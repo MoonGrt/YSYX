@@ -1,25 +1,37 @@
-# 顶层 Makefile
+BUILD_DIR = ./build
 
-TOP     = Dual_Control_Switch
-VSRC    = vsrc/$(TOP).v
-CSRC    = csrc/main.cpp
+PRJ = playground
 
-OBJ_DIR = obj
-VTOP    = $(OBJ_DIR)/V$(TOP)
+test:
+	mill -i $(PRJ).test
 
-VERILATOR_FLAGS = -Wall --cc --exe --trace
+verilog:
+	$(call git_commit, "generate verilog")
+	mkdir -p $(BUILD_DIR)
+	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
 
-all: $(VTOP)
+help:
+	mill -i $(PRJ).runMain Elaborate --help
 
-$(VTOP): $(VSRC) $(CSRC)
-	verilator $(VERILATOR_FLAGS) $(VSRC) $(CSRC) -o V$(TOP) --Mdir $(OBJ_DIR)
-	make -C $(OBJ_DIR) -f V$(TOP).mk
+reformat:
+	mill -i __.reformat
 
-sim: $(VTOP)
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	./$(VTOP)
+checkformat:
+	mill -i __.checkFormat
+
+bsp:
+	mill -i mill.bsp.BSP/install
+
+idea:
+	mill -i mill.idea.GenIdea/idea
 
 clean:
-	rm -rf $(OBJ_DIR) wave.vcd
+	-rm -rf $(BUILD_DIR)
 
-include ../Makefile
+.PHONY: test verilog help reformat checkformat clean
+
+sim:
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@echo "Write this Makefile by yourself."
+
+-include ../Makefile
