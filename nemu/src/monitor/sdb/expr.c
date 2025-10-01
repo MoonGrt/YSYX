@@ -40,17 +40,17 @@ static struct rule {
   const char *regex;
   int token_type;
 } rules[] = {
-  {" +", TK_NOTYPE},         // spaces
-  {"\\+", TK_PLUS},          // plus
-  {"-", TK_MINUS},           // minus
-  {"\\*", TK_MUL},           // multiply or deref
-  {"/", TK_DIV},             // divide
-  {"\\(", TK_LPAREN},        // left parenthesis
-  {"\\)", TK_RPAREN},        // right parenthesis
+  {" +", TK_NOTYPE},          // spaces
+  {"\\+", TK_PLUS},           // plus
+  {"-", TK_MINUS},            // minus
+  {"\\*", TK_MUL},            // multiply or deref
+  {"/", TK_DIV},              // divide
+  {"\\(", TK_LPAREN},         // left parenthesis
+  {"\\)", TK_RPAREN},         // right parenthesis
   {"0x[0-9a-fA-F]+", TK_HEX}, // hex number
-  {"[0-9]+", TK_NUM},        // decimal number
-  {"\\$[a-zA-Z]+", TK_REG},  // register
-  {"==", TK_EQ},             // equal
+  {"[0-9]+", TK_NUM},         // decimal number
+  {"\\$[a-zA-Z]+", TK_REG},   // register
+  {"==", TK_EQ},              // equal
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -145,7 +145,7 @@ static int get_precedence(int type) {
     case TK_DIV: return 3;
     case TK_NEG:
     case TK_DEREF: return 4;
-    default: return 0; // 非运算符
+    default: return 0;
   }
 }
 
@@ -160,10 +160,9 @@ static int find_main_op(int p, int q) {
     if (type == TK_LPAREN) { level++; continue; }
     if (type == TK_RPAREN) { level--; continue; }
 
-    if (level == 0) { // 只有外层运算符考虑
+    if (level == 0) {
       int pri = get_precedence(type);
       if (pri > 0) {
-        // NEMU 风格：优先选择最右侧的最低优先级运算符
         if (pri <= min_pri) {
           min_pri = pri;
           main_op = i;
@@ -231,6 +230,5 @@ word_t expr(char *e, bool *success) {
     }
   }
 
-  *success = true;
   return eval(0, nr_token-1, success);
 }

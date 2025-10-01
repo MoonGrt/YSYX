@@ -105,7 +105,7 @@ static int cmd_p(char *args) {
   bool success;
   uint32_t result = expr(args, &success);  // expr 函数用于表达式求值
   if (success) {
-    printf("%s = 0x%x\n", args, result);
+    printf("%s = %x\n", args, result);
   } else {
     printf("Invalid expression: %s\n", args);
   }
