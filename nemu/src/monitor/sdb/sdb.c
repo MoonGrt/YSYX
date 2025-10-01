@@ -42,17 +42,21 @@ static char* rl_gets() {
   return line_read;
 }
 
+static int cmd_help(char *args);
+
 static int cmd_c(char *args) {
   cpu_exec(-1);
   return 0;
 }
 
-
 static int cmd_q(char *args) {
   exit(0);
 }
 
-static int cmd_help(char *args);
+static int cmd_r(char *args) {
+
+  return 0;
+}
 
 static int cmd_si(char *args) {
   int step = 1; // 默认 1 步
@@ -92,22 +96,22 @@ static int cmd_info(char *args) {
   return 0;
 }
 
-// static int cmd_p(char *args) {
-//   if (args == NULL) {
-//     printf("Usage: p EXPR\n");
-//     return 0;
-//   }
+static int cmd_p(char *args) {
+  if (args == NULL) {
+    printf("Usage: p EXPR\n");
+    return 0;
+  }
 
-//   bool success;
-//   uint32_t result = expr(args, &success);  // expr 函数用于表达式求值
-//   if (success) {
-//     printf("%s = 0x%x\n", args, result);
-//   } else {
-//     printf("Invalid expression: %s\n", args);
-//   }
+  bool success;
+  uint32_t result = expr(args, &success);  // expr 函数用于表达式求值
+  if (success) {
+    printf("%s = 0x%x\n", args, result);
+  } else {
+    printf("Invalid expression: %s\n", args);
+  }
 
-//   return 0;
-// }
+  return 0;
+}
 
 // static int cmd_w(char *args) {
 //   if (args == NULL) {
@@ -153,11 +157,12 @@ static struct {
   int (*handler) (char *);
 } cmd_table [] = {
   { "help", "Display information about all supported commands", cmd_help },
+  { "r", "Reset the processor", cmd_r },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
   { "si", "Step execution", cmd_si },
   { "info", "Print program status: info r (registers), info w (watchpoints)", cmd_info },
-  // { "p", "Evaluate expression EXPR", cmd_p },
+  { "p", "Evaluate expression EXPR", cmd_p },
   // { "w", "Set watchpoint on EXPR", cmd_w },
   // { "d", "Delete watchpoint N", cmd_d },
 };
