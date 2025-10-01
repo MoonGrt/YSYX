@@ -24,6 +24,11 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
+  printf("GPR:\n");
+  for (int i = 0; i < 32; i++) {
+    printf("%-3s = 0x%08x\t", regs[i], cpu.gpr[i]); // 直接用 cpu.gpr[i]
+    if ((i + 1) % 4 == 0) printf("\n"); // 每行 4 个寄存器
+  }
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {

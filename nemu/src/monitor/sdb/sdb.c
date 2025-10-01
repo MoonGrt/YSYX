@@ -65,14 +65,10 @@ static int cmd_si(char *args) {
       printf("Invalid argument '%s'. Usage: si [N]\n", args);
       return 0;
     }
-    if (n <= 0) {
-      printf("Step count must be > 0\n");
-      return 0;
-    }
     step = (int)n;
   }
 
-  cpu_exec(step); // 执行 n 步
+  cpu_exec(step);
   return 0;
 }
 
@@ -84,7 +80,7 @@ static int cmd_info(char *args) {
 
   if (strcmp(args, "r") == 0) {
     // 打印寄存器状态
-    isa_reg_display();  // 假设已有 NEMU 提供的接口
+    isa_reg_display();
   } 
   else if (strcmp(args, "w") == 0) {
     // 打印监视点信息
