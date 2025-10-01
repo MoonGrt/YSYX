@@ -171,7 +171,7 @@ static int find_main_op(int p, int q) {
   return main_op;
 }
 
-static bool check_parentheses(int p, int q) {
+static bool check_parentheses(int p, int q, bool *success) {
   if (tokens[p].type != TK_LPAREN || tokens[q].type != TK_RPAREN)
     return false;
 
@@ -183,6 +183,7 @@ static bool check_parentheses(int p, int q) {
   }
 
   if (level != 0) {
+    *success = false; // 括号不匹配
     return false;
   }
 
@@ -199,7 +200,8 @@ word_t eval(int p, int q, bool *success) {
     *success = false;
     return 0;
   }
-  else if (check_parentheses(p, q) == true) {
+  else if (check_parentheses(p, q, success) == true) {
+    printf("check_parentheses == true");
     return eval(p + 1, q - 1, success);
   }
   else {
