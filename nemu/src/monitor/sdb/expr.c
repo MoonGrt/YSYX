@@ -174,6 +174,27 @@ static int find_main_op(int p, int q) {
   return main_op;
 }
 
+static bool check_parentheses(int p, int q, bool *success) {
+  if (tokens[p].type != TK_LPAREN || tokens[q].type != TK_RPAREN)
+    return false;
+
+  int level = 0;
+  for (int i = p; i <= q; i++) {
+    if (tokens[i].type == TK_LPAREN) level++;
+    else if (tokens[i].type == TK_RPAREN) level--;
+
+    // 在除去最后一个 token 之前，括号层数不能为 0
+    if (level == 0 && i < q) return false;
+  }
+
+  if (level != 0) {
+    *success = false; // 括号不匹配
+    return false;
+  }
+
+  return true;
+}
+
 word_t eval(int p, int q, bool *success) {
   if (p > q) { *success = false; return 0; }
   else if (p == q) {
@@ -184,8 +205,8 @@ word_t eval(int p, int q, bool *success) {
     *success = false;
     return 0;
   }
-  else if (tokens[p].type == TK_LPAREN && tokens[q].type == TK_RPAREN) {
-    return eval(p+1, q-1, success);
+  else if (check_parentheses(p, q, success) == true) {
+    return eval(p + 1, q - 1, success);
   }
   else {
     int op = find_main_op(p, q);
