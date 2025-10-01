@@ -150,16 +150,13 @@ static int get_precedence(int type) {
 }
 
 static int find_main_op(int p, int q) {
-  int min_pri = 100;   // 初始值很大
+  int level = 0;     // 括号深度
+  int min_pri = 100; // 初始值很大
   int main_op = -1;
-  int level = 0;       // 括号深度
-
   for (int i = p; i <= q; i++) {
     int type = tokens[i].type;
-
     if (type == TK_LPAREN) { level++; continue; }
     if (type == TK_RPAREN) { level--; continue; }
-
     if (level == 0) {
       int pri = get_precedence(type);
       if (pri > 0) {
@@ -174,7 +171,7 @@ static int find_main_op(int p, int q) {
   return main_op;
 }
 
-static bool check_parentheses(int p, int q, bool *success) {
+static bool check_parentheses(int p, int q) {
   if (tokens[p].type != TK_LPAREN || tokens[q].type != TK_RPAREN)
     return false;
 
@@ -182,13 +179,10 @@ static bool check_parentheses(int p, int q, bool *success) {
   for (int i = p; i <= q; i++) {
     if (tokens[i].type == TK_LPAREN) level++;
     else if (tokens[i].type == TK_RPAREN) level--;
-
-    // 在除去最后一个 token 之前，括号层数不能为 0
     if (level == 0 && i < q) return false;
   }
 
   if (level != 0) {
-    *success = false; // 括号不匹配
     return false;
   }
 
@@ -205,7 +199,7 @@ word_t eval(int p, int q, bool *success) {
     *success = false;
     return 0;
   }
-  else if (check_parentheses(p, q, success) == true) {
+  else if (check_parentheses(p, q) == true) {
     return eval(p + 1, q - 1, success);
   }
   else {

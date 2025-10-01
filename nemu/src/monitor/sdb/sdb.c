@@ -64,7 +64,7 @@ static int cmd_si(char *args) {
   if (args != NULL) {
     // 解析用户输入的步数
     char *endptr;
-    long n = strtol(args, &endptr, 10); // 转换字符串为整数
+    long n = strtol(args, &endptr, 10);
     if (*endptr != '\0') {
       printf("Invalid argument '%s'. Usage: si [N]\n", args);
       return 0;
