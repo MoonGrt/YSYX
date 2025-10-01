@@ -88,7 +88,7 @@ static int cmd_info(char *args) {
   } 
   else if (strcmp(args, "w") == 0) {
     // 打印监视点信息
-
+    print_wp();
   } 
   else {
     printf("Unknown subcommand '%s' for info\n", args);
