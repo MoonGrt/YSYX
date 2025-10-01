@@ -76,6 +76,81 @@ static int cmd_si(char *args) {
   return 0;
 }
 
+static int cmd_info(char *args) {
+  if (args == NULL) {
+    printf("Usage: info SUBCMD\n");
+    return 0;
+  }
+
+  if (strcmp(args, "r") == 0) {
+    // 打印寄存器状态
+    isa_reg_display();  // 假设已有 NEMU 提供的接口
+  } 
+  else if (strcmp(args, "w") == 0) {
+    // 打印监视点信息
+
+  } 
+  else {
+    printf("Unknown subcommand '%s' for info\n", args);
+  }
+  return 0;
+}
+
+// static int cmd_p(char *args) {
+//   if (args == NULL) {
+//     printf("Usage: p EXPR\n");
+//     return 0;
+//   }
+
+//   bool success;
+//   uint32_t result = expr(args, &success);  // expr 函数用于表达式求值
+//   if (success) {
+//     printf("%s = 0x%x\n", args, result);
+//   } else {
+//     printf("Invalid expression: %s\n", args);
+//   }
+
+//   return 0;
+// }
+
+// static int cmd_w(char *args) {
+//   if (args == NULL) {
+//     printf("Usage: w EXPR\n");
+//     return 0;
+//   }
+
+//   int wp_no = new_wp(args);  // 假设已有监视点创建接口
+//   if (wp_no >= 0) {
+//     printf("Watchpoint %d set on '%s'\n", wp_no, args);
+//   } else {
+//     printf("Failed to set watchpoint\n");
+//   }
+
+//   return 0;
+// }
+
+// static int cmd_d(char *args) {
+//   if (args == NULL) {
+//     printf("Usage: d N\n");
+//     return 0;
+//   }
+
+//   char *endptr;
+//   long n = strtol(args, &endptr, 10);
+//   if (*endptr != '\0' || n <= 0) {
+//     printf("Invalid watchpoint number: %s\n", args);
+//     return 0;
+//   }
+
+//   if (free_wp((int)n) == 0) {  // 假设 free_wp 删除监视点，返回 0 表示成功
+//     printf("Watchpoint %d deleted\n", (int)n);
+//   } else {
+//     printf("No watchpoint %d\n", (int)n);
+//   }
+
+//   return 0;
+// }
+
 static struct {
   const char *name;
   const char *description;
@@ -85,9 +160,10 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
   { "si", "Step execution", cmd_si },
-
-  /* TODO: Add more commands */
-
+  { "info", "Print program status: info r (registers), info w (watchpoints)", cmd_info },
+  // { "p", "Evaluate expression EXPR", cmd_p },
+  // { "w", "Set watchpoint on EXPR", cmd_w },
+  // { "d", "Delete watchpoint N", cmd_d },
 };
 
 #define NR_CMD ARRLEN(cmd_table)
