@@ -183,7 +183,7 @@ static bool check_parentheses(int p, int q, bool *success) {
   }
 
   if (level != 0) {
-    *success = false; // 括号不匹配
+    *success = false;
     return false;
   }
 

@@ -102,7 +102,7 @@ static int cmd_p(char *args) {
     return 0;
   }
 
-  bool success;
+  bool success = true;
   uint32_t result = expr(args, &success);  // expr 函数用于表达式求值
   if (success) {
     printf("%s = %x\n", args, result);
