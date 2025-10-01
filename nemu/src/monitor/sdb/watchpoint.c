@@ -21,8 +21,8 @@ typedef struct watchpoint {
   int NO;
   struct watchpoint *next;
 
-  /* TODO: Add more members if necessary */
-
+  char expr_str[64];
+  word_t last_val;
 } WP;
 
 static WP wp_pool[NR_WP] = {};
@@ -39,5 +39,76 @@ void init_wp_pool() {
   free_ = wp_pool;
 }
 
-/* TODO: Implement the functionality of watchpoint */
+WP* new_wp(char *args) {
+  if (free_ == NULL) {
+    printf("No free watchpoints!\n");
+    return NULL;
+  }
 
+  WP *wp = free_;
+  free_ = free_->next;
+
+  wp->next = head;
+  head = wp;
+
+  // 保存表达式字符串
+  snprintf(wp->expr_str, sizeof(wp->expr_str), "%s", args);
+
+  // 初始化 last_val
+  bool success;
+  wp->last_val = expr((char*)args, &success);
+  if (!success) wp->last_val = 0;
+
+  printf("Watchpoint %d set on '%s', initial value = 0x%x\n",
+         wp->NO, wp->expr_str, wp->last_val);
+
+  return wp;
+}
+
+int free_wp(int no) {
+  WP **cur = &head;
+  while (*cur != NULL) {
+    if ((*cur)->NO == no) {
+      WP *tmp = *cur;
+      *cur = tmp->next;  // 从链表中移除
+      tmp->next = free_; // 放回空闲链表
+      free_ = tmp;
+      return 0;
+    }
+    cur = &((*cur)->next);
+  }
+  return -1;
+}
+
+void print_wp() {
+  if (head == NULL) {
+    printf("No watchpoints.\n");
+    return;
+  }
+
+  printf("Num\tExpression\tLast Value\n");
+  WP *wp = head;
+  while (wp) {
+    printf("%d\t%s\t0x%x\n", wp->NO, wp->expr_str, wp->last_val);
+    wp = wp->next;
+  }
+}
+
+bool check_wp() {
+  bool triggered = false;
+  WP *wp = head;
+  while (wp) {
+    bool success;
+    word_t val = expr(wp->expr_str, &success);
+    if (!success) { wp = wp->next; continue; }
+
+    if (val != wp->last_val) {
+      printf("Watchpoint %d triggered: %s\n", wp->NO, wp->expr_str);
+      printf("Old value = 0x%x, New value = 0x%x\n", wp->last_val, val);
+      wp->last_val = val;
+      triggered = true;
+    }
+    wp = wp->next;
+  }
+  return triggered;
+}
