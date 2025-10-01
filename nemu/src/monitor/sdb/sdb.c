@@ -55,7 +55,24 @@ static int cmd_q(char *args) {
 static int cmd_help(char *args);
 
 static int cmd_si(char *args) {
-  cpu_exec(1);
+  int step = 1; // 默认 1 步
+
+  if (args != NULL) {
+    // 解析用户输入的步数
+    char *endptr;
+    long n = strtol(args, &endptr, 10); // 转换字符串为整数
+    if (*endptr != '\0') {
+      printf("Invalid argument '%s'. Usage: si [N]\n", args);
+      return 0;
+    }
+    if (n <= 0) {
+      printf("Step count must be > 0\n");
+      return 0;
+    }
+    step = (int)n;
+  }
+
+  cpu_exec(step); // 执行 n 步
   return 0;
 }
 
