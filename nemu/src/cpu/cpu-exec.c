@@ -42,7 +42,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   // 扫描所有监视点
   WP *wp = head;
   while (wp) {
-    bool success;
+    bool success = true;
     word_t val = expr(wp->expr_str, &success);
     if (!success) {
       printf("Failed to evaluate watchpoint %d: %s\n", wp->NO, wp->expr_str);

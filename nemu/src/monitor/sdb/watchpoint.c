@@ -45,7 +45,7 @@ int new_wp(char *e) {
   snprintf(wp->expr_str, sizeof(wp->expr_str), "%s", e);
 
   // 初始化 last_val
-  bool success;
+  bool success = true;
   wp->last_val = expr((char*)e, &success);
   if (!success) wp->last_val = 0;
 
