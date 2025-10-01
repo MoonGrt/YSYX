@@ -42,17 +42,114 @@ static char* rl_gets() {
   return line_read;
 }
 
+static int cmd_help(char *args);
+
 static int cmd_c(char *args) {
   cpu_exec(-1);
   return 0;
 }
 
-
 static int cmd_q(char *args) {
-  return -1;
+  exit(0);
 }
 
-static int cmd_help(char *args);
+static int cmd_r(char *args) {
+
+  return 0;
+}
+
+static int cmd_si(char *args) {
+  int step = 1; // 默认 1 步
+
+  if (args != NULL) {
+    // 解析用户输入的步数
+    char *endptr;
+    long n = strtol(args, &endptr, 10);
+    if (*endptr != '\0') {
+      printf("Invalid argument '%s'. Usage: si [N]\n", args);
+      return 0;
+    }
+    step = (int)n;
+  }
+
+  cpu_exec(step);
+  return 0;
+}
+
+static int cmd_info(char *args) {
+  if (args == NULL) {
+    printf("Usage: info SUBCMD\n");
+    return 0;
+  }
+
+  if (strcmp(args, "r") == 0) {
+    // 打印寄存器状态
+    isa_reg_display();
+  } 
+  else if (strcmp(args, "w") == 0) {
+    // 打印监视点信息
+    print_wp();
+  } 
+  else {
+    printf("Unknown subcommand '%s' for info\n", args);
+  }
+  return 0;
+}
+
+static int cmd_p(char *args) {
+  if (args == NULL) {
+    printf("Usage: p EXPR\n");
+    return 0;
+  }
+
+  bool success = true;
+  uint32_t result = expr(args, &success);
+  if (success) {
+    printf("%s = %x\n", args, result);
+  } else {
+    printf("Invalid expression: %s\n", args);
+  }
+
+  return 0;
+}
+
+static int cmd_w(char *args) {
+  if (args == NULL) {
+    printf("Usage: w EXPR\n");
+    return 0;
+  }
+
+  int wp_no = new_wp(args);
+  if (wp_no >= 0) {
+    printf("Watchpoint %d set on '%s'\n", wp_no, args);
+  } else {
+    printf("Failed to set watchpoint\n");
+  }
+
+  return 0;
+}
+
+static int cmd_d(char *args) {
+  if (args == NULL) {
+    printf("Usage: d N\n");
+    return 0;
+  }
+
+  char *endptr;
+  long n = strtol(args, &endptr, 10);
+  if (*endptr != '\0' || n <= 0) {
+    printf("Invalid watchpoint number: %s\n", args);
+    return 0;
+  }
+
+  if (free_wp((int)n) == 0) {
+    printf("Watchpoint %d deleted\n", (int)n);
+  } else {
+    printf("No watchpoint %d\n", (int)n);
+  }
+
+  return 0;
+}
 
 static struct {
   const char *name;
@@ -60,11 +157,14 @@ static struct {
   int (*handler) (char *);
 } cmd_table [] = {
   { "help", "Display information about all supported commands", cmd_help },
+  { "r", "Reset the processor", cmd_r },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
-  /* TODO: Add more commands */
-
+  { "si", "Step execution", cmd_si },
+  { "info", "Print program status: info r (registers), info w (watchpoints)", cmd_info },
+  { "p", "Evaluate expression EXPR", cmd_p },
+  { "w", "Set watchpoint on EXPR", cmd_w },
+  { "d", "Delete watchpoint N", cmd_d },
 };
 
 #define NR_CMD ARRLEN(cmd_table)

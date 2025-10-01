@@ -191,6 +191,15 @@ config DIFFTEST_REF_NAME
   default "kvm" if DIFFTEST_REF_KVM
   default "spike" if DIFFTEST_REF_SPIKE
   default "none"
+
+config WATCHPOINT
+  bool "Enable watchpoint support"
+  default y
+  help
+    Enable hardware/software watchpoints in NEMU.
+    This will allow setting watchpoints with the 'w' command
+    and automatically pause execution when the value changes.
+
 endmenu
 
 if MODE_SYSTEM
