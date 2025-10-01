@@ -201,7 +201,6 @@ word_t eval(int p, int q, bool *success) {
     return 0;
   }
   else if (check_parentheses(p, q, success) == true) {
-    printf("check_parentheses(%d, %d) == true\n", p, q);
     return eval(p + 1, q - 1, success);
   }
   else {
