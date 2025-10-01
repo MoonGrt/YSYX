@@ -49,7 +49,7 @@ static struct rule {
   {"\\)", TK_RPAREN},         // right parenthesis
   {"0x[0-9a-fA-F]+", TK_HEX}, // hex number
   {"[0-9]+", TK_NUM},         // decimal number
-  {"\\$[a-zA-Z]+", TK_REG},   // register
+  {"\\$[a-zA-Z0-9]+", TK_REG},   // register
   {"==", TK_EQ},              // equal
 };
 
