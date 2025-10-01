@@ -39,7 +39,7 @@ void init_wp_pool() {
   free_ = wp_pool;
 }
 
-WP* new_wp(char *args) {
+WP* new_wp(char *expression) {
   if (free_ == NULL) {
     printf("No free watchpoints!\n");
     return NULL;
@@ -52,11 +52,11 @@ WP* new_wp(char *args) {
   head = wp;
 
   // 保存表达式字符串
-  snprintf(wp->expr_str, sizeof(wp->expr_str), "%s", args);
+  snprintf(wp->expr_str, sizeof(wp->expr_str), "%s", expression);
 
   // 初始化 last_val
   bool success;
-  wp->last_val = expr((char*)args, &success);
+  wp->last_val = expr((char*)expression, &success);
   if (!success) wp->last_val = 0;
 
   printf("Watchpoint %d set on '%s', initial value = 0x%x\n",
