@@ -39,10 +39,10 @@ void init_wp_pool() {
   free_ = wp_pool;
 }
 
-WP* new_wp(char *expression) {
+int new_wp(char *e) {
   if (free_ == NULL) {
     printf("No free watchpoints!\n");
-    return NULL;
+    assert(0);  // 没有空闲监视点时直接终止程序
   }
 
   WP *wp = free_;
@@ -52,17 +52,17 @@ WP* new_wp(char *expression) {
   head = wp;
 
   // 保存表达式字符串
-  snprintf(wp->expr_str, sizeof(wp->expr_str), "%s", expression);
+  snprintf(wp->expr_str, sizeof(wp->expr_str), "%s", e);
 
   // 初始化 last_val
   bool success;
-  wp->last_val = expr((char*)expression, &success);
+  wp->last_val = expr((char*)e, &success);
   if (!success) wp->last_val = 0;
 
   printf("Watchpoint %d set on '%s', initial value = 0x%x\n",
          wp->NO, wp->expr_str, wp->last_val);
 
-  return wp;
+  return 0;
 }
 
 int free_wp(int no) {

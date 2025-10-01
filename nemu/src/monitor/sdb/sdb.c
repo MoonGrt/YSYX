@@ -113,43 +113,43 @@ static int cmd_p(char *args) {
   return 0;
 }
 
-// static int cmd_w(char *args) {
-//   if (args == NULL) {
-//     printf("Usage: w EXPR\n");
-//     return 0;
-//   }
+static int cmd_w(char *args) {
+  if (args == NULL) {
+    printf("Usage: w EXPR\n");
+    return 0;
+  }
 
-//   int wp_no = new_wp(args);  // 假设已有监视点创建接口
-//   if (wp_no >= 0) {
-//     printf("Watchpoint %d set on '%s'\n", wp_no, args);
-//   } else {
-//     printf("Failed to set watchpoint\n");
-//   }
+  int wp_no = new_wp(args);
+  if (wp_no >= 0) {
+    printf("Watchpoint %d set on '%s'\n", wp_no, args);
+  } else {
+    printf("Failed to set watchpoint\n");
+  }
 
-//   return 0;
-// }
+  return 0;
+}
 
-// static int cmd_d(char *args) {
-//   if (args == NULL) {
-//     printf("Usage: d N\n");
-//     return 0;
-//   }
+static int cmd_d(char *args) {
+  if (args == NULL) {
+    printf("Usage: d N\n");
+    return 0;
+  }
 
-//   char *endptr;
-//   long n = strtol(args, &endptr, 10);
-//   if (*endptr != '\0' || n <= 0) {
-//     printf("Invalid watchpoint number: %s\n", args);
-//     return 0;
-//   }
+  char *endptr;
+  long n = strtol(args, &endptr, 10);
+  if (*endptr != '\0' || n <= 0) {
+    printf("Invalid watchpoint number: %s\n", args);
+    return 0;
+  }
 
-//   if (free_wp((int)n) == 0) {  // 假设 free_wp 删除监视点，返回 0 表示成功
-//     printf("Watchpoint %d deleted\n", (int)n);
-//   } else {
-//     printf("No watchpoint %d\n", (int)n);
-//   }
+  if (free_wp((int)n) == 0) {
+    printf("Watchpoint %d deleted\n", (int)n);
+  } else {
+    printf("No watchpoint %d\n", (int)n);
+  }
 
-//   return 0;
-// }
+  return 0;
+}
 
 static struct {
   const char *name;
@@ -163,8 +163,8 @@ static struct {
   { "si", "Step execution", cmd_si },
   { "info", "Print program status: info r (registers), info w (watchpoints)", cmd_info },
   { "p", "Evaluate expression EXPR", cmd_p },
-  // { "w", "Set watchpoint on EXPR", cmd_w },
-  // { "d", "Delete watchpoint N", cmd_d },
+  { "w", "Set watchpoint on EXPR", cmd_w },
+  { "d", "Delete watchpoint N", cmd_d },
 };
 
 #define NR_CMD ARRLEN(cmd_table)
