@@ -58,6 +58,7 @@ int new_wp(char *e) {
 int free_wp(int no) {
   WP **cur = &head;
   while (*cur != NULL) {
+    printf("------%d-----\n", (*cur)->NO);
     if ((*cur)->NO == no) {
       WP *tmp = *cur;
       *cur = tmp->next;  // 从链表中移除
