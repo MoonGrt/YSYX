@@ -18,6 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <utils.h>
 
 static int is_batch_mode = false;
 
@@ -55,6 +56,7 @@ static int cmd_q(char *args) {
 
 static int cmd_r(char *args) {
   init_isa();
+  nemu_state.state = NEMU_STOP;
   return 0;
 }
 
