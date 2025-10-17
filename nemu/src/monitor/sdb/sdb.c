@@ -54,7 +54,7 @@ static int cmd_q(char *args) {
 }
 
 static int cmd_r(char *args) {
-
+  init_isa();
   return 0;
 }
 
