@@ -58,7 +58,7 @@ static int cmd_r(char *args) {
   return 0;
 }
 
-static int cmd_si(char *args) {
+static int cmd_s(char *args) {
   int step = 1; // 默认 1 步
 
   if (args != NULL) {
@@ -66,7 +66,7 @@ static int cmd_si(char *args) {
     char *endptr;
     long n = strtol(args, &endptr, 10);
     if (*endptr != '\0') {
-      printf("Invalid argument '%s'. Usage: si [N]\n", args);
+      printf("Invalid argument '%s'. Usage: s [N]\n", args);
       return 0;
     }
     step = (int)n;
@@ -160,7 +160,7 @@ static struct {
   { "r", "Reset the processor", cmd_r },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-  { "si", "Step execution", cmd_si },
+  { "s", "Step execution", cmd_s },
   { "info", "Print program status: info r (registers), info w (watchpoints)", cmd_info },
   { "p", "Evaluate expression EXPR", cmd_p },
   { "w", "Set watchpoint on EXPR", cmd_w },
