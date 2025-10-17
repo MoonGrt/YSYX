@@ -122,9 +122,7 @@ static int cmd_w(char *args) {
   }
 
   int wp_no = new_wp(args);
-  if (wp_no >= 0) {
-    printf("Watchpoint %d set on '%s'\n", wp_no, args);
-  } else {
+  if (wp_no < 0) {
     printf("Failed to set watchpoint\n");
   }
 
