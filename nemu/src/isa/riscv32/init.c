@@ -27,14 +27,18 @@
 // };
 
 static const uint32_t img [] = {
-  0x800002b7,  // lui t0,0x80000
-  0x70000337,  // lui t1,0x70000
-  0x600003b7,  // lui t2,0x60000
-  0x0062a023,  // sw t1,0(t0)
-  0x0072a223,  // sw t2,4(t0)
-  0x0002a023,  // sw  zero,0(t0)
-  0x0002a503,  // lw  a0,0(t0)
-  0x0000006b,  // nemu_trap
+  0x00000297,  // auipc t0,0
+  0x00500513,  // li a0, 5
+  0x00300593,  // li a1, 3
+  0x00b50633,  // add a2, a0, a1
+  0x40b506b3,  // sub a3, a0, a1
+  0x00b51733,  // and a4, a0, a1
+  0x00b567b3,  // or  a5, a0, a1
+  0x00b54733,  // xor a6, a0, a1
+  0x00028823,  // sb  zero, 16(t0)
+  0x0102c503,  // lbu a0, 16(t0)
+  0x00100073,  // ebreak
+  0xdeadbeef,  // some data
 };
 
 // static const uint32_t img[] = {
