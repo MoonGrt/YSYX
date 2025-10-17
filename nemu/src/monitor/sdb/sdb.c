@@ -137,9 +137,9 @@ static int cmd_d(char *args) {
 
   char *endptr;
   long n = strtol(args, &endptr, 10);
-  if (*endptr != '\0' || n <= 0) {
-    printf("Invalid watchpoint number: %s\n", args);
-    return 0;
+  if (*endptr != '\0' || n < 0 || n >= NR_WP) {
+      printf("Invalid watchpoint number: %s\n", args);
+      return 0;
   }
 
   if (free_wp((int)n) == 0) {
