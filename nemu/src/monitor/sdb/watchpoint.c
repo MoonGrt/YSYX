@@ -79,7 +79,7 @@ void print_wp() {
   printf("Num\tExpression\tLast Value\n");
   WP *wp = head;
   while (wp) {
-    printf("%d\t%s\t0x%x\n", wp->NO, wp->expr_str, wp->last_val);
+    printf("%d\t%s\t\t0x%x\n", wp->NO, wp->expr_str, wp->last_val);
     wp = wp->next;
   }
 }

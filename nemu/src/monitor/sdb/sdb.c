@@ -18,6 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <utils.h>
 
 static int is_batch_mode = false;
 
@@ -54,11 +55,12 @@ static int cmd_q(char *args) {
 }
 
 static int cmd_r(char *args) {
-
+  init_isa();
+  nemu_state.state = NEMU_STOP;
   return 0;
 }
 
-static int cmd_si(char *args) {
+static int cmd_s(char *args) {
   int step = 1; // 默认 1 步
 
   if (args != NULL) {
@@ -66,7 +68,7 @@ static int cmd_si(char *args) {
     char *endptr;
     long n = strtol(args, &endptr, 10);
     if (*endptr != '\0') {
-      printf("Invalid argument '%s'. Usage: si [N]\n", args);
+      printf("Invalid argument '%s'. Usage: s [N]\n", args);
       return 0;
     }
     step = (int)n;
@@ -105,7 +107,7 @@ static int cmd_p(char *args) {
   bool success = true;
   uint32_t result = expr(args, &success);
   if (success) {
-    printf("%s = %x\n", args, result);
+    printf("%s = %u (0x%x)\n", args, result, result);
   } else {
     printf("Invalid expression: %s\n", args);
   }
@@ -120,9 +122,7 @@ static int cmd_w(char *args) {
   }
 
   int wp_no = new_wp(args);
-  if (wp_no >= 0) {
-    printf("Watchpoint %d set on '%s'\n", wp_no, args);
-  } else {
+  if (wp_no < 0) {
     printf("Failed to set watchpoint\n");
   }
 
@@ -137,9 +137,9 @@ static int cmd_d(char *args) {
 
   char *endptr;
   long n = strtol(args, &endptr, 10);
-  if (*endptr != '\0' || n <= 0) {
-    printf("Invalid watchpoint number: %s\n", args);
-    return 0;
+  if (*endptr != '\0' || n < 0 || n >= NR_WP) {
+      printf("Invalid watchpoint number: %s\n", args);
+      return 0;
   }
 
   if (free_wp((int)n) == 0) {
@@ -160,7 +160,7 @@ static struct {
   { "r", "Reset the processor", cmd_r },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-  { "si", "Step execution", cmd_si },
+  { "s", "Step execution", cmd_s },
   { "info", "Print program status: info r (registers), info w (watchpoints)", cmd_info },
   { "p", "Evaluate expression EXPR", cmd_p },
   { "w", "Set watchpoint on EXPR", cmd_w },
