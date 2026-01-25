@@ -51,7 +51,7 @@ static int cmd_c(char *args) {
 }
 
 static int cmd_q(char *args) {
-  exit(0);
+  return -1;
 }
 
 static int cmd_r(char *args) {
@@ -156,15 +156,15 @@ static struct {
   const char *description;
   int (*handler) (char *);
 } cmd_table [] = {
+  { "info", "Print program status: info r (registers), info w (watchpoints)", cmd_info },
   { "help", "Display information about all supported commands", cmd_help },
   { "r", "Reset the processor", cmd_r },
   { "c", "Continue the execution of the program", cmd_c },
-  { "q", "Exit NEMU", cmd_q },
   { "s", "Step execution", cmd_s },
-  { "info", "Print program status: info r (registers), info w (watchpoints)", cmd_info },
   { "p", "Evaluate expression EXPR", cmd_p },
   { "w", "Set watchpoint on EXPR", cmd_w },
   { "d", "Delete watchpoint N", cmd_d },
+  { "q", "Exit NEMU", cmd_q },
 };
 
 #define NR_CMD ARRLEN(cmd_table)
@@ -237,7 +237,6 @@ void sdb_mainloop() {
 void init_sdb() {
   /* Compile the regular expressions. */
   init_regex();
-
   /* Initialize the watchpoint pool. */
   init_wp_pool();
 }
