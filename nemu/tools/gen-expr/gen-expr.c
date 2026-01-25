@@ -31,8 +31,69 @@ static char *code_format =
 "  return 0; "
 "}";
 
+// 随机选择 0~n-1
+static int choose(int n) {
+  return rand() % n;
+}
+
+// 往 buf 里加一个字符
+static void gen(char c) {
+  int len = strlen(buf);
+  buf[len] = c;
+  buf[len + 1] = '\0';
+}
+
+// 生成一个随机数字
+static void gen_num() {
+  int num = rand() % 100; // 0~99
+  char tmp[16];
+  sprintf(tmp, "%d", num);
+  strcat(buf, tmp);
+}
+
+// 生成随机运算符 + - * /
+static void gen_rand_op() {
+  char ops[] = "+-*/";
+  char op = ops[choose(4)];
+  gen(op);
+}
+
+// 生成随机表达式
 static void gen_rand_expr() {
-  buf[0] = '\0';
+  static int depth = 0;
+  depth++;
+  if (depth > 3) { // 避免生成太深的表达式
+    gen_num();
+    depth--;
+    return;
+  }
+
+  switch (choose(3)) {
+    case 0:
+      gen_num();
+      break;
+    case 1:
+      gen('(');
+      gen_rand_expr();
+      gen(')');
+      break;
+    default:
+      gen_rand_expr();
+      // 如果右侧可能是除法，防止除零
+      if (choose(4) == 3) { // 25% 几率生成 '/'
+        gen('/');
+        int num = rand() % 99 + 1; // 1~99
+        char tmp[16];
+        sprintf(tmp, "%d", num);
+        strcat(buf, tmp);
+      } else {
+        gen_rand_op();
+        gen_rand_expr();
+      }
+      break;
+  }
+
+  depth--;
 }
 
 int main(int argc, char *argv[]) {
