@@ -98,17 +98,22 @@ static int cmd_info(char *args) {
   return 0;
 }
 
+// #define TESTCWD
+#ifdef TESTCWD
 #include <unistd.h>
+#endif
 static int cmd_test(char *args) {
   if (args == NULL) {
     printf("  Usage: test filename\n");
     return 0;
   }
 
+#ifdef TESTCWD
   char cwd[256];
   char *ret = getcwd(cwd, sizeof(cwd));
   assert(ret != NULL);
-  printf("CWD: %s\n", cwd);
+  printf("  CWD: %s\n", cwd);
+#endif
 
   FILE *fp = fopen(args, "r");
   if (fp == NULL) {
