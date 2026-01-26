@@ -177,7 +177,7 @@ static int cmd_p(char *args) {
   uint32_t result = expr(args, &success);
   if (success) {
     pcnt++;
-    printf("  $%d = %u (0x%x)\n", pcnt, result, result);
+    printf("  $%d = %u\n", pcnt, result);
   } else {
     printf("  Invalid expression: %s\n", args);
   }
