@@ -176,7 +176,8 @@ static int cmd_p(char *args) {
   bool success = true;
   uint32_t result = expr(args, &success);
   if (success) {
-    printf("  %s = %u (0x%x)\n", args, result, result);
+    pcnt++;
+    printf("  $%d = %u (0x%x)\n", pcnt, result, result);
   } else {
     printf("  Invalid expression: %s\n", args);
   }
@@ -305,8 +306,8 @@ void sdb_mainloop() {
 }
 
 void init_sdb() {
-  pcnt = 0;
   /* Compile the regular expressions. */
+  pcnt = 0;  // init expr cnt
   init_regex();
   /* Initialize the watchpoint pool. */
   init_wp_pool();
