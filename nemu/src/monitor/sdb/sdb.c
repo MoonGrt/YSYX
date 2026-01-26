@@ -98,6 +98,61 @@ static int cmd_info(char *args) {
   return 0;
 }
 
+static int cmd_test(char *args) {
+  if (args == NULL) {
+    printf("Usage: test filename\n");
+    return 0;
+  }
+
+  FILE *fp = fopen(args, "r");
+  if (fp == NULL) {
+    perror("fopen");
+    return 0;
+  }
+
+  char line[512];
+  int line_no = 0;
+
+  while (fgets(line, sizeof(line), fp)) {
+    line_no++;
+
+    // 1. 读取期望结果
+    uint32_t golden;
+    int offset = 0;
+    if (sscanf(line, "%u%n", &golden, &offset) != 1) {
+      printf("X Line %d: invalid format\n", line_no);
+      continue;
+    }
+
+    // 2. offset 之后就是完整表达式（允许任意空格）
+    char *expr_str = line + offset;
+
+    // 跳过前导空格
+    while (*expr_str == ' ') expr_str++;
+
+    bool success = true;
+    uint32_t result = expr(expr_str, &success);
+
+    if (!success) {
+      printf("X Line %d: expr eval failed\n", line_no);
+      printf("   expr: %s\n", expr_str);
+      assert(0);
+    }
+
+    if (result != golden) {
+      printf("X Line %d: mismatch\n", line_no);
+      printf("   expr   : %s\n", expr_str);
+      printf("   nemu   : %u\n", result);
+      printf("   golden : %u\n", golden);
+      assert(0);
+    }
+  }
+
+  fclose(fp);
+  printf("O All tests passed!\n");
+  return 0;
+}
+
 static int cmd_p(char *args) {
   if (args == NULL) {
     printf("Usage: p EXPR\n");
@@ -158,6 +213,7 @@ static struct {
 } cmd_table [] = {
   { "info", "Print program status: info r (registers), info w (watchpoints)", cmd_info },
   { "help", "Display information about all supported commands", cmd_help },
+  { "test", "", cmd_test },
   { "r", "Reset the processor", cmd_r },
   { "c", "Continue the execution of the program", cmd_c },
   { "s", "Step execution", cmd_s },
