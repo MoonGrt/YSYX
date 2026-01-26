@@ -166,6 +166,7 @@ static int cmd_test(char *args) {
   return 0;
 }
 
+static int pcnt;
 static int cmd_p(char *args) {
   if (args == NULL) {
     printf("  Usage: p EXPR\n");
@@ -304,6 +305,7 @@ void sdb_mainloop() {
 }
 
 void init_sdb() {
+  pcnt = 0;
   /* Compile the regular expressions. */
   init_regex();
   /* Initialize the watchpoint pool. */
