@@ -152,7 +152,7 @@ static int cmd_test(char *args) {
 
     if (result != golden) {
       printf("  X Line %d: mismatch\n", line_no);
-      printf("    expr   : %s\n", expr_str);
+      printf("    expr   : %s", expr_str);
       printf("    nemu   : %u\n", result);
       printf("    golden : %u\n", golden);
       assert(0);
