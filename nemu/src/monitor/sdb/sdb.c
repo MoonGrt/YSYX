@@ -157,6 +157,8 @@ static int cmd_test(char *args) {
       printf("    golden : %u\n", golden);
       assert(0);
     }
+
+    printf("  O Line %d: %s = %u\n", line_no, expr_str, result);
   }
 
   fclose(fp);
