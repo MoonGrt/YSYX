@@ -120,7 +120,7 @@ static bool make_token(char *e) {
             nr_token++;
             break;
           default:
-            printf("Unknown token type %d\n", rules[i].token_type);
+            printf("  Unknown token type %d\n", rules[i].token_type);
             return false;
         }        
 
@@ -129,7 +129,7 @@ static bool make_token(char *e) {
     }
 
     if (i == NR_REGEX) {
-      printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
+      printf("  no match at position %d\n%s\n%*.s^\n", position, e, position, "");
       return false;
     }
   }

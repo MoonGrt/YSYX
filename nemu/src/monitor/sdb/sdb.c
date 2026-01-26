@@ -68,7 +68,7 @@ static int cmd_s(char *args) {
     char *endptr;
     long n = strtol(args, &endptr, 10);
     if (*endptr != '\0') {
-      printf("Invalid argument '%s'. Usage: s [N]\n", args);
+      printf("  Invalid argument '%s'. Usage: s [N]\n", args);
       return 0;
     }
     step = (int)n;
@@ -80,7 +80,7 @@ static int cmd_s(char *args) {
 
 static int cmd_info(char *args) {
   if (args == NULL) {
-    printf("Usage: info SUBCMD\n");
+    printf("  Usage: info SUBCMD\n");
     return 0;
   }
 
@@ -93,20 +93,20 @@ static int cmd_info(char *args) {
     print_wp();
   } 
   else {
-    printf("Unknown subcommand '%s' for info\n", args);
+    printf("  Unknown subcommand '%s' for info\n", args);
   }
   return 0;
 }
 
 static int cmd_test(char *args) {
   if (args == NULL) {
-    printf("Usage: test filename\n");
+    printf("  Usage: test filename\n");
     return 0;
   }
 
   FILE *fp = fopen(args, "r");
   if (fp == NULL) {
-    perror("fopen");
+    perror("  fopen");
     return 0;
   }
 
@@ -120,7 +120,7 @@ static int cmd_test(char *args) {
     uint32_t golden;
     int offset = 0;
     if (sscanf(line, "%u%n", &golden, &offset) != 1) {
-      printf("X Line %d: invalid format\n", line_no);
+      printf("  X Line %d: invalid format\n", line_no);
       continue;
     }
 
@@ -134,37 +134,37 @@ static int cmd_test(char *args) {
     uint32_t result = expr(expr_str, &success);
 
     if (!success) {
-      printf("X Line %d: expr eval failed\n", line_no);
-      printf("   expr: %s\n", expr_str);
+      printf("  X Line %d: expr eval failed\n", line_no);
+      printf("    expr: %s\n", expr_str);
       assert(0);
     }
 
     if (result != golden) {
-      printf("X Line %d: mismatch\n", line_no);
-      printf("   expr   : %s\n", expr_str);
-      printf("   nemu   : %u\n", result);
-      printf("   golden : %u\n", golden);
+      printf("  X Line %d: mismatch\n", line_no);
+      printf("    expr   : %s\n", expr_str);
+      printf("    nemu   : %u\n", result);
+      printf("    golden : %u\n", golden);
       assert(0);
     }
   }
 
   fclose(fp);
-  printf("O All tests passed!\n");
+  printf("  O All tests passed!\n");
   return 0;
 }
 
 static int cmd_p(char *args) {
   if (args == NULL) {
-    printf("Usage: p EXPR\n");
+    printf("  Usage: p EXPR\n");
     return 0;
   }
 
   bool success = true;
   uint32_t result = expr(args, &success);
   if (success) {
-    printf("%s = %u (0x%x)\n", args, result, result);
+    printf("  %s = %u (0x%x)\n", args, result, result);
   } else {
-    printf("Invalid expression: %s\n", args);
+    printf("  Invalid expression: %s\n", args);
   }
 
   return 0;
@@ -172,13 +172,13 @@ static int cmd_p(char *args) {
 
 static int cmd_w(char *args) {
   if (args == NULL) {
-    printf("Usage: w EXPR\n");
+    printf("  Usage: w EXPR\n");
     return 0;
   }
 
   int wp_no = new_wp(args);
   if (wp_no < 0) {
-    printf("Failed to set watchpoint\n");
+    printf("  Failed to set watchpoint\n");
   }
 
   return 0;
@@ -186,21 +186,21 @@ static int cmd_w(char *args) {
 
 static int cmd_d(char *args) {
   if (args == NULL) {
-    printf("Usage: d N\n");
+    printf("  Usage: d N\n");
     return 0;
   }
 
   char *endptr;
   long n = strtol(args, &endptr, 10);
   if (*endptr != '\0' || n < 0 || n >= NR_WP) {
-      printf("Invalid watchpoint number: %s\n", args);
+      printf("  Invalid watchpoint number: %s\n", args);
       return 0;
   }
 
   if (free_wp((int)n) == 0) {
-    printf("Watchpoint %d deleted\n", (int)n);
+    printf("  Watchpoint %d deleted\n", (int)n);
   } else {
-    printf("No watchpoint %d\n", (int)n);
+    printf("  No watchpoint %d\n", (int)n);
   }
 
   return 0;
@@ -213,7 +213,7 @@ static struct {
 } cmd_table [] = {
   { "info", "Print program status: info r (registers), info w (watchpoints)", cmd_info },
   { "help", "Display information about all supported commands", cmd_help },
-  { "test", "", cmd_test },
+  { "test", "Expression EXPR test", cmd_test },
   { "r", "Reset the processor", cmd_r },
   { "c", "Continue the execution of the program", cmd_c },
   { "s", "Step execution", cmd_s },
@@ -233,17 +233,17 @@ static int cmd_help(char *args) {
   if (arg == NULL) {
     /* no argument given */
     for (i = 0; i < NR_CMD; i ++) {
-      printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
+      printf("  %s - %s\n", cmd_table[i].name, cmd_table[i].description);
     }
   }
   else {
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(arg, cmd_table[i].name) == 0) {
-        printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
+        printf("  %s - %s\n", cmd_table[i].name, cmd_table[i].description);
         return 0;
       }
     }
-    printf("Unknown command '%s'\n", arg);
+    printf("  Unknown command '%s'\n", arg);
   }
   return 0;
 }
@@ -286,7 +286,7 @@ void sdb_mainloop() {
       }
     }
 
-    if (i == NR_CMD) { printf("Unknown command '%s'\n", cmd); }
+    if (i == NR_CMD) { printf("  Unknown command '%s'\n", cmd); }
   }
 }
 
