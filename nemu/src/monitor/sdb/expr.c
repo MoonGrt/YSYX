@@ -41,17 +41,17 @@ static struct rule {
   const char *regex;
   int token_type;
 } rules[] = {
-  {" +", TK_NOTYPE},           // spaces
-  {"\\+", TK_PLUS},            // plus
-  {"-", TK_MINUS},             // minus
-  {"\\*", TK_MUL},             // multiply or deref
-  {"/", TK_DIV},               // divide
-  {"\\(", TK_LPAREN},          // left parenthesis
-  {"\\)", TK_RPAREN},          // right parenthesis
-  {"0x[0-9a-fA-F]+", TK_HEX},  // hex number
-  {"[0-9]+", TK_NUM},          // decimal number
-  {"\\$[a-zA-Z0-9]+", TK_REG}, // register
-  {"==", TK_EQ},               // equal
+  { "[[:space:]]+", TK_NOTYPE}, // spaces
+  {"\\+", TK_PLUS},             // plus
+  {"-", TK_MINUS},              // minus
+  {"\\*", TK_MUL},              // multiply or deref
+  {"/", TK_DIV},                // divide
+  {"\\(", TK_LPAREN},           // left parenthesis
+  {"\\)", TK_RPAREN},           // right parenthesis
+  {"0x[0-9a-fA-F]+", TK_HEX},   // hex number
+  {"[0-9]+", TK_NUM},           // decimal number
+  {"\\$[a-zA-Z0-9]+", TK_REG},  // register
+  {"==", TK_EQ},                // equal
 };
 
 #define NR_REGEX ARRLEN(rules)
