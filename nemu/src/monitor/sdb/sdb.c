@@ -213,7 +213,7 @@ static struct {
 } cmd_table [] = {
   { "info", "Print program status: info r (registers), info w (watchpoints)", cmd_info },
   { "help", "Display information about all supported commands", cmd_help },
-  { "test", "Expression EXPR test", cmd_test },
+  { "test", "Test expression from file", cmd_test },
   { "r", "Reset the processor", cmd_r },
   { "c", "Continue the execution of the program", cmd_c },
   { "s", "Step execution", cmd_s },
