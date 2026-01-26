@@ -138,8 +138,8 @@ static int cmd_test(char *args) {
     // 2. offset 之后就是完整表达式（允许任意空格）
     char *expr_str = line + offset;
 
-    // 跳过前导空格
-    while (*expr_str == ' ') expr_str++;
+    // // 跳过前导空格
+    // while (*expr_str == ' ') expr_str++;
 
     bool success = true;
     uint32_t result = expr(expr_str, &success);
