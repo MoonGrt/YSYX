@@ -191,7 +191,7 @@ static bool check_parentheses(int p, int q, bool *success) {
   return true;
 }
 
-word_t eval(int p, int q, bool *success) {
+int32_t eval(int p, int q, bool *success) {
   if (p > q) { *success = false; return 0; }
   else if (p == q) {
     // 单个 token
