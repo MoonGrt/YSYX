@@ -161,7 +161,7 @@ static int cmd_test(char *args) {
       assert(0);
     }
 
-    printf("  O Line %d: %s              = %u\n", line_no, expr_str, result);
+    printf("  O Line %d: %u = %s \n", line_no, result, expr_str);
   }
 
   fclose(fp);
