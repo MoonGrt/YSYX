@@ -31,7 +31,7 @@ void init_wp_pool() {
 
 int new_wp(char *e) {
   if (free_ == NULL) {
-    printf("No free watchpoints!\n");
+    printf("  No free watchpoints!\n");
     assert(0);  // 没有空闲监视点时直接终止程序
   }
 
@@ -49,7 +49,7 @@ int new_wp(char *e) {
   wp->last_val = expr((char*)e, &success);
   if (!success) wp->last_val = 0;
 
-  printf("Watchpoint %d set on '%s', initial value = 0x%x\n",
+  printf("  Watchpoint %d set on '%s', initial value = 0x%x\n",
          wp->NO, wp->expr_str, wp->last_val);
 
   return 0;
@@ -72,14 +72,14 @@ int free_wp(int no) {
 
 void print_wp() {
   if (head == NULL) {
-    printf("No watchpoints.\n");
+    printf("  No watchpoints.\n");
     return;
   }
 
-  printf("Num\tExpression\tLast Value\n");
+  printf("  Num\tExpression\tLast Value\n");
   WP *wp = head;
   while (wp) {
-    printf("%d\t%s\t\t0x%x\n", wp->NO, wp->expr_str, wp->last_val);
+    printf("  %d\t%s\t\t0x%x\n", wp->NO, wp->expr_str, wp->last_val);
     wp = wp->next;
   }
 }
@@ -93,8 +93,8 @@ bool check_wp() {
     if (!success) { wp = wp->next; continue; }
 
     if (val != wp->last_val) {
-      printf("Watchpoint %d triggered: %s\n", wp->NO, wp->expr_str);
-      printf("Old value = 0x%x, New value = 0x%x\n", wp->last_val, val);
+      printf("  Watchpoint %d triggered: %s\n", wp->NO, wp->expr_str);
+      printf("  Old value = 0x%x, New value = 0x%x\n", wp->last_val, val);
       wp->last_val = val;
       triggered = true;
     }

@@ -41,17 +41,17 @@ static struct rule {
   const char *regex;
   int token_type;
 } rules[] = {
-  {" +", TK_NOTYPE},           // spaces
-  {"\\+", TK_PLUS},            // plus
-  {"-", TK_MINUS},             // minus
-  {"\\*", TK_MUL},             // multiply or deref
-  {"/", TK_DIV},               // divide
-  {"\\(", TK_LPAREN},          // left parenthesis
-  {"\\)", TK_RPAREN},          // right parenthesis
-  {"0x[0-9a-fA-F]+", TK_HEX},  // hex number
-  {"[0-9]+", TK_NUM},          // decimal number
-  {"\\$[a-zA-Z0-9]+", TK_REG}, // register
-  {"==", TK_EQ},               // equal
+  { "[[:space:]]+", TK_NOTYPE}, // spaces
+  {"\\+", TK_PLUS},             // plus
+  {"-", TK_MINUS},              // minus
+  {"\\*", TK_MUL},              // multiply or deref
+  {"/", TK_DIV},                // divide
+  {"\\(", TK_LPAREN},           // left parenthesis
+  {"\\)", TK_RPAREN},           // right parenthesis
+  {"0x[0-9a-fA-F]+", TK_HEX},   // hex number
+  {"[0-9]+", TK_NUM},           // decimal number
+  {"\\$[a-zA-Z0-9]+", TK_REG},  // register
+  {"==", TK_EQ},                // equal
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -80,7 +80,8 @@ typedef struct token {
   char str[32];
 } Token;
 
-static Token tokens[32] __attribute__((used)) = {};
+#define MAX_TOKEN_NUM 1024
+static Token tokens[MAX_TOKEN_NUM] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
 static bool make_token(char *e) {
@@ -120,7 +121,7 @@ static bool make_token(char *e) {
             nr_token++;
             break;
           default:
-            printf("Unknown token type %d\n", rules[i].token_type);
+            printf("  Unknown token type %d\n", rules[i].token_type);
             return false;
         }        
 
@@ -129,7 +130,7 @@ static bool make_token(char *e) {
     }
 
     if (i == NR_REGEX) {
-      printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
+      printf("  no match at position %d\n%s\n%*.s^\n", position, e, position, "");
       return false;
     }
   }
@@ -191,7 +192,7 @@ static bool check_parentheses(int p, int q, bool *success) {
   return true;
 }
 
-word_t eval(int p, int q, bool *success) {
+int32_t eval(int p, int q, bool *success) {
   if (p > q) { *success = false; return 0; }
   else if (p == q) {
     // 单个 token
@@ -208,7 +209,7 @@ word_t eval(int p, int q, bool *success) {
     int op = find_main_op(p, q);
     if (op < 0) { *success = false; return 0; }
 
-    word_t val1 = 0, val2 = 0;
+    int32_t val1 = 0, val2 = 0;
     if (tokens[op].type != TK_NEG && tokens[op].type != TK_DEREF)
       val1 = eval(p, op-1, success);
     val2 = eval(op+1, q, success);
@@ -221,7 +222,7 @@ word_t eval(int p, int q, bool *success) {
       case TK_DIV: return val1 / val2;
       case TK_EQ: return val1 == val2;
       case TK_NEG: return -val2;
-      case TK_DEREF: return paddr_read(val2, 4); // 读取内存
+      case TK_DEREF: return (int32_t)paddr_read(val2, 4); // 读取内存
       default: *success = false; return 0;
     }
   }
