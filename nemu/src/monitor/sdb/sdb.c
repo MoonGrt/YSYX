@@ -142,7 +142,7 @@ static int cmd_test(char *args) {
     }
 
     // 3. offset 之后就是完整表达式（允许任意空格）
-    char *expr_str = line + offset - 1;
+    char *expr_str = line + offset;
 
     bool success = true;
     uint32_t result = expr(expr_str, &success);
