@@ -208,7 +208,7 @@ int32_t eval(int p, int q, bool *success) {
     int op = find_main_op(p, q);
     if (op < 0) { *success = false; return 0; }
 
-    word_t val1 = 0, val2 = 0;
+    int32_t val1 = 0, val2 = 0;
     if (tokens[op].type != TK_NEG && tokens[op].type != TK_DEREF)
       val1 = eval(p, op-1, success);
     val2 = eval(op+1, q, success);
@@ -221,7 +221,7 @@ int32_t eval(int p, int q, bool *success) {
       case TK_DIV: return val1 / val2;
       case TK_EQ: return val1 == val2;
       case TK_NEG: return -val2;
-      case TK_DEREF: return paddr_read(val2, 4); // 读取内存
+      case TK_DEREF: return (int32_t)paddr_read(val2, 4); // 读取内存
       default: *success = false; return 0;
     }
   }
