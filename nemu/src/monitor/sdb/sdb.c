@@ -127,7 +127,13 @@ static int cmd_test(char *args) {
   while (fgets(line, sizeof(line), fp)) {
     line_no++;
 
-    // 1. 读取期望结果
+    // 1. 去掉行尾 '\n'
+    size_t len = strlen(line);
+    if (len > 0 && line[len - 1] == '\n') {
+      line[len - 1] = '\0';
+    }
+
+    // 2. 读取期望结果
     uint32_t golden;
     int offset = 0;
     if (sscanf(line, "%u%n", &golden, &offset) != 1) {
@@ -135,7 +141,7 @@ static int cmd_test(char *args) {
       continue;
     }
 
-    // 2. offset 之后就是完整表达式（允许任意空格）
+    // 3. offset 之后就是完整表达式（允许任意空格）
     char *expr_str = line + offset - 1;
 
     bool success = true;
