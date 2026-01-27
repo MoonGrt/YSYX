@@ -121,7 +121,7 @@ static int cmd_test(char *args) {
     return 0;
   }
 
-  char line[512];
+  char line[1024];
   int line_no = 0;
 
   while (fgets(line, sizeof(line), fp)) {
@@ -136,7 +136,7 @@ static int cmd_test(char *args) {
     }
 
     // 2. offset 之后就是完整表达式（允许任意空格）
-    char *expr_str = line + offset - 2;
+    char *expr_str = line + offset;
 
     bool success = true;
     uint32_t result = expr(expr_str, &success);
