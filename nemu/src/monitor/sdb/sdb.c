@@ -311,6 +311,7 @@ void sdb_mainloop() {
 void init_sdb() {
   /* Compile the regular expressions. */
   pcnt = 0;  // init expr cnt
+  nemu_state.state = NEMU_STOP;
   init_regex();
   /* Initialize the watchpoint pool. */
   init_wp_pool();
