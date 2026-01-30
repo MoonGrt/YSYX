@@ -97,6 +97,7 @@ int main(int argc, char *argv[]) {
     pclose(fp);
 
     printf("%u %s\n", result, buf);
+    fflush(stdout);  // printf immediately
   }
   return 0;
 }
