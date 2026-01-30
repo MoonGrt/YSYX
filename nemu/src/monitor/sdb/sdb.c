@@ -51,6 +51,7 @@ static int cmd_c(char *args) {
 }
 
 static int cmd_q(char *args) {
+  nemu_state.state = NEMU_QUIT;
   return -1;
 }
 
@@ -311,7 +312,6 @@ void sdb_mainloop() {
 void init_sdb() {
   /* Compile the regular expressions. */
   pcnt = 0;  // init expr cnt
-  nemu_state.state = NEMU_STOP;
   init_regex();
   /* Initialize the watchpoint pool. */
   init_wp_pool();
