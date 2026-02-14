@@ -6,5 +6,5 @@ https://ysyx.oscc.cc/docs/#%E6%95%99%E5%AD%A6%E8%B5%84%E6%BA%90
 minirv.circ为logisim文件
 ![alt text](image.png)
 
-minirvEMU.c为c程序，按照教程使用make ARCH=native run即可运行
+minirvEMU.c为c程序，按照教程使用`make ARCH=native run`即可运行
 ![alt text](image-1.png)
