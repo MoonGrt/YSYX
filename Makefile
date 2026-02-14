@@ -1,4 +1,4 @@
-STUID = ysyx_xxxxxxxx
+STUID = ysyx_26010030
 STUNAME = MoonGrt
 
 # DO NOT modify the following code!!!
