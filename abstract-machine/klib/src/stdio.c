@@ -154,9 +154,9 @@ repeat:
     precision = -1;
     if(*fmt == '.'){
       ++fmt;
-      if(is_digit(*fmt)) {
+      if(is_digit(*fmt))
         precision = skip_atoi(&fmt);
-      }else if (*fmt == '*') {
+      else if (*fmt == '*') {
         ++fmt;
         precision = va_arg(ap, int);
       }
@@ -205,27 +205,25 @@ repeat:
         break;
       default:
         if(*fmt != '%') *str++ = '%';
-        if(*fmt) {
+        if(*fmt)
           *str++ = *fmt;
-        }else {
+        else
           --fmt;
-        }
         continue;
     }
 
-    if(qualifier == 'l') {
+    if(qualifier == 'l')
       num = va_arg(ap,unsigned long);
-    }else if(qualifier == 'h'){
-      if(flags & SIGN){
+    else if(qualifier == 'h'){
+      if(flags & SIGN)
         num = va_arg(ap, int);
-      }else {
+      else
         num = va_arg(ap, unsigned int);
-      }
-    }else if(flags & SIGN) {
-      num = va_arg(ap, int);
-    }else {
-      num = va_arg(ap, unsigned int);
     }
+    else if(flags & SIGN)
+      num = va_arg(ap, int);
+    else
+      num = va_arg(ap, unsigned int);
 
     str = number(str, num, base, field_width, precision, flags);
   }
