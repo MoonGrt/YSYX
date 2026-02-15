@@ -37,7 +37,6 @@ void *malloc(size_t size) {
 #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
   size = (size_t)ROUNDUP(size, 8);
   if(hbrk == NULL){
-
     //hbrk = (char *)(((uint32_t)heap.start / 2 + (uint32_t)heap.end / 2));
     hbrk = (char *)heap.start;
     // printf("start: %x, end: %x, mid: %p\n", heap.start, heap.end, hbrk);
@@ -46,9 +45,7 @@ void *malloc(size_t size) {
   char *old = hbrk;
   hbrk += size;
 
-  for(uint32_t *p = (uint32_t *)old; p != (uint32_t *)hbrk; p++) {
-    *p = 0;
-  }
+  for(uint32_t *p = (uint32_t *)old; p != (uint32_t *)hbrk; p++) *p = 0;
 
   return old;
 #endif
