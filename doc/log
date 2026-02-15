@@ -1,0 +1,5 @@
+PA2 - D1.2.2 CorssTool
+Ubuntu20.04 run `make ARCH=riscv32-nemu ALL=dummy run`
+Got `error: ‘-march=rv32im_zicsr’: unsupported ISA subset ‘z’`
+The apt install of `g++-riscv64-linux-gnu binutils-riscv64-linux-gnu` is old.
+Turn to Ubuntu 22.04
