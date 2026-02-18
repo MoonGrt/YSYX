@@ -55,7 +55,6 @@ sim: $(VSRCS)
 
 run: sim
 	@echo "Write this Makefile by yourself."
-	@$^
 
 gdb: sim
 	@echo "Write this Makefile by yourself."
