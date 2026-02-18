@@ -9,5 +9,5 @@ object Elaborate extends App {
     ).reduce(_ + "," + _)
   )
   // circt.stage.ChiselStage.emitSystemVerilogFile(new gcd.GCD(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new minirv.MiniRV(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new minirv.Top(), args, firtoolOptions)
 }
