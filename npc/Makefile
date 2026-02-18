@@ -53,7 +53,7 @@ CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	verilator -cc --exe --build -x-assign fast --trace --assert --coverage -CFLAGS -ggdb  -LDFLAGS -ggdb -j 8 \
-	--timescale "1ns/1ns" --no-timing --top-module ysyxSoCFull --autoflush \
+	--timescale "1ns/1ns" --no-timing --top-module $(TOPNAME) --autoflush \
 	csrc/minirv.cpp \
 	vsrc/minirv.v build/MiniRVSOC.sv
 
