@@ -60,10 +60,9 @@ class RAM_DPI extends BlackBox with HasBlackBoxInline {
 // ---------------------------
 // EBreak BlackBox (异常处理模块)
 // ---------------------------
-class EBreak_DPI extends BlackBox(Map("SIZE" -> 1024)) with HasBlackBoxInline {
+class EBreak_DPI extends BlackBox with HasBlackBoxInline {
   val io = IO(new Bundle {
-    val addr = Input(UInt(32.W))
-    val data = Output(UInt(32.W))
+    val trap = Input(Bool())
   })
   // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
   setInline("EBreak_DPI.v",
@@ -256,7 +255,7 @@ class MiniRVSOC extends Module {
   val ram = Module(new RAM_DPI)
 
   // IF: CPU 从 ROM 取指令
-  rom.io.addr  := cpu.io.pc
+  rom.io.raddr := cpu.io.pc
   cpu.io.instr := rom.io.data
 
   // MEM: CPU 数据访问 RAM
