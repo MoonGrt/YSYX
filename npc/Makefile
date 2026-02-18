@@ -1,4 +1,12 @@
+TOPNAME = MiniRVSOC
+
+VERILATOR = verilator
+VERILATOR_CFLAGS += --trace -MMD --build -cc -O3 --x-assign fast --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT
+
 BUILD_DIR = build
+OBJ_DIR = $(BUILD_DIR)/obj_dir
+BIN = $(BUILD_DIR)/$(TOPNAME)
+WAVE_FILE = $(BUILD_DIR)/wave.vcd
 
 PRJ = playground
 
@@ -30,8 +38,25 @@ clean:
 
 .PHONY: test verilog help reformat checkformat clean
 
+VSRCS = $(shell find $(abspath ./build) -name "MiniRVSOC.sv")
+CSRCS = $(abspath ./csrc/main.cpp)
+
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	$(VERILATOR) $(VERILATOR_CFLAGS) \
+		--top-module $(TOPNAME) $^ \
+		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
+		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
+
+run: sim
 	@echo "Write this Makefile by yourself."
+
+gdb: sim
+	@echo "Write this Makefile by yourself."
+
+wave: sim
+	gtkwave $(WAVE_FILE)
+
+.PHONY: sim run gdb wave
 
 -include ../Makefile
