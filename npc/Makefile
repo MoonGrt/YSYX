@@ -1,7 +1,8 @@
 TOPNAME = MiniRVSOC
 
 VERILATOR = verilator
-VERILATOR_CFLAGS += --trace -cc -exe -MMD --build -cc -O3 --x-assign fast --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT
+VERILATOR_CFLAGS += --trace -cc -exe -MMD --build -cc -O3 --x-assign fast \
+                    --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT
 
 RTL_DIR = rtl
 BUILD_DIR = build
