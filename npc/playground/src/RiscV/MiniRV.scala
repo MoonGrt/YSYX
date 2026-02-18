@@ -236,6 +236,7 @@ class MiniRV extends Module {
 
   // Memory
   io.mem_addr  := exStage.io.mem_addr
+  io.mem_mask  := 0.U(7.W)
   io.mem_wdata := idStage.io.rs2_data
   io.mem_we    := idStage.io.mem_write
 
