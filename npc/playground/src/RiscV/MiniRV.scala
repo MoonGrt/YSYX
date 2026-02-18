@@ -6,11 +6,28 @@ import chisel3.util._
 // ---------------------------
 // ROM BlackBox (只读指令存储器)
 // ---------------------------
-class ROM_DPI extends BlackBox(Map("SIZE" -> 1024)) {
+class ROM_DPI extends BlackBox(Map("SIZE" -> 1024)) with HasBlackBoxInline {
   val io = IO(new Bundle {
     val addr = Input(UInt(32.W))
     val data = Output(UInt(32.W))
   })
+
+  // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
+  setInline("ROM_DPI.v",
+    s"""
+      |module ROM_DPI #(parameter SIZE = 1024)(
+      |  input  wire [31:0] addr,
+      |  output wire [31:0] data
+      |);
+      |  // DPI-C 接口示例（由外部 C 实现实际数据）
+      |  import "DPI-C" function void rom_dpi(input logic [31:0] addr, output logic [31:0] data);
+      |  logic [31:0] tmp;
+      |  always_comb begin
+      |    rom_dpi(addr, tmp);
+      |  end
+      |  assign data = tmp;
+      |endmodule
+    """.stripMargin)
 }
 
 // ---------------------------
