@@ -35,6 +35,15 @@ word_t paddr_read(paddr_t addr, int len)
     }
   return result;
 }
+void paddr_write(paddr_t addr, int wmask, word_t data)
+{
+    if (addr < CONFIG_MBASE || addr >= CONFIG_MBASE + MEM_SIZE) return;
+    for(int i = 0; i < 4; i++) {
+        if(wmask & (1 << i)) {
+            *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
+        }
+    }
+}
 
 static uint64_t time_tmp=0;
 extern "C" {
@@ -53,21 +62,12 @@ extern "C" {
             printf("%x\n",(unsigned)addr);
             mmio=true;
             ret = (uint32_t) time_tmp;
-            #ifdef CONFIG_DTRACE
-            dtrace_read("RTC", addr, ret);
-            #endif
         } else if (addr==RTC_ADDR+4) {
             mmio=true;
             time_tmp = get_time();
             ret= time_tmp >> 32;
-            #ifdef CONFIG_DTRACE
-            dtrace_read("RTC", addr, ret);
-            #endif
         }
         if (mmio) {
-            #ifdef CONFIG_DIFFTEST
-            difftest_skip_ref();
-            #endif
             return ret;
         }
         addr = addr & ~0x3u;
@@ -82,21 +82,12 @@ extern "C" {
             printf("%x\n",(unsigned)raddr);
             mmio=true;
             ret = (uint32_t) time_tmp;
-            #ifdef CONFIG_DTRACE
-            dtrace_read("RTC", raddr, ret);
-            #endif
         } else if (raddr==RTC_ADDR+4) {
             mmio=true;
             time_tmp = get_time();
             ret= time_tmp >> 32;
-            #ifdef CONFIG_DTRACE
-            dtrace_read("RTC", raddr, ret);
-            #endif
         }
         if (mmio) {
-            #ifdef CONFIG_DIFFTEST
-            difftest_skip_ref();
-            #endif
             return ret;
         }
         raddr = raddr & ~0x3u;
@@ -105,23 +96,6 @@ extern "C" {
     }
     void ram_wdpi(int waddr, int wdata, char wmask) {
         bool mmio=false;
-        assert(waddr!=SERIAL_PORT);
-        if (waddr == SERIAL_PORT) {
-            #ifdef CONFIG_DTRACE
-            dtrace_write("serial", waddr, wdata);
-            #endif
-            //putchar(wdata);
-            fflush(stdout);
-            mmio=true;
-            //fflush(stdout);
-            //return;
-        }
-        if (mmio) {
-            #ifdef CONFIG_DIFFTEST
-            difftest_skip_ref();
-            #endif
-            return;
-        }
         paddr_write(waddr,wmask, wdata);
     }
 }
