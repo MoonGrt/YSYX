@@ -88,7 +88,6 @@ class IF extends Module {
     val instr   = Input(UInt(32.W))   // 外部提供指令
     val pc_out  = Output(UInt(32.W))  // 当前 PC 输出
   })
-
   val pc = RegInit("h80000000".U(32.W))
   pc := io.pc_next
   io.pc_out := pc
