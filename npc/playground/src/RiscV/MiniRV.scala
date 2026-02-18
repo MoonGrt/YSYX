@@ -101,6 +101,7 @@ class RAM_DPI extends BlackBox {
 class EBreak extends BlackBox {
   val io = IO(new Bundle {
     val trap = Input(Bool())
+    val code = Input(UInt(8.W))
   })
 }
 
@@ -174,8 +175,9 @@ class ID extends Module {
                    opcode === "b1100111".U)
   io.jalr := (opcode === "b1100111".U)
 
-  val trap = Module(new EBreak_DPI)
+  val trap = Module(new EBreak)
   trap.io.trap := (opcode === "b1110011".U)
+  trap.io.code := 0.U(8.W)
 }
 
 // ---------------------------
