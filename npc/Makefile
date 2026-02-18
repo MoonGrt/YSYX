@@ -1,9 +1,10 @@
 TOPNAME = MiniRVSOC
 
 VERILATOR = verilator
-VERILATOR_CFLAGS += --trace -cc --exe --build -x-assign fast --assert \
-                    --coverage -CFLAGS -ggdb  -LDFLAGS -ggdb -j 8 \
-                    --timescale "1ns/1ns" --no-timing --autoflush
+VERILATOR_CFLAGS += --trace -MMD --build -cc -O3 --x-assign fast --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT
+# VERILATOR_CFLAGS += --trace -cc --exe --build -x-assign fast --assert \
+#                     --coverage -CFLAGS -ggdb  -LDFLAGS -ggdb -j 8 \
+#                     --timescale "1ns/1ns" --no-timing --autoflush
 
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -50,14 +51,8 @@ sim: $(VSRCS)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN)) \
+		--Mdir $(OBJ_DIR) -o $(BIN) \
 		--top-module $(TOPNAME) $^ $(CSRCS)
-# sim:
-# 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-# 	verilator -cc --exe --build -x-assign fast --trace --assert --coverage -CFLAGS -ggdb  -LDFLAGS -ggdb -j 8 \
-# 	--timescale "1ns/1ns" --no-timing --top-module $(TOPNAME) --autoflush \
-# 	csrc/minirv.cpp \
-# 	vsrc/minirv.v vsrc/ebreak.v build/MiniRVSOC.sv
 
 run: sim
 	@echo "Write this Makefile by yourself."
