@@ -17,8 +17,10 @@
 
 static char *digits = "0123456789abcdefghijklmnopqrstuvwxyz";
 static char *upper_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
 // void putch(char ch);
-// 
+//
+
 int power(int n, int m){
   int result = 1;
   for(int i = 0;i < m; i++) result *= n;
@@ -234,18 +236,15 @@ repeat:
 int sprintf(char *out, const char *fmt, ...) {
   va_list args;
   int n;
-
   va_start(args, fmt);
   n = vsprintf(out, fmt, args);
   va_end(args);
-
   return n;
 }
 
 int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
   char *buf =	NULL;
   int result = vsprintf(buf, fmt, ap);
-
   if(!buf)
     return -1;
   if(result < 0){
