@@ -54,9 +54,8 @@ sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	verilator -cc --exe --build -x-assign fast --trace --assert --coverage -CFLAGS -ggdb  -LDFLAGS -ggdb -j 8 \
 	--timescale "1ns/1ns" --no-timing --top-module ysyxSoCFull --autoflush \
-	csrc/minirv.cpp\
-	vsrc/minirv.v\
-	$(YSYXSOC_FILES) ../ysyxSoC/build/ysyxSoCFull.v
+	csrc/minirv.cpp \
+	vsrc/minirv.v
 
 run: sim
 	@echo "Write this Makefile by yourself."
