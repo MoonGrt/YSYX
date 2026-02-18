@@ -1,11 +1,6 @@
-import "DPI-C" function void ebreak();
 import "DPI-C" function void rom_rdpi(input int addr, output int data);
 import "DPI-C" function int  ram_rdpi(input int raddr);
 import "DPI-C" function void ram_wdpi(input int waddr, input int wdata, input byte wmask);
-
-module EBreak_DPI(input wire trap);
-  always @(*) if (trap) ebreak();
-endmodule
 
 module ROM_DPI(
   input  wire [31:0] addr,

@@ -98,7 +98,7 @@ class RAM_DPI extends BlackBox {
 // ---------------------------
 // EBreak BlackBox (异常处理模块)
 // ---------------------------
-class EBreak_DPI extends BlackBox {
+class EBreak extends BlackBox {
   val io = IO(new Bundle {
     val trap = Input(Bool())
   })
