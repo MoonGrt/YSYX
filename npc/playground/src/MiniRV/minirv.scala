@@ -2,8 +2,6 @@ package minirv
 
 import chisel3._
 import chisel3.util._
-import chisel3.experimental.{ChiselAnnotation, annotate}
-import chisel3.experimental.DontTouch
 
 // ---------------------------
 // IF 模块：Instruction Fetch
@@ -174,30 +172,36 @@ class MiniRV extends Module {
 }
 
 // ---------------------------
-// DPI-C 接口 ROM 模块（只读指令存储器）
+// ROM BlackBox (只读指令存储器)
 // ---------------------------
-class ROM_DPI extends Module {
+class ROM_BB extends BlackBox(Map("SIZE" -> 1024)) with HasBlackBoxInline {
   val io = IO(new Bundle {
     val addr = Input(UInt(32.W))
     val data = Output(UInt(32.W))
   })
 
-  // 输出寄存器
-  val outReg = RegInit(0.U(32.W))
-  io.data := outReg
-
-  // 标记为 DPI-C 信号
-  annotate(new ChiselAnnotation {
-    override def toFirrtl: String = s"""@verilog.DPI import "DPI-C" function rom_dpi(input logic [31:0] addr, output logic [31:0] data);"""
-  })
-
-  // TODO: 这里的逻辑由 DPI-C 在 Verilog 中实现
+  // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
+  setInline("ROM_BB.v",
+    s"""
+      |module ROM_BB #(parameter SIZE = 1024)(
+      |  input  wire [31:0] addr,
+      |  output wire [31:0] data
+      |);
+      |  // DPI-C 接口示例（由外部 C 实现实际数据）
+      |  import "DPI-C" function void rom_dpi(input logic [31:0] addr, output logic [31:0] data);
+      |  logic [31:0] tmp;
+      |  always_comb begin
+      |    rom_dpi(addr, tmp);
+      |  end
+      |  assign data = tmp;
+      |endmodule
+    """.stripMargin)
 }
 
 // ---------------------------
-// DPI-C 接口 RAM 模块（可读写数据存储器）
+// RAM BlackBox (可读写数据存储器)
 // ---------------------------
-class RAM_DPI extends Module {
+class RAM_BB extends BlackBox(Map("SIZE" -> 1024)) with HasBlackBoxInline {
   val io = IO(new Bundle {
     val addr  = Input(UInt(32.W))
     val wdata = Input(UInt(32.W))
@@ -205,15 +209,23 @@ class RAM_DPI extends Module {
     val we    = Input(Bool())
   })
 
-  val outReg = RegInit(0.U(32.W))
-  io.rdata := outReg
-
-  // 标记为 DPI-C 信号
-  annotate(new ChiselAnnotation {
-    override def toFirrtl: String = s"""@verilog.DPI import "DPI-C" function ram_dpi(input logic [31:0] addr, input logic [31:0] wdata, input logic we, output logic [31:0] rdata);"""
-  })
-
-  // TODO: 这里的逻辑由 DPI-C 在 Verilog 中实现
+  setInline("RAM_BB.v",
+    s"""
+      |module RAM_BB #(parameter SIZE = 1024)(
+      |  input  wire [31:0] addr,
+      |  input  wire [31:0] wdata,
+      |  input  wire        we,
+      |  output wire [31:0] rdata
+      |);
+      |  // DPI-C 接口示例（由外部 C 实现实际数据）
+      |  import "DPI-C" function void ram_dpi(input logic [31:0] addr, input logic [31:0] wdata, input logic we, output logic [31:0] rdata);
+      |  logic [31:0] tmp;
+      |  always_comb begin
+      |    ram_dpi(addr, wdata, we, tmp);
+      |  end
+      |  assign rdata = tmp;
+      |endmodule
+    """.stripMargin)
 }
 
 // ---------------------------
@@ -223,8 +235,8 @@ class Top extends Module {
   val io = IO(new Bundle {})
 
   val cpu = Module(new MiniRV)
-  val rom = Module(new ROM_DPI(1024))
-  val ram = Module(new RAM_DPI(1024))
+  val rom = Module(new ROM_BB(1024))
+  val ram = Module(new RAM_BB(1024))
 
   // IF: CPU 从 ROM 取指令
   rom.io.addr  := cpu.io.pc
