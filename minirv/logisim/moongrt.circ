@@ -340,7 +340,6 @@
     </comp>
     <comp lib="0" loc="(830,540)" name="Pin">
       <a name="appearance" val="NewPins"/>
-      <a name="initial" val="0x1"/>
       <a name="label" val="EN"/>
     </comp>
     <comp lib="0" loc="(930,420)" name="Tunnel">

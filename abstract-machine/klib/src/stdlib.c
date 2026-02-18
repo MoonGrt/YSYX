@@ -40,7 +40,7 @@ void *malloc(size_t size) {
     //hbrk = (char *)(((uint32_t)heap.start / 2 + (uint32_t)heap.end / 2));
     hbrk = (char *)heap.start;
     // printf("start: %x, end: %x, mid: %p\n", heap.start, heap.end, hbrk);
-    assert(0);
+    // assert(0);
   }
   char *old = hbrk;
   hbrk += size;

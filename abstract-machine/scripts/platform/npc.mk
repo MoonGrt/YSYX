@@ -28,13 +28,4 @@ image: image-dep
 run: insert-arg
 	echo "TODO: add command here to run simulation"
 
-gdb: insert-arg
-	echo "TODO: add command here to run simulation"
-
-run: insert-arg
-	$(MAKE) -C $(NPC_HOME) run IMG=$(IMAGE).bin
-
-gdb: insert-arg
-	$(MAKE) -C $(NPC_HOME) gdb IMG=$(IMAGE).bin
-
 .PHONY: insert-arg
