@@ -54,7 +54,6 @@ sim: $(VSRCS)
 		--top-module $(TOPNAME) $^ $(CSRCS)
 
 run: sim
-	@echo "Write this Makefile by yourself."
 	@$^
 
 gdb: sim
