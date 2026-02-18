@@ -2,6 +2,7 @@
 #include "VMiniRVSOC.h"
 #include <iostream>
 
+typedef uint32_t word_t;
 #define CONFIG_MBASE 0x80000000L
 #define CONFIG_MSIZE 0x8000000L
 constexpr int MEM_SIZE=1024*1024*128;
