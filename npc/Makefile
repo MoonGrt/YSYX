@@ -1,4 +1,4 @@
-BUILD_DIR = ./build
+BUILD_DIR = build
 
 PRJ = playground
 
@@ -32,6 +32,12 @@ clean:
 
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@echo "Write this Makefile by yourself."
+
+run: sim
+	@echo "Write this Makefile by yourself."
+
+gdb: sim
 	@echo "Write this Makefile by yourself."
 
 -include ../Makefile
