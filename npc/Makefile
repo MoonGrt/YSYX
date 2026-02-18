@@ -40,6 +40,8 @@ clean:
 
 VSRCS = $(shell find $(abspath ./build) -name "MiniRVSOC.sv")
 CSRCS = $(abspath ./csrc/main.cpp)
+INCFLAGS = $(addprefix -I, $(INC_PATH))
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
