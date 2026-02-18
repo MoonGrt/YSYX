@@ -12,13 +12,13 @@ WAVE_FILE = $(BUILD_DIR)/wave.vcd
 
 PRJ = playground
 
-test:
-	mill -i $(PRJ).test
-
 verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(RTL_DIR)
 	mill -i $(PRJ).runMain Elaborate --target-dir $(RTL_DIR)
+
+test:
+	mill -i $(PRJ).test
 
 help:
 	mill -i $(PRJ).runMain Elaborate --help
@@ -46,7 +46,7 @@ CSRCS := $(shell find ./csrc -name "minirv.cpp")
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
-sim: $(VSRCS)
+$(BIN): $(VSRCS)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	mkdir -p $(BUILD_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
