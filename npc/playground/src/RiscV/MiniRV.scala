@@ -1,4 +1,4 @@
-package minirv
+package riscv
 
 import chisel3._
 import chisel3.util._
@@ -41,7 +41,7 @@ class RAM_DPI extends BlackBox(Map("SIZE" -> 1024)) with HasBlackBoxInline {
     val we    = Input(Bool())
   })
 
-  setInline(
+  setInline("RAM_DPI.v",
     s"""
       |module RAM_DPI #(parameter SIZE = 1024)(
       |  input  wire [31:0] addr,

@@ -28,4 +28,7 @@ image: image-dep
 run: insert-arg
 	echo "TODO: add command here to run simulation"
 
+gdb: insert-arg
+	echo "TODO: add command here to run simulation"
+
 .PHONY: insert-arg
