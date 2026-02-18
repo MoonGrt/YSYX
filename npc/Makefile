@@ -55,7 +55,7 @@ sim:
 	verilator -cc --exe --build -x-assign fast --trace --assert --coverage -CFLAGS -ggdb  -LDFLAGS -ggdb -j 8 \
 	--timescale "1ns/1ns" --no-timing --top-module ysyxSoCFull --autoflush \
 	csrc/minirv.cpp \
-	vsrc/minirv.v
+	vsrc/minirv.v build/MiniRVSOC.sv
 
 run: sim
 	@echo "Write this Makefile by yourself."
