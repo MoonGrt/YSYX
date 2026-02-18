@@ -79,16 +79,6 @@ extern "C" {
     int ram_rdpi(int raddr) {
         word_t ret=0;
         bool mmio=false;
-        assert(raddr!=RTC_ADDR);
-        if (raddr == RTC_ADDR) {
-            printf("%x\n",(unsigned)raddr);
-            mmio=true;
-            ret = (uint32_t) time_tmp;
-        } else if (raddr==RTC_ADDR+4) {
-            mmio=true;
-            time_tmp = get_time();
-            ret= time_tmp >> 32;
-        }
         if (mmio) {
             return ret;
         }
