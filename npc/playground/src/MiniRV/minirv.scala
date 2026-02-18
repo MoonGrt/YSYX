@@ -64,21 +64,21 @@ class ID extends Module {
 
   // 根据 opcode 选择立即数
   io.imm := MuxLookup(opcode, 0.U, Seq(
-    "b0010011".U -> imm_i,  // addi
-    "b0110111".U -> imm_u,  // lui
-    "b0000011".U -> imm_i,  // lw, lbu
-    "b0100011".U -> imm_s,  // sw, sb
-    "b1100111".U -> imm_i   // jalr
+    "b0010011".U(7.W) -> imm_i,  // addi
+    "b0110111".U(7.W) -> imm_u,  // lui
+    "b0000011".U(7.W) -> imm_i,  // lw, lbu
+    "b0100011".U(7.W) -> imm_s,  // sw, sb
+    "b1100111".U(7.W) -> imm_i   // jalr
   ))
 
   // ALU 操作码：0=add, 1=addi/lw/sw/lbu/sb, 2=lui
   io.alu_op := MuxLookup(opcode, 0.U, Seq(
-    "b0110011".U -> 0.U, // add
-    "b0010011".U -> 1.U, // addi
-    "b0110111".U -> 2.U, // lui
-    "b0000011".U -> 1.U, // lw, lbu
-    "b0100011".U -> 1.U, // sw, sb
-    "b1100111".U -> 1.U  // jalr
+    "b0110011".U(7.W) -> 0.U, // add
+    "b0010011".U(7.W) -> 1.U, // addi
+    "b0110111".U(7.W) -> 2.U, // lui
+    "b0000011".U(7.W) -> 1.U, // lw, lbu
+    "b0100011".U(7.W) -> 1.U, // sw, sb
+    "b1100111".U(7.W) -> 1.U  // jalr
   ))
 
   // 内存读写信号
