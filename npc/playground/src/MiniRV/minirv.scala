@@ -136,7 +136,7 @@ class RAM(size: Int) extends Module {
 // ---------------------------
 class MiniRV extends Module {
   val io = IO(new Bundle {
-    val pc         = Input(UInt(32.W))
+    val pc         = Output(UInt(32.W))
     val instr      = Input(UInt(32.W))
     val mem_rdata  = Input(UInt(32.W))
     val mem_wdata  = Output(UInt(32.W))
