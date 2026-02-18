@@ -171,47 +171,47 @@ class MiniRV extends Module {
   ifStage.io.instr := io.instr
 }
 
-// ---------------------------
-// ROM 模块（只读存储器）
-// ---------------------------
-class ROM(size: Int) extends Module {
-  val io = IO(new Bundle {
-    val addr = Input(UInt(32.W))   // 输入地址
-    val data = Output(UInt(32.W))  // 输出数据
-  })
+// // ---------------------------
+// // ROM 模块（只读存储器）
+// // ---------------------------
+// class ROM(size: Int) extends Module {
+//   val io = IO(new Bundle {
+//     val addr = Input(UInt(32.W))   // 输入地址
+//     val data = Output(UInt(32.W))  // 输出数据
+//   })
 
-  // 使用 Chisel 内存模块
-  val mem = Mem(size, UInt(32.W))
+//   // 使用 Chisel 内存模块
+//   val mem = Mem(size, UInt(32.W))
 
-  // ROM 输出，根据地址读取（地址右移两位因为每条指令 32bit）
-  io.data := mem(io.addr >> 2)
+//   // ROM 输出，根据地址读取（地址右移两位因为每条指令 32bit）
+//   io.data := mem(io.addr >> 2)
 
-  // 可选：通过文件初始化 ROM
-  // loadMemoryFromFileInline(mem, "program.hex")
-}
+//   // 可选：通过文件初始化 ROM
+//   // loadMemoryFromFileInline(mem, "program.hex")
+// }
 
-// ---------------------------
-// RAM 模块（读写存储器）
-// ---------------------------
-class RAM(size: Int) extends Module {
-  val io = IO(new Bundle {
-    val addr  = Input(UInt(32.W))   // 地址输入
-    val wdata = Input(UInt(32.W))   // 写数据
-    val rdata = Output(UInt(32.W))  // 读数据
-    val we    = Input(Bool())       // 写使能
-  })
+// // ---------------------------
+// // RAM 模块（读写存储器）
+// // ---------------------------
+// class RAM(size: Int) extends Module {
+//   val io = IO(new Bundle {
+//     val addr  = Input(UInt(32.W))   // 地址输入
+//     val wdata = Input(UInt(32.W))   // 写数据
+//     val rdata = Output(UInt(32.W))  // 读数据
+//     val we    = Input(Bool())       // 写使能
+//   })
 
-  // 使用 Chisel 内存模块
-  val mem = Mem(size, UInt(32.W))
+//   // 使用 Chisel 内存模块
+//   val mem = Mem(size, UInt(32.W))
 
-  // 读操作
-  io.rdata := mem(io.addr >> 2)
+//   // 读操作
+//   io.rdata := mem(io.addr >> 2)
 
-  // 写操作
-  when(io.we) {
-    mem(io.addr >> 2) := io.wdata
-  }
-}
+//   // 写操作
+//   when(io.we) {
+//     mem(io.addr >> 2) := io.wdata
+//   }
+// }
 
 // ---------------------------
 // 顶层 Top：自包含 CPU + ROM + RAM
