@@ -4,13 +4,89 @@ import chisel3._
 import chisel3.util._
 
 // ---------------------------
+// ROM BlackBox (只读指令存储器)
+// ---------------------------
+class ROM_DPI extends BlackBox(Map("SIZE" -> 1024)) with HasBlackBoxInline {
+  val io = IO(new Bundle {
+    val addr = Input(UInt(32.W))
+    val data = Output(UInt(32.W))
+  })
+
+  // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
+  setInline("ROM_DPI.v",
+    s"""
+      |module ROM_DPI #(parameter SIZE = 1024)(
+      |  input  wire [31:0] addr,
+      |  output wire [31:0] data
+      |);
+      |  // DPI-C 接口示例（由外部 C 实现实际数据）
+      |  import "DPI-C" function void rom_dpi(input logic [31:0] addr, output logic [31:0] data);
+      |  logic [31:0] tmp;
+      |  always_comb begin
+      |    rom_dpi(addr, tmp);
+      |  end
+      |  assign data = tmp;
+      |endmodule
+    """.stripMargin)
+}
+
+// ---------------------------
+// RAM BlackBox (可读写数据存储器)
+// ---------------------------
+class RAM_DPI extends BlackBox(Map("SIZE" -> 1024)) with HasBlackBoxInline {
+  val io = IO(new Bundle {
+    val addr  = Input(UInt(32.W))
+    val wdata = Input(UInt(32.W))
+    val rdata = Output(UInt(32.W))
+    val we    = Input(Bool())
+  })
+
+  setInline("RAM_DPI.v",
+    s"""
+      |module RAM_DPI #(parameter SIZE = 1024)(
+      |  input  wire [31:0] addr,
+      |  input  wire [31:0] wdata,
+      |  input  wire        we,
+      |  output wire [31:0] rdata
+      |);
+      |  // DPI-C 接口示例（由外部 C 实现实际数据）
+      |  import "DPI-C" function void ram_dpi(input logic [31:0] addr, input logic [31:0] wdata, input logic we, output logic [31:0] rdata);
+      |  logic [31:0] tmp;
+      |  always_comb begin
+      |    ram_dpi(addr, wdata, we, tmp);
+      |  end
+      |  assign rdata = tmp;
+      |endmodule
+    """.stripMargin)
+}
+
+// ---------------------------
+// Trap BlackBox (异常处理模块)
+// ---------------------------
+class Trap_DPI extends BlackBox with HasBlackBoxInline {
+  val io = IO(new Bundle {
+    val trap = Input(Bool())
+  })
+
+  setInline("Trap_DPI.v",
+    """
+    |module Trap_DPI(input wire trap);
+    |  import "DPI-C" function void nemu_trap();
+    |  always @(*) begin
+    |    if (trap) nemu_trap();
+    |  end
+    |endmodule
+    """.stripMargin)
+}
+
+// ---------------------------
 // IF 模块：Instruction Fetch
 // ---------------------------
 class IF extends Module {
   val io = IO(new Bundle {
-    val pc_next = Input(UInt(32.W))    // 下一个 PC
-    val instr   = Input(UInt(32.W))    // 外部提供指令
-    val pc_out  = Output(UInt(32.W))   // 当前 PC 输出
+    val pc_next = Input(UInt(32.W))   // 下一个 PC
+    val instr   = Input(UInt(32.W))   // 外部提供指令
+    val pc_out  = Output(UInt(32.W))  // 当前 PC 输出
   })
 
   val pc = RegInit("h80000000".U(32.W))
@@ -42,6 +118,10 @@ class ID extends Module {
   val rd     = io.instr(11,7)
   val rs1    = io.instr(19,15)
   val rs2    = io.instr(24,20)
+
+  val isEbreak = (opcode === "b1110011".U) && (funct3 === 0.U) && (funct7 === 1.U)
+  val trap = Module(new Trap_DPI)
+  trap.io.trap := trap
 
   io.rs1_data := regfile(rs1)
   io.rs2_data := regfile(rs2)
@@ -169,63 +249,6 @@ class MiniRV extends Module {
 
   // PC update
   ifStage.io.pc_next := exStage.io.pc_next
-}
-
-// ---------------------------
-// ROM BlackBox (只读指令存储器)
-// ---------------------------
-class ROM_DPI extends BlackBox(Map("SIZE" -> 1024)) with HasBlackBoxInline {
-  val io = IO(new Bundle {
-    val addr = Input(UInt(32.W))
-    val data = Output(UInt(32.W))
-  })
-
-  // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
-  setInline("ROM_DPI.v",
-    s"""
-      |module ROM_DPI #(parameter SIZE = 1024)(
-      |  input  wire [31:0] addr,
-      |  output wire [31:0] data
-      |);
-      |  // DPI-C 接口示例（由外部 C 实现实际数据）
-      |  import "DPI-C" function void rom_dpi(input logic [31:0] addr, output logic [31:0] data);
-      |  logic [31:0] tmp;
-      |  always_comb begin
-      |    rom_dpi(addr, tmp);
-      |  end
-      |  assign data = tmp;
-      |endmodule
-    """.stripMargin)
-}
-
-// ---------------------------
-// RAM BlackBox (可读写数据存储器)
-// ---------------------------
-class RAM_DPI extends BlackBox(Map("SIZE" -> 1024)) with HasBlackBoxInline {
-  val io = IO(new Bundle {
-    val addr  = Input(UInt(32.W))
-    val wdata = Input(UInt(32.W))
-    val rdata = Output(UInt(32.W))
-    val we    = Input(Bool())
-  })
-
-  setInline("RAM_DPI.v",
-    s"""
-      |module RAM_DPI #(parameter SIZE = 1024)(
-      |  input  wire [31:0] addr,
-      |  input  wire [31:0] wdata,
-      |  input  wire        we,
-      |  output wire [31:0] rdata
-      |);
-      |  // DPI-C 接口示例（由外部 C 实现实际数据）
-      |  import "DPI-C" function void ram_dpi(input logic [31:0] addr, input logic [31:0] wdata, input logic we, output logic [31:0] rdata);
-      |  logic [31:0] tmp;
-      |  always_comb begin
-      |    ram_dpi(addr, wdata, we, tmp);
-      |  end
-      |  assign rdata = tmp;
-      |endmodule
-    """.stripMargin)
 }
 
 // ---------------------------
