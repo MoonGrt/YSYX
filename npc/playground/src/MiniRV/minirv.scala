@@ -13,7 +13,7 @@ class IF extends Module {
     val pc_out  = Output(UInt(32.W))   // 当前 PC 输出
   })
 
-  val pc = RegInit(0.U(32.W))
+  val pc = RegInit("h80000000".U(32.W))
   pc := io.pc_next
   io.pc_out := pc
 }
@@ -136,12 +136,12 @@ class RAM(size: Int) extends Module {
 // ---------------------------
 class MiniRV extends Module {
   val io = IO(new Bundle {
-    val pc         = Output(UInt(32.W))
-    val instr      = Input(UInt(32.W))
-    val mem_rdata  = Input(UInt(32.W))
-    val mem_wdata  = Output(UInt(32.W))
-    val mem_addr   = Output(UInt(32.W))
-    val mem_we     = Output(Bool())
+    val pc        = Output(UInt(32.W))
+    val instr     = Input(UInt(32.W))
+    val mem_rdata = Input(UInt(32.W))
+    val mem_wdata = Output(UInt(32.W))
+    val mem_addr  = Output(UInt(32.W))
+    val mem_we    = Output(Bool())
   })
 
   val ifStage = Module(new IF)
