@@ -1,4 +1,5 @@
 #include <verilated.h>
+#include <verilated_vcd_c.h>
 #include "VMiniRVSOC.h"
 #include <iostream>
 
@@ -90,30 +91,43 @@ int main(int argc, char **argv) {
         return 1;
     }
     Verilated::commandArgs(argc, argv);
-    Verilated::mkdir("logs");
 
     // 实例化顶层模块
     VMiniRVSOC *top = new VMiniRVSOC;
 
-    // 可选：开启波形
-    // Verilated::traceEverOn(true);
+    // 创建 VCD 波形对象
+    VerilatedVcdC *tfp = nullptr;
+    Verilated::traceEverOn(true);  // 必须先打开 trace
+
+    // 创建 build 目录（如果不存在）
+    Verilated::mkdir("build");
+
+    // 打开波形文件
+    tfp = new VerilatedVcdC;
+    top->trace(tfp, 99);             // 99 是 trace depth
+    tfp->open("build/wave.vcd");
 
     std::cout << "[NPC] Simulation start" << std::endl;
 
-    while (!Verilated::gotFinish()) {
+    // while (!Verilated::gotFinish()) {
+    for (int i = 0; i < 50000; i++) {
         // ======== 上升沿 ========
         top->clock = 0;
         top->eval();
+        tfp->dump(main_time);
         main_time++;
         // ======== 下降沿 ========
         top->clock = 1;
         top->eval();
+        tfp->dump(main_time);
         main_time++;
     }
 
-    std::cout << "[NPC] Simulation finished at time = "
-              << main_time << std::endl;
-
+    tfp->close();
+    delete tfp;
     delete top;
+
+    std::cout << "[NPC] Simulation finished at time = " << main_time << std::endl;
+
     return 0;
 }
