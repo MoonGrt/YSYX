@@ -34,6 +34,7 @@ word_t paddr_read(paddr_t addr, int len)
             result= *(uint32_t *)guest_to_host(addr);
             break;
         default:
+            return 0;
     }
   return result;
 }
@@ -59,16 +60,6 @@ extern "C" {
     int rom_rdpi(int addr) {
         word_t ret=0;
         bool mmio=false;
-        assert(addr!=RTC_ADDR);
-        if (addr == RTC_ADDR) {
-            printf("%x\n",(unsigned)addr);
-            mmio=true;
-            ret = (uint32_t) time_tmp;
-        } else if (addr==RTC_ADDR+4) {
-            mmio=true;
-            time_tmp = get_time();
-            ret= time_tmp >> 32;
-        }
         if (mmio) {
             return ret;
         }
