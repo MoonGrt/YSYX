@@ -2,9 +2,6 @@ TOPNAME = MiniRVSOC
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += --trace -cc -exe -MMD --build -cc -O3 --x-assign fast --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT
-# VERILATOR_CFLAGS += --trace -cc --exe --build -x-assign fast --assert \
-#                     --coverage -CFLAGS -ggdb  -LDFLAGS -ggdb -j 8 \
-#                     --timescale "1ns/1ns" --no-timing --autoflush
 
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
