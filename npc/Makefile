@@ -38,9 +38,9 @@ clean:
 
 .PHONY: test verilog help reformat checkformat clean
 
-VSRCS := $(shell find $(abspath ./build) -name "MiniRVSOC.sv")
-VSRCS += $(shell find $(abspath ./vsrc) -name "*.v")
-CSRCS := $(abspath ./csrc/minirv.cpp)
+VSRCS := $(shell find ./build -name "MiniRVSOC.sv")
+VSRCS += $(shell find ./vsrc -name "*.v")
+CSRCS := $(shell find ./csrc -name "minirv.cpp")
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
