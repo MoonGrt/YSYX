@@ -30,10 +30,9 @@ class ROM_DPI extends BlackBox with HasBlackBoxInline {
 class RAM_DPI extends BlackBox with HasBlackBoxInline {
   val io = IO(new Bundle {
     val we    = Input(Bool())
-    val waddr = Input(UInt(32.W))
+    val addr  = Input(UInt(32.W))
     val wdata = Input(UInt(32.W))
     val wmask = Input(UInt(8.W))
-    val raddr = Input(UInt(32.W))
     val rdata = Output(UInt(32.W))
   })
   // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
