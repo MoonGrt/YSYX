@@ -119,10 +119,6 @@ class ID extends Module {
   val rs1    = io.instr(19,15)
   val rs2    = io.instr(24,20)
 
-  val isEbreak = (opcode === "b1110011".U) && (funct3 === 0.U) && (funct7 === 1.U)
-  val trap = Module(new Trap_DPI)
-  trap.io.trap := trap
-
   io.rs1_data := regfile(rs1)
   io.rs2_data := regfile(rs2)
   io.rd_addr  := rd
@@ -153,6 +149,10 @@ class ID extends Module {
                    opcode === "b0000011".U || opcode === "b0110111".U ||
                    opcode === "b1100111".U)
   io.jalr := (opcode === "b1100111".U)
+
+  val isEbreak = (opcode === "b1110011".U)
+  val trap = Module(new Trap_DPI)
+  trap.io.trap := isEbreak
 }
 
 // ---------------------------
