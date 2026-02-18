@@ -4,7 +4,7 @@ import "DPI-C" function void ram_wdpi(input int waddr, input int wdata, input by
 
 module ROM_DPI(
   input  wire [31:0] addr,
-  output wire [31:0] data
+  output reg  [31:0] data
 );
   always @(*) data = ram_rdpi(addr);
 endmodule
@@ -14,7 +14,7 @@ module RAM_DPI(
   input  wire [31:0] addr,
   input  wire [ 7:0] mask,
   input  wire [31:0] wdata,
-  output wire [31:0] rdata
+  output reg  [31:0] rdata
 );
   always @(*) begin
     rdata = ram_rdpi(addr);
