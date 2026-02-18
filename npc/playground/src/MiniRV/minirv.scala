@@ -235,8 +235,8 @@ class Top extends Module {
   val io = IO(new Bundle {})
 
   val cpu = Module(new MiniRV)
-  val rom = Module(new ROM_BB(1024))
-  val ram = Module(new RAM_BB(1024))
+  val rom = Module(new ROM_BB)
+  val ram = Module(new RAM_BB)
 
   // IF: CPU 从 ROM 取指令
   rom.io.addr  := cpu.io.pc
