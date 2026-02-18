@@ -43,15 +43,14 @@ class RAM_DPI extends BlackBox with HasBlackBoxInline {
       |import "DPI-C" function void ram_wdpi(input int waddr, input int wdata, input byte wmask);
       |module RAM_DPI(
       |  input  wire        we,
-      |  input  wire [31:0] waddr,
+      |  input  wire [31:0] addr,
       |  input  wire [31:0] wdata,
       |  input  wire [ 7:0] wmask,
-      |  input  wire [31:0] raddr,
       |  output wire [31:0] rdata
       |);
       |  always @(*) begin
-      |    rdata = ram_rdpi(raddr);
-      |    if (we) ram_wdpi(waddr, wdata, wmask);
+      |    rdata = ram_rdpi(addr);
+      |    if (we) ram_wdpi(addr, wdata, wmask);
       |  end
       |endmodule
     """.stripMargin)
@@ -255,7 +254,7 @@ class MiniRVSOC extends Module {
   val ram = Module(new RAM_DPI)
 
   // IF: CPU 从 ROM 取指令
-  rom.io.raddr := cpu.io.pc
+  rom.io.addr  := cpu.io.pc
   cpu.io.instr := rom.io.data
 
   // MEM: CPU 数据访问 RAM

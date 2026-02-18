@@ -16,14 +16,13 @@ endmodule
 
 module RAM_DPI(
   input  wire        we,
-  input  wire [31:0] waddr,
+  input  wire [31:0] addr,
   input  wire [31:0] wdata,
   input  wire [ 7:0] wmask,
-  input  wire [31:0] raddr,
   output wire [31:0] rdata
 );
   always @(*) begin
-    rdata = ram_rdpi(raddr);
-    if (we) ram_wdpi(waddr, wdata, wmask);
+    rdata = ram_rdpi(addr);
+    if (we) ram_wdpi(addr, wdata, wmask);
   end
 endmodule
