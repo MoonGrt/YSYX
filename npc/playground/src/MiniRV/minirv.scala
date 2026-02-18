@@ -41,7 +41,7 @@ class RAM_DPI extends BlackBox(Map("SIZE" -> 1024)) with HasBlackBoxInline {
     val we    = Input(Bool())
   })
 
-  setInline("RAM_DPI.v",
+  setInline(
     s"""
       |module RAM_DPI #(parameter SIZE = 1024)(
       |  input  wire [31:0] addr,
@@ -150,9 +150,8 @@ class ID extends Module {
                    opcode === "b1100111".U)
   io.jalr := (opcode === "b1100111".U)
 
-  val isEbreak = (opcode === "b1110011".U)
   val trap = Module(new Trap_DPI)
-  trap.io.trap := isEbreak
+  trap.io.trap := (opcode === "b1110011".U)
 }
 
 // ---------------------------
