@@ -51,11 +51,11 @@ class ID extends Module {
   val imm_u = io.instr(31,12) << 12
   val imm_s = Cat(io.instr(31,25), io.instr(11,7))
   io.imm := MuxLookup(opcode, 0.U, Seq(
-    "b0010011".U -> imm_i,
-    "b0110111".U -> imm_u,
-    "b0000011".U -> imm_i,
-    "b0100011".U -> imm_s,
-    "b1100111".U -> imm_i
+    "b0010011".U -> imm_i.zext,
+    "b0110111".U -> imm_u.zext,
+    "b0000011".U -> imm_i.zext,
+    "b0100011".U -> imm_s.zext,
+    "b1100111".U -> imm_i.zext
   ))
 
   io.alu_op := MuxLookup(opcode, 0.U, Seq(
