@@ -136,6 +136,7 @@ class RAM(size: Int) extends Module {
 // ---------------------------
 class MiniRV extends Module {
   val io = IO(new Bundle {
+    val pc         = Input(UInt(32.W))
     val instr      = Input(UInt(32.W))
     val mem_rdata  = Input(UInt(32.W))
     val mem_wdata  = Output(UInt(32.W))
@@ -150,6 +151,8 @@ class MiniRV extends Module {
   // IF -> ID
   idStage.io.instr := ifStage.io.instr
   idStage.io.pc    := ifStage.io.pc_out
+  io.pc            := ifStage.io.pc_out
+  ifStage.io.instr := io.instr
 
   // ID -> EX
   exStage.io.rs1    := idStage.io.rs1_data
@@ -166,65 +169,20 @@ class MiniRV extends Module {
 
   // PC update
   ifStage.io.pc_next := exStage.io.pc_next
-
-  // IF 指令输入
-  ifStage.io.instr := io.instr
 }
-
-// // ---------------------------
-// // ROM 模块（只读存储器）
-// // ---------------------------
-// class ROM(size: Int) extends Module {
-//   val io = IO(new Bundle {
-//     val addr = Input(UInt(32.W))   // 输入地址
-//     val data = Output(UInt(32.W))  // 输出数据
-//   })
-
-//   // 使用 Chisel 内存模块
-//   val mem = Mem(size, UInt(32.W))
-
-//   // ROM 输出，根据地址读取（地址右移两位因为每条指令 32bit）
-//   io.data := mem(io.addr >> 2)
-
-//   // 可选：通过文件初始化 ROM
-//   // loadMemoryFromFileInline(mem, "program.hex")
-// }
-
-// // ---------------------------
-// // RAM 模块（读写存储器）
-// // ---------------------------
-// class RAM(size: Int) extends Module {
-//   val io = IO(new Bundle {
-//     val addr  = Input(UInt(32.W))   // 地址输入
-//     val wdata = Input(UInt(32.W))   // 写数据
-//     val rdata = Output(UInt(32.W))  // 读数据
-//     val we    = Input(Bool())       // 写使能
-//   })
-
-//   // 使用 Chisel 内存模块
-//   val mem = Mem(size, UInt(32.W))
-
-//   // 读操作
-//   io.rdata := mem(io.addr >> 2)
-
-//   // 写操作
-//   when(io.we) {
-//     mem(io.addr >> 2) := io.wdata
-//   }
-// }
 
 // ---------------------------
 // 顶层 Top：自包含 CPU + ROM + RAM
 // ---------------------------
 class Top extends Module {
-  val io = IO(new Bundle {}) // 无任何外部 IO
+  val io = IO(new Bundle {})
 
   val cpu = Module(new MiniRV)
   val rom = Module(new ROM(1024))
   val ram = Module(new RAM(1024))
 
   // IF: CPU 从 ROM 取指令
-  rom.io.addr := cpu.ifStage.pc
+  rom.io.addr  := cpu.io.pc
   cpu.io.instr := rom.io.data
 
   // MEM: CPU 数据访问 RAM
