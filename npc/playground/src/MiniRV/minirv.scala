@@ -2,6 +2,8 @@ package minirv
 
 import chisel3._
 import chisel3.util._
+import chisel3.experimental.{ChiselAnnotation, annotate}
+import chisel3.experimental.DontTouch
 
 // ---------------------------
 // IF 模块：Instruction Fetch
@@ -70,7 +72,7 @@ class ID extends Module {
   io.mem_read  := (opcode === "b0000011".U)
   io.mem_write := (opcode === "b0100011".U)
   io.reg_write := (opcode === "b0110011".U || opcode === "b0010011".U ||
-                   opcode === "b0000011".U || opcode === "b0110111".U || 
+                   opcode === "b0000011".U || opcode === "b0110111".U ||
                    opcode === "b1100111".U)
   io.jalr := (opcode === "b1100111".U)
 }
@@ -172,14 +174,57 @@ class MiniRV extends Module {
 }
 
 // ---------------------------
+// DPI-C 接口 ROM 模块（只读指令存储器）
+// ---------------------------
+class ROM_DPI extends Module {
+  val io = IO(new Bundle {
+    val addr = Input(UInt(32.W))
+    val data = Output(UInt(32.W))
+  })
+
+  // 输出寄存器
+  val outReg = RegInit(0.U(32.W))
+  io.data := outReg
+
+  // 标记为 DPI-C 信号
+  annotate(new ChiselAnnotation {
+    override def toFirrtl: String = s"""@verilog.DPI import "DPI-C" function rom_dpi(input logic [31:0] addr, output logic [31:0] data);"""
+  })
+
+  // TODO: 这里的逻辑由 DPI-C 在 Verilog 中实现
+}
+
+// ---------------------------
+// DPI-C 接口 RAM 模块（可读写数据存储器）
+// ---------------------------
+class RAM_DPI extends Module {
+  val io = IO(new Bundle {
+    val addr  = Input(UInt(32.W))
+    val wdata = Input(UInt(32.W))
+    val rdata = Output(UInt(32.W))
+    val we    = Input(Bool())
+  })
+
+  val outReg = RegInit(0.U(32.W))
+  io.rdata := outReg
+
+  // 标记为 DPI-C 信号
+  annotate(new ChiselAnnotation {
+    override def toFirrtl: String = s"""@verilog.DPI import "DPI-C" function ram_dpi(input logic [31:0] addr, input logic [31:0] wdata, input logic we, output logic [31:0] rdata);"""
+  })
+
+  // TODO: 这里的逻辑由 DPI-C 在 Verilog 中实现
+}
+
+// ---------------------------
 // 顶层 Top：自包含 CPU + ROM + RAM
 // ---------------------------
 class Top extends Module {
   val io = IO(new Bundle {})
 
   val cpu = Module(new MiniRV)
-  val rom = Module(new ROM(1024))
-  val ram = Module(new RAM(1024))
+  val rom = Module(new ROM_DPI(1024))
+  val ram = Module(new RAM_DPI(1024))
 
   // IF: CPU 从 ROM 取指令
   rom.io.addr  := cpu.io.pc
