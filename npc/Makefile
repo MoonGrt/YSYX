@@ -46,7 +46,7 @@ CSRCS := $(shell find ./csrc -name "minirv.cpp")
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
-$(BIN):
+$(BIN): $(VSRCS)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
@@ -56,7 +56,7 @@ $(BIN):
 run: $(BIN)
 	@$^
 
-gdb: sim
+gdb: $(BIN)
 	@echo "Write this Makefile by yourself."
 
 wave: sim
