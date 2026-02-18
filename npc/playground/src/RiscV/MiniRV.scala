@@ -31,7 +31,7 @@ class RAM_DPI extends BlackBox with HasBlackBoxInline {
   val io = IO(new Bundle {
     val we    = Input(Bool())
     val addr  = Input(UInt(32.W))
-    val wmask = Input(UInt(8.W))
+    val mask  = Input(UInt(8.W))
     val wdata = Input(UInt(32.W))
     val rdata = Output(UInt(32.W))
   })
@@ -43,7 +43,7 @@ class RAM_DPI extends BlackBox with HasBlackBoxInline {
       |module RAM_DPI(
       |  input  wire        we,
       |  input  wire [31:0] addr,
-      |  input  wire [ 7:0] wmask,
+      |  input  wire [ 7:0] mask,
       |  input  wire [31:0] wdata,
       |  output wire [31:0] rdata
       |);
@@ -211,7 +211,7 @@ class MiniRV extends Module {
     val instr     = Input(UInt(32.W))
     val mem_we    = Output(Bool())
     val mem_addr  = Output(UInt(32.W))
-    val mem_wmask = Output(UInt(7.W))
+    val mem_mask  = Output(UInt(7.W))
     val mem_wdata = Output(UInt(32.W))
     val mem_rdata = Input(UInt(32.W))
   })
