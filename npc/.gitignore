@@ -17,6 +17,7 @@ build/
 !*.mill
 !.mill-version
 out/
+rtl/
 .bsp/
 .idea/
 .idea_modules/
