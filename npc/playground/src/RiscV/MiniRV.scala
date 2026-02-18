@@ -6,7 +6,7 @@ import chisel3.util._
 // ---------------------------
 // ROM BlackBox (只读指令存储器)
 // ---------------------------
-class ROM_DPI extends BlackBox(Map("SIZE" -> 1024)) with HasBlackBoxInline {
+class ROM_DPI extends BlackBox(Map("SIZE" -> 1024)) {
   val io = IO(new Bundle {
     val addr = Input(UInt(32.W))
     val data = Output(UInt(32.W))
