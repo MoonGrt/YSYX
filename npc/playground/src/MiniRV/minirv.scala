@@ -8,9 +8,9 @@ import chisel3.util._
 // ---------------------------
 class IF extends Module {
   val io = IO(new Bundle {
-    val pc_next = Input(UInt(32.W))    // 下一个 PC
-    val instr   = Output(UInt(32.W))   // 当前指令
-    val pc_out  = Output(UInt(32.W))   // 当前 PC 输出
+    val pc_next = Input(UInt(32.W))   // 下一个 PC
+    val pc_out  = Output(UInt(32.W))  // 当前 PC 输出
+    val instr   = Output(UInt(32.W))  // 当前指令
   })
 
   // PC 寄存器
@@ -64,21 +64,21 @@ class ID extends Module {
 
   // 根据 opcode 选择立即数
   io.imm := MuxLookup(opcode, 0.U, Seq(
-    "b0010011".U(7.W) -> imm_i,  // addi
-    "b0110111".U(7.W) -> imm_u,  // lui
-    "b0000011".U(7.W) -> imm_i,  // lw, lbu
-    "b0100011".U(7.W) -> imm_s,  // sw, sb
-    "b1100111".U(7.W) -> imm_i   // jalr
+    "b0010011".U -> imm_i,  // addi
+    "b0110111".U -> imm_u,  // lui
+    "b0000011".U -> imm_i,  // lw, lbu
+    "b0100011".U -> imm_s,  // sw, sb
+    "b1100111".U -> imm_i   // jalr
   ))
 
   // ALU 操作码：0=add, 1=addi/lw/sw/lbu/sb, 2=lui
   io.alu_op := MuxLookup(opcode, 0.U, Seq(
-    "b0110011".U(7.W) -> 0.U, // add
-    "b0010011".U(7.W) -> 1.U, // addi
-    "b0110111".U(7.W) -> 2.U, // lui
-    "b0000011".U(7.W) -> 1.U, // lw, lbu
-    "b0100011".U(7.W) -> 1.U, // sw, sb
-    "b1100111".U(7.W) -> 1.U  // jalr
+    "b0110011".U -> 0.U, // add
+    "b0010011".U -> 1.U, // addi
+    "b0110111".U -> 2.U, // lui
+    "b0000011".U -> 1.U, // lw, lbu
+    "b0100011".U -> 1.U, // sw, sb
+    "b1100111".U -> 1.U  // jalr
   ))
 
   // 内存读写信号
@@ -124,7 +124,7 @@ class EX extends Module {
 // ---------------------------
 // Mini-RV 顶层 CPU 模块
 // ---------------------------
-class top extends Module {
+class minirv extends Module {
   val io = IO(new Bundle {
     val mem_rdata = Input(UInt(32.W))  // 从内存读到的数据
     val mem_wdata = Output(UInt(32.W)) // 写内存数据
