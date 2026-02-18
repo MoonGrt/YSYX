@@ -260,7 +260,7 @@ class MiniRVSOC extends Module {
   // MEM: CPU 数据访问 RAM
   ram.io.we    := cpu.io.mem_we
   ram.io.addr  := cpu.io.mem_addr
-  ram.io.wmask := cpu.io.mem_mask
+  ram.io.mask  := cpu.io.mem_mask
   ram.io.wdata := cpu.io.mem_wdata
   cpu.io.mem_rdata := ram.io.rdata
 }
