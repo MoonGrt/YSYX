@@ -92,7 +92,7 @@ extern "C" {
       Verilated::gotFinish(true);
   }
   int pmem_read(int raddr){
-    // raddr = raddr & ~0x3u;
+    raddr = raddr & ~0x3u;
     word_t data= paddr_read(raddr, 4);
     return data;
   }
