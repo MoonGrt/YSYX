@@ -173,8 +173,8 @@ int main(int argc, char **argv){
   // 主仿真
   std::cout << "[NPC] Simulation start" << std::endl;
   // while (!Verilated::gotFinish()){
-  for (int i = 0; i < 100; i++){
-    tick(top, tfp);
+  for (int i = 0; i < 100 && !Verilated::gotFinish(); i++) {
+      tick(top, tfp);
   }
   // 结束
   tfp->close();
