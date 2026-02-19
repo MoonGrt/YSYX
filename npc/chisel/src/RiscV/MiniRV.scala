@@ -201,8 +201,10 @@ class ID extends Module {
 
     // 输出到 EX
     val exsel   = Output(UInt(EX_SEL_LEN.W))
-    val op1     = Output(UInt(32.W))
-    val op2     = Output(UInt(32.W))
+    val rs1     = Output(UInt(32.W))
+    val rs2     = Output(UInt(32.W))
+    val imm     = Output(UInt(32.W))
+    val immen   = Output(Bool())
     val rd_addr = Output(UInt(5.W))
 
     val halt   = Output(Bool())
@@ -250,17 +252,18 @@ class ID extends Module {
   val imm_i = Sext(io.inst(31,20), 12)
   val imm_s = Sext(Cat(io.inst(31,25), io.inst(11,7)), 12)
   val imm_u = io.inst(31,12) << 12
-  val imm = MuxLookup(immsel, 0.U)(Seq(
+  io.imm := MuxLookup(immsel, 0.U)(Seq(
     IMMI -> imm_i,
     IMMS -> imm_s,
     IMMU -> imm_u
   ))
 
   // -------- EX操作数 --------
+  val immen = (immsel =/= IMMN)
   val rs1_data = regfile(rs1)
   val rs2_data = regfile(rs2)
-  io.op1 := rs1_data
-  io.op2 := Mux(immsel === IMMN, rs2_data, imm)
+  io.rs1 := regfile(rs1)
+  io.rs2 := regfile(rs2)
 
   // -------- JUMP功能 --------
   io.jumpen := (jumpsel === JUMP_JALR)
@@ -312,13 +315,15 @@ class EX extends Module {
   import Parameters._
   val io = IO(new Bundle {
     val pc    = Input(UInt(32.W))
-    val op1   = Input(UInt(32.W))
-    val op2   = Input(UInt(32.W))
+    val rs1   = Input(UInt(32.W))
+    val rs2   = Input(UInt(32.W))
+    val imm   = Input(UInt(32.W))
+    val immen = Input(Bool())
     val exsel = Input(UInt(EX_SEL_LEN.W))
-    val exout  = Output(UInt(32.W))
+    val exout = Output(UInt(32.W))
   })
   // -------- ALU --------
-  io.exout := io.op1 + io.op2
+  io.exout := io.rs1 + io.rs2
 }
 
 // ---------------------------
@@ -353,13 +358,15 @@ class MiniRV extends Module {
 
   // EX
   exStage.io.pc    := ifStage.io.pc
-  exStage.io.op1   := idStage.io.op1
-  exStage.io.op2   := idStage.io.op2
+  exStage.io.rs1   := idStage.io.rs1
+  exStage.io.rs2   := idStage.io.rs2
+  exStage.io.imm   := idStage.io.imm
+  exStage.io.immen := idStage.io.immen
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
   io.mem_addr  := exStage.io.exout
-  io.mem_wdata := idStage.io.op2
+  io.mem_wdata := idStage.io.rs2
   io.mem_we    := idStage.io.memWen
   io.mem_mask  := Mux(
     idStage.io.memBen,
