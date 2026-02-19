@@ -147,8 +147,8 @@ int main(int argc, char **argv){
   top->reset = 0;
   // 主仿真
   std::cout << "[NPC] Simulation start" << std::endl;
-  // while (!Verilated::gotFinish()) tick(top, tfp);
-  for (int i = 0; i < 50; i++) 
+  while (!Verilated::gotFinish())
+  // for (int i = 0; i < 50; i++) 
   {
     tick(top, tfp);
     if (is_ebreak) {
