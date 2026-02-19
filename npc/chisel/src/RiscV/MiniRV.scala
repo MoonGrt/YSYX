@@ -341,6 +341,8 @@ class MiniRV extends Module {
 
   // IF
   io.pc := ifStage.io.pc
+  ifStage.io.jumpen := idStage.io.jumpen
+  ifStage.io.jump   := idStage.io.op2
 
   // ID
   idStage.io.inst := io.inst
@@ -361,9 +363,12 @@ class MiniRV extends Module {
   )
 
   // Write Back
-  val wb_data = Mux(
-    idStage.io.memRen,
-    io.mem_rdata, exStage.io.exout
+  val wb_data = MuxCase(
+    exStage.io.exout,  // 默认EX输出
+    Seq(
+      idStage.io.memRen -> io.mem_rdata,  // Memory read
+      idStage.io.jumpen -> ifStage.io.pcn  // Jump
+    )
   )
 
   idStage.io.wb_en   := idStage.io.regWen
