@@ -369,13 +369,15 @@ class MiniRV extends Module {
   io.mem_addr  := exStage.io.exout
   io.mem_wdata := idStage.io.rs2
   io.mem_we    := idStage.io.memWen
-  io.mem_mask  := Mux(
-    idStage.io.memBen,
-    "b0001".U, "b1111".U
-  )
+  io.mem_mask := Mux(idStage.io.memBen,
+                    (1.U << exStage.io.exout(1,0)).asUInt,  // LBU/LB mask
+                    "b1111".U)  // SW/SW
 
   // Write Back
-  val mem_data = Mux(idStage.io.memBen, Cat(0.U(24.W), io.mem_rdata(7,0)), io.mem_rdata)
+  val byte_shift = (exStage.io.exout(1,0) << 3)  // 位移量
+  val mem_data = Mux(idStage.io.memBen,
+                    (io.mem_rdata >> byte_shift)(7,0).zext,  // 取正确字节 + 零扩展
+                    io.mem_rdata)
   val wb_data  = MuxCase(
     exStage.io.exout,  // 默认EX输出
     Seq(
