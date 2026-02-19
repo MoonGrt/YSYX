@@ -179,5 +179,5 @@ int main(int argc, char **argv){
   tfp->close();
   delete tfp;
   delete top;
-  return 0;
+  return 1;
 }
