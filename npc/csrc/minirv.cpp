@@ -175,10 +175,6 @@ int main(int argc, char **argv){
   // while (!Verilated::gotFinish()){
   for (int i = 0; i < 100; i++){
     tick(top, tfp);
-    if (is_ebreak) {
-      std::cout << "[NPC] Simulation finished at time = " << sim_time << std::endl;
-      break;
-    }
   }
   // 结束
   tfp->close();
