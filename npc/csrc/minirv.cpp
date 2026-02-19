@@ -13,12 +13,8 @@ static inline bool in_pmem(paddr_t addr) {
   return addr - CONFIG_MBASE <= CONFIG_MSIZE && addr >= CONFIG_MBASE;
 }
 uint8_t* guest_to_host(paddr_t paddr) {   
-  if (in_pmem(paddr)) {
-    return mem + paddr - CONFIG_MBASE;
-  }
-  else {
-    return NULL;
-  }
+  if (in_pmem(paddr)) return mem + paddr - CONFIG_MBASE;
+  else return NULL;
 }
 word_t paddr_read(paddr_t addr, int len)
 {
@@ -46,34 +42,22 @@ static uint64_t time_tmp=0;
 extern "C" {
     bool is_ebreak;
     uint8_t ebreak_code;
-    void ebreak(uint8_t code)
-    {
+    void ebreak(uint8_t code){
         is_ebreak=true;
         ebreak_code=code;
     }
     int rom_rdpi(int addr) {
-        word_t ret=0;
-        bool mmio=false;
-        if (mmio) {
-            return ret;
-        }
         addr = addr & ~0x3u;
         word_t data= paddr_read(addr, 4);
         return data;
     }
     int ram_rdpi(int raddr) {
-        word_t ret=0;
-        bool mmio=false;
-        if (mmio) {
-            return ret;
-        }
         raddr = raddr & ~0x3u;
         word_t data= paddr_read(raddr, 4);
         return data;
     }
     void ram_wdpi(int waddr, int wdata, char wmask) {
-        bool mmio=false;
-        paddr_write(waddr,wmask, wdata);
+        paddr_write(waddr, wmask, wdata);
     }
 }
 
