@@ -294,14 +294,13 @@ class EX extends Module {
     val op1   = Input(UInt(32.W))
     val op2   = Input(UInt(32.W))
     val exsel = Input(UInt(EX_SEL_LEN.W))
-
     val exout  = Output(UInt(32.W))
     val pcn = Output(UInt(32.W))
   })
 
   val jumpen = (io.exsel === EX_JALR)
   // -------- ALU --------
-  io.exout := Mux(jumpen, io.pc + 4.U, io.op1 + io.op2)
+  io.exout := io.op1 + io.op2
   // -------- JUMP --------
   io.pcn := Mux(jumpen, io.exout & ~1.U(32.W), io.pc + 4.U)
 }
