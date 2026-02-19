@@ -191,7 +191,7 @@ class ID extends Module {
     "b0010011".U -> 1.U,  // ADDI
     "b0000011".U -> 1.U,  // LOAD
     "b0100011".U -> 1.U,  // STORE
-    "b0110111".U -> 2.U,  // LUI
+    "b0110111".U -> 1.U,  // LUI
     "b1100111".U -> 1.U   // JALR
   ))
 
@@ -247,8 +247,8 @@ class EX extends Module {
 // ---------------------------
 class MiniRV extends Module {
   val io = IO(new Bundle {
-    val pc        = Output(UInt(32.W))
-    val instr     = Input(UInt(32.W))
+    val pc    = Output(UInt(32.W))
+    val instr = Input(UInt(32.W))
 
     val mem_we    = Output(Bool())
     val mem_addr  = Output(UInt(32.W))
