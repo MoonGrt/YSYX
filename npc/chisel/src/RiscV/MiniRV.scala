@@ -299,3 +299,7 @@ class MiniRVSOC extends Module {
   ram.io.wdata := cpu.io.mem_wdata
   cpu.io.mem_rdata := ram.io.rdata
 }
+
+object MiniRVSOC extends App {
+  (new chisel3.stage.ChiselStage).emitVerilog(new MiniRVSOC, args)
+}
