@@ -8,6 +8,7 @@ typedef uint32_t paddr_t;
 #define CONFIG_MBASE 0x80000000L
 #define CONFIG_MSIZE 0x8000000L
 constexpr int MEM_SIZE=1024*1024*128;
+
 uint8_t mem[MEM_SIZE];
 static inline bool in_pmem(paddr_t addr) {
   return addr - CONFIG_MBASE <= CONFIG_MSIZE && addr >= CONFIG_MBASE;
@@ -38,7 +39,6 @@ void paddr_write(paddr_t addr, int wmask, word_t data)
     }
 }
 
-static uint64_t time_tmp=0;
 extern "C" {
     bool is_ebreak;
     uint8_t ebreak_code;
@@ -57,11 +57,17 @@ extern "C" {
 }
 
 
-vluint64_t main_time = 0;
 
-// Verilator 要求的时间函数
-double sc_time_stamp() {
-    return main_time;
+static vluint64_t sim_time = 0;
+static void tick(VMiniRVSOC* top, VerilatedFstC* tfp) {
+    // ======== 上升沿 ========
+    top->clk = 0;
+    top->eval();
+    tfp->dump(sim_time++);
+    // ======== 下降沿 ========
+    top->clk = 1;
+    top->eval();
+    tfp->dump(sim_time++);
 }
 
 int main(int argc, char **argv) {
@@ -74,39 +80,24 @@ int main(int argc, char **argv) {
     // 实例化顶层模块
     VMiniRVSOC *top = new VMiniRVSOC;
 
-    // 创建 VCD 波形对象
-    VerilatedVcdC *tfp = nullptr;
-    Verilated::traceEverOn(true);  // 必须先打开 trace
-
     // 创建 build 目录（如果不存在）
     Verilated::mkdir("build");
 
-    // 打开波形文件
-    tfp = new VerilatedVcdC;
-    top->trace(tfp, 99);             // 99 是 trace depth
+    // 创建 VCD 波形对象
+    Verilated::traceEverOn(true);  // 必须先打开 trace
+    VerilatedVcdC *tfp = new VerilatedVcdC;
+    top->trace(tfp, 99);  // 99 是 trace depth
     tfp->open("build/wave.vcd");
 
+    // 主仿真
     std::cout << "[NPC] Simulation start" << std::endl;
+    // while (!Verilated::gotFinish()) tick(top, tfp);
+    for (int i = 0; i < 50000; i++) tick(top, tfp);
 
-    // while (!Verilated::gotFinish()) {
-    for (int i = 0; i < 50000; i++) {
-        // ======== 上升沿 ========
-        top->clock = 0;
-        top->eval();
-        tfp->dump(main_time);
-        main_time++;
-        // ======== 下降沿 ========
-        top->clock = 1;
-        top->eval();
-        tfp->dump(main_time);
-        main_time++;
-    }
-
+    // 结束
+    std::cout << "[NPC] Simulation finished at time = " << main_time << std::endl;
     tfp->close();
     delete tfp;
     delete top;
-
-    std::cout << "[NPC] Simulation finished at time = " << main_time << std::endl;
-
     return 0;
 }
