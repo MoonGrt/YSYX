@@ -143,8 +143,11 @@ object Instructions {
   val JALR   = BitPat("b?????????????????000?????1100111")
   // Load immediate
   val LUI    = BitPat("b?????????????????????????0110111")
-  // EBreak
+  // E - Type
+  val E      = BitPat("b?????????????????????????1110011")
   val EBREAK = BitPat("b00000000000100000000000001110011")
+  // Implemented instructions
+  val IMPLEMENTED = Seq(LW, LBU, SW, SB, ADD, ADDI, JALR, LUI, E, EBREAK)
 }
 object Parameters {
   val EX_SEL_LEN = 1
@@ -173,21 +176,22 @@ class ID extends Module {
   import Instructions._
   import Parameters._
   val io = IO(new Bundle {
-    val inst      = Input(UInt(32.W))
+    val inst    = Input(UInt(32.W))
 
     // 写回接口（来自 WB）
-    val wb_en     = Input(Bool())
-    val wb_rd     = Input(UInt(5.W))
-    val wb_data   = Input(UInt(32.W))
+    val wb_en   = Input(Bool())
+    val wb_rd   = Input(UInt(5.W))
+    val wb_data = Input(UInt(32.W))
 
     // 输出到 EX
-    val exsel     = Output(UInt(EX_SEL_LEN.W))
-    val op1       = Output(UInt(32.W))
-    val op2       = Output(UInt(32.W))
-    val rd_addr   = Output(UInt(5.W))
+    val exsel   = Output(UInt(EX_SEL_LEN.W))
+    val op1     = Output(UInt(32.W))
+    val op2     = Output(UInt(32.W))
+    val rd_addr = Output(UInt(5.W))
 
-    val memBen  = Output(Bool())
-    val memRen  = Output(Bool())
+    val halt   = Output(Bool())
+    val memBen = Output(Bool())
+    val memRen = Output(Bool())
     val memWen = Output(Bool())
     val reg_write = Output(Bool())
   })
@@ -252,6 +256,32 @@ class ID extends Module {
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := io.wb_data
   }
+
+  // -------- 异常处理 --------
+  val trap = Module(new EBreak)
+  // 定义异常编码规则
+  // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
+  val impl_inst = Instructions.IMPLEMENTED.filterNot(inst =>
+    inst == Instructions.E || inst == Instructions.EBREAK
+  )
+  val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
+  val is_zero = (io.inst === 0.U)
+  val is_ebreak = (io.inst === EBREAK)
+  val is_otherE = (io.inst === E) && (io.inst =/= EBREAK)
+  val exc_code = MuxCase(
+    1.U(8.W),  // 默认全零指令
+    Seq(
+      is_ebreak -> 0.U,  // EBREAK
+      is_zero -> 1.U,  // 全零指令
+      is_otherE -> 2.U,  // 其他E指令
+      is_unimpl -> 3.U  // 未实现指令
+    )
+  )
+  // 输出到 EBreak 模块
+  trap.io.trap := ~reset.asBool && is_unimpl
+  trap.io.code := exc_code
+  // halt 信号
+  io.halt := ~reset.asBool && is_unimpl
 }
 
 // ---------------------------
@@ -271,13 +301,9 @@ class EX extends Module {
 
   val jumpen = (io.exsel === EX_JALR)
   // -------- ALU --------
-  io.exout := Mux(
-    jumpen, io.pc + 4.U, io.op1 + io.op2
-  )
+  io.exout := Mux(jumpen, io.pc + 4.U, io.op1 + io.op2)
   // -------- JUMP --------
-  io.pcn := Mux(
-    jumpen, io.exout & ~1.U(32.W), io.pc + 4.U
-  )
+  io.pcn := Mux(jumpen, io.exout & ~1.U(32.W), io.pc + 4.U)
 }
 
 // ---------------------------
@@ -287,7 +313,7 @@ class MiniRV extends Module {
   import Instructions._
   import Parameters._
   val io = IO(new Bundle {
-    val pc    = Output(UInt(32.W))
+    val pc   = Output(UInt(32.W))
     val inst = Input(UInt(32.W))
 
     val mem_we    = Output(Bool())
@@ -332,20 +358,19 @@ class MiniRV extends Module {
   idStage.io.wb_rd   := idStage.io.rd_addr
   idStage.io.wb_data := wb_data
 
-  // Trap & PC update
-  val trap   = Module(new EBreak)
-  val trapen = (io.inst === EBREAK)
-  trap.io.trap := (trapen)
-  trap.io.code := 0.U(8.W)
+  // PC update
   ifStage.io.pcn := exStage.io.pcn
-  when (trapen) {ifStage.io.pcn := ifStage.io.pc}
+  when (idStage.io.halt) {ifStage.io.pcn := ifStage.io.pc}
 }
 
 // ---------------------------
 // MiniRV SOC：自包含 CPU + ROM + RAM
 // ---------------------------
 class MiniRVSOC extends Module {
-  val io = IO(new Bundle {})
+  val io = IO(new Bundle {
+    val pc   = Output(UInt(32.W))
+    val inst = Output(UInt(32.W))
+  })
 
   val cpu = Module(new MiniRV)
   val rom = Module(new ROM_DPI)
@@ -361,4 +386,8 @@ class MiniRVSOC extends Module {
   ram.io.mask  := cpu.io.mem_mask
   ram.io.wdata := cpu.io.mem_wdata
   cpu.io.mem_rdata := ram.io.rdata
+
+  // 输出
+  io.pc   := cpu.io.pc
+  io.inst := cpu.io.inst
 }

@@ -3,7 +3,11 @@
 #include "VMiniRVSOC.h"
 #include <iostream>
 
-#define DEBUG
+// #define DEBUG
+
+// 实例化顶层模块
+VMiniRVSOC *top = new VMiniRVSOC;
+VerilatedVcdC *tfp = new VerilatedVcdC;
 
 typedef uint32_t word_t;
 typedef uint32_t paddr_t;
@@ -24,13 +28,13 @@ extern "C" void init_ram() {
   memset(ram, 0, RAM_SIZE);
 };
 static const uint32_t img [] = {
-  0x00500513,  // addi a0, zero, 5; a0 = 5
-  0x00300593,  // addi a1, zero, 3; a1 = 3
-  0x00b50633,  // add a2, a0, a1  ; a2 = a0 + a1
-  0x00028823,  // sb  zero, 16(t0); 存储 0 到 t0+16
-  0x0102c503,  // lbu a0, 16(t0)  ; 从 t0+16 读一个字节
-  0x00100073,  // ebreak
-  0xdeadbeef,  // 数据占位
+  0x00500513,  // 0x00 addi a0, zero, 5; a0 = 5
+  0x00300593,  // 0x04 addi a1, zero, 3; a1 = 3
+  0x00b50633,  // 0x08 add a2, a0, a1  ; a2 = a0 + a1
+  0x00028823,  // 0x0c sb  zero, 16(t0); 存储 0 到 t0+16
+  0x0102c503,  // 0x10 lbu a0, 16(t0)  ; 从 t0+16 读一个字节
+  0x00100073,  // 0x04 ebreak
+  0xdeadbeef,  // 0x08 deadbeef
 };
 
 static inline bool in_rom(paddr_t addr){
@@ -55,7 +59,7 @@ word_t paddr_read(paddr_t addr, int len){
     default: return 0;
   }
 #ifdef DEBUG
-  printf("paddr_read:  addr=0x%08x, len =   %d, data=0x%08x\n", addr, len, result);
+  printf("paddr_read:  addr=0x%08x, len =%d,    data=0x%08x\n", addr, len, result);
 #endif
   return result;
 }
@@ -70,10 +74,34 @@ void paddr_write(paddr_t addr, int mask, word_t data){
 
 extern "C" {
   bool is_ebreak;
-  uint8_t ebreak_code;
-  void ebreak(uint8_t code){
-    is_ebreak=true;
-    ebreak_code=code;
+  #define EBREAK_CODE    0
+  #define ZERO_INST_CODE 1
+  #define OTHER_E_CODE   2
+  #define UNIMPL_CODE    3
+  void ebreak(uint8_t code) {
+      is_ebreak = true;
+      // 异常信息映射：颜色 + 消息
+      struct {
+          const char* color;
+          const char* msg;
+      } exc_info[] = {
+          [EBREAK_CODE]  = {"\33[1;32m", "EBREAK: HIT GOOD TRAP"},
+          [ZERO_INST_CODE]= {"\33[1;34m", "ALL ZERO INSTRUCTION"},
+          [OTHER_E_CODE] = {"\33[1;33m", "E-INSTRUCTION EXCEPTION"},
+          [UNIMPL_CODE]  = {"\33[1;31m", "UNIMPLEMENTED INSTRUCTION"},
+      };
+      // 默认异常（安全）
+      const char* color = "\33[1;31m";
+      const char* msg   = "UNKNOWN EXCEPTION";
+      if (code <= ZERO_INST_CODE) {
+          color = exc_info[code].color;
+          msg   = exc_info[code].msg;
+      }
+      // 统一打印
+      printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
+      printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
+      // 停止仿真
+      Verilated::gotFinish(true);
   }
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;
@@ -103,7 +131,7 @@ static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
 
 int main(int argc, char **argv){
   if (argc < 1){
-    puts("Format: <exe> +/-trace <image>");
+    puts("[NPC] Format: <exe> +/-trace <image>");
     return 1;
   }
   Verilated::commandArgs(argc, argv);
@@ -116,7 +144,7 @@ int main(int argc, char **argv){
     // 使用用户提供的 image 文件
     FILE *img_file = fopen(argv[2], "rb");
     if (img_file == nullptr) {
-      puts("Open executable image failed");
+      puts("[NPC] Open executable image failed");
       return 1;
     }
     img_size = fread(rom, 1, ROM_SIZE, img_file);
@@ -130,33 +158,26 @@ int main(int argc, char **argv){
   }
 
 
-  // 实例化顶层模块
-  VMiniRVSOC *top = new VMiniRVSOC;
   // 创建 build 目录（如果不存在）
   Verilated::mkdir("build");
   // 创建 VCD 波形对象
   Verilated::traceEverOn(true);  // 必须先打开 trace
-  VerilatedVcdC *tfp = new VerilatedVcdC;
   top->trace(tfp, 99);  // 99 是 trace depth
   tfp->open("build/wave.vcd");
 
   // ===== 复位 =====
-  printf("Resetting...\n");
+  printf("[NPC] Resetting...\n");
   top->reset = 1;
   tick(top, tfp);
   top->reset = 0;
   // 主仿真
   std::cout << "[NPC] Simulation start" << std::endl;
-  // while (!Verilated::gotFinish())
-  for (int i = 0; i < 50; i++) 
-  {
+  // while (!Verilated::gotFinish()){
+  for (int i = 0; i < 100 && !Verilated::gotFinish(); i++) {
     tick(top, tfp);
-    if (is_ebreak) {
-      std::cout << "[NPC] Simulation finished at time = " << sim_time << std::endl;
-      break;
-    }
   }
   // 结束
+  std::cout << "[NPC] Simulation finished at time = " << sim_time << std::endl;
   tfp->close();
   delete tfp;
   delete top;
