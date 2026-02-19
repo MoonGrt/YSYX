@@ -307,8 +307,8 @@ class MiniRV extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
-  val memWen   := (idStage.io.memsel === MEM_RW) || (idStage.io.memsel === MEM_RB)
-  val memRen   := (idStage.io.memsel === MEM_WW) || (idStage.io.memsel === MEM_WB)
+  val memWen = (idStage.io.memsel === MEM_RW) || (idStage.io.memsel === MEM_RB)
+  val memRen = (idStage.io.memsel === MEM_WW) || (idStage.io.memsel === MEM_WB)
   io.mem_addr  := exStage.io.exout
   io.mem_wdata := idStage.io.op2
   io.mem_we    := memWen
