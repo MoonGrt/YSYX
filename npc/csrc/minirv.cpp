@@ -97,6 +97,7 @@ extern "C" {
     return data;
   }
   void pmem_write(int waddr, char wmask, int wdata){
+    waddr = waddr & ~0x3u;
     paddr_write(waddr, wmask, wdata);
   }
 }
