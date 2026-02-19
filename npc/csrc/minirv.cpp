@@ -7,16 +7,48 @@
 
 typedef uint32_t word_t;
 typedef uint32_t paddr_t;
+uint8_t *rom = NULL;
+uint8_t *ram = NULL;
 #define CONFIG_MBASE 0x80000000L
 #define CONFIG_MSIZE 0x8000000L
-constexpr int MEM_SIZE=1024*1024*128;
+#define ROM_BASE 0x30000000L
+#define ROM_SIZE 0x1000000L
+#define RAM_BASE 0x80000000L
+#define RAM_SIZE 0x20000000L
+extern "C" void init_rom(){
+  rom = (uint8_t *)malloc(ROM_SIZE);
+  assert(rom);
+  memset(rom, 0, ROM_SIZE);
+};
+extern "C" void init_ram() {
+  ram = (uint8_t *)malloc(RAM_SIZE);
+  assert(ram);
+  memset(ram, 0, RAM_SIZE);
+};
+static const uint32_t img [] = {
+  0x00000297,  // auipc t0,0
+  0x00500513,  // li a0, 5
+  0x00300593,  // li a1, 3
+  0x00b50633,  // add a2, a0, a1
+  0x40b506b3,  // sub a3, a0, a1
+  0x00b51733,  // and a4, a0, a1
+  0x00b567b3,  // or  a5, a0, a1
+  0x00b54733,  // xor a6, a0, a1
+  0x00028823,  // sb  zero, 16(t0)
+  0x0102c503,  // lbu a0, 16(t0)
+  0x00100073,  // ebreak
+  0xdeadbeef,  // some data
+};
 
-uint8_t mem[MEM_SIZE];
-static inline bool in_pmem(paddr_t addr){
-  return addr - CONFIG_MBASE <= CONFIG_MSIZE && addr >= CONFIG_MBASE;
+static inline bool in_rom(paddr_t addr){
+  return addr - ROM_BASE <= ROM_SIZE && addr >= ROM_BASE;
 }
-uint8_t* guest_to_host(paddr_t paddr){   
-  if (in_pmem(paddr)) return mem + paddr - CONFIG_MBASE;
+static inline bool in_ram(paddr_t addr){
+  return addr - RAM_BASE <= RAM_SIZE && addr >= RAM_BASE;
+}
+uint8_t* guest_to_host(paddr_t paddr){
+  if (in_rom(paddr)) return rom + paddr - ROM_BASE;
+  else if (in_ram(paddr)) return ram + paddr - RAM_BASE;
   else return NULL;
 }
 word_t paddr_read(paddr_t addr, int len){
@@ -61,36 +93,7 @@ extern "C" {
 
 
 
-uint8_t *rom = NULL;
-uint8_t *ram = NULL;
-#define ROM_BASE 0x30000000L
-#define ROM_SIZE 0x1000000L
-#define RAM_BASE 0x80000000L
-#define RAM_SIZE 0x20000000L
-extern "C" void init_rom(){
-  rom = (uint8_t *)malloc(ROM_SIZE);
-  assert(rom);
-  memset(rom, 0, ROM_SIZE);
-};
-extern "C" void init_ram() {
-  ram = (uint8_t *)malloc(RAM_SIZE);
-  assert(ram);
-  memset(ram, 0, RAM_SIZE);
-};
-static const uint32_t img [] = {
-  0x00000297,  // auipc t0,0
-  0x00500513,  // li a0, 5
-  0x00300593,  // li a1, 3
-  0x00b50633,  // add a2, a0, a1
-  0x40b506b3,  // sub a3, a0, a1
-  0x00b51733,  // and a4, a0, a1
-  0x00b567b3,  // or  a5, a0, a1
-  0x00b54733,  // xor a6, a0, a1
-  0x00028823,  // sb  zero, 16(t0)
-  0x0102c503,  // lbu a0, 16(t0)
-  0x00100073,  // ebreak
-  0xdeadbeef,  // some data
-};
+
 
 static vluint64_t sim_time = 0;
 static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
