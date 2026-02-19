@@ -9,9 +9,9 @@ typedef uint32_t word_t;
 typedef uint32_t paddr_t;
 uint8_t *rom = NULL;
 uint8_t *ram = NULL;
-#define ROM_BASE 0x30000000L
-#define ROM_SIZE 0x1000000L
-#define RAM_BASE 0x80000000L
+#define ROM_BASE 0x80000000L
+#define ROM_SIZE 0x01000000L
+#define RAM_BASE 0x81000000L
 #define RAM_SIZE 0x20000000L
 extern "C" void init_rom(){
   rom = (uint8_t *)malloc(ROM_SIZE);
