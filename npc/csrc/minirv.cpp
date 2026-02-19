@@ -104,13 +104,9 @@ int main(int argc, char **argv){
     Verilated::commandArgs(argc, argv);
     Verilated::mkdir("logs");
 
-    // FILE *img = fopen(argv[2], "rb");
-    // if (img == nullptr) puts("Open executable image failed");
-    // init_ram();
-    // init_rom();
-    // int img_size = fread(rom, 1, ROM_SIZE, img);
-
     int img_size = 0;
+    init_ram();
+    init_rom();
     if (argc >= 3) {
         // ===== 使用用户提供的 image 文件 =====
         FILE *img_file = fopen(argv[2], "rb");
