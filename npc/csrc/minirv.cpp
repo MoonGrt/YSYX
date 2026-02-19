@@ -46,17 +46,12 @@ extern "C" {
         is_ebreak=true;
         ebreak_code=code;
     }
-    int rom_rdpi(int addr) {
-        addr = addr & ~0x3u;
-        word_t data= paddr_read(addr, 4);
-        return data;
-    }
-    int ram_rdpi(int raddr) {
+    int pmem_read(int raddr) {
         raddr = raddr & ~0x3u;
         word_t data= paddr_read(raddr, 4);
         return data;
     }
-    void ram_wdpi(int waddr, int wdata, char wmask) {
+    void pmem_write(int waddr, int wdata, char wmask) {
         paddr_write(waddr, wmask, wdata);
     }
 }
