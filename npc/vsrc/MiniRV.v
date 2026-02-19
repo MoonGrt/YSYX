@@ -14,6 +14,6 @@ module RAM_DPI(
 );
   always @(*) begin
     rdata = pmem_read(addr);
-    if (we) pmem_write(addr, wdata, mask);
+    if (we) pmem_write(addr, mask, wdata);
   end
 endmodule

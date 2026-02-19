@@ -3,6 +3,8 @@
 #include "VMiniRVSOC.h"
 #include <iostream>
 
+#define DEBUG
+
 typedef uint32_t word_t;
 typedef uint32_t paddr_t;
 #define CONFIG_MBASE 0x80000000L
@@ -26,9 +28,15 @@ word_t paddr_read(paddr_t addr, int len){
     case 4: result= *(uint32_t *)guest_to_host(addr); break;
     default: return 0;
   }
+#ifdef DEBUG
+  printf("paddr_read: addr=0x%08x, len=%d, data=0x%08x\n", addr, len, result);
+#endif
   return result;
 }
 void paddr_write(paddr_t addr, int wmask, word_t data){
+#ifdef DEBUG
+  printf("paddr_write: addr=0x%08x, wmask=0x%02x, data=0x%08x\n", addr, wmask, data);
+#endif
   if (addr < CONFIG_MBASE || addr >= CONFIG_MBASE + MEM_SIZE) return;
   for(int i = 0; i < 4; i++)
     if(wmask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
