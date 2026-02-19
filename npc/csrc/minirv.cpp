@@ -24,6 +24,7 @@ word_t paddr_read(paddr_t addr, int len){
     case 1: result= *guest_to_host(addr); break;
     case 2: result= *(uint16_t *)guest_to_host(addr); break;
     case 4: result= *(uint32_t *)guest_to_host(addr); break;
+    
     default: return 0;
   }
   return result;
