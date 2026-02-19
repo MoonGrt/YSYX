@@ -375,7 +375,7 @@ class MiniRV extends Module {
 class MiniRVSOC extends Module {
   val io = IO(new Bundle {
     val pc   = Output(UInt(32.W))
-    val inst = Input(UInt(32.W))
+    val inst = Output(UInt(32.W))
   })
 
   val cpu = Module(new MiniRV)
