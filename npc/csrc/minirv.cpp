@@ -3,7 +3,7 @@
 #include "VMiniRVSOC.h"
 #include <iostream>
 
-#define DEBUG
+// #define DEBUG
 
 typedef uint32_t word_t;
 typedef uint32_t paddr_t;
