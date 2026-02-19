@@ -144,7 +144,7 @@ object Instructions {
   // Load immediate
   val LUI    = BitPat("b?????????????????????????0110111")
   // EBreak
-  val EBREAK = BitPat("b000000000001000000000000011100111")
+  val EBREAK = BitPat("b00000000000100000000000001110011")
 }
 object Parameters {
   val EX_SEL_LEN = 1
@@ -209,8 +209,8 @@ class ID extends Module {
       LUI  -> List(EX_ADD, IMMU, WB_EX,  MEM_RW),  // sext(imm_u[31:12] << 12)
     ),
   )
-  val immsel = decoded(0)
-  val exsel  = decoded(1)
+  val exsel  = decoded(0)
+  val immsel = decoded(1)
   val wbsel  = decoded(2)
   val memsel = decoded(3)
 
@@ -247,7 +247,7 @@ class ID extends Module {
   io.mem_byte  := (memsel === MEM_RB) || (memsel === MEM_WB)
   io.mem_read  := (memsel === MEM_RW) || (memsel === MEM_RB)
   io.mem_write := (memsel === MEM_WW) || (memsel === MEM_WB)
-  io.reg_write := ~io.mem_write
+  io.reg_write := (wbsel =/= WB_NONE)
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := io.wb_data
   }
@@ -268,12 +268,14 @@ class EX extends Module {
     val pcn = Output(UInt(32.W))
   })
 
+  val jumpen = (io.exsel === EX_JALR)
   // -------- ALU --------
-  io.exout := io.op1 + io.op2
+  io.exout := Mux(
+    jumpen, io.pc + 4.U, io.op1 + io.op2
+  )
   // -------- JUMP --------
   io.pcn := Mux(
-    (io.exsel === Parameters.EX_JALR),
-    io.exout & ~1.U(32.W), io.pc + 4.U
+    jumpen, io.exout & ~1.U(32.W), io.pc + 4.U
   )
 }
 
