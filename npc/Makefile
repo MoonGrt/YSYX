@@ -33,7 +33,7 @@ idea:
 GTKWAVE =gtkwave
 VERILATOR = verilator
 VERILATOR_CFLAGS += --trace -cc -exe -MMD --build -cc -O3 --x-assign fast \
-                    --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT
+                    --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT -ggdb -ggdb -j 8
 
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -55,10 +55,10 @@ $(BIN): $(VSRCS)
 		--top-module $(TOPNAME) $^ $(CSRCS)
 
 run: $(BIN)
-	@$^
+	@$^ +trace
 
 gdb: $(BIN)
-	@echo "Write this Makefile by yourself."
+	gdb --args @$^ -trace
 
 wave: sim
 	$(GTKWAVE) $(WAVE_FILE)

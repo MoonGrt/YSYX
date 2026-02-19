@@ -18,37 +18,37 @@ uint8_t* guest_to_host(paddr_t paddr){
   else return NULL;
 }
 word_t paddr_read(paddr_t addr, int len){
-    if (addr < CONFIG_MBASE || addr >= CONFIG_MBASE + MEM_SIZE) return 0;
-    word_t result = 0;
-    switch (len){
-        case 1: result= *guest_to_host(addr); break;
-        case 2: result= *(uint16_t *)guest_to_host(addr); break;
-        case 4: result= *(uint32_t *)guest_to_host(addr); break;
-        default: return 0;
-    }
+  if (addr < CONFIG_MBASE || addr >= CONFIG_MBASE + MEM_SIZE) return 0;
+  word_t result = 0;
+  switch (len){
+    case 1: result= *guest_to_host(addr); break;
+    case 2: result= *(uint16_t *)guest_to_host(addr); break;
+    case 4: result= *(uint32_t *)guest_to_host(addr); break;
+    default: return 0;
+  }
   return result;
 }
 void paddr_write(paddr_t addr, int wmask, word_t data){
-    if (addr < CONFIG_MBASE || addr >= CONFIG_MBASE + MEM_SIZE) return;
-    for(int i = 0; i < 4; i++)
-        if(wmask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
+  if (addr < CONFIG_MBASE || addr >= CONFIG_MBASE + MEM_SIZE) return;
+  for(int i = 0; i < 4; i++)
+    if(wmask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
 }
 
 extern "C" {
-    bool is_ebreak;
-    uint8_t ebreak_code;
-    void ebreak(uint8_t code){
-        is_ebreak=true;
-        ebreak_code=code;
-    }
-    int pmem_read(int raddr){
-        raddr = raddr & ~0x3u;
-        word_t data= paddr_read(raddr, 4);
-        return data;
-    }
-    void pmem_write(int waddr, int wdata, char wmask){
-        paddr_write(waddr, wmask, wdata);
-    }
+  bool is_ebreak;
+  uint8_t ebreak_code;
+  void ebreak(uint8_t code){
+    is_ebreak=true;
+    ebreak_code=code;
+  }
+  int pmem_read(int raddr){
+    raddr = raddr & ~0x3u;
+    word_t data= paddr_read(raddr, 4);
+    return data;
+  }
+  void pmem_write(int waddr, int wdata, char wmask){
+    paddr_write(waddr, wmask, wdata);
+  }
 }
 
 
@@ -86,66 +86,63 @@ static const uint32_t img [] = {
 
 static vluint64_t sim_time = 0;
 static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
-    // ======== 上升沿 ========
-    top->clock = 0;
-    top->eval();
-    tfp->dump(sim_time++);
-    // ======== 下降沿 ========
-    top->clock = 1;
-    top->eval();
-    tfp->dump(sim_time++);
+  // ======== 上升沿 ========
+  top->clock = 0;
+  top->eval();
+  tfp->dump(sim_time++);
+  // ======== 下降沿 ========
+  top->clock = 1;
+  top->eval();
+  tfp->dump(sim_time++);
 }
 
 int main(int argc, char **argv){
-    if (argc < 1){
-        puts("Format: <exe> +/-trace <image>");
-        return 1;
+  if (argc < 1){
+    puts("Format: <exe> +/-trace <image>");
+    return 1;
+  }
+  Verilated::commandArgs(argc, argv);
+  Verilated::mkdir("logs");
+
+  int img_size = 0;
+  init_ram();
+  init_rom();
+  if (argc >= 3) {
+    // ===== 使用用户提供的 image 文件 =====
+    FILE *img_file = fopen(argv[2], "rb");
+    if (img_file == nullptr) {
+      puts("Open executable image failed");
+      return 1;
     }
-    Verilated::commandArgs(argc, argv);
-    Verilated::mkdir("logs");
-
-    int img_size = 0;
-    init_ram();
-    init_rom();
-    if (argc >= 3) {
-        // ===== 使用用户提供的 image 文件 =====
-        FILE *img_file = fopen(argv[2], "rb");
-        if (img_file == nullptr) {
-            puts("Open executable image failed");
-            return 1;
-        }
-        img_size = fread(rom, 1, ROM_SIZE, img_file);
-        fclose(img_file);
-        printf("[NPC] Load image from file, size = %d bytes\n", img_size);
-    } else {
-        // ===== 使用默认内置 image =====
-        img_size = sizeof(img);
-        memcpy(rom, img, img_size);
-        printf("[NPC] Load default image, size = %d bytes\n", img_size);
-    }
+    img_size = fread(rom, 1, ROM_SIZE, img_file);
+    fclose(img_file);
+    printf("[NPC] Load image from file, size = %d bytes\n", img_size);
+  } else {
+    // ===== 使用默认内置 image =====
+    img_size = sizeof(img);
+    memcpy(rom, img, img_size);
+    printf("[NPC] Load default image, size = %d bytes\n", img_size);
+  }
 
 
-    // 实例化顶层模块
-    VMiniRVSOC *top = new VMiniRVSOC;
+  // 实例化顶层模块
+  VMiniRVSOC *top = new VMiniRVSOC;
+  // 创建 build 目录（如果不存在）
+  Verilated::mkdir("build");
+  // 创建 VCD 波形对象
+  Verilated::traceEverOn(true);  // 必须先打开 trace
+  VerilatedVcdC *tfp = new VerilatedVcdC;
+  top->trace(tfp, 99);  // 99 是 trace depth
+  tfp->open("build/wave.vcd");
 
-    // 创建 build 目录（如果不存在）
-    Verilated::mkdir("build");
-
-    // 创建 VCD 波形对象
-    Verilated::traceEverOn(true);  // 必须先打开 trace
-    VerilatedVcdC *tfp = new VerilatedVcdC;
-    top->trace(tfp, 99);  // 99 是 trace depth
-    tfp->open("build/wave.vcd");
-
-    // 主仿真
-    std::cout << "[NPC] Simulation start" << std::endl;
-    // while (!Verilated::gotFinish()) tick(top, tfp);
-    for (int i = 0; i < 50; i++) tick(top, tfp);
-
-    // 结束
-    std::cout << "[NPC] Simulation finished at time = " << sim_time << std::endl;
-    tfp->close();
-    delete tfp;
-    delete top;
-    return 0;
+  // 主仿真
+  std::cout << "[NPC] Simulation start" << std::endl;
+  // while (!Verilated::gotFinish()) tick(top, tfp);
+  for (int i = 0; i < 50; i++) tick(top, tfp);
+  // 结束
+  std::cout << "[NPC] Simulation finished at time = " << sim_time << std::endl;
+  tfp->close();
+  delete tfp;
+  delete top;
+  return 0;
 }
