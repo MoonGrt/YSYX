@@ -74,10 +74,13 @@ static void step(void) {
       uint32_t addr = (a + imm);
       uint32_t w = M[guest_to_host(addr) >> 2];
 #ifdef DEBUG
-      printf("raddr = %08x; rdata = %08x\n", addr, M[guest_to_host(addr)>>2]);
+        printf("raddr = %08x;  rdata = %08x\n", addr, M[guest_to_host(addr)>>2]);
 #endif
       if (funct3 == 4) {  // LB
         uint32_t sh = (addr & 3) * 8;
+#ifdef DEBUG
+        printf("raddr = %08x; rbdata = %08x\n", addr, sext((w >> sh) & 0xff, 8));
+#endif
         reg_write(rd, sext((w >> sh) & 0xff, 8));
       } else {  // LW
         reg_write(rd, w);
@@ -88,12 +91,15 @@ static void step(void) {
     case 0x23: {
       int32_t imm = sext(((ins >> 7) & 0x1f) | ((ins >> 25) << 5), 12);
       uint32_t addr = a + imm;
+#ifdef DEBUG
+      printf("waddr = %08x;  wdata = %08x\n", addr, b);
+#endif
       if (funct3 == 0) {  // SB
         uint32_t sh = (addr & 3) * 8;
         uint32_t w = M[guest_to_host(addr) >> 2];
         w = (w & ~(0xff << sh)) | ((b & 0xff) << sh);
 #ifdef DEBUG
-        printf("waddr = %08x; wdata = %08x\n", addr, w);
+        printf("waddr = %08x; wbdata = %08x, sh = %d\n", addr, w, sh);
 #endif
         M[guest_to_host(addr) >> 2] = w;
       } else {  // SW
@@ -101,9 +107,6 @@ static void step(void) {
           pixels[(addr >> 10) & 0xff][(addr >> 2) & 0xff] = b;
           io_write(AM_GPU_FBDRAW, 0, 0, pixels, 256, 256, true);
         } else if (funct3 == 2) {
-#ifdef DEBUG
-          printf("waddr = %08x; wdata = %08x\n", addr, b);
-#endif
           M[guest_to_host(addr) >> 2] = b;
         }
       }
@@ -173,7 +176,7 @@ int main(void) {
 
   while (1) {
 #ifdef DEBUG
-    if (stepcnt > 0) getchar();  // 等待回车
+    if (stepcnt > 140) getchar();  // 等待回车
 #endif
     step();
 #ifdef DEBUG
