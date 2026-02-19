@@ -174,7 +174,7 @@ int main(int argc, char **argv){
   std::cout << "[NPC] Simulation start" << std::endl;
   // while (!Verilated::gotFinish()){
   for (int i = 0; i < 100 && !Verilated::gotFinish(); i++) {
-      tick(top, tfp);
+    tick(top, tfp);
   }
   // 结束
   tfp->close();
