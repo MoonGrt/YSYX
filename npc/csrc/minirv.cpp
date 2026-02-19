@@ -73,13 +73,11 @@ void paddr_write(paddr_t addr, int mask, word_t data){
 }
 
 extern "C" {
-  bool is_ebreak;
   #define EBREAK_CODE    0
   #define ZERO_INST_CODE 1
   #define OTHER_E_CODE   2
   #define UNIMPL_CODE    3
   void ebreak(uint8_t code) {
-      is_ebreak = true;
       // 异常信息映射：颜色 + 消息
       struct {
           const char* color;
