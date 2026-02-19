@@ -334,7 +334,9 @@ class MiniRV extends Module {
   val trapen = (io.inst === EBREAK)
   trap.io.trap := (trapen)
   trap.io.code := 0.U(8.W)
-  when (trapen) ifStage.io.pc_next := ifStage.io.pc
+  when (trapen) {
+    ifStage.io.pc_next := ifStage.io.pc
+  }
 }
 
 // ---------------------------
