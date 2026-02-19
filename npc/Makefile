@@ -49,7 +49,7 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
 $(BIN): $(VSRCS) $(CSRCS)
-	# $(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	mkdir -p $(BUILD_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
@@ -63,7 +63,7 @@ gdb: $(BIN)
 	gdb --args $(BIN) -trace $(IMG)
 
 wave: $(WAVE_FILE)
-	$(GTKWAVE) $(WAVE_FILE) &
+	$(GTKWAVE) $(WAVE_FILE)
 
 clean:
 	-rm -rf $(BUILD_DIR)

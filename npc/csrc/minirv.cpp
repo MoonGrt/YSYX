@@ -28,13 +28,13 @@ extern "C" void init_ram() {
   memset(ram, 0, RAM_SIZE);
 };
 static const uint32_t img [] = {
-  0x00500513,  // addi a0, zero, 5; a0 = 5
-  0x00300593,  // addi a1, zero, 3; a1 = 3
-  0x00b50633,  // add a2, a0, a1  ; a2 = a0 + a1
-  0x00028823,  // sb  zero, 16(t0); 存储 0 到 t0+16
-  0x0102c503,  // lbu a0, 16(t0)  ; 从 t0+16 读一个字节
-  0x00100073,  // ebreak
-  0xdeadbeef,  // 数据占位
+  0x00500513,  // 0x00 addi a0, zero, 5; a0 = 5
+  0x00300593,  // 0x04 addi a1, zero, 3; a1 = 3
+  0x00b50633,  // 0x08 add a2, a0, a1  ; a2 = a0 + a1
+  0x00028823,  // 0x0c sb  zero, 16(t0); 存储 0 到 t0+16
+  0x0102c503,  // 0x10 lbu a0, 16(t0)  ; 从 t0+16 读一个字节
+  0x00100073,  // 0x04 ebreak
+  0xdeadbeef,  // 0x08 deadbeef
 };
 
 static inline bool in_rom(paddr_t addr){
@@ -74,32 +74,6 @@ void paddr_write(paddr_t addr, int mask, word_t data){
 
 extern "C" {
   bool is_ebreak;
-  // #define HIT_GOOD_TRAP 0
-  // #define HIT_BAD_TRAP  1
-  // #define ABORT         2
-  // void ebreak(uint8_t code){
-  //   is_ebreak=true;
-  //   switch(code){
-  //     // case HIT_GOOD_TRAP:
-  //     //   printf("\33[1;32m HIT GOOD TRAP \33[0m at pc = 0x%08x   ", top->cpu->io_pc);
-  //     //   printf("\33[1;35m Instruction \33[0m = 0x%08x\n", top->cpu->io_inst);
-  //     //   break;
-  //     // case HIT_BAD_TRAP:
-  //     //   printf("\33[1;31m HIT BAD TRAP\33[0m at pc = 0x%08x   ", top->cpu->io_pc);
-  //     //   printf("\33[1;32m Instruction \33[0m = 0x%08x\n", top->cpu->io_inst);
-  //     //   break;
-  //     // case ABORT:
-  //     // default:
-  //     //   printf("\33[1;31m ABORT\33[0m at pc = 0x%08x   ", top->cpu->io_pc);
-  //     //   printf("\33[1;32m Instruction \33[0m = 0x%08x\n", top->cpu->io_inst);
-  //     //   break;
-  //     case HIT_GOOD_TRAP: printf("\33[1;32m HIT GOOD TRAP; \33[0mebreak: code=0x%02x\n", code); break;
-  //     case HIT_BAD_TRAP: printf("\33[1;31m HIT BAD TRAP; \33[0mebreak: code=0x%02xn", code); break;
-  //     case ABORT:
-  //     default: printf("\33[1;31m ABORT"); break;
-  //   }
-  //   Verilated::gotFinish(true);
-  // }
   #define EBREAK_CODE    0
   #define ZERO_INST_CODE 1
   #define OTHER_E_CODE   2
@@ -124,8 +98,8 @@ extern "C" {
           msg   = exc_info[code].msg;
       }
       // 统一打印
-      printf("[NPC] %s%s\33[0m at pc = 0x%08x   ", color, msg, top->io_pc);
-      printf("\33[1;35m Instruction \33[0m = 0x%08x\n", top->io_inst);
+      printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
+      printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
       // 停止仿真
       Verilated::gotFinish(true);
   }
