@@ -33,7 +33,7 @@ idea:
 GTKWAVE =gtkwave
 VERILATOR = verilator
 VERILATOR_CFLAGS += --trace -cc -exe -MMD --build -cc -O3 --x-assign fast \
-                    --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT -ggdb -ggdb -j 8
+                    --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT -ggdb -j 8
 
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
