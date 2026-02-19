@@ -61,11 +61,11 @@ extern "C" {
 static vluint64_t sim_time = 0;
 static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp) {
     // ======== 上升沿 ========
-    top->clk = 0;
+    top->clock = 0;
     top->eval();
     tfp->dump(sim_time++);
     // ======== 下降沿 ========
-    top->clk = 1;
+    top->clock = 1;
     top->eval();
     tfp->dump(sim_time++);
 }
