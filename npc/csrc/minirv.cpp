@@ -59,7 +59,7 @@ extern "C" {
 
 
 static vluint64_t sim_time = 0;
-static void tick(VMiniRVSOC* top, VerilatedFstC* tfp) {
+static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp) {
     // ======== 上升沿 ========
     top->clk = 0;
     top->eval();
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < 50000; i++) tick(top, tfp);
 
     // 结束
-    std::cout << "[NPC] Simulation finished at time = " << main_time << std::endl;
+    std::cout << "[NPC] Simulation finished at time = " << sim_time << std::endl;
     tfp->close();
     delete tfp;
     delete top;
