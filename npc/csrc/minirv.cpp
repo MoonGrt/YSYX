@@ -185,10 +185,12 @@ int main(int argc, char **argv){
   delete tfp;
   delete top;
   if (is_ebreak) {
-    std::cout << "[NPC] Simulation finished at time = " << sim_time << ", \33[1;32mwith EBREAK hit\33[0m\n" << std::endl;
+    std::cout << "[NPC] Simulation finished at time = " << sim_time 
+              << ", \33[1;32mwith EBREAK hit\33[0m" << std::endl;
     return 0;
   } else {
-    std::cout << "[NPC] Simulation finished at time = " << sim_time << ", \33[1;31mwithout EBREAK hit\33[0m\n" << std::endl;
+    std::cout << "[NPC] Simulation finished at time = " << sim_time 
+              << ", \33[1;31mwithout EBREAK hit\33[0m" << std::endl;
     return 1;
   }
 }
