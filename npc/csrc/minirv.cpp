@@ -124,8 +124,8 @@ extern "C" {
           msg   = exc_info[code].msg;
       }
       // 统一打印
-      printf("%s%s\33[0m at pc = 0x%08x   ", color, msg, top->cpu->io_pc);
-      printf("\33[1;35m Instruction \33[0m = 0x%08x\n", top->cpu->io_inst);
+      printf("[NPC] %s%s\33[0m at pc = 0x%08x   ", color, msg, top->io_pc);
+      printf("\33[1;35m Instruction \33[0m = 0x%08x\n", top->io_inst);
       // 停止仿真
       Verilated::gotFinish(true);
   }

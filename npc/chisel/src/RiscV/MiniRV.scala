@@ -257,18 +257,10 @@ class ID extends Module {
     regfile(io.wb_rd) := io.wb_data
   }
 
-  // // -------- 异常处理 --------
-  // val trap   = Module(new EBreak)
-  // val trapen = (io.inst === EBREAK)
-  // trap.io.trap := trapen
-  // trap.io.code := Mux(
-  //   (io.inst === E) && (io.inst =/= EBREAK),
-  //   1.U(8.W), 0.U(8.W))
-  // io.halt := trapen
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
   // 定义异常编码规则
-  // 0: EBREAK, 1: 全零指令, 2: 未实现指令
+  // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
   val impl_inst = Instructions.IMPLEMENTED.filterNot(_ == Instructions.E)
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
   val is_zero = (io.inst === 0.U)
@@ -284,10 +276,10 @@ class ID extends Module {
     )
   )
   // 输出到 EBreak 模块
-  trap.io.trap := is_unimpl
+  trap.io.trap := ~reset.asBool && is_unimpl
   trap.io.code := exc_code
   // halt 信号
-  io.halt := is_unimpl
+  io.halt := ~reset.asBool && is_unimpl
 }
 
 // ---------------------------
