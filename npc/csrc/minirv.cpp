@@ -102,7 +102,8 @@ extern "C" {
   // }
   #define EBREAK_CODE    0
   #define ZERO_INST_CODE 1
-  #define UNIMPL_CODE    2
+  #define OTHER_E_CODE   2
+  #define UNIMPL_CODE    3
   void ebreak(uint8_t code) {
       is_ebreak = true;
       // 异常信息映射：颜色 + 消息
@@ -111,8 +112,9 @@ extern "C" {
           const char* msg;
       } exc_info[] = {
           [EBREAK_CODE]  = {"\33[1;32m", "EBREAK: HIT GOOD TRAP"},
+          [ZERO_INST_CODE]= {"\33[1;34m", "ALL ZERO INSTRUCTION"},
+          [OTHER_E_CODE] = {"\33[1;33m", "E-INSTRUCTION EXCEPTION"},
           [UNIMPL_CODE]  = {"\33[1;31m", "UNIMPLEMENTED INSTRUCTION"},
-          [ZERO_INST_CODE]= {"\33[1;34m", "ALL ZERO INSTRUCTION"}
       };
       // 默认异常（安全）
       const char* color = "\33[1;31m";

@@ -273,12 +273,14 @@ class ID extends Module {
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
   val is_zero = (io.inst === 0.U)
   val is_ebreak = (io.inst === EBREAK)
+  val is_otherE = (io.inst === E) && (io.inst =/= EBREAK)
   val exc_code = MuxCase(
     1.U(8.W),  // 默认全零指令
     Seq(
       is_ebreak -> 0.U,  // EBREAK
       is_zero -> 1.U,  // 全零指令
-      is_unimpl -> 2.U  // 未实现指令
+      is_otherE -> 2.U,  // 其他E指令
+      is_unimpl -> 3.U  // 未实现指令
     )
   )
   // 输出到 EBreak 模块
@@ -317,7 +319,7 @@ class MiniRV extends Module {
   import Instructions._
   import Parameters._
   val io = IO(new Bundle {
-    val pc    = Output(UInt(32.W))
+    val pc   = Output(UInt(32.W))
     val inst = Input(UInt(32.W))
 
     val mem_we    = Output(Bool())
@@ -371,7 +373,10 @@ class MiniRV extends Module {
 // MiniRV SOC：自包含 CPU + ROM + RAM
 // ---------------------------
 class MiniRVSOC extends Module {
-  val io = IO(new Bundle {})
+  val io = IO(new Bundle {
+    val pc   = Output(UInt(32.W))
+    val inst = Input(UInt(32.W))
+  })
 
   val cpu = Module(new MiniRV)
   val rom = Module(new ROM_DPI)
@@ -387,4 +392,8 @@ class MiniRVSOC extends Module {
   ram.io.mask  := cpu.io.mem_mask
   ram.io.wdata := cpu.io.mem_wdata
   cpu.io.mem_rdata := ram.io.rdata
+
+  // 输出
+  io.pc   := cpu.io.pc
+  io.inst := cpu.io.inst
 }
