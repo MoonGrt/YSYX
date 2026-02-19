@@ -13,7 +13,7 @@ typedef uint32_t word_t;
 typedef uint32_t paddr_t;
 uint8_t *mem = NULL;
 #define MEM_BASE 0x80000000L
-#define MEM_SIZE 0x01000000L
+#define MEM_SIZE 0x20000000L
 extern "C" void init_mem(){
   mem = (uint8_t *)malloc(MEM_SIZE);
   assert(mem);
