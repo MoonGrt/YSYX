@@ -26,10 +26,6 @@ image: image-dep
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
 run: insert-arg
-	$(MAKE) -C $(NPC_HOME) run IMG=$(IMAGE).bin
-
-gdb: insert-arg
-	$(MAKE) -C $(NPC_HOME) gdb IMG=$(IMAGE).bin
-
+	echo "TODO: add command here to run simulation"
 
 .PHONY: insert-arg
