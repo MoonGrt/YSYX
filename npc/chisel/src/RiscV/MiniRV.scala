@@ -259,11 +259,11 @@ class ID extends Module {
   ))
 
   // -------- EX操作数 --------
-  val immen = (immsel =/= IMMN)
   val rs1_data = regfile(rs1)
   val rs2_data = regfile(rs2)
   io.rs1 := regfile(rs1)
   io.rs2 := regfile(rs2)
+  io.immen := (immsel =/= IMMN)
 
   // -------- JUMP功能 --------
   io.jumpen := (jumpsel === JUMP_JALR)
