@@ -53,6 +53,23 @@ extern "C" {
 
 
 
+uint8_t *rom = NULL;
+uint8_t *ram = NULL;
+#define ROM_BASE 0x30000000L
+#define ROM_SIZE 0x1000000L
+#define RAM_BASE 0x80000000L
+#define RAM_SIZE 0x20000000L
+extern "C" void init_rom(){
+  rom = (uint8_t *)malloc(ROM_SIZE);
+  assert(rom);
+  memset(rom, 0, ROM_SIZE);
+};
+extern "C" void init_ram() {
+  ram = (uint8_t *)malloc(RAM_SIZE);
+  assert(ram);
+  memset(ram, 0, RAM_SIZE);
+};
+
 static vluint64_t sim_time = 0;
 static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
     // ======== 上升沿 ========
