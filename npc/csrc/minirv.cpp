@@ -27,8 +27,6 @@ static const uint32_t img [] = {
   0x00500513,  // addi a0, zero, 5; a0 = 5
   0x00300593,  // addi a1, zero, 3; a1 = 3
   0x00b50633,  // add a2, a0, a1  ; a2 = a0 + a1
-  0x00550633,  // add a3, a0, a1  ; 用 add 代替 sub 不可能，保持加法
-  0x00551733,  // add a4, a0, a1  ; 用 add 代替 and/or/xor
   0x00028823,  // sb  zero, 16(t0); 存储 0 到 t0+16
   0x0102c503,  // lbu a0, 16(t0)  ; 从 t0+16 读一个字节
   0x00100073,  // ebreak
