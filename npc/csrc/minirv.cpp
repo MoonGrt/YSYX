@@ -34,19 +34,21 @@ void paddr_write(paddr_t addr, int wmask, word_t data){
         if(wmask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
 }
 
-bool is_ebreak;
-uint8_t ebreak_code;
-void ebreak(uint8_t code){
-    is_ebreak=true;
-    ebreak_code=code;
-}
-int pmem_read(int raddr){
-    raddr = raddr & ~0x3u;
-    word_t data= paddr_read(raddr, 4);
-    return data;
-}
-void pmem_write(int waddr, int wdata, char wmask){
-    paddr_write(waddr, wmask, wdata);
+extern "C" {
+    bool is_ebreak;
+    uint8_t ebreak_code;
+    void ebreak(uint8_t code){
+        is_ebreak=true;
+        ebreak_code=code;
+    }
+    int pmem_read(int raddr){
+        raddr = raddr & ~0x3u;
+        word_t data= paddr_read(raddr, 4);
+        return data;
+    }
+    void pmem_write(int waddr, int wdata, char wmask){
+        paddr_write(waddr, wmask, wdata);
+    }
 }
 
 
