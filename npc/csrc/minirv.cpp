@@ -9,8 +9,6 @@ typedef uint32_t word_t;
 typedef uint32_t paddr_t;
 uint8_t *rom = NULL;
 uint8_t *ram = NULL;
-#define CONFIG_MBASE 0x80000000L
-#define CONFIG_MSIZE 0x8000000L
 #define ROM_BASE 0x30000000L
 #define ROM_SIZE 0x1000000L
 #define RAM_BASE 0x80000000L
@@ -52,7 +50,8 @@ uint8_t* guest_to_host(paddr_t paddr){
   else return NULL;
 }
 word_t paddr_read(paddr_t addr, int len){
-  if (addr < CONFIG_MBASE || addr >= CONFIG_MBASE + MEM_SIZE) return 0;
+  if ((addr < ROM_BASE || addr >= ROM_BASE + ROM_SIZE) ||
+      (addr < RAM_BASE || addr >= RAM_BASE + RAM_SIZE)) return 0;
   word_t result = 0;
   switch (len){
     case 1: result= *guest_to_host(addr); break;
@@ -69,7 +68,7 @@ void paddr_write(paddr_t addr, int mask, word_t data){
 #ifdef DEBUG
   printf("paddr_write: addr=0x%08x, mask=0x%02x, data=0x%08x\n", addr, mask, data);
 #endif
-  if (addr < CONFIG_MBASE || addr >= CONFIG_MBASE + MEM_SIZE) return;
+  if (addr < RAM_BASE || addr >= RAM_BASE + RAM_SIZE) return;
   for(int i = 0; i < 4; i++)
     if(mask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
 }
