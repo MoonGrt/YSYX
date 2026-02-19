@@ -33,13 +33,13 @@ word_t paddr_read(paddr_t addr, int len){
 #endif
   return result;
 }
-void paddr_write(paddr_t addr, int wmask, word_t data){
+void paddr_write(paddr_t addr, int mask, word_t data){
 #ifdef DEBUG
-  printf("paddr_write: addr=0x%08x, wmask=0x%02x, data=0x%08x\n", addr, wmask, data);
+  printf("paddr_write: addr=0x%08x, mask=0x%02x, data=0x%08x\n", addr, mask, data);
 #endif
   if (addr < CONFIG_MBASE || addr >= CONFIG_MBASE + MEM_SIZE) return;
   for(int i = 0; i < 4; i++)
-    if(wmask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
+    if(mask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
 }
 
 extern "C" {
@@ -54,7 +54,7 @@ extern "C" {
     word_t data= paddr_read(raddr, 4);
     return data;
   }
-  void pmem_write(int waddr, int wdata, char wmask){
+  void pmem_write(int waddr, char wmask, int wdata){
     paddr_write(waddr, wmask, wdata);
   }
 }
