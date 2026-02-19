@@ -345,7 +345,7 @@ class MiniRV extends Module {
   // IF
   io.pc := ifStage.io.pc
   ifStage.io.jumpen := idStage.io.jumpen
-  ifStage.io.jump   := idStage.io.op2
+  ifStage.io.jump   := exStage.io.exout
   ifStage.io.halt   := idStage.io.halt
 
   // ID
