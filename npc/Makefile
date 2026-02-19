@@ -56,10 +56,10 @@ $(BIN): $(VSRCS) $(CSRCS)
 		--Mdir $(OBJ_DIR) -o $(abspath $(BIN)) \
 		--top-module $(TOPNAME) $^
 
-run: $(BIN)
+run: verilog $(BIN)
 	$(BIN) +trace $(IMG)
 
-gdb: $(BIN)
+gdb: verilog $(BIN)
 	gdb --args $(BIN) -trace $(IMG)
 
 wave: run
