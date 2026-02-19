@@ -119,11 +119,11 @@ object Sext {
 // ---------------------------
 class IF extends Module {
   val io = IO(new Bundle {
-    val pc_next = Input(UInt(32.W))   // 下一个 PC
+    val pcn = Input(UInt(32.W))   // 下一个 PC
     val pc  = Output(UInt(32.W))  // 当前 PC 输出
   })
   val pc = RegInit("h80000000".U(32.W))
-  pc := io.pc_next
+  pc := io.pcn
   io.pc := pc
 }
 
@@ -265,13 +265,13 @@ class EX extends Module {
     val exsel = Input(UInt(EX_SEL_LEN.W))
 
     val exout  = Output(UInt(32.W))
-    val pcnext = Output(UInt(32.W))
+    val pcn = Output(UInt(32.W))
   })
 
   // -------- ALU --------
   io.exout := io.op1 + io.op2
   // -------- JUMP --------
-  io.pcnext := Mux(
+  io.pcn := Mux(
     (io.exsel === Parameters.EX_JALR),
     io.exout & ~1.U(32.W), io.pc + 4.U
   )
@@ -314,7 +314,7 @@ class MiniRV extends Module {
   io.mem_addr  := exStage.io.exout
   io.mem_wdata := idStage.io.op2
   io.mem_we    := idStage.io.mem_write
-  io.mem_mask := Mux(
+  io.mem_mask  := Mux(
     idStage.io.mem_byte,
     "b0001".U, "b1111".U
   )
@@ -330,13 +330,12 @@ class MiniRV extends Module {
   idStage.io.wb_data := wb_data
 
   // Trap & PC update
-  val trap = Module(new EBreak)
+  val trap   = Module(new EBreak)
   val trapen = (io.inst === EBREAK)
   trap.io.trap := (trapen)
   trap.io.code := 0.U(8.W)
-  when (trapen) {
-    ifStage.io.pc_next := ifStage.io.pc
-  }
+  ifStage.io.pcn := exStage.io.pcn
+  when (trapen) {ifStage.io.pcn := ifStage.io.pc}
 }
 
 // ---------------------------
