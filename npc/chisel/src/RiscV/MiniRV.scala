@@ -369,8 +369,8 @@ class MiniRV extends Module {
   io.mem_we    := idStage.io.memWen
   io.mem_addr  := exStage.io.exout
   io.mem_wdata := Mux(idStage.io.memBen,
-                      idStage.io.rs2 << (exStage.io.exout(1,0) << 3),  // LBU/LB mask
-                      idStage.io.rs2)  // SW/SW
+                      idStage.io.rs2 << (exStage.io.exout(1,0) << 3),
+                      idStage.io.rs2)
   io.mem_mask  := Mux(idStage.io.memBen,
                      (1.U << exStage.io.exout(1,0)).asUInt,  // LBU/LB mask
                       "b1111".U)  // SW/SW
