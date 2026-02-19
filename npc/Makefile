@@ -5,13 +5,13 @@ PRJ = chisel
 verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(RTL_DIR)
-	mill -i $(PRJ).runMain MiniRVSOC --target-dir $(RTL_DIR)
+	mill -i $(PRJ).runMain $(TOPNAME) --target-dir $(RTL_DIR)
 
 test:
 	mill -i $(PRJ).test
 
 help:
-	mill -i $(PRJ).runMain Elaborate --help
+	mill -i $(PRJ).runMain $(TOPNAME) --help
 
 reformat:
 	mill -i __.reformat
