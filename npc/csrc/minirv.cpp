@@ -3,7 +3,7 @@
 #include "VMiniRVSOC.h"
 #include <iostream>
 
-// #define DEBUG
+#define DEBUG
 
 // 实例化顶层模块
 VMiniRVSOC *top = new VMiniRVSOC;
