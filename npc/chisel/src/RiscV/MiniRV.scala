@@ -203,7 +203,7 @@ class ID extends Module {
   io.jalr := opcode === "b1100111".U
 
   val trap = Module(new EBreak)
-  trap.io.trap := (opcode === "b1110011".U)
+  trap.io.trap := (io.instr === "h00100073".U)
   trap.io.code := 0.U(8.W)
 }
 
