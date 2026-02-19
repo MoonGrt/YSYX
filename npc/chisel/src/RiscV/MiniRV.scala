@@ -321,7 +321,10 @@ class EX extends Module {
     val exout = Output(UInt(32.W))
   })
   // -------- ALU --------
-  io.exout := io.rs1 + io.rs2
+  io.exout := Mux(
+    io.immen,
+    io.rs1 + io.imm, io.rs1 + io.rs2
+  )
 }
 
 // ---------------------------
