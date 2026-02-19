@@ -185,7 +185,9 @@ class ID extends Module {
     val op2       = Output(UInt(32.W))
     val rd_addr   = Output(UInt(5.W))
 
-    val memsel    = Output(UInt(MEM_SEL_LEN.W))
+    val mem_byte  = Output(Bool())
+    val mem_read  = Output(Bool())
+    val mem_write = Output(Bool())
     val reg_write = Output(Bool())
   })
 
@@ -242,7 +244,9 @@ class ID extends Module {
 
   // -------- WB功能 --------
   io.rd_addr := rd
-  io.memsel  := memsel
+  io.mem_byte  := (memsel === MEM_RB) || (memsel === MEM_WB)
+  io.mem_read  := (memsel === MEM_RW) || (memsel === MEM_RB)
+  io.mem_write := (memsel === MEM_WW) || (memsel === MEM_WB)
   io.reg_write := ~io.mem_write
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := io.wb_data
@@ -307,20 +311,19 @@ class MiniRV extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
-  val memWen = (idStage.io.memsel === MEM_RW) || (idStage.io.memsel === MEM_RB)
-  val memRen = (idStage.io.memsel === MEM_WW) || (idStage.io.memsel === MEM_WB)
   io.mem_addr  := exStage.io.exout
   io.mem_wdata := idStage.io.op2
-  io.mem_we    := memWen
-  io.mem_mask := MuxLookup(idStage.io.memsel, "b1111".U)(Seq(
-    MEM_WB -> "b0001".U,
-    MEM_WW -> "b1111".U
-  ))
+  io.mem_we    := idStage.io.mem_write
+  io.mem_mask := Mux(
+    idStage.io.mem_byte,
+    "b0001".U, "b1111".U
+  )
 
   // Write Back
   val wb_data = Mux(
-    memRen,
-    io.mem_rdata, exStage.io.exout)
+    idStage.io.mem_read,
+    io.mem_rdata, exStage.io.exout
+  )
 
   idStage.io.wb_en   := idStage.io.reg_write
   idStage.io.wb_rd   := idStage.io.rd_addr
@@ -331,9 +334,7 @@ class MiniRV extends Module {
   val trapen = (io.inst === EBREAK)
   trap.io.trap := (trapen)
   trap.io.code := 0.U(8.W)
-  when (trapen) {
-    ifStage.io.pc_next := ifStage.io.pc
-  }
+  when (trapen) ifStage.io.pc_next := ifStage.io.pc
 }
 
 // ---------------------------
