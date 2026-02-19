@@ -252,17 +252,15 @@ class ID extends Module {
   val imm_i = Sext(io.inst(31,20), 12)
   val imm_s = Sext(Cat(io.inst(31,25), io.inst(11,7)), 12)
   val imm_u = io.inst(31,12) << 12
+
+  // -------- EX操作数 --------
+  io.rs1 := regfile(rs1)
+  io.rs2 := regfile(rs2)
   io.imm := MuxLookup(immsel, 0.U)(Seq(
     IMMI -> imm_i,
     IMMS -> imm_s,
     IMMU -> imm_u
   ))
-
-  // -------- EX操作数 --------
-  val rs1_data = regfile(rs1)
-  val rs2_data = regfile(rs2)
-  io.rs1 := regfile(rs1)
-  io.rs2 := regfile(rs2)
   io.immen := (immsel =/= IMMN)
 
   // -------- JUMP功能 --------
