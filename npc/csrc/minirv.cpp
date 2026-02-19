@@ -50,13 +50,13 @@ uint8_t* guest_to_host(paddr_t paddr){
   else return NULL;
 }
 word_t paddr_read(paddr_t addr, int len){
-  if ((addr < ROM_BASE || addr >= ROM_BASE + ROM_SIZE) ||
-      (addr < RAM_BASE || addr >= RAM_BASE + RAM_SIZE)) return 0;
+  uint8_t *host = guest_to_host(addr);
+  if (!host) return 0;
   word_t result = 0;
-  switch (len){
-    case 1: result= *guest_to_host(addr); break;
-    case 2: result= *(uint16_t *)guest_to_host(addr); break;
-    case 4: result= *(uint32_t *)guest_to_host(addr); break;
+  switch (len) {
+    case 1: result = *host; break;
+    case 2: result = *(uint16_t *)host; break;
+    case 4: result = *(uint32_t *)host; break;
     default: return 0;
   }
 #ifdef DEBUG
