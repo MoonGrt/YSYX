@@ -254,7 +254,7 @@ class ID extends Module {
   val imm_u = io.inst(31,12) << 12
 
   // -------- EX操作数 --------
-  io.rs1 := regfile(rs1)
+  io.rs1 := Mux(io.inst === LUI, 0.U(32.W), regfile(rs1))
   io.rs2 := regfile(rs2)
   io.imm := MuxLookup(immsel, 0.U)(Seq(
     IMMI -> imm_i,
