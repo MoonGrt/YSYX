@@ -62,7 +62,7 @@ run: $(BIN)
 gdb: $(BIN)
 	gdb --args $(BIN) -trace $(IMG)
 
-wave: run
+wave: $(WAVE_FILE)
 	$(GTKWAVE) $(WAVE_FILE)
 
 clean:
