@@ -12,7 +12,7 @@ uint8_t *ram = NULL;
 #define ROM_BASE 0x80000000L
 #define ROM_SIZE 0x01000000L
 #define RAM_BASE 0x81000000L
-#define RAM_SIZE 0x20000000L
+#define RAM_SIZE 0x90000000L
 extern "C" void init_rom(){
   rom = (uint8_t *)malloc(ROM_SIZE);
   assert(rom);
@@ -60,7 +60,7 @@ word_t paddr_read(paddr_t addr, int len){
     default: return 0;
   }
 #ifdef DEBUG
-  printf("paddr_read: addr=0x%08x, len=%d, data=0x%08x\n", addr, len, result);
+  printf("paddr_read:  addr=0x%08x, len =   %d, data=0x%08x\n", addr, len, result);
 #endif
   return result;
 }
