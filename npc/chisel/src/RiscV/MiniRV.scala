@@ -120,11 +120,10 @@ object Sext {
 class IF extends Module {
   val io = IO(new Bundle {
     val pc_next = Input(UInt(32.W))   // 下一个 PC
-    val pc_out  = Output(UInt(32.W))  // 当前 PC 输出
+    val pc  = Output(UInt(32.W))  // 当前 PC 输出
   })
   val pc = RegInit("h80000000".U(32.W))
-  pc := io.pc_next
-  io.pc_out := pc
+  io.pc := io.pc_next
 }
 
 // ---------------------------
@@ -173,7 +172,6 @@ class ID extends Module {
   import Parameters._
   val io = IO(new Bundle {
     val instr     = Input(UInt(32.W))
-    val pc        = Input(UInt(32.W))
 
     // 写回接口（来自 WB）
     val wb_en     = Input(Bool())
@@ -184,11 +182,7 @@ class ID extends Module {
     val exsel     = Output(UInt(EX_SEL_LEN.W))
     val op1       = Output(UInt(32.W))
     val op2       = Output(UInt(32.W))
-
-    val rs1_data  = Output(UInt(32.W))
-    val rs2_data  = Output(UInt(32.W))
     val rd_addr   = Output(UInt(5.W))
-    val imm       = Output(UInt(32.W))
 
     val mem_read  = Output(Bool())
     val mem_write = Output(Bool())
@@ -202,7 +196,7 @@ class ID extends Module {
 
   val decoded = ListLookup(
     io.instr,
-    List(EX_ADD, IMM1, WB_EX, MEM_WW),
+    List(EX_ADD, IMMN, WB_EX, MEM_WW),
     Array(
       // Load/Store
       LW     -> List(IMMI, EX_ADD , WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
@@ -267,6 +261,7 @@ class ID extends Module {
 // ---------------------------
 class EX extends Module {
   val io = IO(new Bundle {
+    val pc    = Input(UInt(32.W))
     val op1   = Input(UInt(32.W))
     val op2   = Input(UInt(32.W))
     val exsel = Input(UInt(2.W))
@@ -304,20 +299,20 @@ class MiniRV extends Module {
   val exStage = Module(new EX)
 
   // IF
-  io.pc := ifStage.io.pc_out
+  io.pc := ifStage.io.pc
 
   // ID
   idStage.io.instr := io.instr
-  idStage.io.pc    := ifStage.io.pc_out
 
   // EX
+  exStage.io.pc    := ifStage.io.pc
   exStage.io.op1   := idStage.io.op1
   exStage.io.op2   := idStage.io.op2
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
   io.mem_addr  := exStage.io.exout
-  io.mem_wdata := idStage.io.rs2_data
+  io.mem_wdata := idStage.io.op2
   io.mem_we    := idStage.io.mem_write
   io.mem_mask  := "b1111".U
 
