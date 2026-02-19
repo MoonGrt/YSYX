@@ -177,7 +177,7 @@ int main(int argc, char **argv){
     tick(top, tfp);
   }
   // 结束
-   std::cout << "[NPC] Simulation finished at time = " << sim_time << std::endl;
+  std::cout << "[NPC] Simulation finished at time = " << sim_time << std::endl;
   tfp->close();
   delete tfp;
   delete top;
