@@ -10,18 +10,17 @@ typedef uint32_t paddr_t;
 constexpr int MEM_SIZE=1024*1024*128;
 
 uint8_t mem[MEM_SIZE];
-static inline bool in_pmem(paddr_t addr) {
+static inline bool in_pmem(paddr_t addr){
   return addr - CONFIG_MBASE <= CONFIG_MSIZE && addr >= CONFIG_MBASE;
 }
-uint8_t* guest_to_host(paddr_t paddr) {   
+uint8_t* guest_to_host(paddr_t paddr){   
   if (in_pmem(paddr)) return mem + paddr - CONFIG_MBASE;
   else return NULL;
 }
-word_t paddr_read(paddr_t addr, int len)
-{
+word_t paddr_read(paddr_t addr, int len){
     if (addr < CONFIG_MBASE || addr >= CONFIG_MBASE + MEM_SIZE) return 0;
     word_t result = 0;
-    switch (len) {
+    switch (len){
         case 1: result= *guest_to_host(addr); break;
         case 2: result= *(uint16_t *)guest_to_host(addr); break;
         case 4: result= *(uint32_t *)guest_to_host(addr); break;
@@ -29,37 +28,31 @@ word_t paddr_read(paddr_t addr, int len)
     }
   return result;
 }
-void paddr_write(paddr_t addr, int wmask, word_t data)
-{
+void paddr_write(paddr_t addr, int wmask, word_t data){
     if (addr < CONFIG_MBASE || addr >= CONFIG_MBASE + MEM_SIZE) return;
-    for(int i = 0; i < 4; i++) {
-        if(wmask & (1 << i)) {
-            *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
-        }
-    }
+    for(int i = 0; i < 4; i++)
+        if(wmask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
 }
 
-extern "C" {
-    bool is_ebreak;
-    uint8_t ebreak_code;
-    void ebreak(uint8_t code){
-        is_ebreak=true;
-        ebreak_code=code;
-    }
-    int pmem_read(int raddr) {
-        raddr = raddr & ~0x3u;
-        word_t data= paddr_read(raddr, 4);
-        return data;
-    }
-    void pmem_write(int waddr, int wdata, char wmask) {
-        paddr_write(waddr, wmask, wdata);
-    }
+bool is_ebreak;
+uint8_t ebreak_code;
+void ebreak(uint8_t code){
+    is_ebreak=true;
+    ebreak_code=code;
+}
+int pmem_read(int raddr){
+    raddr = raddr & ~0x3u;
+    word_t data= paddr_read(raddr, 4);
+    return data;
+}
+void pmem_write(int waddr, int wdata, char wmask){
+    paddr_write(waddr, wmask, wdata);
 }
 
 
 
 static vluint64_t sim_time = 0;
-static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp) {
+static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
     // ======== 上升沿 ========
     top->clock = 0;
     top->eval();
@@ -70,8 +63,8 @@ static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp) {
     tfp->dump(sim_time++);
 }
 
-int main(int argc, char **argv) {
-    if (argc < 1) {
+int main(int argc, char **argv){
+    if (argc < 1){
         puts("Format: <x.exe> +/-trace");
         return 1;
     }
