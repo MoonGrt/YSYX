@@ -184,7 +184,7 @@ int main(int argc, char **argv){
   tfp->close();
   delete tfp;
   delete top;
-  if is_ebreak {
+  if (is_ebreak) {
     std::cout << "[NPC] Simulation finished at time = , \33[1;32mwith EBREAK hit\33[0m\n" << sim_time << std::endl;
     return 0;
   } else {
