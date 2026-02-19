@@ -54,7 +54,7 @@ $(BIN): $(VSRCS) $(CSRCS)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) -o $(abspath $(BIN)) \
-		--top-module $(TOPNAME) $^ 
+		--top-module $(TOPNAME) $^
 
 run: $(BIN)
 	$(BIN) +trace
