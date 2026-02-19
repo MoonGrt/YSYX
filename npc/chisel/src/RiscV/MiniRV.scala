@@ -162,11 +162,12 @@ object Parameters {
   val WB_EX   = 1.U(WB_SEL_LEN.W)
   val WB_MEM  = 2.U(WB_SEL_LEN.W)
 
-  val MEM_SEL_LEN = 2
-  val MEM_RW = 0.U(MEM_SEL_LEN.W)  // write word
-  val MEM_RB = 1.U(MEM_SEL_LEN.W)  // write byte
-  val MEM_WW = 2.U(MEM_SEL_LEN.W)
-  val MEM_WB = 3.U(MEM_SEL_LEN.W)
+  val MEM_SEL_LEN = 3
+  val MEM_NONE = 0.U(MEM_SEL_LEN.W)
+  val MEM_RW   = 0.U(MEM_SEL_LEN.W)  // write word
+  val MEM_RB   = 1.U(MEM_SEL_LEN.W)  // write byte
+  val MEM_WW   = 2.U(MEM_SEL_LEN.W)
+  val MEM_WB   = 3.U(MEM_SEL_LEN.W)
 }
 class ID extends Module {
   import Instructions._
@@ -201,12 +202,12 @@ class ID extends Module {
       SW   -> List(EX_ADD, IMMS, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
       SB   -> List(EX_ADD, IMMS, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
       // Add
-      ADD  -> List(EX_ADD, IMMN, WB_EX,  MEM_RW),  // x[rs1] + x[rs2]
-      ADDI -> List(EX_ADD, IMMI, WB_EX,  MEM_RW),  // x[rs1] + sext(imm_i)
+      ADD  -> List(EX_ADD, IMMN, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
+      ADDI -> List(EX_ADD, IMMI, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
       // Jump
-      JALR -> List(EX_JALR,IMMI, WB_EX,  MEM_RW),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+      JALR -> List(EX_JALR,IMMI, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
       // Load immediate
-      LUI  -> List(EX_ADD, IMMU, WB_EX,  MEM_RW),  // sext(imm_u[31:12] << 12)
+      LUI  -> List(EX_ADD, IMMU, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
     ),
   )
   val exsel  = decoded(0)
