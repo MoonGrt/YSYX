@@ -164,10 +164,10 @@ object Parameters {
 
   val MEM_SEL_LEN = 3
   val MEM_NONE = 0.U(MEM_SEL_LEN.W)
-  val MEM_RW   = 0.U(MEM_SEL_LEN.W)  // write word
-  val MEM_RB   = 1.U(MEM_SEL_LEN.W)  // write byte
-  val MEM_WW   = 2.U(MEM_SEL_LEN.W)
-  val MEM_WB   = 3.U(MEM_SEL_LEN.W)
+  val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // write word
+  val MEM_RB   = 2.U(MEM_SEL_LEN.W)  // write byte
+  val MEM_WW   = 3.U(MEM_SEL_LEN.W)
+  val MEM_WB   = 4.U(MEM_SEL_LEN.W)
 }
 class ID extends Module {
   import Instructions._
