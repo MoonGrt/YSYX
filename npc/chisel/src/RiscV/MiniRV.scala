@@ -377,7 +377,7 @@ class MiniRV extends Module {
   val byte_shift = (exStage.io.exout(1,0) << 3)  // 位移量
   val byte_data = (io.mem_rdata >> byte_shift)(7,0)  // 取目标字节
   val mem_data  = Mux(idStage.io.memBen,
-                      Cat(0.U(24.W), byte_data),    // 零扩展到 32 位
+                      Cat(0.U(24.W), byte_data),  // 零扩展到 32 位
                       io.mem_rdata)
   val wb_data  = MuxCase(
     exStage.io.exout,  // 默认EX输出
