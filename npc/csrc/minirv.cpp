@@ -47,7 +47,7 @@ word_t paddr_read(paddr_t addr, int len){
     default: return 0;
   }
 #ifdef DEBUG
-  printf("paddr_read:  addr=0x%08x, len =%d,    data=0x%08x\n", addr, len, result);
+  printf("paddr_read:  addr=0x%08x, len =%d,   data=0x%08x\n", addr, len, result);
 #endif
   return result;
 }
