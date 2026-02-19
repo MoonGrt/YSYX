@@ -4,38 +4,6 @@ import chisel3._
 import chisel3.util._
 
 // // ---------------------------
-// // ROM 模块（只读指令存储器）
-// // ---------------------------
-// class ROM(size: Int) extends Module {
-//   val io = IO(new Bundle {
-//     val addr  = Input(UInt(32.W))
-//     val data  = Output(UInt(32.W))
-//   })
-
-//   val mem = Mem(size, UInt(32.W))
-//   // TODO: 这里可以通过 loadMemoryFromFileInline("program.hex") 初始化
-//   io.data := mem(io.addr >> 2)
-// }
-
-// // ---------------------------
-// // RAM 模块（数据存储器）
-// // ---------------------------
-// class RAM(size: Int) extends Module {
-//   val io = IO(new Bundle {
-//     val addr  = Input(UInt(32.W))
-//     val wdata = Input(UInt(32.W))
-//     val rdata = Output(UInt(32.W))
-//     val we    = Input(Bool())
-//   })
-
-//   val mem = Mem(size, UInt(32.W))
-//   io.rdata := mem(io.addr >> 2)
-//   when(io.we) { mem(io.addr >> 2) := io.wdata }
-// }
-
-
-
-// // ---------------------------
 // // ROM BlackBox (只读指令存储器)
 // // ---------------------------
 // class ROM_DPI extends BlackBox with HasBlackBoxInline {

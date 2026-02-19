@@ -35,7 +35,7 @@ VERILATOR = verilator
 VERILATOR_CFLAGS += --trace -cc -exe -MMD --build -cc -O3 --x-assign fast \
                     --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT \
 					--timescale "1ns/1ns" --no-timing \
-					-CFLAGS -ggdb  -LDFLAGS -ggdb -j 8
+					-CFLAGS -ggdb -LDFLAGS -ggdb -j 8
 
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -57,12 +57,12 @@ $(BIN): $(VSRCS)
 		--top-module $(TOPNAME) $^ $(CSRCS)
 
 run: $(BIN)
-	@$^ +trace
+	$(BIN) +trace
 
 gdb: $(BIN)
-	gdb --args @$^ -trace
+	gdb --args $(BIN) -trace
 
-wave: sim
+wave: run
 	$(GTKWAVE) $(WAVE_FILE)
 
 clean:

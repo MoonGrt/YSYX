@@ -108,7 +108,7 @@ int main(int argc, char **argv){
   init_ram();
   init_rom();
   if (argc >= 3) {
-    // ===== 使用用户提供的 image 文件 =====
+    // 使用用户提供的 image 文件
     FILE *img_file = fopen(argv[2], "rb");
     if (img_file == nullptr) {
       puts("Open executable image failed");
@@ -118,7 +118,7 @@ int main(int argc, char **argv){
     fclose(img_file);
     printf("[NPC] Load image from file, size = %d bytes\n", img_size);
   } else {
-    // ===== 使用默认内置 image =====
+    // 使用默认内置 image
     img_size = sizeof(img);
     memcpy(rom, img, img_size);
     printf("[NPC] Load default image, size = %d bytes\n", img_size);
@@ -135,6 +135,11 @@ int main(int argc, char **argv){
   top->trace(tfp, 99);  // 99 是 trace depth
   tfp->open("build/wave.vcd");
 
+  // ===== 复位 =====
+  printf("Resetting...\n");
+  top->reset = 1;
+  tick(top, tfp);
+  top->reset = 0;
   // 主仿真
   std::cout << "[NPC] Simulation start" << std::endl;
   // while (!Verilated::gotFinish()) tick(top, tfp);
