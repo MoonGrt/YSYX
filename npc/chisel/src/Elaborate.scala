@@ -8,8 +8,7 @@ object Elaborate extends App {
       "locationInfoStyle=wrapInAtSquareBracket"
     ).reduce(_ + "," + _)
   )
-  // circt.stage.ChiselStage.emitSystemVerilogFile(new gcd.GCD(), args, firtoolOptions)
-  circt.stage.ChiselStage.emitSystemVerilogFile(new riscv.MiniRVSOC(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new gcd.GCD(), args, firtoolOptions)
 }
 
 object MiniRVSOC extends App {

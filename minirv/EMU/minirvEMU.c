@@ -10,7 +10,7 @@
 #define M_SIZE 0x1000000
 
 static uint32_t PC;
-static uint32_t R[16];          // x0..x31 (x0 hardwired to 0)
+static uint32_t R[16];  // x0..x31 (x0 hardwired to 0)
 static uint32_t M[M_SIZE];
 static uint32_t pixels[256][256];
 
@@ -33,9 +33,6 @@ static void step(void) {
   uint32_t a = reg_read(rs1);
   uint32_t b = reg_read(rs2);
 
-#ifdef DEBUG
-  printf("step = %d; PC = %08x, inst = %08x\n", stepcnt, PC, ins);
-#endif
   switch (opcode) {
     // LUI
     case 0x37:
@@ -53,9 +50,6 @@ static void step(void) {
       int32_t imm = sext(ins >> 20, 12);
       uint32_t addr = (a + imm) & (M_SIZE - 1);
       uint32_t w = M[addr >> 2];
-#ifdef DEBUG
-      printf("raddr = %08x; rdata = %08x\n", addr, M[addr>>2]);
-#endif
       if (funct3 == 4) {  // LB
         uint32_t sh = (addr & 3) * 8;
         reg_write(rd, sext((w >> sh) & 0xff, 8));
@@ -74,9 +68,6 @@ static void step(void) {
         uint32_t w = M[addr >> 2];
         w = (w & ~(0xff << sh)) | ((b & 0xff) << sh);
         M[addr >> 2] = w;
-#ifdef DEBUG
-        printf("waddr = %08x; wdata = %08x\n", addr, w);
-#endif
       } else {  // SW
         if (addr >= 0x20000000 && addr < 0x20040000) {
           pixels[(addr >> 10) & 0xff][(addr >> 2) & 0xff] = b;
@@ -84,9 +75,6 @@ static void step(void) {
         } else if (funct3 == 2) {
           addr &= M_SIZE-1;
           M[addr >> 2] = b;
-#ifdef DEBUG
-          printf("waddr = %08x; wdata = %08x\n", addr, b);
-#endif
         }
       }
       break;
@@ -133,17 +121,7 @@ int main(void) {
     fclose(f);
 
     while (1) {
-#ifdef DEBUG
-        if (stepcnt > 117) getchar();  // 等待回车 // 746
-#endif
         step();
-#ifdef DEBUG
-        for (int i = 0; i < 16; i++) {
-            printf("   0x%08x", R[i]);
-            if ((i + 1) % 4 == 0) printf("\n");
-        }
-        printf("\n");
-#endif
     }
     return 0;
 }

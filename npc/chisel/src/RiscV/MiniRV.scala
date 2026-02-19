@@ -106,12 +106,20 @@ class EBreak extends BlackBox {
 }
 
 // ---------------------------
+// 工具：符号扩展
+// ---------------------------
+object Sext {
+  def apply(x: UInt, bits: Int): UInt = {
+    Cat(Fill(32 - bits, x(bits - 1)), x)
+  }
+}
+
+// ---------------------------
 // IF 模块：Instruction Fetch
 // ---------------------------
 class IF extends Module {
   val io = IO(new Bundle {
     val pc_next = Input(UInt(32.W))   // 下一个 PC
-    val instr   = Input(UInt(32.W))   // 外部提供指令
     val pc_out  = Output(UInt(32.W))  // 当前 PC 输出
   })
   val pc = RegInit("h80000000".U(32.W))
@@ -126,58 +134,75 @@ class ID extends Module {
   val io = IO(new Bundle {
     val instr     = Input(UInt(32.W))
     val pc        = Input(UInt(32.W))
+
+    // 写回接口（来自 WB）
+    val wb_en     = Input(Bool())
+    val wb_rd     = Input(UInt(5.W))
+    val wb_data   = Input(UInt(32.W))
+
+    // 输出到 EX
     val rs1_data  = Output(UInt(32.W))
     val rs2_data  = Output(UInt(32.W))
     val rd_addr   = Output(UInt(5.W))
     val imm       = Output(UInt(32.W))
-    val alu_op    = Output(UInt(4.W))
+
+    val alu_op    = Output(UInt(2.W))
     val mem_read  = Output(Bool())
     val mem_write = Output(Bool())
     val reg_write = Output(Bool())
     val jalr      = Output(Bool())
   })
 
+  // -------- 寄存器堆 --------
   val regfile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
 
+  // 写回（x0 永远忽略）
+  when (io.wb_en && io.wb_rd =/= 0.U) {
+    regfile(io.wb_rd) := io.wb_data
+  }
+
+  // -------- 指令字段 --------
   val opcode = io.instr(6,0)
   val rd     = io.instr(11,7)
   val rs1    = io.instr(19,15)
   val rs2    = io.instr(24,20)
 
-  io.rs1_data := regfile(rs1)
-  io.rs2_data := regfile(rs2)
+  // -------- 读寄存器（x0 = 0）--------
+  io.rs1_data := Mux(rs1 === 0.U, 0.U, regfile(rs1))
+  io.rs2_data := Mux(rs2 === 0.U, 0.U, regfile(rs2))
   io.rd_addr  := rd
 
-  val imm_i = io.instr(31,20)
+  // -------- 立即数（严格对齐 C 模型）--------
+  val imm_i = Sext(io.instr(31,20), 12)
+  val imm_s = Sext(Cat(io.instr(31,25), io.instr(11,7)), 12)
   val imm_u = io.instr(31,12) << 12
-  val imm_s = Cat(io.instr(31,25), io.instr(11,7))
+
   io.imm := MuxLookup(opcode, 0.U)(Seq(
-    "b0010011".U -> imm_i.asSInt.pad(32).asUInt,
-    "b0110111".U -> imm_u.asSInt.pad(32).asUInt,
-    "b0000011".U -> imm_i.asSInt.pad(32).asUInt,
-    "b0100011".U -> imm_s.asSInt.pad(32).asUInt,
-    "b1100111".U -> imm_i.asSInt.pad(32).asUInt
+    "b0010011".U -> imm_i,  // ADDI
+    "b0000011".U -> imm_i,  // LOAD
+    "b0100011".U -> imm_s,  // STORE
+    "b0110111".U -> imm_u,  // LUI
+    "b1100111".U -> imm_i   // JALR
   ))
 
+  // -------- 控制信号 --------
   io.alu_op := MuxLookup(opcode, 0.U)(Seq(
-    "b0110011".U -> 0.U,
-    "b0010011".U -> 1.U,
-    "b0110111".U -> 2.U,
-    "b0000011".U -> 1.U,
-    "b0100011".U -> 1.U,
-    "b1100111".U -> 1.U
+    "b0110011".U -> 0.U,  // ADD
+    "b0010011".U -> 1.U,  // ADDI
+    "b0000011".U -> 1.U,  // LOAD
+    "b0100011".U -> 1.U,  // STORE
+    "b0110111".U -> 2.U,  // LUI
+    "b1100111".U -> 1.U   // JALR
   ))
 
-  io.mem_read  := (opcode === "b0000011".U)
-  io.mem_write := (opcode === "b0100011".U)
-  io.reg_write := (opcode === "b0110011".U || opcode === "b0010011".U ||
-                   opcode === "b0000011".U || opcode === "b0110111".U ||
-                   opcode === "b1100111".U)
-  io.jalr := (opcode === "b1100111".U)
-
-  val trap = Module(new EBreak)
-  trap.io.trap := (opcode === "b1110011".U)
-  trap.io.code := 0.U(8.W)
+  io.mem_read  := opcode === "b0000011".U
+  io.mem_write := opcode === "b0100011".U
+  io.reg_write := opcode === "b0110011".U ||
+                  opcode === "b0010011".U ||
+                  opcode === "b0000011".U ||
+                  opcode === "b0110111".U ||
+                  opcode === "b1100111".U
+  io.jalr := opcode === "b1100111".U
 }
 
 // ---------------------------
@@ -188,22 +213,31 @@ class EX extends Module {
     val rs1     = Input(UInt(32.W))
     val rs2     = Input(UInt(32.W))
     val imm     = Input(UInt(32.W))
-    val alu_op  = Input(UInt(4.W))
+    val alu_op  = Input(UInt(2.W))
+    val pc      = Input(UInt(32.W))
+    val jalr    = Input(Bool())
+
     val alu_out = Output(UInt(32.W))
     val mem_addr= Output(UInt(32.W))
-    val jalr    = Input(Bool())
-    val pc      = Input(UInt(32.W))
     val pc_next = Output(UInt(32.W))
   })
 
+  // -------- ALU --------
   io.alu_out := MuxLookup(io.alu_op, 0.U)(Seq(
-    0.U -> (io.rs1 + io.rs2),
-    1.U -> (io.rs1 + io.imm),
-    2.U -> io.imm
+    0.U -> (io.rs1 + io.rs2),  // ADD
+    1.U -> (io.rs1 + io.imm),  // ADDI / LOAD / STORE
+    2.U -> io.imm              // LUI
   ))
 
+  // -------- 地址计算 --------
   io.mem_addr := io.rs1 + io.imm
-  io.pc_next := Mux(io.jalr, (io.rs1 + io.imm) & ~1.U(32.W), io.pc + 4.U)
+
+  // -------- PC 更新 --------
+  io.pc_next := Mux(
+    io.jalr,
+    (io.rs1 + io.imm) & ~1.U(32.W),  // 对齐 C：& ~1
+    io.pc + 4.U
+  )
 }
 
 // ---------------------------
@@ -237,15 +271,16 @@ class RAM(size: Int) extends Module {
 }
 
 // ---------------------------
-// MiniRV CPU
+// MiniRV CPU（单周期）
 // ---------------------------
 class MiniRV extends Module {
   val io = IO(new Bundle {
     val pc        = Output(UInt(32.W))
     val instr     = Input(UInt(32.W))
+
     val mem_we    = Output(Bool())
     val mem_addr  = Output(UInt(32.W))
-    val mem_mask  = Output(UInt(7.W))
+    val mem_mask  = Output(UInt(8.W))
     val mem_wdata = Output(UInt(32.W))
     val mem_rdata = Input(UInt(32.W))
   })
@@ -254,13 +289,14 @@ class MiniRV extends Module {
   val idStage = Module(new ID)
   val exStage = Module(new EX)
 
-  // IF -> ID
-  idStage.io.instr := ifStage.io.instr
-  idStage.io.pc    := ifStage.io.pc_out
-  io.pc            := ifStage.io.pc_out
-  ifStage.io.instr := io.instr
+  // IF
+  io.pc := ifStage.io.pc_out
 
-  // ID -> EX
+  // ID
+  idStage.io.instr := io.instr
+  idStage.io.pc    := ifStage.io.pc_out
+
+  // EX
   exStage.io.rs1    := idStage.io.rs1_data
   exStage.io.rs2    := idStage.io.rs2_data
   exStage.io.imm    := idStage.io.imm
@@ -270,9 +306,18 @@ class MiniRV extends Module {
 
   // Memory
   io.mem_addr  := exStage.io.mem_addr
-  io.mem_mask  := 0.U(7.W)
   io.mem_wdata := idStage.io.rs2_data
   io.mem_we    := idStage.io.mem_write
+  io.mem_mask  := "b1111".U  // 先全字写，对齐 C 的 SW
+
+  // Write Back
+  val wb_data = Mux(idStage.io.mem_read,
+                    io.mem_rdata,
+                    exStage.io.alu_out)
+
+  idStage.io.wb_en   := idStage.io.reg_write
+  idStage.io.wb_rd   := idStage.io.rd_addr
+  idStage.io.wb_data := wb_data
 
   // PC update
   ifStage.io.pc_next := exStage.io.pc_next
@@ -288,11 +333,11 @@ class MiniRVSOC extends Module {
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)
 
-  // IF: CPU 从 ROM 取指令
-  rom.io.addr  := cpu.io.pc
+  // 指令取值
+  rom.io.addr := cpu.io.pc
   cpu.io.instr := rom.io.data
 
-  // MEM: CPU 数据访问 RAM
+  // 数据访存
   ram.io.we    := cpu.io.mem_we
   ram.io.addr  := cpu.io.mem_addr
   ram.io.mask  := cpu.io.mem_mask
