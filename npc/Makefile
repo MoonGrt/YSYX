@@ -57,10 +57,10 @@ $(BIN): $(VSRCS) $(CSRCS)
 		--top-module $(TOPNAME) $^
 
 run: $(BIN)
-	$(BIN) +trace
+	$(BIN) +trace $(IMG)
 
 gdb: $(BIN)
-	gdb --args $(BIN) -trace
+	gdb --args $(BIN) -trace $(IMG)
 
 wave: run
 	$(GTKWAVE) $(WAVE_FILE)
