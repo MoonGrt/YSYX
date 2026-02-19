@@ -32,7 +32,7 @@ idea:
 
 GTKWAVE =gtkwave
 VERILATOR = verilator
-VERILATOR_CFLAGS += --trace -cc -exe -MMD --build -cc -O3 --x-assign fast \
+VERILATOR_CFLAGS += --trace -cc -exe -MMD --build -cc -O0 -g --x-assign fast \
                     --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT \
 					--timescale "1ns/1ns" --no-timing
 
