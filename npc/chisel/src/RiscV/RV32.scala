@@ -1,5 +1,7 @@
 package rv32
 
+package riscv
+
 import chisel3._
 import chisel3.util._
 
@@ -130,6 +132,37 @@ class IF extends Module {
 // ---------------------------
 // ID 模块：Instruction Decode + GPR
 // ---------------------------
+object Instructions {
+  // Load/Store
+  val LW      = BitPat("b?????????????????010?????0000011")
+  val LBU     = BitPat("b?????????????????100?????0000011")
+  val SW      = BitPat("b?????????????????010?????0100011")
+  val SB      = BitPat("b?????????????????000?????0100011")
+  // Add
+  val ADD     = BitPat("b0000000??????????000?????0110011")
+  val ADDI    = BitPat("b?????????????????000?????0010011")
+  // Jump
+  val JALR    = BitPat("b?????????????????000?????1100111")
+  // Load immediate
+  val LUI     = BitPat("b?????????????????????????0110111")
+  // EBreak
+  val EBREAK  = BitPat("b000000000001000000000000011100111")
+}
+object Parameters {
+  val EX_SEL_LEN = 2
+  val EX_ADD  = 0.U(EX_SEL_LEN.W)
+  val EX_JALR = 0.U(EX_SEL_LEN.W)
+
+  val WB_SEL_LEN = 1
+  val WB_EX  = 0.U(WB_SEL_LEN.W)
+  val WB_MEM = 1.U(WB_SEL_LEN.W)
+
+  val MEM_SEL_LEN = 2
+  val MEM_WW = 0.U(MEM_SEL_LEN.W)  // write word
+  val MEM_WB = 0.U(MEM_SEL_LEN.W)  // write byte
+  val MEM_RW = 0.U(MEM_SEL_LEN.W)
+  val MEM_RB = 0.U(MEM_SEL_LEN.W)
+}
 class ID extends Module {
   val io = IO(new Bundle {
     val instr     = Input(UInt(32.W))
@@ -152,6 +185,14 @@ class ID extends Module {
     val reg_write = Output(Bool())
     val jalr      = Output(Bool())
   })
+
+
+
+
+
+
+
+
 
   // -------- 寄存器堆 --------
   val regfile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
@@ -195,11 +236,9 @@ class ID extends Module {
     "b1100111".U -> 1.U   // JALR
   ))
 
-  io.mem_read  := opcode === "b0000011".U
-  io.mem_write := opcode === "b0100011".U
-  io.reg_write := (opcode === "b0110011".U || opcode === "b0010011".U ||
-                   opcode === "b0000011".U || opcode === "b0110111".U ||
-                   opcode === "b1100111".U)
+  io.mem_read  := (opcode === "b0000011".U)
+  io.mem_write := (opcode === "b0100011".U)
+  io.reg_write := ~io.mem_write
   io.jalr := opcode === "b1100111".U
 
   val trap = Module(new EBreak)
