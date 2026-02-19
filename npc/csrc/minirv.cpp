@@ -140,7 +140,7 @@ int main(int argc, char **argv){
     // 主仿真
     std::cout << "[NPC] Simulation start" << std::endl;
     // while (!Verilated::gotFinish()) tick(top, tfp);
-    for (int i = 0; i < 50000; i++) tick(top, tfp);
+    for (int i = 0; i < 50; i++) tick(top, tfp);
 
     // 结束
     std::cout << "[NPC] Simulation finished at time = " << sim_time << std::endl;
