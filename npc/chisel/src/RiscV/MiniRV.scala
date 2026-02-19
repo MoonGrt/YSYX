@@ -315,9 +315,7 @@ class EX extends Module {
     val op1   = Input(UInt(32.W))
     val op2   = Input(UInt(32.W))
     val exsel = Input(UInt(EX_SEL_LEN.W))
-
     val exout  = Output(UInt(32.W))
-    val pcn = Output(UInt(32.W))
   })
   // -------- ALU --------
   io.exout := io.op1 + io.op2
