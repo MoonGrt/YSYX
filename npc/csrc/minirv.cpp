@@ -11,21 +11,13 @@ VerilatedVcdC *tfp = new VerilatedVcdC;
 
 typedef uint32_t word_t;
 typedef uint32_t paddr_t;
-uint8_t *rom = NULL;
-uint8_t *ram = NULL;
-#define ROM_BASE 0x80000000L
-#define ROM_SIZE 0x01000000L
-#define RAM_BASE 0x81000000L
-#define RAM_SIZE 0x90000000L
-extern "C" void init_rom(){
-  rom = (uint8_t *)malloc(ROM_SIZE);
-  assert(rom);
-  memset(rom, 0, ROM_SIZE);
-};
-extern "C" void init_ram() {
-  ram = (uint8_t *)malloc(RAM_SIZE);
-  assert(ram);
-  memset(ram, 0, RAM_SIZE);
+uint8_t *mem = NULL;
+#define MEM_BASE 0x80000000L
+#define MEM_SIZE 0x01000000L
+extern "C" void init_mem(){
+  mem = (uint8_t *)malloc(MEM_SIZE);
+  assert(mem);
+  memset(mem, 0, MEM_SIZE);
 };
 static const uint32_t img [] = {
   0x00500513,  // 0x00 addi a0, zero, 5; a0 = 5
@@ -37,15 +29,11 @@ static const uint32_t img [] = {
   0xdeadbeef,  // 0x08 deadbeef
 };
 
-static inline bool in_rom(paddr_t addr){
-  return addr - ROM_BASE <= ROM_SIZE && addr >= ROM_BASE;
-}
-static inline bool in_ram(paddr_t addr){
-  return addr - RAM_BASE <= RAM_SIZE && addr >= RAM_BASE;
+static inline bool in_mem(paddr_t addr){
+  return addr - MEM_BASE <= MEM_SIZE && addr >= MEM_BASE;
 }
 uint8_t* guest_to_host(paddr_t paddr){
-  if (in_rom(paddr)) return rom + paddr - ROM_BASE;
-  else if (in_ram(paddr)) return ram + paddr - RAM_BASE;
+  if (in_mem(paddr)) return mem + paddr - MEM_BASE;
   else return NULL;
 }
 word_t paddr_read(paddr_t addr, int len){
@@ -67,7 +55,7 @@ void paddr_write(paddr_t addr, int mask, word_t data){
 #ifdef DEBUG
   printf("paddr_write: addr=0x%08x, mask=0x%02x, data=0x%08x\n", addr, mask, data);
 #endif
-  if (addr < RAM_BASE || addr >= RAM_BASE + RAM_SIZE) return;
+  if (addr < MEM_BASE || addr >= MEM_BASE + MEM_SIZE) return;
   for(int i = 0; i < 4; i++)
     if(mask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
 }
@@ -138,8 +126,7 @@ int main(int argc, char **argv){
   Verilated::mkdir("logs");
 
   int img_size = 0;
-  init_ram();
-  init_rom();
+  init_mem();
   if (argc >= 3) {
     // 使用用户提供的 image 文件
     FILE *img_file = fopen(argv[2], "rb");
@@ -147,13 +134,13 @@ int main(int argc, char **argv){
       puts("[NPC] Open executable image failed");
       return 1;
     }
-    img_size = fread(rom, 1, ROM_SIZE, img_file);
+    img_size = fread(mem, 1, MEM_SIZE, img_file);
     fclose(img_file);
     printf("[NPC] Load image from file, size = %d bytes\n", img_size);
   } else {
     // 使用默认内置 image
     img_size = sizeof(img);
-    memcpy(rom, img, img_size);
+    memcpy(mem, img, img_size);
     printf("[NPC] Load default image, size = %d bytes\n", img_size);
   }
 
