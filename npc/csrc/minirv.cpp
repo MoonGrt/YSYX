@@ -53,7 +53,7 @@ word_t paddr_read(paddr_t addr, int len){
 }
 void paddr_write(paddr_t addr, int mask, word_t data){
 #ifdef DEBUG
-  printf("paddr_write: addr=0x%08x, mask=0x%02x, data=0x%08x\n", addr, mask, data);
+  printf("paddr_write: addr=0x%08x, mask=0x%x, data=0x%08x\n", addr, mask, data);
 #endif
   if (addr < MEM_BASE || addr >= MEM_BASE + MEM_SIZE) return;
   for(int i = 0; i < 4; i++)
