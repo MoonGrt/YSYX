@@ -83,11 +83,19 @@ static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
 }
 
 int main(int argc, char **argv){
-    if (argc < 1){
-        puts("Format: <x.exe> +/-trace");
+    if (argc < 2){
+        puts("Format: <x.exe> +/-trace <image>");
         return 1;
     }
     Verilated::commandArgs(argc, argv);
+    Verilated::mkdir("logs");
+
+    FILE *img = fopen(argv[2], "rb");
+    if (img == nullptr) puts("Open executable image failed");
+    init_ram();
+    init_rom();
+    int img_size = fread(rom, 1, ROM_SIZE, img);
+
 
     // 实例化顶层模块
     VMiniRVSOC *top = new VMiniRVSOC;
