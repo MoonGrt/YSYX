@@ -375,10 +375,11 @@ class MiniRV extends Module {
   )
 
   // Write Back
-  val wb_data = MuxCase(
+  val mem_data = Mux(idStage.io.memBen, Cat(0.U(24.W), io.mem_rdata(7,0)), io.mem_rdata)
+  val wb_data  = MuxCase(
     exStage.io.exout,  // 默认EX输出
     Seq(
-      idStage.io.memRen -> io.mem_rdata,  // Memory read
+      idStage.io.memRen -> mem_data,  // Memory read
       idStage.io.jumpen -> ifStage.io.pcn  // Jump
     )
   )

@@ -156,7 +156,7 @@ int main(void) {
   /* =======================
    * BIN 文件加载
    * ======================= */
-  FILE *f =fopen("../bin/add-minirv-npc.bin", "rb");
+  FILE *f =fopen("../bin/shift-minirv-npc.bin", "rb");
   size_t bytes_read;
   size_t elements_to_read;
   fseek(f, 0, SEEK_END);
