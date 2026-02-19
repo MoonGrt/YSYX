@@ -119,16 +119,21 @@ object Sext {
 // ---------------------------
 class IF extends Module {
   val io = IO(new Bundle {
+    val halt   = Input(Bool())  // halt 信号
     val jumpen = Input(Bool())  // 跳转使能
     val jump   = Input(UInt(32.W))  // 跳转地址
     val pcn    = Output(UInt(32.W))  // 下一个 PC
     val pc     = Output(UInt(32.W))  // 当前 PC 输出
   })
   val pc = RegInit("h80000000".U(32.W))
-  when (io.jumpen) {
-    pc := io.jump
+  when (io.halt) {
+    pc := pc
   }.otherwise {
-    pc := io.pcn
+    when (io.jumpen) {
+      pc := io.jump
+    }.otherwise {
+      pc := io.pcn
+    }
   }
   io.pc  := pc
   io.pcn := pc + 4.U(32.W)
@@ -343,6 +348,7 @@ class MiniRV extends Module {
   io.pc := ifStage.io.pc
   ifStage.io.jumpen := idStage.io.jumpen
   ifStage.io.jump   := idStage.io.op2
+  ifStage.io.halt   := idStage.io.halt
 
   // ID
   idStage.io.inst := io.inst
@@ -374,10 +380,6 @@ class MiniRV extends Module {
   idStage.io.wb_en   := idStage.io.regWen
   idStage.io.wb_rd   := idStage.io.rd_addr
   idStage.io.wb_data := wb_data
-
-  // PC update
-  ifStage.io.pcn := exStage.io.pcn
-  when (idStage.io.halt) {ifStage.io.pcn := ifStage.io.pc}
 }
 
 // ---------------------------
