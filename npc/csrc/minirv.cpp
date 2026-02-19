@@ -69,6 +69,20 @@ extern "C" void init_ram() {
   assert(ram);
   memset(ram, 0, RAM_SIZE);
 };
+static const uint32_t img [] = {
+  0x00000297,  // auipc t0,0
+  0x00500513,  // li a0, 5
+  0x00300593,  // li a1, 3
+  0x00b50633,  // add a2, a0, a1
+  0x40b506b3,  // sub a3, a0, a1
+  0x00b51733,  // and a4, a0, a1
+  0x00b567b3,  // or  a5, a0, a1
+  0x00b54733,  // xor a6, a0, a1
+  0x00028823,  // sb  zero, 16(t0)
+  0x0102c503,  // lbu a0, 16(t0)
+  0x00100073,  // ebreak
+  0xdeadbeef,  // some data
+};
 
 static vluint64_t sim_time = 0;
 static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
@@ -83,18 +97,36 @@ static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
 }
 
 int main(int argc, char **argv){
-    if (argc < 2){
-        puts("Format: <x.exe> +/-trace <image>");
+    if (argc < 1){
+        puts("Format: <exe> +/-trace <image>");
         return 1;
     }
     Verilated::commandArgs(argc, argv);
     Verilated::mkdir("logs");
 
-    FILE *img = fopen(argv[2], "rb");
-    if (img == nullptr) puts("Open executable image failed");
-    init_ram();
-    init_rom();
-    int img_size = fread(rom, 1, ROM_SIZE, img);
+    // FILE *img = fopen(argv[2], "rb");
+    // if (img == nullptr) puts("Open executable image failed");
+    // init_ram();
+    // init_rom();
+    // int img_size = fread(rom, 1, ROM_SIZE, img);
+
+    int img_size = 0;
+    if (argc >= 3) {
+        // ===== 使用用户提供的 image 文件 =====
+        FILE *img_file = fopen(argv[2], "rb");
+        if (img_file == nullptr) {
+            puts("Open executable image failed");
+            return 1;
+        }
+        img_size = fread(rom, 1, ROM_SIZE, img_file);
+        fclose(img_file);
+        printf("[NPC] Load image from file, size = %d bytes\n", img_size);
+    } else {
+        // ===== 使用默认内置 image =====
+        img_size = sizeof(img);
+        memcpy(rom, img, img_size);
+        printf("[NPC] Load default image, size = %d bytes\n", img_size);
+    }
 
 
     // 实例化顶层模块
