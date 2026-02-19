@@ -114,29 +114,6 @@ object Sext {
   }
 }
 
-object Parameters {
-  val EX_SEL_LEN = 1
-  val EX_ADD  = 0.U(EX_SEL_LEN.W)
-  val EX_JALR = 1.U(EX_SEL_LEN.W)
-
-  val IMM_SEL_LEN = 2
-  val IMMN = 0.U(IMM_SEL_LEN.W)
-  val IMMI = 1.U(IMM_SEL_LEN.W)
-  val IMMS = 2.U(IMM_SEL_LEN.W)
-  val IMMU = 3.U(IMM_SEL_LEN.W)
-
-  val WB_SEL_LEN = 2
-  val WB_NONE = 0.U(WB_SEL_LEN.W)
-  val WB_EX   = 1.U(WB_SEL_LEN.W)
-  val WB_MEM  = 2.U(WB_SEL_LEN.W)
-
-  val MEM_SEL_LEN = 2
-  val MEM_RW = 0.U(MEM_SEL_LEN.W)  // write word
-  val MEM_RB = 1.U(MEM_SEL_LEN.W)  // write byte
-  val MEM_WW = 2.U(MEM_SEL_LEN.W)
-  val MEM_WB = 3.U(MEM_SEL_LEN.W)
-}
-
 // ---------------------------
 // IF 模块：Instruction Fetch
 // ---------------------------
@@ -169,11 +146,33 @@ object Instructions {
   // EBreak
   val EBREAK = BitPat("b000000000001000000000000011100111")
 }
+object Parameters {
+  val EX_SEL_LEN = 1
+  val EX_ADD  = 0.U(EX_SEL_LEN.W)
+  val EX_JALR = 1.U(EX_SEL_LEN.W)
+
+  val IMM_SEL_LEN = 2
+  val IMMN = 0.U(IMM_SEL_LEN.W)
+  val IMMI = 1.U(IMM_SEL_LEN.W)
+  val IMMS = 2.U(IMM_SEL_LEN.W)
+  val IMMU = 3.U(IMM_SEL_LEN.W)
+
+  val WB_SEL_LEN = 2
+  val WB_NONE = 0.U(WB_SEL_LEN.W)
+  val WB_EX   = 1.U(WB_SEL_LEN.W)
+  val WB_MEM  = 2.U(WB_SEL_LEN.W)
+
+  val MEM_SEL_LEN = 2
+  val MEM_RW = 0.U(MEM_SEL_LEN.W)  // write word
+  val MEM_RB = 1.U(MEM_SEL_LEN.W)  // write byte
+  val MEM_WW = 2.U(MEM_SEL_LEN.W)
+  val MEM_WB = 3.U(MEM_SEL_LEN.W)
+}
 class ID extends Module {
   import Instructions._
   import Parameters._
   val io = IO(new Bundle {
-    val instr     = Input(UInt(32.W))
+    val inst      = Input(UInt(32.W))
 
     // 写回接口（来自 WB）
     val wb_en     = Input(Bool())
@@ -186,32 +185,26 @@ class ID extends Module {
     val op2       = Output(UInt(32.W))
     val rd_addr   = Output(UInt(5.W))
 
-    val mem_read  = Output(Bool())
-    val mem_write = Output(Bool())
+    val memsel    = Output(UInt(MEM_SEL_LEN.W))
     val reg_write = Output(Bool())
   })
 
-  // -------- 异常处理 --------
-  val trap = Module(new EBreak)
-  trap.io.trap := (io.instr === EBREAK)
-  trap.io.code := 0.U(8.W)
-
   val decoded = ListLookup(
-    io.instr,
+    io.inst,
     List(EX_ADD, IMMN, WB_EX, MEM_WW),
     Array(
       // Load/Store
-      LW     -> List(IMMI, EX_ADD , WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
-      LBU    -> List(IMMI, EX_ADD , WB_MEM, MEM_RB),  // x[rs1] + sext(imm_i)
-      SW     -> List(IMMI, EX_ADD , WB_MEM, MEM_WW),  // x[rs1] + sext(imm_s)
-      SB     -> List(IMMI, EX_ADD , WB_MEM, MEM_WB),  // x[rs1] + sext(imm_s)
+      LW   -> List(EX_ADD, IMMI, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
+      LBU  -> List(EX_ADD, IMMI, WB_MEM, MEM_RB),  // x[rs1] + sext(imm_i)
+      SW   -> List(EX_ADD, IMMS, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
+      SB   -> List(EX_ADD, IMMS, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
       // Add
-      ADD    -> List(IMMS, EX_ADD , WB_MEM, MEM_RW),  // x[rs1] + x[rs2]
-      ADDI   -> List(IMMS, EX_ADD , WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
+      ADD  -> List(EX_ADD, IMMN, WB_EX,  MEM_RW),  // x[rs1] + x[rs2]
+      ADDI -> List(EX_ADD, IMMI, WB_EX,  MEM_RW),  // x[rs1] + sext(imm_i)
       // Jump
-      JALR   -> List(IMMU, EX_JALR, WB_MEM, MEM_RW),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+      JALR -> List(EX_JALR,IMMI, WB_EX,  MEM_RW),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
       // Load immediate
-      LUI    -> List(IMMI, EX_ADD , WB_MEM, MEM_RW),  // sext(imm_u[31:12] << 12)
+      LUI  -> List(EX_ADD, IMMU, WB_EX,  MEM_RW),  // sext(imm_u[31:12] << 12)
     ),
   )
   val immsel = decoded(0)
@@ -223,15 +216,15 @@ class ID extends Module {
   val regfile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
 
   // -------- 指令字段 --------
-  val opcode = io.instr(6,0)
-  val rd     = io.instr(11,7)
-  val rs1    = io.instr(19,15)
-  val rs2    = io.instr(24,20)
+  val opcode = io.inst(6,0)
+  val rd     = io.inst(11,7)
+  val rs1    = io.inst(19,15)
+  val rs2    = io.inst(24,20)
 
   // -------- 立即数 --------
-  val imm_i = Sext(io.instr(31,20), 12)
-  val imm_s = Sext(Cat(io.instr(31,25), io.instr(11,7)), 12)
-  val imm_u = io.instr(31,12) << 12
+  val imm_i = Sext(io.inst(31,20), 12)
+  val imm_s = Sext(Cat(io.inst(31,25), io.inst(11,7)), 12)
+  val imm_u = io.inst(31,12) << 12
   val imm = MuxLookup(immsel, 0.U)(Seq(
     IMMI -> imm_i,
     IMMS -> imm_s,
@@ -239,19 +232,17 @@ class ID extends Module {
   ))
 
   // -------- EX操作数 --------
-  val immnen = (immsel === IMMN)
   val rs1_data = regfile(rs1)
   val rs2_data = regfile(rs2)
   io.op1 := rs1_data
-  io.op2 := Mux(~immnen, 0.U, regfile(rs1))
+  io.op2 := Mux(immsel === IMMN, rs2_data, imm)
 
   // -------- EX功能 --------
   io.exsel := exsel
 
   // -------- WB功能 --------
   io.rd_addr := rd
-  io.mem_read  := (memsel === MEM_RW) || (memsel === MEM_RB)
-  io.mem_write := (memsel === MEM_WW) || (memsel === MEM_WB)
+  io.memsel  := memsel
   io.reg_write := ~io.mem_write
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := io.wb_data
@@ -278,7 +269,7 @@ class EX extends Module {
   // -------- JUMP --------
   io.pcnext := Mux(
     (io.exsel === Parameters.EX_JALR),
-    io.exout, io.pc + 4.U
+    io.exout & ~1.U(32.W), io.pc + 4.U
   )
 }
 
@@ -286,9 +277,11 @@ class EX extends Module {
 // MiniRV CPU（单周期）
 // ---------------------------
 class MiniRV extends Module {
+  import Instructions._
+  import Parameters._
   val io = IO(new Bundle {
     val pc    = Output(UInt(32.W))
-    val instr = Input(UInt(32.W))
+    val inst = Input(UInt(32.W))
 
     val mem_we    = Output(Bool())
     val mem_addr  = Output(UInt(32.W))
@@ -305,7 +298,7 @@ class MiniRV extends Module {
   io.pc := ifStage.io.pc
 
   // ID
-  idStage.io.instr := io.instr
+  idStage.io.inst := io.inst
 
   // EX
   exStage.io.pc    := ifStage.io.pc
@@ -314,22 +307,33 @@ class MiniRV extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
+  val memWen   := (idStage.io.memsel === MEM_RW) || (idStage.io.memsel === MEM_RB)
+  val memRen   := (idStage.io.memsel === MEM_WW) || (idStage.io.memsel === MEM_WB)
   io.mem_addr  := exStage.io.exout
   io.mem_wdata := idStage.io.op2
-  io.mem_we    := idStage.io.mem_write
-  io.mem_mask  := "b1111".U
+  io.mem_we    := memWen
+  io.mem_mask := MuxLookup(idStage.io.memsel, "b1111".U)(Seq(
+    MEM_WB -> "b0001".U,
+    MEM_WW -> "b1111".U
+  ))
 
   // Write Back
-  val wb_data = Mux(idStage.io.mem_read,
-                    io.mem_rdata,
-                    exStage.io.exout)
+  val wb_data = Mux(
+    memRen,
+    io.mem_rdata, exStage.io.exout)
 
   idStage.io.wb_en   := idStage.io.reg_write
   idStage.io.wb_rd   := idStage.io.rd_addr
   idStage.io.wb_data := wb_data
 
-  // PC update
-  ifStage.io.pc_next := exStage.io.pcnext
+  // Trap & PC update
+  val trap = Module(new EBreak)
+  val trapen = (io.inst === EBREAK)
+  trap.io.trap := (trapen)
+  trap.io.code := 0.U(8.W)
+  when (trapen) {
+    ifStage.io.pc_next := ifStage.io.pc
+  }
 }
 
 // ---------------------------
@@ -344,7 +348,7 @@ class MiniRVSOC extends Module {
 
   // 指令取值
   rom.io.addr := cpu.io.pc
-  cpu.io.instr := rom.io.data
+  cpu.io.inst := rom.io.data
 
   // 数据访存
   ram.io.we    := cpu.io.mem_we
