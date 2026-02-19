@@ -13,7 +13,7 @@ typedef uint32_t word_t;
 typedef uint32_t paddr_t;
 uint8_t *mem = NULL;
 #define MEM_BASE 0x80000000L
-#define MEM_SIZE 0x20000000L
+#define MEM_SIZE 0x01000000L
 extern "C" void init_mem(){
   mem = (uint8_t *)malloc(MEM_SIZE);
   assert(mem);
@@ -161,7 +161,7 @@ int main(int argc, char **argv){
   // 主仿真
   std::cout << "[NPC] Simulation start" << std::endl;
   // while (!Verilated::gotFinish()){
-  for (int i = 0; i < 10000000 && !Verilated::gotFinish(); i++) {
+  for (int i = 0; i < 1000 && !Verilated::gotFinish(); i++) {
     tick(top, tfp);
     if (is_ebreak) {
       std::cout << "[NPC] EBREAK hit, exiting simulation.\n";
