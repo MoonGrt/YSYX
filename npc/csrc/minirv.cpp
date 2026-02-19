@@ -77,8 +77,10 @@ extern "C" {
   #define ZERO_INST_CODE 1
   #define OTHER_E_CODE   2
   #define UNIMPL_CODE    3
+  bool is_ebreak;
   void ebreak(uint8_t code) {
       // 异常信息映射：颜色 + 消息
+      is_ebreak = (code == EBREAK_CODE);
       struct {
           const char* color;
           const char* msg;
@@ -173,11 +175,20 @@ int main(int argc, char **argv){
   // while (!Verilated::gotFinish()){
   for (int i = 0; i < 100 && !Verilated::gotFinish(); i++) {
     tick(top, tfp);
+    if (is_ebreak) {
+      std::cout << "[NPC] EBREAK hit, exiting simulation.\n";
+      break;
+    }
   }
   // 结束
-  std::cout << "[NPC] Simulation finished at time = " << sim_time << std::endl;
   tfp->close();
   delete tfp;
   delete top;
-  return 1;
+  if is_ebreak {
+    std::cout << "[NPC] Simulation finished at time = , \33[1;32mwith EBREAK hit\33[0m\n" << sim_time << std::endl;
+    return 0;
+  } else {
+    std::cout << "[NPC] Simulation finished at time = , \33[1;31mwithout EBREAK hit\33[0m\n" << sim_time << std::endl;
+    return 1;
+  }
 }
