@@ -301,5 +301,5 @@ class MiniRVSOC extends Module {
 }
 
 object MiniRVSOC extends App {
-  (new chisel3.stage.ChiselStage).emitVerilog(new MiniRVSOC, args)
+  (new circt.stage.ChiselStage).emitVerilog(new MiniRVSOC, args)
 }
