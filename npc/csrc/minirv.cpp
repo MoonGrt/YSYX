@@ -106,14 +106,15 @@ extern "C" {
 
 
 
+
+#include <getopt.h>
 #define no_argument		    0
 #define required_argument	1
 #define optional_argument	2
-#include <getopt.h>
-
 static char *img_file = NULL;
 static char *log_file = NULL;
 static int parse_args(int argc, char *argv[]) {
+  printf("[NPC] ARGS = %d\n", argc);
   const struct option table[] = {
     {"help", no_argument      , NULL, 'h'},
     {"img" , required_argument, NULL, 'i'},
