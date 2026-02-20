@@ -126,20 +126,6 @@ void init(int argc, char *argv[]) {
   welcome();
 }
 
-static vluint64_t sim_time = 0;
-int exit(void) {
-  tfp->close();
-  delete tfp;
-  delete top;
-  if (is_ebreak) {
-    Log("Simulation finished at time = %ld, with EBREAK hit", sim_time);
-    return 0;
-  } else {
-    Log("Simulation finished at time = %ld, without EBREAK hit", sim_time);
-    return 1;
-  }
-}
-
 
 
 // 实例化顶层模块
@@ -233,6 +219,7 @@ static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
   tfp->dump(sim_time++);
 }
 
+int exit(void);
 int main(int argc, char **argv){
   Verilated::commandArgs(argc, argv);
   Verilated::mkdir("logs");
@@ -261,4 +248,18 @@ int main(int argc, char **argv){
   }
 
   return exit();
+}
+
+static vluint64_t sim_time = 0;
+int exit(void) {
+  tfp->close();
+  delete tfp;
+  delete top;
+  if (is_ebreak) {
+    Log("Simulation finished at time = %ld, with EBREAK hit", sim_time);
+    return 0;
+  } else {
+    Log("Simulation finished at time = %ld, without EBREAK hit", sim_time);
+    return 1;
+  }
 }
