@@ -146,7 +146,7 @@ static int parse_args(int argc, char *argv[]) {
 }
 
 FILE *log_fp = NULL;
-void init_log(const char *log_file) {
+void init_log(void) {
   log_fp = stdout;
   if (log_file != NULL) {
     FILE *fp = fopen(log_file, "w");
@@ -156,7 +156,7 @@ void init_log(const char *log_file) {
   Log("Log is written to %s", log_file ? log_file : "stdout");
 }
 
-static long load_img() {
+static void load_img(void) {
   long img_size = 0;
   if (img_file == NULL) {
     // 使用默认内置 image
@@ -174,7 +174,6 @@ static long load_img() {
     fclose(fp);
     printf("[NPC] Load image from file, size = %ld bytes\n", img_size);
   }
-  return img_size;
 }
 
 static void welcome() {
@@ -193,11 +192,11 @@ void init(int argc, char *argv[]) {
   /* Parse arguments. */
   parse_args(argc, argv);
   /* Open the log file. */
-  init_log(log_file);
+  init_log();
   /* Initialize memory. */
   init_mem();
-  /* Load the image to memory. This will overwrite the built-in image. */
-  long img_size = load_img();
+  /* Load the image to memory.*/
+  load_img();
   /* Display welcome message. */
   welcome();
 }
