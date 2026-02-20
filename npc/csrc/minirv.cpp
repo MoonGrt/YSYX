@@ -208,6 +208,7 @@ extern "C" {
   }
 }
 
+static vluint64_t sim_time = 0;
 static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
   // ======== 上升沿 ========
   top->clock = 0;
@@ -250,7 +251,6 @@ int main(int argc, char **argv){
   return exit();
 }
 
-static vluint64_t sim_time = 0;
 int exit(void) {
   tfp->close();
   delete tfp;
