@@ -43,10 +43,10 @@ static int parse_args(int argc, char *argv[]) {
 
 
 
-#define ANSI_FG_RED   "\33[1;31m"
-#define ANSI_FG_GREEN "\33[1;32m"
-#define ANSI_BG_BLUE  "\33[1;44m"
-#define ANSI_NONE     "\33[0m"
+#define ANSI_FG_RED     "\33[1;31m"
+#define ANSI_FG_GREEN   "\33[1;32m"
+#define ANSI_FG_BLUE    "\33[1;34m"
+#define ANSI_NONE       "\33[0m"
 #define ANSI_FMT(str, fmt) fmt str ANSI_NONE
 
 FILE *log_fp = NULL;
