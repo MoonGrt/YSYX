@@ -156,6 +156,26 @@ void init_log(const char *log_file) {
   Log("Log is written to %s", log_file ? log_file : "stdout");
 }
 
+static long load_img() {
+  long img_size = 0;
+  if (img_file == NULL) {
+    // 使用用户提供的 image 文件
+    FILE *img_file = fopen(argv[2], "rb");
+    if (img_file == nullptr) {
+      puts("[NPC] Open executable image failed");
+      return 1;
+    }
+    img_size = fread(mem, 1, MEM_SIZE, img_file);
+    fclose(img_file);
+    printf("[NPC] Load image from file, size = %d bytes\n", img_size);
+  } else {
+    // 使用默认内置 image
+    img_size = sizeof(img);
+    memcpy(mem, img, img_size);
+    printf("[NPC] Load default image, size = %d bytes\n", img_size);
+  }
+}
+
 static void welcome() {
   // Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
   // IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
@@ -175,8 +195,6 @@ void init(int argc, char *argv[]) {
   init_log(log_file);
   /* Initialize memory. */
   init_mem();
-  /* Perform ISA dependent initialization. */
-  init_isa();
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();
   /* Display welcome message. */
@@ -218,27 +236,9 @@ int main(int argc, char **argv){
   //   puts("[NPC] Format: <exe> +/-trace <image>");
   //   return 1;
   // }
-  // Verilated::commandArgs(argc, argv);
-  // Verilated::mkdir("logs");
 
-  // int img_size = 0;
-  // init_mem();
-  // if (argc >= 3) {
-  //   // 使用用户提供的 image 文件
-  //   FILE *img_file = fopen(argv[2], "rb");
-  //   if (img_file == nullptr) {
-  //     puts("[NPC] Open executable image failed");
-  //     return 1;
-  //   }
-  //   img_size = fread(mem, 1, MEM_SIZE, img_file);
-  //   fclose(img_file);
-  //   printf("[NPC] Load image from file, size = %d bytes\n", img_size);
-  // } else {
-  //   // 使用默认内置 image
-  //   img_size = sizeof(img);
-  //   memcpy(mem, img, img_size);
-  //   printf("[NPC] Load default image, size = %d bytes\n", img_size);
-  // }
+  Verilated::commandArgs(argc, argv);
+  Verilated::mkdir("logs");
 
   // 解析命令行参数
   parse_args(argc, argv);
