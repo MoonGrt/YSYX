@@ -156,6 +156,7 @@ bool log_enable() {
 #define concat_temp(x, y) x ## y
 #define concat(x, y) concat_temp(x, y)
 #define CHOOSE2nd(a, b, ...) b
+#define __IGNORE(...)
 #define MUX_WITH_COMMA(contain_comma, a, b) CHOOSE2nd(contain_comma a, b)
 #define MUX_MACRO_PROPERTY(p, macro, a, b) MUX_WITH_COMMA(concat(p, macro), a, b)
 #define MUXDEF(macro, X, Y)  MUX_MACRO_PROPERTY(__P_DEF_, macro, X, Y)
