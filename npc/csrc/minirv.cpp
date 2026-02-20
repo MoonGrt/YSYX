@@ -145,6 +145,21 @@ static int parse_args(int argc, char *argv[]) {
   return 0;
 }
 
+uint64_t g_nr_guest_inst = 0;
+#define CONFIG_TRACE 1
+#define CONFIG_TRACE_START 0
+#define CONFIG_TRACE_END 10000
+bool log_enable() {
+  return MUXDEF(CONFIG_TRACE, (g_nr_guest_inst >= CONFIG_TRACE_START) &&
+         (g_nr_guest_inst <= CONFIG_TRACE_END), false);
+}
+#define concat_temp(x, y) x ## y
+#define concat(x, y) concat_temp(x, y)
+#define CHOOSE2nd(a, b, ...) b
+#define MUX_WITH_COMMA(contain_comma, a, b) CHOOSE2nd(contain_comma a, b)
+#define MUX_MACRO_PROPERTY(p, macro, a, b) MUX_WITH_COMMA(concat(p, macro), a, b)
+#define MUXDEF(macro, X, Y)  MUX_MACRO_PROPERTY(__P_DEF_, macro, X, Y)
+#define IFDEF(macro, ...) MUXDEF(macro, __KEEP, __IGNORE)(__VA_ARGS__)
 #define log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
   do { \
     extern FILE* log_fp; \
