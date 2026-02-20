@@ -144,12 +144,12 @@ static int parse_args(int argc, char *argv[]) {
 }
 
 FILE *log_fp = NULL;
-#define log_write(...) do {                \
+#define log_write(...) { \
   if (log_fp != NULL) {    \
-    fprintf(log_fp, __VA_ARGS__);          \
-    fflush(log_fp);                        \
-  }                                       \
-} while (0)
+    fprintf(log_fp, __VA_ARGS__); \
+    fflush(log_fp); \
+  } \
+}
 #define Log(fmt, ...) do { \
   log_write("[%s:%d %s] " fmt "\n", \
             __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
