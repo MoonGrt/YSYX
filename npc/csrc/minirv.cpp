@@ -162,17 +162,17 @@ static long load_img() {
     // 使用默认内置 image
     img_size = sizeof(img);
     memcpy(mem, img, img_size);
-    printf("[NPC] Load default image, size = %d bytes\n", img_size);
+    printf("[NPC] Load default image, size = %ld bytes\n", img_size);
   } else {
     // 使用用户提供的 image 文件
-    FILE *img_file = fopen(img_file, "rb");
-    if (img_file == nullptr) {
+    FILE *fp = fopen(img_file, "rb");
+    if (fp == nullptr) {
       puts("[NPC] Open executable image failed");
       return 1;
     }
-    img_size = fread(mem, 1, MEM_SIZE, img_file);
-    fclose(img_file);
-    printf("[NPC] Load image from file, size = %d bytes\n", img_size);
+    img_size = fread(mem, 1, MEM_SIZE, fp);
+    fclose(fp);
+    printf("[NPC] Load image from file, size = %ld bytes\n", img_size);
   }
 }
 
