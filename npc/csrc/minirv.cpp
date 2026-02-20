@@ -150,7 +150,7 @@ void init_log(const char *log_file) {
   log_fp = stdout;
   if (log_file != NULL) {
     FILE *fp = fopen(log_file, "w");
-    Assert(fp, "Can not open '%s'", log_file);
+    assert(fp);
     log_fp = fp;
   }
   Log("Log is written to %s", log_file ? log_file : "stdout");
@@ -183,6 +183,17 @@ void init(int argc, char *argv[]) {
   welcome();
 }
 
+static vluint64_t sim_time = 0;
+static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
+  // ======== 上升沿 ========
+  top->clock = 0;
+  top->eval();
+  tfp->dump(sim_time++);
+  // ======== 下降沿 ========
+  top->clock = 1;
+  top->eval();
+  tfp->dump(sim_time++);
+}
 int is_exit_status_bad(void) {
   tfp->close();
   delete tfp;
@@ -201,17 +212,7 @@ int is_exit_status_bad(void) {
 
 
 
-static vluint64_t sim_time = 0;
-static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
-  // ======== 上升沿 ========
-  top->clock = 0;
-  top->eval();
-  tfp->dump(sim_time++);
-  // ======== 下降沿 ========
-  top->clock = 1;
-  top->eval();
-  tfp->dump(sim_time++);
-}
+
 int main(int argc, char **argv){
   // if (argc < 1){
   //   puts("[NPC] Format: <exe> +/-trace <image>");
