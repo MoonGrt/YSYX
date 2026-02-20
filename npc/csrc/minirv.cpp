@@ -150,11 +150,12 @@ FILE *log_fp = NULL;
     fflush(log_fp); \
   } \
 }
+#define SHORT_FILE(file) (strrchr(file,'/') ? strrchr(file,'/')+1 : file)
 #define Log(fmt, ...) do { \
   printf("[%s:%d %s] " fmt "\n", \
-    __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    SHORT_FILE(__FILE__), __LINE__, __func__, ##__VA_ARGS__); \
   log_write("[%s:%d %s] " fmt "\n", \
-    __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    SHORT_FILE(__FILE__), __LINE__, __func__, ##__VA_ARGS__); \
 } while (0)
 void init_log(void) {
   log_fp = stdout;
