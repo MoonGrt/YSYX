@@ -230,6 +230,7 @@ static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
   top->clock = 0;
   top->eval();
   tfp->dump(sim_time++);
+  log_write("0x%08x: 0x%08x\n", top->io_pc, top->io_inst);
   // ======== 下降沿 ========
   top->clock = 1;
   top->eval();
@@ -260,7 +261,6 @@ int main(int argc, char **argv){
   std::cout << "[NPC] Simulation start" << std::endl;
   // while (!Verilated::gotFinish()){
   for (int i = 0; i < 100000 && !Verilated::gotFinish(); i++) {
-    log_write("0x%08x: 0x%08x\n", top->io_pc, top->io_inst);
     tick(top, tfp);
     if (is_ebreak) break;
   }
