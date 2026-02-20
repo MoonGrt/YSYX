@@ -220,7 +220,7 @@ static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
   top->eval();
   tfp->dump(sim_time++);
 }
-int is_exit_status_bad(void) {
+int exit(void) {
   tfp->close();
   delete tfp;
   delete top;
@@ -264,5 +264,5 @@ int main(int argc, char **argv){
     if (is_ebreak) break;
   }
 
-  return is_exit_status_bad();
+  return exit();
 }
