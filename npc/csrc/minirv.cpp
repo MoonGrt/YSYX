@@ -114,7 +114,9 @@ extern "C" {
 static char *img_file = NULL;
 static char *log_file = NULL;
 static int parse_args(int argc, char *argv[]) {
-  printf("[NPC] ARGS = %d\n", argc);
+  printf("[NPC] ARGC = %d\n", argc);
+  for (int i = 0; i < argc; i++)
+    printf("[NPC] ARGV[%d] = '%s'\n", i, argv[i]);
   const struct option table[] = {
     {"help", no_argument      , NULL, 'h'},
     {"img" , required_argument, NULL, 'i'},
