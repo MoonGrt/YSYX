@@ -50,7 +50,7 @@ CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
 override ARGS ?= --log=$(BUILD_DIR)/npc-log.txt
 IMG ?=
-NPC_EXEC := $(BIN) $(IMG) $(ARGS)
+NPC_EXEC := $(BIN) $(ARGS) $(IMG)
 
 $(BIN): $(VSRCS) $(CSRCS)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!

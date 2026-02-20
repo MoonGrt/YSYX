@@ -9,8 +9,8 @@
 #define no_argument       0
 #define required_argument 1
 #define optional_argument 2
-static char *img_file = NULL;
 static char *log_file = NULL;
+static char *img_file = NULL;
 #define PRINTARG
 static int parse_args(int argc, char *argv[]) {
 #ifdef PRINTARG
@@ -20,8 +20,8 @@ static int parse_args(int argc, char *argv[]) {
 #endif
   const struct option table[] = {
     {"help", no_argument      , NULL, 'h'},
-    {"img" , required_argument, NULL, 'i'},
     {"log" , required_argument, NULL, 'l'},
+    {"img" , required_argument, NULL, 'i'},
     {0     , 0                , NULL,  0 },
   };
   int o;
@@ -33,8 +33,8 @@ static int parse_args(int argc, char *argv[]) {
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
         printf("\t-h, --help     display this help and exit\n");
-        printf("\t-i, --img=FILE use FILE as executable image\n");
         printf("\t-l, --log=FILE output log to FILE\n");
+        printf("\t-i, --img=FILE use FILE as executable image\n");
         printf("\n");
         exit(0);
     }
