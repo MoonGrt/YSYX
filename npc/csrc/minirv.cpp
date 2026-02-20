@@ -141,42 +141,43 @@ static int parse_args(int argc, char *argv[]) {
 }
 
 uint64_t g_nr_guest_inst = 0;
-#define __IGNORE(...)
+
 #define CONFIG_TRACE 1
 #define CONFIG_TRACE_START 0
-#define CONFIG_TRACE_END 10000
-#define concat_temp(x, y) x ## y
-#define concat(x, y) concat_temp(x, y)
-#define CHOOSE2nd(a, b, ...) b
-#define MUX_WITH_COMMA(contain_comma, a, b) CHOOSE2nd(contain_comma a, b)
-#define MUX_MACRO_PROPERTY(p, macro, a, b) MUX_WITH_COMMA(concat(p, macro), a, b)
-#define MUXDEF(macro, X, Y)  MUX_MACRO_PROPERTY(__P_DEF_, macro, X, Y)
-#define IFDEF(macro, ...) MUXDEF(macro, __KEEP, __IGNORE)(__VA_ARGS__)
-bool log_enable() {
-  return MUXDEF(CONFIG_TRACE, (g_nr_guest_inst >= CONFIG_TRACE_START) &&
-         (g_nr_guest_inst <= CONFIG_TRACE_END), false);
+#define CONFIG_TRACE_END   10000
+
+FILE *log_fp = NULL;
+
+/* 是否允许打印 log */
+static inline bool log_enable(void) {
+#if CONFIG_TRACE
+  return g_nr_guest_inst >= CONFIG_TRACE_START &&
+         g_nr_guest_inst <= CONFIG_TRACE_END;
+#else
+  return false;
+#endif
 }
-#define log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
-  do { \
-    extern FILE* log_fp; \
-    extern bool log_enable(); \
-    if (log_enable() && log_fp != NULL) { \
-      fprintf(log_fp, __VA_ARGS__); \
-      fflush(log_fp); \
-    } \
-  } while (0) \
-)
-#define _Log(...) \
-  do { \
-    printf(__VA_ARGS__); \
-    log_write(__VA_ARGS__); \
-  } while (0)
-#define ANSI_FG_BLUE    "\33[1;34m"
-#define ANSI_NONE       "\33[0m"
-#define ANSI_FMT(str, fmt) fmt str ANSI_NONE
-#define Log(format, ...) \
-    _Log(ANSI_FMT("[%s:%d %s] " format, ANSI_FG_BLUE) "\n", \
-        __FILE__, __LINE__, __func__, ## __VA_ARGS__)
+
+/* 写文件 log */
+static inline void log_write(const char *fmt, ...) {
+#ifdef CONFIG_TARGET_NATIVE_ELF
+  if (!log_enable() || log_fp == NULL) return;
+
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(log_fp, fmt, ap);
+  va_end(ap);
+  fflush(log_fp);
+#endif
+}
+#define ANSI_FG_BLUE "\33[1;34m"
+#define ANSI_NONE    "\33[0m"
+#define Log(fmt, ...) do { \
+  printf(ANSI_FG_BLUE "[%s:%d %s] " fmt ANSI_NONE "\n", \
+         __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+  log_write("[%s:%d %s] " fmt "\n", \
+            __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+} while (0)
 FILE *log_fp = NULL;
 void init_log(void) {
   log_fp = stdout;
