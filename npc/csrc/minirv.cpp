@@ -145,16 +145,16 @@ static int parse_args(int argc, char *argv[]) {
 
 FILE *log_fp = NULL;
 #define log_write(...) { \
-  if (log_fp != NULL) {    \
+  if (log_fp != NULL) { \
     fprintf(log_fp, __VA_ARGS__); \
     fflush(log_fp); \
   } \
 }
 #define Log(fmt, ...) do { \
   printf("[%s:%d %s] " fmt "\n", \
-         __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
   log_write("[%s:%d %s] " fmt "\n", \
-            __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
 } while (0)
 void init_log(void) {
   log_fp = stdout;
@@ -172,6 +172,7 @@ static void load_img(void) {
     // 使用默认内置 image
     img_size = sizeof(img);
     memcpy(mem, img, img_size);
+    Log("No image is given. Use the default build-in image.");
     printf("[NPC] Load default image, size = %ld bytes\n", img_size);
   } else {
     // 使用用户提供的 image 文件
@@ -190,7 +191,7 @@ static void welcome() {
   //       "If it is not necessary, you can disable it in menuconfig"));
   // Log("Build time: %s, %s", __TIME__, __DATE__);
   // printf("Welcome to %s-NPC!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
-  printf("Welcome to MiniRV-NPC!\n");
+  printf("[NPC] Welcome to MiniRV-NPC!\n");
 }
 
 /* Perform some global initialization. */
