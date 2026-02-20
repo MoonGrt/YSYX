@@ -72,7 +72,7 @@ extern "C" void init_mem(){
   mem = (uint8_t *)malloc(MEM_SIZE);
   assert(mem);
   memset(mem, 0, MEM_SIZE);
-  Log("Memory initialized at 0x%08x, size = 0x%08x\n", MEM_BASE, MEM_SIZE);
+  // Log("Memory initialized at 0x%08x, size = 0x%08x\n", MEM_BASE, MEM_SIZE);
 };
 static const uint32_t img [] = {
   0x00500513,  // 0x00 addi a0, zero, 5; a0 = 5
