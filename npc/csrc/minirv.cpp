@@ -27,8 +27,9 @@ static int parse_args(int argc, char *argv[]) {
   int o;
   while ( (o = getopt_long(argc, argv, "-hi:l:", table, NULL)) != -1) {
     switch (o) {
-      case 'i': img_file = optarg; break;
       case 'l': log_file = optarg; break;
+      case 'i': 
+      case  1 : img_file = optarg; break;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
         printf("\t-h, --help     display this help and exit\n");
