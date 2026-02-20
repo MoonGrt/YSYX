@@ -190,7 +190,7 @@ static void welcome() {
   // IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
   //       "to record the trace. This may lead to a large log file. "
   //       "If it is not necessary, you can disable it in menuconfig"));
-  // Log("Build time: %s, %s", __TIME__, __DATE__);
+  Log("Build time: %s, %s", __TIME__, __DATE__);
   // printf("Welcome to %s-NPC!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
   printf("[NPC] Welcome to MiniRV-NPC!\n");
 }
@@ -254,7 +254,7 @@ int main(int argc, char **argv){
   tfp->open("build/wave.vcd");
 
   // ===== 复位 =====
-  printf("[NPC] Resetting...\n");
+  printf("[NPC] Resetting ...\n");
   top->reset = 1;
   tick(top, tfp);
   top->reset = 0;
@@ -263,10 +263,7 @@ int main(int argc, char **argv){
   // while (!Verilated::gotFinish()){
   for (int i = 0; i < 100000 && !Verilated::gotFinish(); i++) {
     tick(top, tfp);
-    if (is_ebreak) {
-      std::cout << "[NPC] EBREAK hit, exiting simulation.\n";
-      break;
-    }
+    if (is_ebreak) break;
   }
 
   return is_exit_status_bad();
