@@ -105,20 +105,7 @@ extern "C" {
 
 
 
-
-static vluint64_t sim_time = 0;
-static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
-  // ======== 上升沿 ========
-  top->clock = 0;
-  top->eval();
-  tfp->dump(sim_time++);
-  // ======== 下降沿 ========
-  top->clock = 1;
-  top->eval();
-  tfp->dump(sim_time++);
-}
-
-#define no_argument		0
+#define no_argument		    0
 #define required_argument	1
 #define optional_argument	2
 extern int getopt_long (int ___argc, char *__getopt_argv_const *___argv,
@@ -129,6 +116,11 @@ extern int getopt_long_only (int ___argc, char *__getopt_argv_const *___argv,
 			     const char *__shortopts,
 		             const struct option *__longopts, int *__longind)
        __THROW __nonnull ((2, 3));
+
+// const  char *optarg;
+static char *log_file = NULL;
+static char *diff_so_file = NULL;
+static char *img_file = NULL;
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
     {"batch", no_argument      , NULL, 'b'},
@@ -141,11 +133,11 @@ static int parse_args(int argc, char *argv[]) {
   int o;
   while ( (o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {
     switch (o) {
-      case 'b': sdb_set_batch_mode(); break;
+      // case 'b': sdb_set_batch_mode(); break;
       // case 'p': sscanf(optarg, "%d", &difftest_port); break;
       // case 'l': log_file = optarg; break;
       // case 'd': diff_so_file = optarg; break;
-      // case 1: img_file = optarg; return 0;
+      case 1: img_file = optarg; return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
         printf("\t-b, --batch       run with batch mode\n");
@@ -157,6 +149,22 @@ static int parse_args(int argc, char *argv[]) {
     }
   }
   return 0;
+}
+
+
+
+
+
+static vluint64_t sim_time = 0;
+static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
+  // ======== 上升沿 ========
+  top->clock = 0;
+  top->eval();
+  tfp->dump(sim_time++);
+  // ======== 下降沿 ========
+  top->clock = 1;
+  top->eval();
+  tfp->dump(sim_time++);
 }
 
 int main(int argc, char **argv){
@@ -214,11 +222,11 @@ int main(int argc, char **argv){
   delete tfp;
   delete top;
   if (is_ebreak) {
-    std::cout << "[NPC] Simulation finished at time = " << sim_time 
+    std::cout << "[NPC] Simulation finished at time = " << sim_time
               << ", \33[1;32mwith EBREAK hit\33[0m" << std::endl;
     return 0;
   } else {
-    std::cout << "[NPC] Simulation finished at time = " << sim_time 
+    std::cout << "[NPC] Simulation finished at time = " << sim_time
               << ", \33[1;31mwithout EBREAK hit\33[0m" << std::endl;
     return 1;
   }
