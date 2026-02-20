@@ -143,18 +143,29 @@ static int parse_args(int argc, char *argv[]) {
   return 0;
 }
 
+uint64_t g_nr_guest_inst = 0;
+#define CONFIG_TRACE 1
+#define CONFIG_TRACE_START 0
+#define CONFIG_TRACE_END   10000
 FILE *log_fp = NULL;
-#define LOGEN 1
+static inline bool log_enable(void) {
+#if CONFIG_TRACE
+  return g_nr_guest_inst >= CONFIG_TRACE_START &&
+         g_nr_guest_inst <= CONFIG_TRACE_END;
+#else
+  return false;
+#endif
+}
 static inline void log_write(const char *fmt, ...) {
-  if (LOGEN || log_fp == NULL) return;
+  if (!log_enable() || log_fp == NULL) return;
   va_list ap;
   va_start(ap, fmt);
   vfprintf(log_fp, fmt, ap);
   va_end(ap);
   fflush(log_fp);
 }
-#define ANSI_NONE    "\33[0m"
 #define ANSI_FG_BLUE "\33[1;34m"
+#define ANSI_NONE    "\33[0m"
 #define Log(fmt, ...) do { \
   printf(ANSI_FG_BLUE "[%s:%d %s] " fmt ANSI_NONE "\n", \
          __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
