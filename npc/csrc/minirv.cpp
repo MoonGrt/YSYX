@@ -11,9 +11,10 @@ VerilatedVcdC *tfp = new VerilatedVcdC;
 
 typedef uint32_t word_t;
 typedef uint32_t paddr_t;
-uint8_t *mem = NULL;
+
 #define MEM_BASE 0x80000000L
 #define MEM_SIZE 0x01000000L
+uint8_t *mem = NULL;
 extern "C" void init_mem(){
   mem = (uint8_t *)malloc(MEM_SIZE);
   assert(mem);
@@ -144,20 +145,42 @@ static int parse_args(int argc, char *argv[]) {
   return 0;
 }
 
+FILE *log_fp = NULL;
+void init_log(const char *log_file) {
+  log_fp = stdout;
+  if (log_file != NULL) {
+    FILE *fp = fopen(log_file, "w");
+    Assert(fp, "Can not open '%s'", log_file);
+    log_fp = fp;
+  }
+  Log("Log is written to %s", log_file ? log_file : "stdout");
+}
 
+static void welcome() {
+  // Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
+  // IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
+  //       "to record the trace. This may lead to a large log file. "
+  //       "If it is not necessary, you can disable it in menuconfig"));
+  // Log("Build time: %s, %s", __TIME__, __DATE__);
+  // printf("Welcome to %s-NPC!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
+  printf("Welcome to MiniRV-NPC!\n");
+  printf("For help, type \"help\"\n");
+}
 
-
-
-static vluint64_t sim_time = 0;
-static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
-  // ======== 上升沿 ========
-  top->clock = 0;
-  top->eval();
-  tfp->dump(sim_time++);
-  // ======== 下降沿 ========
-  top->clock = 1;
-  top->eval();
-  tfp->dump(sim_time++);
+/* Perform some global initialization. */
+void init(int argc, char *argv[]) {
+  /* Parse arguments. */
+  parse_args(argc, argv);
+  /* Open the log file. */
+  init_log(log_file);
+  /* Initialize memory. */
+  init_mem();
+  /* Perform ISA dependent initialization. */
+  init_isa();
+  /* Load the image to memory. This will overwrite the built-in image. */
+  long img_size = load_img();
+  /* Display welcome message. */
+  welcome();
 }
 
 int is_exit_status_bad(void) {
@@ -175,32 +198,49 @@ int is_exit_status_bad(void) {
   }
 }
 
-int main(int argc, char **argv){
-  if (argc < 1){
-    puts("[NPC] Format: <exe> +/-trace <image>");
-    return 1;
-  }
-  Verilated::commandArgs(argc, argv);
-  Verilated::mkdir("logs");
 
-  int img_size = 0;
-  init_mem();
-  if (argc >= 3) {
-    // 使用用户提供的 image 文件
-    FILE *img_file = fopen(argv[2], "rb");
-    if (img_file == nullptr) {
-      puts("[NPC] Open executable image failed");
-      return 1;
-    }
-    img_size = fread(mem, 1, MEM_SIZE, img_file);
-    fclose(img_file);
-    printf("[NPC] Load image from file, size = %d bytes\n", img_size);
-  } else {
-    // 使用默认内置 image
-    img_size = sizeof(img);
-    memcpy(mem, img, img_size);
-    printf("[NPC] Load default image, size = %d bytes\n", img_size);
-  }
+
+
+static vluint64_t sim_time = 0;
+static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
+  // ======== 上升沿 ========
+  top->clock = 0;
+  top->eval();
+  tfp->dump(sim_time++);
+  // ======== 下降沿 ========
+  top->clock = 1;
+  top->eval();
+  tfp->dump(sim_time++);
+}
+int main(int argc, char **argv){
+  // if (argc < 1){
+  //   puts("[NPC] Format: <exe> +/-trace <image>");
+  //   return 1;
+  // }
+  // Verilated::commandArgs(argc, argv);
+  // Verilated::mkdir("logs");
+
+  // int img_size = 0;
+  // init_mem();
+  // if (argc >= 3) {
+  //   // 使用用户提供的 image 文件
+  //   FILE *img_file = fopen(argv[2], "rb");
+  //   if (img_file == nullptr) {
+  //     puts("[NPC] Open executable image failed");
+  //     return 1;
+  //   }
+  //   img_size = fread(mem, 1, MEM_SIZE, img_file);
+  //   fclose(img_file);
+  //   printf("[NPC] Load image from file, size = %d bytes\n", img_size);
+  // } else {
+  //   // 使用默认内置 image
+  //   img_size = sizeof(img);
+  //   memcpy(mem, img, img_size);
+  //   printf("[NPC] Load default image, size = %d bytes\n", img_size);
+  // }
+
+  // 解析命令行参数
+  parse_args(argc, argv);
 
 
   // 创建 build 目录（如果不存在）
