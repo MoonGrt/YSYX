@@ -48,11 +48,9 @@ CSRCS := $(shell find ./csrc -name "minirv.cpp")
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
-# Some convenient rules
-override ARGS ?= --log=$(BUILD_DIR)/nemu-log.txt
-# Command to execute NPC
+override ARGS ?= --log=$(BUILD_DIR)/npc-log.txt
 IMG ?=
-NPC_EXEC := $(BIN) $(ARGS) $(IMG)
+NPC_EXEC := $(BIN) $(IMG) $(ARGS)
 
 $(BIN): $(VSRCS) $(CSRCS)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!

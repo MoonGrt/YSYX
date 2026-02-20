@@ -108,15 +108,18 @@ extern "C" {
 
 
 #include <getopt.h>
-#define no_argument		    0
-#define required_argument	1
-#define optional_argument	2
+#define no_argument       0
+#define required_argument 1
+#define optional_argument 2
 static char *img_file = NULL;
 static char *log_file = NULL;
+// #define PRINTARG
 static int parse_args(int argc, char *argv[]) {
+#ifdef PRINTARG
   printf("[NPC] ARGC = %d\n", argc);
   for (int i = 0; i < argc; i++)
     printf("[NPC] ARGV[%d] = '%s'\n", i, argv[i]);
+#endif
   const struct option table[] = {
     {"help", no_argument      , NULL, 'h'},
     {"img" , required_argument, NULL, 'i'},
@@ -130,7 +133,6 @@ static int parse_args(int argc, char *argv[]) {
       case 'l': log_file = optarg; break;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
-        printf("Options:\n");
         printf("\t-h, --help     display this help and exit\n");
         printf("\t-i, --img=FILE use FILE as executable image\n");
         printf("\t-l, --log=FILE output log to FILE\n");
