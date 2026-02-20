@@ -284,11 +284,12 @@ int exit(void) {
   delete tfp;
   delete top;
   if (is_ebreak) {
-    Log("Simulation finished at time = %ld, with %s", sim_time,
-    ANSI_FMT("EBREAK hit", ANSI_FG_GREEN));
+    Log("Simulation finished at time = %ld, %s", sim_time,
+    ANSI_FMT("with EBREAK hit", ANSI_FG_GREEN));
     return 0;
   } else {
-    Log("Simulation finished at time = %ld, without EBREAK hit", sim_time);
+    Log("Simulation finished at time = %ld, %s", sim_time,
+    ANSI_FMT("without EBREAK hit", ANSI_FG_RED));
     return 1;
   }
 }
