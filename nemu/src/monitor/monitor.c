@@ -30,10 +30,8 @@ static void welcome() {
         "to record the trace. This may lead to a large log file. "
         "If it is not necessary, you can disable it in menuconfig"));
   Log("Build time: %s, %s", __TIME__, __DATE__);
-  printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
-  printf("For help, type \"help\"\n");
-  // Log("Exercise: Please remove me in the source code and compile NEMU again.");
-  // assert(0);
+  printf("[NEMU] Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
+  printf("[NEMU] For help, type \"help\"\n");
 }
 
 #ifndef CONFIG_TARGET_AM
@@ -70,12 +68,12 @@ static long load_img() {
 
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
-    {"batch"    , no_argument      , NULL, 'b'},
-    {"log"      , required_argument, NULL, 'l'},
-    {"diff"     , required_argument, NULL, 'd'},
-    {"port"     , required_argument, NULL, 'p'},
-    {"help"     , no_argument      , NULL, 'h'},
-    {0          , 0                , NULL,  0 },
+    {"batch", no_argument      , NULL, 'b'},
+    {"log"  , required_argument, NULL, 'l'},
+    {"diff" , required_argument, NULL, 'd'},
+    {"port" , required_argument, NULL, 'p'},
+    {"help" , no_argument      , NULL, 'h'},
+    {0      , 0                , NULL,  0 },
   };
   int o;
   while ( (o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {
@@ -87,10 +85,10 @@ static int parse_args(int argc, char *argv[]) {
       case 1: img_file = optarg; return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
-        printf("\t-b,--batch              run with batch mode\n");
-        printf("\t-l,--log=FILE           output log to FILE\n");
-        printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
-        printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
+        printf("\t-b, --batch       run with batch mode\n");
+        printf("\t-l, --log=FILE    output log to FILE\n");
+        printf("\t-d, --diff=REF_SO run DiffTest with reference REF_SO\n");
+        printf("\t-p, --port=PORT   run DiffTest with port PORT\n");
         printf("\n");
         exit(0);
     }
@@ -98,38 +96,27 @@ static int parse_args(int argc, char *argv[]) {
   return 0;
 }
 
+/* Perform some global initialization. */
 void init_monitor(int argc, char *argv[]) {
-  /* Perform some global initialization. */
-
   /* Parse arguments. */
   parse_args(argc, argv);
-
   /* Set random seed. */
   init_rand();
-
   /* Open the log file. */
   init_log(log_file);
-
   /* Initialize memory. */
   init_mem();
-
   /* Initialize devices. */
   IFDEF(CONFIG_DEVICE, init_device());
-
   /* Perform ISA dependent initialization. */
   init_isa();
-
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();
-
   /* Initialize differential testing. */
   init_difftest(diff_so_file, img_size, difftest_port);
-
   /* Initialize the simple debugger. */
   init_sdb();
-
   IFDEF(CONFIG_ITRACE, init_disasm());
-
   /* Display welcome message. */
   welcome();
 }
