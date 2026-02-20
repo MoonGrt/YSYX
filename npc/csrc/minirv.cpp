@@ -153,8 +153,8 @@ static inline void log_write(const char *fmt, ...) {
   va_end(ap);
   fflush(log_fp);
 }
-#define ANSI_FG_BLUE "\33[1;34m"
 #define ANSI_NONE    "\33[0m"
+#define ANSI_FG_BLUE "\33[1;34m"
 #define Log(fmt, ...) do { \
   printf(ANSI_FG_BLUE "[%s:%d %s] " fmt ANSI_NONE "\n", \
          __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
