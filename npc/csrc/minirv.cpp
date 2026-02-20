@@ -264,8 +264,8 @@ int main(int argc, char **argv){
   Verilated::commandArgs(argc, argv);
   Verilated::mkdir("logs");
 
-  // 解析命令行参数
-  parse_args(argc, argv);
+  // 初始化仿真环境
+  init(argc, argv);
 
   // 创建 build 目录（如果不存在）
   Verilated::mkdir("build");
