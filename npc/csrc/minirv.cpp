@@ -41,6 +41,27 @@ static int parse_args(int argc, char *argv[]) {
   return 0;
 }
 
+
+
+#define ANSI_FG_BLACK   "\33[1;30m"
+#define ANSI_FG_RED     "\33[1;31m"
+#define ANSI_FG_GREEN   "\33[1;32m"
+#define ANSI_FG_YELLOW  "\33[1;33m"
+#define ANSI_FG_BLUE    "\33[1;34m"
+#define ANSI_FG_MAGENTA "\33[1;35m"
+#define ANSI_FG_CYAN    "\33[1;36m"
+#define ANSI_FG_WHITE   "\33[1;37m"
+#define ANSI_BG_BLACK   "\33[1;40m"
+#define ANSI_BG_RED     "\33[1;41m"
+#define ANSI_BG_GREEN   "\33[1;42m"
+#define ANSI_BG_YELLOW  "\33[1;43m"
+#define ANSI_BG_BLUE    "\33[1;44m"
+#define ANSI_BG_MAGENTA "\33[1;45m"
+#define ANSI_BG_CYAN    "\33[1;46m"
+#define ANSI_BG_WHITE   "\33[1;47m"
+#define ANSI_NONE       "\33[0m"
+#define ANSI_FMT(str, fmt) fmt str ANSI_NONE
+
 FILE *log_fp = NULL;
 #define log_write(...) { \
   if (log_fp != NULL) { \
@@ -50,9 +71,9 @@ FILE *log_fp = NULL;
 }
 #define SHORT_FILE(file) ((strncmp(file, "../../", 6) == 0) ? ((file)+6) : (file))
 #define Log(fmt, ...) do { \
-  printf("[%s:%d %s] " fmt "\n", \
+  printf(ANSI_FMT("[%s:%d %s] " fsm, ANSI_FG_BLUE) "\n", \
     SHORT_FILE(__FILE__), __LINE__, __func__, ##__VA_ARGS__); \
-  log_write("[%s:%d %s] " fmt "\n", \
+  log_write(ANSI_FMT("[%s:%d %s] " fsm, ANSI_FG_BLUE) "\n", \
     SHORT_FILE(__FILE__), __LINE__, __func__, ##__VA_ARGS__); \
 } while (0)
 void init_log(void) {
@@ -64,6 +85,8 @@ void init_log(void) {
   }
   Log("Log is written to %s", log_file ? log_file : "stdout");
 }
+
+
 
 #define MEM_BASE 0x80000000L
 #define MEM_SIZE 0x01000000L
@@ -103,6 +126,8 @@ static void load_img(void) {
   }
 }
 
+
+
 static void welcome() {
   // Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
   // IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
@@ -112,6 +137,8 @@ static void welcome() {
   // printf("Welcome to %s-NPC!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
   printf("[NPC] Welcome to MiniRV-NPC!\n");
 }
+
+
 
 /* Perform some global initialization. */
 void init(int argc, char *argv[]) {
