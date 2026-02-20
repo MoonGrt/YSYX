@@ -71,9 +71,9 @@ FILE *log_fp = NULL;
 }
 #define SHORT_FILE(file) ((strncmp(file, "../../", 6) == 0) ? ((file)+6) : (file))
 #define Log(fmt, ...) do { \
-  printf(ANSI_FMT("[%s:%d %s] " fsm, ANSI_FG_BLUE) "\n", \
+  printf(ANSI_FMT("[%s:%d %s] " fmt, ANSI_FG_BLUE) "\n", \
     SHORT_FILE(__FILE__), __LINE__, __func__, ##__VA_ARGS__); \
-  log_write(ANSI_FMT("[%s:%d %s] " fsm, ANSI_FG_BLUE) "\n", \
+  log_write(ANSI_FMT("[%s:%d %s] " fmt, ANSI_FG_BLUE) "\n", \
     SHORT_FILE(__FILE__), __LINE__, __func__, ##__VA_ARGS__); \
 } while (0)
 void init_log(void) {
