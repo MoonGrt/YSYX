@@ -166,10 +166,7 @@ static void load_img(void) {
   } else {
     // 使用用户提供的 image 文件
     FILE *fp = fopen(img_file, "rb");
-    if (fp == nullptr) {
-      puts("[NPC] Open executable image failed");
-      return 1;
-    }
+    assert(fp);
     img_size = fread(mem, 1, MEM_SIZE, fp);
     fclose(fp);
     printf("[NPC] Load image from file, size = %ld bytes\n", img_size);
