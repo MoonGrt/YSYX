@@ -174,6 +174,7 @@ static long load_img() {
     fclose(fp);
     printf("[NPC] Load image from file, size = %ld bytes\n", img_size);
   }
+  return img_size;
 }
 
 static void welcome() {
