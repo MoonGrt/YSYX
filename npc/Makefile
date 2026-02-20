@@ -48,6 +48,12 @@ CSRCS := $(shell find ./csrc -name "minirv.cpp")
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
+# Some convenient rules
+override ARGS ?= --log=$(BUILD_DIR)/nemu-log.txt
+# Command to execute NPC
+IMG ?=
+NPC_EXEC := $(BIN) $(ARGS) $(IMG)
+
 $(BIN): $(VSRCS) $(CSRCS)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	mkdir -p $(BUILD_DIR)
@@ -57,10 +63,10 @@ $(BIN): $(VSRCS) $(CSRCS)
 		--top-module $(TOPNAME) $^
 
 run: $(BIN)
-	$(BIN) +trace $(IMG)
+	$(NPC_EXEC)
 
 gdb: $(BIN)
-	gdb --args $(BIN) -trace $(IMG)
+	gdb --args $(NPC_EXEC)
 
 wave: $(WAVE_FILE)
 	$(GTKWAVE) $(WAVE_FILE)
