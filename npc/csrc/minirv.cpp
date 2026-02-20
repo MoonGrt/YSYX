@@ -150,7 +150,7 @@ FILE *log_fp = NULL;
     fflush(log_fp); \
   } \
 }
-#define SHORT_FILE(file) (strrchr(file,'/') ? strrchr(file,'/')+1 : file)
+#define SHORT_FILE(file) ((strncmp(file, "../../", 6) == 0) ? ((file)+6) : (file))
 #define Log(fmt, ...) do { \
   printf("[%s:%d %s] " fmt "\n", \
     SHORT_FILE(__FILE__), __LINE__, __func__, ##__VA_ARGS__); \
