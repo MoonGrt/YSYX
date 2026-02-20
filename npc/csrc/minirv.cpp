@@ -5,19 +5,86 @@
 
 // #define DEBUG
 
-// 实例化顶层模块
-VMiniRVSOC *top = new VMiniRVSOC;
-VerilatedVcdC *tfp = new VerilatedVcdC;
+#include <getopt.h>
+#define no_argument       0
+#define required_argument 1
+#define optional_argument 2
+static char *log_file = NULL;
+static char *img_file = NULL;
+#define PRINTARG
+static int parse_args(int argc, char *argv[]) {
+#ifdef PRINTARG
+  printf("[NPC] ARGC = %d\n", argc);
+  for (int i = 0; i < argc; i++)
+    printf("[NPC] ARGV[%d] = '%s'\n", i, argv[i]);
+#endif
+  const struct option table[] = {
+    {"help", no_argument      , NULL, 'h'},
+    {"log" , required_argument, NULL, 'l'},
+    {"img" , required_argument, NULL, 'i'},
+    {0     , 0                , NULL,  0 },
+  };
+  int o;
+  while ( (o = getopt_long(argc, argv, "-hi:l:", table, NULL)) != -1) {
+    switch (o) {
+      case 'l': log_file = optarg; break;
+      case 'i': 
+      case  1 : img_file = optarg; break;
+      default:
+        printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
+        printf("\t-h, --help     display this help and exit\n");
+        printf("\t-l, --log=FILE output log to FILE\n");
+        printf("\t-i, --img=FILE use FILE as executable image\n");
+        printf("\n");
+        exit(0);
+    }
+  }
+  return 0;
+}
 
-typedef uint32_t word_t;
-typedef uint32_t paddr_t;
-uint8_t *mem = NULL;
+
+
+#define ANSI_FG_RED     "\33[1;31m"
+#define ANSI_FG_GREEN   "\33[1;32m"
+#define ANSI_FG_BLUE    "\33[1;34m"
+#define ANSI_NONE       "\33[0m"
+#define ANSI_FMT(str, fmt) fmt str ANSI_NONE
+
+FILE *log_fp = NULL;
+#define log_write(...) { \
+  if (log_fp != NULL) { \
+    fprintf(log_fp, __VA_ARGS__); \
+    fflush(log_fp); \
+  } \
+}
+#define SHORT_FILE(file) ((strncmp(file, "../../", 6) == 0) ? ((file)+6) : (file))
+#define Log(fmt, ...) do { \
+  printf(ANSI_FMT("[%s:%d %s] " fmt, ANSI_FG_BLUE) "\n", \
+    SHORT_FILE(__FILE__), __LINE__, __func__, ##__VA_ARGS__); \
+  log_write(ANSI_FMT("[%s:%d %s] " fmt, ANSI_FG_BLUE) "\n", \
+    SHORT_FILE(__FILE__), __LINE__, __func__, ##__VA_ARGS__); \
+} while (0)
+void init_log(void) {
+  log_fp = stdout;
+  if (log_file != NULL) {
+    FILE *fp = fopen(log_file, "w");
+    assert(fp);
+    log_fp = fp;
+  }
+  Log("Log is written to %s", log_file ? log_file : "stdout");
+}
+
+
+
 #define MEM_BASE 0x80000000L
 #define MEM_SIZE 0x01000000L
+uint8_t *mem = NULL;
 extern "C" void init_mem(){
   mem = (uint8_t *)malloc(MEM_SIZE);
   assert(mem);
   memset(mem, 0, MEM_SIZE);
+  Log("Memory initialized at 0x%08lx, size = 0x%08lx", 
+      (unsigned long)MEM_BASE, (unsigned long)MEM_SIZE);
 };
 static const uint32_t img [] = {
   0x00500513,  // 0x00 addi a0, zero, 5; a0 = 5
@@ -28,6 +95,61 @@ static const uint32_t img [] = {
   0x00100073,  // 0x04 ebreak
   0xdeadbeef,  // 0x08 deadbeef
 };
+
+static void load_img(void) {
+  long img_size = 0;
+  if (img_file == NULL) {
+    // 使用默认内置 image
+    img_size = sizeof(img);
+    memcpy(mem, img, img_size);
+    Log("No image is given. Use the default build-in image.");
+    Log("Load default image, size = %ld bytes", img_size);
+  } else {
+    // 使用用户提供的 image 文件
+    FILE *fp = fopen(img_file, "rb");
+    assert(fp);
+    img_size = fread(mem, 1, MEM_SIZE, fp);
+    fclose(fp);
+    Log("Load image from file, size = %ld bytes", img_size);
+  }
+}
+
+
+
+static void welcome() {
+  // Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
+  // IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
+  //       "to record the trace. This may lead to a large log file. "
+  //       "If it is not necessary, you can disable it in menuconfig"));
+  Log("Build time: %s, %s", __TIME__, __DATE__);
+  // printf("Welcome to %s-NPC!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
+  printf("[NPC] Welcome to MiniRV-NPC!\n");
+}
+
+
+
+/* Perform some global initialization. */
+void init(int argc, char *argv[]) {
+  /* Parse arguments. */
+  parse_args(argc, argv);
+  /* Open the log file. */
+  init_log();
+  /* Initialize memory. */
+  init_mem();
+  /* Load the image to memory.*/
+  load_img();
+  /* Display welcome message. */
+  welcome();
+}
+
+
+
+// 实例化顶层模块
+VMiniRVSOC *top = new VMiniRVSOC;
+VerilatedVcdC *tfp = new VerilatedVcdC;
+
+typedef uint32_t word_t;
+typedef uint32_t paddr_t;
 
 static inline bool in_mem(paddr_t addr){
   return addr - MEM_BASE <= MEM_SIZE && addr >= MEM_BASE;
@@ -102,10 +224,6 @@ extern "C" {
   }
 }
 
-
-
-
-
 static vluint64_t sim_time = 0;
 static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
   // ======== 上升沿 ========
@@ -118,33 +236,13 @@ static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
   tfp->dump(sim_time++);
 }
 
+int exit(void);
 int main(int argc, char **argv){
-  if (argc < 1){
-    puts("[NPC] Format: <exe> +/-trace <image>");
-    return 1;
-  }
   Verilated::commandArgs(argc, argv);
   Verilated::mkdir("logs");
 
-  int img_size = 0;
-  init_mem();
-  if (argc >= 3) {
-    // 使用用户提供的 image 文件
-    FILE *img_file = fopen(argv[2], "rb");
-    if (img_file == nullptr) {
-      puts("[NPC] Open executable image failed");
-      return 1;
-    }
-    img_size = fread(mem, 1, MEM_SIZE, img_file);
-    fclose(img_file);
-    printf("[NPC] Load image from file, size = %d bytes\n", img_size);
-  } else {
-    // 使用默认内置 image
-    img_size = sizeof(img);
-    memcpy(mem, img, img_size);
-    printf("[NPC] Load default image, size = %d bytes\n", img_size);
-  }
-
+  // 初始化仿真环境
+  init(argc, argv);
 
   // 创建 build 目录（如果不存在）
   Verilated::mkdir("build");
@@ -154,31 +252,34 @@ int main(int argc, char **argv){
   tfp->open("build/wave.vcd");
 
   // ===== 复位 =====
-  printf("[NPC] Resetting...\n");
+  printf("[NPC] Resetting ...\n");
   top->reset = 1;
   tick(top, tfp);
   top->reset = 0;
   // 主仿真
   std::cout << "[NPC] Simulation start" << std::endl;
+  log_write("0x%08x: %08x\n", top->io_pc, top->io_inst);
   // while (!Verilated::gotFinish()){
   for (int i = 0; i < 100000 && !Verilated::gotFinish(); i++) {
     tick(top, tfp);
-    if (is_ebreak) {
-      std::cout << "[NPC] EBREAK hit, exiting simulation.\n";
-      break;
-    }
+    log_write("0x%08x: 0x%08x\n", top->io_pc, top->io_inst);
+    if (is_ebreak) break;
   }
-  // 结束
+
+  return exit();
+}
+
+int exit(void) {
   tfp->close();
   delete tfp;
   delete top;
   if (is_ebreak) {
-    std::cout << "[NPC] Simulation finished at time = " << sim_time 
-              << ", \33[1;32mwith EBREAK hit\33[0m" << std::endl;
+    Log("Simulation finished at time = %ld, %s", sim_time,
+    ANSI_FMT("with EBREAK hit", ANSI_FG_GREEN));
     return 0;
   } else {
-    std::cout << "[NPC] Simulation finished at time = " << sim_time 
-              << ", \33[1;31mwithout EBREAK hit\33[0m" << std::endl;
+    Log("Simulation finished at time = %ld, %s", sim_time,
+    ANSI_FMT("without EBREAK hit", ANSI_FG_RED));
     return 1;
   }
 }
