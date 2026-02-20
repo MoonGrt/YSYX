@@ -261,6 +261,7 @@ int main(int argc, char **argv){
   // while (!Verilated::gotFinish()){
   for (int i = 0; i < 100000 && !Verilated::gotFinish(); i++) {
     tick(top, tfp);
+    log_write("%s\n", _this->logbuf);
     if (is_ebreak) break;
   }
 
