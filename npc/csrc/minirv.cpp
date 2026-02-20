@@ -65,6 +65,25 @@ void init_log(void) {
   Log("Log is written to %s", log_file ? log_file : "stdout");
 }
 
+#define MEM_BASE 0x80000000L
+#define MEM_SIZE 0x01000000L
+uint8_t *mem = NULL;
+extern "C" void init_mem(){
+  mem = (uint8_t *)malloc(MEM_SIZE);
+  assert(mem);
+  memset(mem, 0, MEM_SIZE);
+  Log("Memory initialized at 0x%08x, size = 0x%08x\n", MEM_BASE, MEM_SIZE);
+};
+static const uint32_t img [] = {
+  0x00500513,  // 0x00 addi a0, zero, 5; a0 = 5
+  0x00300593,  // 0x04 addi a1, zero, 3; a1 = 3
+  0x00b50633,  // 0x08 add a2, a0, a1  ; a2 = a0 + a1
+  0x00028823,  // 0x0c sb  zero, 16(t0); 存储 0 到 t0+16
+  0x0102c503,  // 0x10 lbu a0, 16(t0)  ; 从 t0+16 读一个字节
+  0x00100073,  // 0x04 ebreak
+  0xdeadbeef,  // 0x08 deadbeef
+};
+
 static void load_img(void) {
   long img_size = 0;
   if (img_file == NULL) {
@@ -129,25 +148,6 @@ VerilatedVcdC *tfp = new VerilatedVcdC;
 
 typedef uint32_t word_t;
 typedef uint32_t paddr_t;
-
-#define MEM_BASE 0x80000000L
-#define MEM_SIZE 0x01000000L
-uint8_t *mem = NULL;
-extern "C" void init_mem(){
-  mem = (uint8_t *)malloc(MEM_SIZE);
-  assert(mem);
-  memset(mem, 0, MEM_SIZE);
-  Log("Memory initialized at 0x%08x, size = 0x%08x\n", MEM_BASE, MEM_SIZE);
-};
-static const uint32_t img [] = {
-  0x00500513,  // 0x00 addi a0, zero, 5; a0 = 5
-  0x00300593,  // 0x04 addi a1, zero, 3; a1 = 3
-  0x00b50633,  // 0x08 add a2, a0, a1  ; a2 = a0 + a1
-  0x00028823,  // 0x0c sb  zero, 16(t0); 存储 0 到 t0+16
-  0x0102c503,  // 0x10 lbu a0, 16(t0)  ; 从 t0+16 读一个字节
-  0x00100073,  // 0x04 ebreak
-  0xdeadbeef,  // 0x08 deadbeef
-};
 
 static inline bool in_mem(paddr_t addr){
   return addr - MEM_BASE <= MEM_SIZE && addr >= MEM_BASE;
