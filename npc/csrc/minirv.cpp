@@ -160,7 +160,7 @@ static long load_img() {
   long img_size = 0;
   if (img_file == NULL) {
     // 使用用户提供的 image 文件
-    FILE *img_file = fopen(argv[2], "rb");
+    FILE *img_file = fopen(img_file, "rb");
     if (img_file == nullptr) {
       puts("[NPC] Open executable image failed");
       return 1;
