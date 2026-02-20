@@ -181,7 +181,7 @@ static void load_img(void) {
     assert(fp);
     img_size = fread(mem, 1, MEM_SIZE, fp);
     fclose(fp);
-    printf("[NPC] Load image from file, size = %ld bytes\n", img_size);
+    Log("Load image from file, size = %ld bytes", img_size);
   }
 }
 
