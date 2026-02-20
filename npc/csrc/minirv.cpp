@@ -178,7 +178,7 @@ static inline void log_write(const char *fmt, ...) {
   log_write("[%s:%d %s] " fmt "\n", \
             __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
 } while (0)
-FILE *log_fp = NULL;
+
 void init_log(void) {
   log_fp = stdout;
   if (log_file != NULL) {
