@@ -159,6 +159,11 @@ void init_log(const char *log_file) {
 static long load_img() {
   long img_size = 0;
   if (img_file == NULL) {
+    // 使用默认内置 image
+    img_size = sizeof(img);
+    memcpy(mem, img, img_size);
+    printf("[NPC] Load default image, size = %d bytes\n", img_size);
+  } else {
     // 使用用户提供的 image 文件
     FILE *img_file = fopen(img_file, "rb");
     if (img_file == nullptr) {
@@ -168,11 +173,6 @@ static long load_img() {
     img_size = fread(mem, 1, MEM_SIZE, img_file);
     fclose(img_file);
     printf("[NPC] Load image from file, size = %d bytes\n", img_size);
-  } else {
-    // 使用默认内置 image
-    img_size = sizeof(img);
-    memcpy(mem, img, img_size);
-    printf("[NPC] Load default image, size = %d bytes\n", img_size);
   }
 }
 
