@@ -151,7 +151,7 @@ FILE *log_fp = NULL;
   } \
 }
 #define Log(fmt, ...) do { \
-  printf(ANSI_FG_BLUE "[%s:%d %s] " fmt ANSI_NONE "\n", \
+  printf("[%s:%d %s] " fmt "\n", \
          __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
   log_write("[%s:%d %s] " fmt "\n", \
             __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
