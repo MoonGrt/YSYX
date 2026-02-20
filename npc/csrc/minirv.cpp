@@ -115,12 +115,7 @@ extern int getopt_long(int argc, char * const argv[],  const char *optstring,
 
 static char *img_file = NULL;
 static char *log_file = NULL;
-struct option {
-  const char *name;
-  int has_arg;
-  int *flag;
-  int val;
-};
+
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
     {"help", no_argument      , NULL, 'h'},
