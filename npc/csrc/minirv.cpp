@@ -115,7 +115,6 @@ extern int getopt_long(int argc, char * const argv[],  const char *optstring,
 
 static char *img_file = NULL;
 static char *log_file = NULL;
-
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
     {"help", no_argument      , NULL, 'h'},
@@ -142,13 +141,13 @@ static int parse_args(int argc, char *argv[]) {
 }
 
 uint64_t g_nr_guest_inst = 0;
+#define __IGNORE(...)
 #define CONFIG_TRACE 1
 #define CONFIG_TRACE_START 0
 #define CONFIG_TRACE_END 10000
 #define concat_temp(x, y) x ## y
 #define concat(x, y) concat_temp(x, y)
 #define CHOOSE2nd(a, b, ...) b
-#define __IGNORE(...)
 #define MUX_WITH_COMMA(contain_comma, a, b) CHOOSE2nd(contain_comma a, b)
 #define MUX_MACRO_PROPERTY(p, macro, a, b) MUX_WITH_COMMA(concat(p, macro), a, b)
 #define MUXDEF(macro, X, Y)  MUX_MACRO_PROPERTY(__P_DEF_, macro, X, Y)
@@ -262,17 +261,11 @@ int is_exit_status_bad(void) {
 
 
 int main(int argc, char **argv){
-  // if (argc < 1){
-  //   puts("[NPC] Format: <exe> +/-trace <image>");
-  //   return 1;
-  // }
-
   Verilated::commandArgs(argc, argv);
   Verilated::mkdir("logs");
 
   // 解析命令行参数
   parse_args(argc, argv);
-
 
   // 创建 build 目录（如果不存在）
   Verilated::mkdir("build");
