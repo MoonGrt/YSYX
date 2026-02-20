@@ -225,12 +225,10 @@ int is_exit_status_bad(void) {
   delete tfp;
   delete top;
   if (is_ebreak) {
-    std::cout << "[NPC] Simulation finished at time = " << sim_time
-              << ", \33[1;32mwith EBREAK hit\33[0m" << std::endl;
+    Log(" Simulation finished at time = %ld, with EBREAK hit", sim_time);
     return 0;
   } else {
-    std::cout << "[NPC] Simulation finished at time = " << sim_time
-              << ", \33[1;31mwithout EBREAK hit\33[0m" << std::endl;
+    Log(" Simulation finished at time = %ld, without EBREAK hit", sim_time);
     return 1;
   }
 }
