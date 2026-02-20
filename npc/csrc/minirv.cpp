@@ -111,10 +111,8 @@ extern "C" {
 extern int getopt_long(int argc, char * const argv[],  const char *optstring,  
                 const struct option *longopts, int *longindex);
 
-// const  char *optarg;
-static char *log_file = NULL;
-static char *diff_so_file = NULL;
 static char *img_file = NULL;
+static char *log_file = NULL;
 struct option {
   const char *name;
   int has_arg;
@@ -133,13 +131,12 @@ static int parse_args(int argc, char *argv[]) {
     switch (o) {
       case 'i': img_file = optarg; break;
       case 'l': log_file = optarg; break;
-      case  1 :
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
         printf("Options:\n");
-        printf("\t-h, --help      display this help and exit\n");
-        printf("\t-i, --img=FILE  use FILE as executable image\n");
-        printf("\t-l, --log=FILE  output log to FILE\n");
+        printf("\t-h, --help     display this help and exit\n");
+        printf("\t-i, --img=FILE use FILE as executable image\n");
+        printf("\t-l, --log=FILE output log to FILE\n");
         printf("\n");
         exit(0);
     }
@@ -161,6 +158,21 @@ static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
   top->clock = 1;
   top->eval();
   tfp->dump(sim_time++);
+}
+
+int is_exit_status_bad(void) {
+  tfp->close();
+  delete tfp;
+  delete top;
+  if (is_ebreak) {
+    std::cout << "[NPC] Simulation finished at time = " << sim_time
+              << ", \33[1;32mwith EBREAK hit\33[0m" << std::endl;
+    return 0;
+  } else {
+    std::cout << "[NPC] Simulation finished at time = " << sim_time
+              << ", \33[1;31mwithout EBREAK hit\33[0m" << std::endl;
+    return 1;
+  }
 }
 
 int main(int argc, char **argv){
@@ -213,17 +225,6 @@ int main(int argc, char **argv){
       break;
     }
   }
-  // 结束
-  tfp->close();
-  delete tfp;
-  delete top;
-  if (is_ebreak) {
-    std::cout << "[NPC] Simulation finished at time = " << sim_time
-              << ", \33[1;32mwith EBREAK hit\33[0m" << std::endl;
-    return 0;
-  } else {
-    std::cout << "[NPC] Simulation finished at time = " << sim_time
-              << ", \33[1;31mwithout EBREAK hit\33[0m" << std::endl;
-    return 1;
-  }
+
+  return is_exit_status_bad();
 }
