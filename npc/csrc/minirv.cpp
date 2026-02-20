@@ -159,6 +159,7 @@ static inline bool log_enable(void) {
 }
 
 /* 写文件 log */
+#define CONFIG_TARGET_NATIVE_ELF 1
 static inline void log_write(const char *fmt, ...) {
 #ifdef CONFIG_TARGET_NATIVE_ELF
   if (!log_enable() || log_fp == NULL) return;
