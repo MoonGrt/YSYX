@@ -100,6 +100,7 @@ static char *number(char *str, long num, int base, int size, int precision, int 
 
   return str;
 }
+
 int printf(const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
