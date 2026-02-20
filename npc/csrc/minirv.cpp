@@ -174,7 +174,7 @@ static void load_img(void) {
     img_size = sizeof(img);
     memcpy(mem, img, img_size);
     Log("No image is given. Use the default build-in image.");
-    printf("[NPC] Load default image, size = %ld bytes\n", img_size);
+    Log("Load default image, size = %ld bytes\n", img_size);
   } else {
     // 使用用户提供的 image 文件
     FILE *fp = fopen(img_file, "rb");
