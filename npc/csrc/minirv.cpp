@@ -113,7 +113,7 @@ extern int getopt_long (int ___argc, char *__getopt_argv_const *___argv,
             const struct option *__longopts, int *__longind)
        __THROW __nonnull ((2, 3));
 
-const  char *optarg;
+// const  char *optarg;
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
