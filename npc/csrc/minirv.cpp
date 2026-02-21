@@ -117,10 +117,6 @@ static void load_img(void) {
 
 
 static void welcome() {
-  // Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
-  // IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
-  //       "to record the trace. This may lead to a large log file. "
-  //       "If it is not necessary, you can disable it in menuconfig"));
   Log("Build time: %s, %s", __TIME__, __DATE__);
   // printf("Welcome to %s-NPC!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
   printf("[NPC] Welcome to MiniRV-NPC!\n");
@@ -189,29 +185,29 @@ extern "C" {
   #define UNIMPL_CODE    3
   bool is_ebreak;
   void ebreak(uint8_t code) {
-      // 异常信息映射：颜色 + 消息
-      is_ebreak = (code == EBREAK_CODE);
-      struct {
-          const char* color;
-          const char* msg;
-      } exc_info[] = {
-          [EBREAK_CODE]  = {"\33[1;32m", "EBREAK: HIT GOOD TRAP"},
-          [ZERO_INST_CODE]= {"\33[1;34m", "ALL ZERO INSTRUCTION"},
-          [OTHER_E_CODE] = {"\33[1;33m", "E-INSTRUCTION EXCEPTION"},
-          [UNIMPL_CODE]  = {"\33[1;31m", "UNIMPLEMENTED INSTRUCTION"},
-      };
-      // 默认异常（安全）
-      const char* color = "\33[1;31m";
-      const char* msg   = "UNKNOWN EXCEPTION";
-      if (code <= ZERO_INST_CODE) {
-          color = exc_info[code].color;
-          msg   = exc_info[code].msg;
-      }
-      // 统一打印
-      printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
-      printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
-      // 停止仿真
-      Verilated::gotFinish(true);
+    // 异常信息映射：颜色 + 消息
+    is_ebreak = (code == EBREAK_CODE);
+    struct {
+      const char* color;
+      const char* msg;
+    } exc_info[] = {
+      [EBREAK_CODE]  = {"\33[1;32m", "EBREAK: HIT GOOD TRAP"},
+      [ZERO_INST_CODE]= {"\33[1;34m", "ALL ZERO INSTRUCTION"},
+      [OTHER_E_CODE] = {"\33[1;33m", "E-INSTRUCTION EXCEPTION"},
+      [UNIMPL_CODE]  = {"\33[1;31m", "UNIMPLEMENTED INSTRUCTION"},
+    };
+    // 默认异常（安全）
+    const char* color = "\33[1;31m";
+    const char* msg   = "UNKNOWN EXCEPTION";
+    if (code <= ZERO_INST_CODE) {
+      color = exc_info[code].color;
+      msg   = exc_info[code].msg;
+    }
+    // 统一打印
+    printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
+    printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
+    // 停止仿真
+    Verilated::gotFinish(true);
   }
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;

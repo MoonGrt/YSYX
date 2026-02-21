@@ -194,12 +194,10 @@ static int cmd_w(char *args) {
     printf("  Usage: w EXPR\n");
     return 0;
   }
-
   int wp_no = new_wp(args);
   if (wp_no < 0) {
     printf("  Failed to set watchpoint\n");
   }
-
   return 0;
 }
 
