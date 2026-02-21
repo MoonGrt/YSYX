@@ -21,7 +21,7 @@ static char *upper_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 // void putch(char ch);
 //
 
-int power(int n, int m){
+int power(int n, int m) {
   int result = 1;
   for(int i = 0;i < m; i++) result *= n;
   return result;
@@ -50,7 +50,7 @@ static char *number(char *str, long num, int base, int size, int precision, int 
 
   c = (type & ZEROPAD) ? '0' : ' ';
   sign = 0;
-  if(type & SIGN){
+  if(type & SIGN) {
     if(num < 0) {
       sign = '-';
       num	 = -num;
@@ -64,7 +64,7 @@ static char *number(char *str, long num, int base, int size, int precision, int 
     }
   }
 
-  if(type & SPECIAL){
+  if(type & SPECIAL) {
     if(base == 16) size -= 2;
     else if(base == 8) size--;
   }
@@ -84,10 +84,10 @@ static char *number(char *str, long num, int base, int size, int precision, int 
   if(!(type & (ZEROPAD | LEFT))) while(size-- > 0) *str++ = ' ';
   if(sign) *str++ = sign;
 
-  if(type & SPECIAL){
+  if(type & SPECIAL) {
     if(base == 8) {
       *str++ = '0';
-    }else if(base == 16){
+    }else if(base == 16) {
       *str++ = '0';
       *str++ = digits[33];
     }
@@ -100,6 +100,7 @@ static char *number(char *str, long num, int base, int size, int precision, int 
 
   return str;
 }
+
 int printf(const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -122,13 +123,13 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
   int precision;
   int qualifier;
 
-  for(str = out; *fmt; fmt++){
-    if(*fmt != '%'){
+  for(str = out; *fmt; fmt++) {
+    if(*fmt != '%') {
       *str++ = *fmt;
       continue;
     }
-    // Process flags
     flags = 0;
+
 repeat:
     fmt++;
     switch(*fmt) {
@@ -154,7 +155,7 @@ repeat:
 
     // Get the precision
     precision = -1;
-    if(*fmt == '.'){
+    if(*fmt == '.') {
       ++fmt;
       if(is_digit(*fmt))
         precision = skip_atoi(&fmt);
@@ -195,38 +196,27 @@ repeat:
         }
         str = number(str, (unsigned long)va_arg(ap, void *), 16, field_width, precision, flags);
         continue;
-      case 'X':
-        flags |= LARGE;
-      case 'x':
-        base = 16;
-        break;
+      case 'X': flags |= LARGE;
+      case 'x': base = 16; break;
       case 'd':
-      case 'i':
-        flags |= SIGN;
-      case 'u':
-        break;
+      case 'i': flags |= SIGN;
+      case 'u': break;
       default:
         if(*fmt != '%') *str++ = '%';
-        if(*fmt)
-          *str++ = *fmt;
-        else
-          --fmt;
+        if(*fmt) *str++ = *fmt;
+        else --fmt;
         continue;
     }
 
     if(qualifier == 'l')
       num = va_arg(ap,unsigned long);
-    else if(qualifier == 'h'){
-      if(flags & SIGN)
-        num = va_arg(ap, int);
-      else
-        num = va_arg(ap, unsigned int);
-    }
+    else if(qualifier == 'h')
+      if(flags & SIGN) num = va_arg(ap, int);
+      else num = va_arg(ap, unsigned int);
     else if(flags & SIGN)
       num = va_arg(ap, int);
     else
       num = va_arg(ap, unsigned int);
-
     str = number(str, num, base, field_width, precision, flags);
   }
   *str = '\0';
@@ -236,11 +226,9 @@ repeat:
 int sprintf(char *out, const char *fmt, ...) {
   va_list args;
   int n;
-
   va_start(args, fmt);
   n = vsprintf(out, fmt, args);
   va_end(args);
-
   return n;
 }
 
@@ -248,19 +236,17 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
   char *buf =	NULL;
   int result = vsprintf(buf, fmt, ap);
 
-  if(!buf)
-    return -1;
-  if(result < 0){
+  if(!buf) return -1;
+  if(result < 0) {
     free(buf);
     return -1;
   }
 
   result = strlen(buf);
-  if(n > 0){
+  if(n > 0) {
     if((long)n > result)
       memcpy(out, buf, result+1);
-    else
-    {
+    else {
       memcpy(out, buf, n-1);
       out[n-1] = 0;
     }
