@@ -102,47 +102,44 @@ void *memset(void *s, int c, size_t n) {
 
 void *memmove(void *dest, const void *src, size_t n) {
   uint8_t* from = (uint8_t*) src;
-	uint8_t* to = (uint8_t*) dest;
+  uint8_t* to = (uint8_t*) dest;
 
-	if (from == to || n == 0)
-		return dest;
-	if (to > from && to-from < (int)n) {
-		/* to overlaps with from */
-		/*  <from......>         */
-		/*         <to........>  */
-		/* copy in reverse, to avoid overwriting from */
-		int i;
-		for(i=n-1; i>=0; i--)
-			to[i] = from[i];
-		return dest;
-	}
-	if (from > to && from-to < (int)n) {
-		/* to overlaps with from */
-		/*        <from......>   */
-		/*  <to........>         */
-		/* copy forwards, to avoid overwriting from */
-		size_t i;
-		for(i=0; i<n; i++)
-			to[i] = from[i];
-		return dest;
-	}
-	memcpy(dest, src, n);
-	return dest;
+  if (from == to || n == 0)
+    return dest;
+  if (to > from && to-from < (int)n) {
+    /* to overlaps with from */
+    /*  <from......>         */
+    /*         <to........>  */
+    /* copy in reverse, to avoid overwriting from */
+    int i;
+    for(i=n-1; i>=0; i--)
+      to[i] = from[i];
+    return dest;
+  }
+  if (from > to && from-to < (int)n) {
+    /* to overlaps with from */
+    /*        <from......>   */
+    /*  <to........>         */
+    /* copy forwards, to avoid overwriting from */
+    size_t i;
+    for(i=0; i<n; i++)
+      to[i] = from[i];
+    return dest;
+  }
+  memcpy(dest, src, n);
+  return dest;
 }
 
 void *memcpy(void *out, const void *in, size_t n) {
-  for(int i=0; i<n; i++) {
+  for(int i=0; i<n; i++)
     ((char*)out)[i]=((char*)in)[i];
-  }
   return out;
 }
 
 int memcmp(const void *s1, const void *s2, size_t n) {
-  for(int i=0; i<n; i++) {
-    if (((uint8_t*)s1)[i]!=((uint8_t*)s2)[i]) {
+  for(int i=0; i<n; i++)
+    if (((uint8_t*)s1)[i]!=((uint8_t*)s2)[i])
       return ((uint8_t*)s1)[i]-((uint8_t*)s2)[i];
-    }
-  }
   return 0;
 }
 
