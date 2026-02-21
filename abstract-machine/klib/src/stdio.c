@@ -46,7 +46,7 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list args) {
   int written = 0;
   const char* p = fmt;
   while (*p!='\0') {
-    if (*p=='%' && (*(p+1)=='s' || *(p+1)=='d')) {
+    if (*p=='%' && (*(p+1)=='s' || *(p+1)=='d' || *(p+1)=='c')) {
       p++;
       if (*p=='s') {
         const char *str = va_arg(args, const char *);
