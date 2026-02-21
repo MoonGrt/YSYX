@@ -1,4 +1,5 @@
-#define DEBUG
+#define LOG
+// #define DEBUG
 // #define IMG_HEX
 
 #include <stdio.h>
@@ -8,6 +9,42 @@
 #include <am.h>
 #include <klib-macros.h>
 
+
+#ifdef LOG
+#include <assert.h>
+
+#define ANSI_FG_RED     "\33[1;31m"
+#define ANSI_FG_GREEN   "\33[1;32m"
+#define ANSI_FG_BLUE    "\33[1;34m"
+#define ANSI_NONE       "\33[0m"
+#define ANSI_FMT(str, fmt) fmt str ANSI_NONE
+
+FILE *log_fp = NULL;
+#define log_write(...) { \
+  if (log_fp != NULL) { \
+    fprintf(log_fp, __VA_ARGS__); \
+    fflush(log_fp); \
+  } \
+}
+#define SHORT_FILE(file) ((strncmp(file, "../../", 6) == 0) ? ((file)+6) : (file))
+#define Log(fmt, ...) do { \
+  printf(ANSI_FMT("[%s:%d %s] " fmt, ANSI_FG_BLUE) "\n", \
+    SHORT_FILE(__FILE__), __LINE__, __func__, ##__VA_ARGS__); \
+  log_write(ANSI_FMT("[%s:%d %s] " fmt, ANSI_FG_BLUE) "\n", \
+    SHORT_FILE(__FILE__), __LINE__, __func__, ##__VA_ARGS__); \
+} while (0)
+void init_log(char *log_file) {
+  log_fp = stdout;
+  if (log_file != NULL) {
+    FILE *fp = fopen(log_file, "w");
+    assert(fp);
+    log_fp = fp;
+  }
+  Log("Log is written to %s", log_file ? log_file : "stdout");
+}
+#endif
+
+
 #ifdef IMG_HEX
 #define M_BASE 0x00000000L
 #else
@@ -15,9 +52,13 @@
 #endif
 #define M_SIZE 0x01000000L
 static uint32_t PC = M_BASE;
-static uint32_t R[16], R_prev[16];  // x0..x31 (x0 hardwired to 0)
 static uint32_t M[M_SIZE];
 static uint32_t pixels[256][256];
+#ifdef DEBUG
+static uint32_t R[16], R_prev[16];  // x0..x31 (x0 hardwired to 0)
+#else
+static uint32_t R[16];  // x0..x31 (x0 hardwired to 0)
+#endif
 
 // ---- helpers ----
 static inline uint32_t reg_read(uint32_t r) { return r ? R[r] : 0; }
@@ -39,7 +80,7 @@ static void step(void) {
   uint32_t ins = M[guest_to_host(PC) >> 2];
 
   if (ins == 0x00100073) {  // EBREAK
-    printf("EBREAK\n");
+    Log("%s", ANSI_FMT("EBREAK: HIT GOOD TRAP", ANSI_FG_GREEN));
     exit(0);
   }
 
@@ -135,6 +176,10 @@ static void step(void) {
 int main(void) {
  ioe_init();
 
+#ifdef LOG
+  init_log("emu.log");
+#endif
+
 #ifdef IMG_HEX
   /* =======================
    * HEX 文件加载
@@ -155,11 +200,12 @@ int main(void) {
       while (*p && *p != ' ') p++;
     }
   }
+  fclose(f);
 #else
   /* =======================
    * BIN 文件加载
    * ======================= */
-  FILE *f =fopen("../bin/string-minirv-npc.bin", "rb");
+  FILE *f =fopen("../bin/dummy-minirv-npc.bin", "rb");
   size_t bytes_read;
   size_t elements_to_read;
   fseek(f, 0, SEEK_END);
@@ -171,14 +217,19 @@ int main(void) {
     fclose(f);
     return 1;
   }
+  Log("Load default image, size = %d bytes", bytes_read);
 #endif
-  fclose(f);
 
+  Log("Build time: %s, %s", __TIME__, __DATE__);
+  printf("[EMU] Welcome to MiniRV-EMU!\n");
+  printf("[EMU] Simulation start\n");
+  log_write("0x%08x: %08x\n", PC, M[guest_to_host(PC) >> 2]);
   while (1) {
 #ifdef DEBUG
     if (stepcnt > 140) getchar();  // 等待回车
 #endif
     step();
+    log_write("0x%08x: %08x\n", PC, M[guest_to_host(PC) >> 2]);
 #ifdef DEBUG
     for (int i = 0; i < 16; i++) {
       if (R[i] != R_prev[i]) printf("   \033[31m0x%08x\033[0m", R[i]);
