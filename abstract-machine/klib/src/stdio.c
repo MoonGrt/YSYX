@@ -55,6 +55,11 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list args) {
             written++;
             CHECK_AND_RETURN;
         }
+      } else if (*p=='c') {
+        char c = va_arg(args, int);
+        *out++ = c;
+        written++;
+        CHECK_AND_RETURN;
       } else {
         assert(*p=='d');
         int v = va_arg(args, int);
