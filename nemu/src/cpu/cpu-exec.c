@@ -115,9 +115,7 @@ static void statistic() {
 }
 
 void assert_fail_msg() {
-#ifdef CONFIG_ITRACE
-  display_inst();
-#endif
+  IFDEF(CONFIG_ITRACE, display_inst());
   isa_reg_display();
   statistic();
 }
