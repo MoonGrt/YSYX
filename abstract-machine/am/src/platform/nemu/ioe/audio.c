@@ -37,7 +37,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   uint32_t sbuf_size = inl(AUDIO_SBUF_SIZE_ADDR);
   uint32_t cnt = inl(AUDIO_COUNT_ADDR);
   uint32_t len = ((ctl->buf).end - (ctl->buf).start);
-  while(len > sbuf_size - cnt){;}
+  while(len > sbuf_size - cnt);
   uint8_t *stream_buf = (uint8_t*)(uintptr_t)AUDIO_SBUF_ADDR;
   for(int i = 0; i < len; i++) {
     stream_buf[sbuf_pos] = audio_data[i];
