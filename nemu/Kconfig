@@ -156,6 +156,22 @@ config MTRACE
   bool "Enable memory tracer"
   default n
 
+config MTRACE_LO
+  depends on MTRACE
+  hex "MTRACE lower bound address"
+  default 0x00000000
+  help
+    Only trace memory accesses whose physical address is
+    greater than or equal to this value.
+
+config MTRACE_HI
+  depends on MTRACE
+  hex "MTRACE upper bound address"
+  default 0xffffffff
+  help
+    Only trace memory accesses whose physical address is
+    less than this value.
+
 config FTRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
   bool "Enable function call tracer"
