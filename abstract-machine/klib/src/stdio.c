@@ -233,7 +233,7 @@ int sprintf(char *out, const char *fmt, ...) {
 }
 
 int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
-    char *buf = malloc(512);
+    char *buf = malloc(256);
     if(!buf) return -1;
     int result = vsprintf(buf, fmt, ap);
     if(result < 0) { free(buf); return -1; }
