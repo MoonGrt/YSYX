@@ -41,7 +41,25 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 #ifdef CONFIG_WATCHPOINT
-
+  // 扫描所有监视点
+  WP *wp = head;
+  while (wp) {
+    bool success = true;
+    word_t val = expr(wp->expr_str, &success);
+    if (!success) {
+      printf("  Failed to evaluate watchpoint %d: %s\n", wp->NO, wp->expr_str);
+      wp = wp->next;
+      continue;
+    }
+    if (val != wp->last_val) {
+      printf("  Watchpoint %d triggered: %s\n", wp->NO, wp->expr_str);
+      printf("  Old value = 0x%x, New value = 0x%x\n", wp->last_val, val);
+      wp->last_val = val;
+      nemu_state.state = NEMU_STOP;
+      return;
+    }
+    wp = wp->next;
+  }
 #endif
 }
 
@@ -113,12 +131,9 @@ void cpu_exec(uint64_t n) {
   }
 
   uint64_t timer_start = get_time();
-
   execute(n);
-
   uint64_t timer_end = get_time();
   g_timer += timer_end - timer_start;
-
   switch (nemu_state.state) {
     case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
     case NEMU_END: case NEMU_ABORT:
