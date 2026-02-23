@@ -79,16 +79,15 @@ static void read_elf_header(int fd, Elf32_Ehdr *eh) {
 }
 
 void ftrace_write(const char *format, ...) {
-    FILE *fp = fopen(FOUTPUT_FILE, "a");
-    if (fp != NULL) {
-        va_list args;
-        va_start(args, format);
-        vfprintf(fp, format, args);
-        va_end(args);
-        fclose(fp);
-    } else {
-        printf("Error opening file %s\n", FOUTPUT_FILE);
-    }
+  FILE *fp = fopen(FOUTPUT_FILE, "a");
+  if (fp != NULL) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(fp, format, args);
+    va_end(args);
+    fclose(fp);
+  } else
+    printf("Error opening file %s\n", FOUTPUT_FILE);
 }
 
 void display_pread(paddr_t addr, int len) {
