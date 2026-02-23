@@ -8,6 +8,7 @@ placeholder = argv[3]
 mainargs = argv[4]
 
 if len(mainargs) >= max_len:
+    print(f"mainargs={mainargs}, len(mainargs)={len(mainargs)}\n")
     print("Error: mainargs should not be longer than {0} bytes\n".format(max_len))
     exit(1)
 print("mainargs={0}".format(mainargs))
