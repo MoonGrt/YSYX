@@ -9,7 +9,7 @@
 #define MAX_IRINGBUF 16
 #define FOUTPUT_FILE "ftrace.txt"
 
-#ifdef ITRACE
+#ifdef CONFIG_ITRACE
 
 typedef struct {
   word_t pc;
