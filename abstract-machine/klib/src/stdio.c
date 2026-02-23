@@ -233,26 +233,17 @@ int sprintf(char *out, const char *fmt, ...) {
 }
 
 int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
-  char *buf =	NULL;
-  int result = vsprintf(buf, fmt, ap);
-
-  if(!buf) return -1;
-  if(result < 0) {
-    free(buf);
-    return -1;
-  }
-
-  result = strlen(buf);
-  if(n > 0) {
-    if((long)n > result)
-      memcpy(out, buf, result+1);
-    else {
-      memcpy(out, buf, n-1);
-      out[n-1] = 0;
+    char *buf = malloc(256);
+    if(!buf) return -1;
+    int result = vsprintf(buf, fmt, ap);
+    if(result < 0) { free(buf); return -1; }
+    if(n > 0) {
+        size_t copy_len = (result < (int)n) ? result : (n-1);
+        memcpy(out, buf, copy_len);
+        out[copy_len] = '\0';
     }
-  }
-  free(buf);
-  return result;
+    free(buf);
+    return result;
 }
 
 int snprintf(char *out, size_t n, const char *fmt, ...) {

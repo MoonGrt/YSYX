@@ -90,13 +90,23 @@ void ftrace_write(const char *format, ...) {
     printf("Error opening file %s\n", FOUTPUT_FILE);
 }
 
+#ifdef CONFIG_MTRACE
+
+static inline bool mtrace_addr_ok(paddr_t addr) {
+  return addr >= CONFIG_MTRACE_LO && addr < CONFIG_MTRACE_HI;
+}
+
 void display_pread(paddr_t addr, int len) {
-  Log("  read in address = " FMT_PADDR ", len = %d", addr, len);
+  if (!mtrace_addr_ok(addr)) return;
+  Log(" [MTRACE] R addr=" FMT_PADDR ", len=%d", addr, len);
 }
 
 void display_pwrite(paddr_t addr, int len, word_t data) {
-  Log("write in address = " FMT_PADDR ", len = %d, data = " FMT_WORD, addr, len, data);
+  if (!mtrace_addr_ok(addr)) return;
+  Log("[MTRACE] W addr=" FMT_PADDR ", len=%d, data=" FMT_WORD, addr, len, data);
 }
+
+#endif  // CONFIG_MTRACE
 
 static void display_elf_hedaer(Elf32_Ehdr eh) {
   /* Storage capacity class */
