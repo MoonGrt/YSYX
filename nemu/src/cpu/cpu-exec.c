@@ -17,12 +17,8 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
-#ifdef CONFIG_WATCHPOINT
 #include "../monitor/sdb/sdb.h"
-#endif
-#ifdef CONFIG_ITRACE
 #include "../utils/local-include/itrace.h"
-#endif
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
