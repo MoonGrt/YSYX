@@ -9,6 +9,8 @@
 #define MAX_IRINGBUF 16
 #define FOUTPUT_FILE "ftrace.txt"
 
+#ifdef CONFIG_ITRACE
+
 typedef struct {
   word_t pc;
   uint32_t inst;
@@ -43,6 +45,8 @@ void display_inst() {
   puts(ANSI_NONE);
 }
 
+#endif // ITRACE
+
 typedef struct {
   char name[32]; // func name, 32 should be enough
   paddr_t addr;
@@ -75,24 +79,23 @@ static void read_elf_header(int fd, Elf32_Ehdr *eh) {
 }
 
 void ftrace_write(const char *format, ...) {
-    FILE *fp = fopen(FOUTPUT_FILE, "a");
-    if (fp != NULL) {
-        va_list args;
-        va_start(args, format);
-        vfprintf(fp, format, args);
-        va_end(args);
-        fclose(fp);
-    } else {
-        printf("Error opening file %s\n", FOUTPUT_FILE);
-    }
+  FILE *fp = fopen(FOUTPUT_FILE, "a");
+  if (fp != NULL) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(fp, format, args);
+    va_end(args);
+    fclose(fp);
+  } else
+    printf("Error opening file %s\n", FOUTPUT_FILE);
 }
 
 void display_pread(paddr_t addr, int len) {
-  Log("read in address = " FMT_PADDR ", len = %d\n", addr, len);
+  Log("  read in address = " FMT_PADDR ", len = %d", addr, len);
 }
 
 void display_pwrite(paddr_t addr, int len, word_t data) {
-  Log("write in address = " FMT_PADDR ", len = %d, data = " FMT_WORD "\n", addr, len, data);
+  Log("write in address = " FMT_PADDR ", len = %d, data = " FMT_WORD, addr, len, data);
 }
 
 static void display_elf_hedaer(Elf32_Ehdr eh) {
