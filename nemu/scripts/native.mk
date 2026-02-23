@@ -37,9 +37,10 @@ run: run-env
 	$(call git_commit, "run NEMU")
 	$(NEMU_EXEC)
 
+run-batch: override ARGS += -b
 run-batch: run-env
 	$(call git_commit, "run NEMU batch mode")
-	$(NEMU_EXEC) -b
+	$(NEMU_EXEC)
 
 gdb: run-env
 	$(call git_commit, "gdb NEMU")
