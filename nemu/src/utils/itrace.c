@@ -461,3 +461,9 @@ void trace_dwrite(paddr_t addr, int len, word_t data, IOMap *map) {
   log_write("dtrace: write %10s at " FMT_PADDR ",%d with " FMT_WORD "\n",
     map->name, addr, len, data);
 }
+
+#ifdef CONFIG_ETRACE
+void etrace_exec(uint32_t pc) {
+  log_write("etrace: ecall at " FMT_WORD "\n", pc);
+}
+#endif
