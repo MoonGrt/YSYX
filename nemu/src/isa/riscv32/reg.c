@@ -39,7 +39,6 @@ word_t isa_reg_str2val(const char *s, bool *success) {
       return cpu.gpr[i];
     }
   }
-
   printf("  Unknown register: %s\n", s);
   if (success) *success = false;
   return 0;
