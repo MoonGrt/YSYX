@@ -25,14 +25,14 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
       result = false;
     }
   }
-  // if (ref_r->csr.mstatus != cpu.csr.mstatus) {
-  //   printf("mstatus is different at pc = " FMT_WORD "! ref: " FMT_WORD ", nemu: " FMT_WORD "\n", pc, ref_r->csr.mstatus, cpu.csr.mstatus);
-  //   result = false;
-  // }
-  // if (ref_r->csr.mcause != cpu.csr.mcause) {
-  //   printf("mcause is different at pc = " FMT_WORD "! ref: " FMT_WORD ", nemu: " FMT_WORD "\n", pc, ref_r->csr.mcause, cpu.csr.mcause);
-  //   result = false;
-  // }
+  if (ref_r->csr.mstatus != cpu.csr.mstatus) {
+    printf("mstatus is different at pc = " FMT_WORD "! ref: " FMT_WORD ", nemu: " FMT_WORD "\n", pc, ref_r->csr.mstatus, cpu.csr.mstatus);
+    result = false;
+  }
+  if (ref_r->csr.mcause != cpu.csr.mcause) {
+    printf("mcause is different at pc = " FMT_WORD "! ref: " FMT_WORD ", nemu: " FMT_WORD "\n", pc, ref_r->csr.mcause, cpu.csr.mcause);
+    result = false;
+  }
   if (ref_r->csr.mtvec != cpu.csr.mtvec) {
     printf("mtvec is different at pc = " FMT_WORD "! ref: " FMT_WORD ", nemu: " FMT_WORD "\n", pc, ref_r->csr.mtvec, cpu.csr.mtvec);
     result = false;
