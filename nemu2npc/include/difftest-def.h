@@ -37,16 +37,16 @@ enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };
 #else
 # error Unsupport ISA
 #endif
-#endif
 
-#if defined(CONFIG_NPC)
-#if defined(CONFIG_CORE_MiniRV)
+#elif defined(CONFIG_NPC)
 
-#elif defined(CONFIG_CORE_Riscv32)
+#if defined(CONFIG_CORE_minirv)
+
+#elif defined(CONFIG_CORE_riscv32)
 #define RISCV_GPR_TYPE MUXDEF(CONFIG_RV64, uint64_t, uint32_t)
 #define RISCV_GPR_NUM  MUXDEF(CONFIG_RVE , 16, 32)
 #define DIFFTEST_REG_SIZE (sizeof(RISCV_GPR_TYPE) * (RISCV_GPR_NUM + 1)) // GPRs + pc
-#elif defined(CORE_Riscv64)
+#elif defined(CORE_riscv64)
 
 #else
 # error Unsupport ISA
