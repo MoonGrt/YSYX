@@ -1,5 +1,6 @@
 #include <verilated.h>
-#include "Vcore.h"
+#include <verilated_vcd_c.h>
+#include "VMiniRVSOC.h"
 
 VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;

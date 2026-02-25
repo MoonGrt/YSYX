@@ -49,7 +49,7 @@ $(OBJ_DIR)/%.o: %.cc
 
 app: $(BINARY)
 
-$(BINARY):: verilate $(OBJS) $(ARCHIVES)
+$(BINARY):: $(OBJS) $(ARCHIVES) verilate
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 
