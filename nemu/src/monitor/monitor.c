@@ -106,10 +106,13 @@ void init_monitor(int argc, char *argv[]) {
 #if defined(CONFIG_NEMU)
 
 #elif defined(CONFIG_NPC)
+  /* Initialize Verilator. */
   Verilated::commandArgs(argc, argv);
-  Verited::mkdir("logs");
+  Verilated::mkdir("logs");
 #endif
-
+  /* Initialize Verilator. */
+  Verilated::commandArgs(argc, argv);
+  Verilated::mkdir("logs");
   /* Parse arguments. */
   parse_args(argc, argv);
   /* Set random seed. */
