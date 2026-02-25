@@ -2,6 +2,7 @@ VERILATOR ?= verilator
 VERILATOR_CFLAGS += --trace -cc -MMD -cc -O3 --x-assign fast \
                     --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT \
                     --timescale "1ns/1ns" --no-timing
+VERILATOR_ROOT = /usr/local/share/verilator
 
 WORK_DIR  = $(shell pwd)
 BUILD_DIR = $(WORK_DIR)/build
@@ -13,6 +14,12 @@ VTOP      := MiniRVSOC
 VSRCS     := $(shell find $(RTL_DIR) -name "*.sv")
 VSRCS     += $(shell find $(VSRCS_DIR) -name "*.v")
 RTL_OBJS  := $(VBUILD)/V$(VTOP)__ALL.a
+
+ifeq ($(CONFIG_NPC),y)
+INC_PATH += build/verilated
+INC_PATH += $(VERILATOR_ROOT)/include
+INC_PATH += $(VERILATOR_ROOT)/include/vltstd
+endif
 
 $(VBUILD)/V$(VTOP).mk: $(RTL_DIR)/$(VTOP).sv
 	@echo + VERILATE RTL

@@ -22,13 +22,6 @@ CXX := g++
 endif
 LD := $(CXX)
 
-ifeq ($(CONFIG_NPC),y)
-INC_PATH += build/verilated
-VERILATOR_ROOT = /usr/local/share/verilator
-INC_PATH += $(VERILATOR_ROOT)/include
-INC_PATH += $(VERILATOR_ROOT)/include/vltstd
-endif
-
 INCLUDES = $(addprefix -I, $(INC_PATH))
 CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
 LDFLAGS := -O2 $(LDFLAGS)
