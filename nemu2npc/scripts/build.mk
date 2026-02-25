@@ -72,7 +72,7 @@ $(BINARY):: $(OBJS) $(ARCHIVES)
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 else
 RTL_OBJS := $(wildcard build/verilated/*.o)
-$(BINARY):: $(OBJS) $(ARCHIVES)
+$(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES)
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(RTL_OBJS)
 endif

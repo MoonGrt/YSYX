@@ -20,7 +20,7 @@ VERILATED_SRCS := \
 VBUILD := $(BUILD_DIR)/verilated
 VLIB := $(VBUILD)/libvcore.a
 
-verilate:
+$(VLIB):
 	@echo + VERILATE RTL
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
