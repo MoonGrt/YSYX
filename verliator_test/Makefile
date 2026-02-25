@@ -25,5 +25,15 @@ sim: $(OBJ_DIR_RTL)/V$(TOP_MODULE).mk $(SC_MAIN)
 run: sim
 	./sim
 
+# 只重新编译RTL
+rtl_only: $(RTL_SOURCES)
+	$(VERILATOR) --cc --exe --top-module $(TOP_MODULE) \
+		-Mdir $(OBJ_DIR_RTL) --build \
+		-CFLAGS "-fPIC" $(RTL_SOURCES) dummy.cpp
+	@echo "RTL已重新编译"
+
+clean_rtl:
+	rm -rf $(OBJ_DIR_RTL)
+
 clean:
 	rm -rf $(OBJ_DIR_RTL) sim

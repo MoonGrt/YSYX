@@ -26,4 +26,13 @@ $(VBUILD)/V$(VTOP).mk: $(RTL_DIR)/$(VTOP).sv
 	@echo "+ AR $@"
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 
+rtl: $(RTL_DIR)/$(VTOP).sv
+	@echo + VERILATE RTL
+	@mkdir -p $(VBUILD)
+	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
+	  --top-module $(VTOP) \
+	  -O3 --Mdir $(VBUILD)
+	@echo "+ AR $@"
+	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
+
 .PHONY: verilate
