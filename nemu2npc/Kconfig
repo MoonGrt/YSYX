@@ -29,7 +29,7 @@ config ISA64
 
 
 if ISA_riscv
-source "src/isa/riscv32/Kconfig"
+source "csrc/isa/riscv32/Kconfig"
 endif
 
 choice
@@ -238,8 +238,8 @@ config WATCHPOINT
 endmenu
 
 if MODE_SYSTEM
-source "src/memory/Kconfig"
-source "src/device/Kconfig"
+source "csrc/memory/Kconfig"
+source "csrc/device/Kconfig"
 endif
 
 

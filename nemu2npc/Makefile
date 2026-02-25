@@ -14,7 +14,7 @@
 #**************************************************************************************/
 
 # Sanity check
-ifeq ($(wildcard $(NEMU2NPC_HOME)/src/npc-main.c),)
+ifeq ($(wildcard $(NEMU2NPC_HOME)/csrc/npc-main.c),)
   $(error NEMU2NPC_HOME=$(NEMU2NPC_HOME) is not a NPC repo)
 endif
 
@@ -27,10 +27,10 @@ remove_quote = $(patsubst "%",%,$(1))
 # Extract variabls from menuconfig
 GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
 ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))
-NAME    = $(GUEST_ISA)-npc-$(ENGINE)
+NAME    = $(GUEST_ISA)-nemu-$(ENGINE)
 
 # Include all filelist.mk to merge file lists
-FILELIST_MK = $(shell find -L ./src -name "filelist.mk")
+FILELIST_MK = $(shell find -L ./csrc -name "filelist.mk")
 include $(FILELIST_MK)
 
 # Filter out directories and files in blacklist to obtain the final set of source files
