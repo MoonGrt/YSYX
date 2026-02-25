@@ -63,9 +63,9 @@ $(BINARY):: $(OBJS) $(ARCHIVES)
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 else
-$(BINARY):: $(VBUILD)/libV$(VTOP).a $(OBJS) $(ARCHIVES) 
+$(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES) 
 	@echo + LD $@
-	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VBUILD)/libV$(VTOP).a
+	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB)
 endif
 
 clean:
