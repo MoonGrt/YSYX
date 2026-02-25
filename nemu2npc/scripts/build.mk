@@ -69,7 +69,6 @@ $(BINARY):: $(OBJS) $(ARCHIVES)
 else
 $(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES) 
 	@echo + LD $@
-	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB)
 endif
 
 clean:
