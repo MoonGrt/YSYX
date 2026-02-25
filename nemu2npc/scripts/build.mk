@@ -14,6 +14,10 @@ INC_PATH := $(WORK_DIR)/include $(INC_PATH)
 OBJ_DIR  = $(BUILD_DIR)/obj-$(NAME)$(SO)
 BINARY   = $(BUILD_DIR)/$(NAME)$(SO)
 
+ifeq ($(CONFIG_NPC),y)
+include $(NEMU2NPC_HOME)/scripts/verilate.mk
+endif
+
 # Compilation flags
 ifeq ($(CC),clang)
 CXX := clang++
