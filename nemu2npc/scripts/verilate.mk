@@ -13,6 +13,8 @@ VTOP      := MiniRVSOC
 VSRCS     := $(shell find $(RTL_DIR) -name "*.sv")
 VSRCS     += $(shell find $(VSRCS_DIR) -name "*.v")
 
+RTL_OBJS  := $(wildcard $(VBUILD)/*.o)
+
 VERILATED_SRCS := \
   $(VBUILD)/V$(VTOP).cpp \
   $(VBUILD)/V$(VTOP)__Syms.cpp
