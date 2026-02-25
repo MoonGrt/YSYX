@@ -1,15 +1,29 @@
-TARGET = sim_main
-OBJ_DIR = obj_dir
-VERILATED_SRCS = $(OBJ_DIR)/Vadder.cpp
+RTL_SOURCES = adder.v
+SC_MAIN = sim_main.cpp
+TOP_MODULE = adder
+VERILATOR = verilator
 CXX = g++
-VERILATOR_INCLUDE = /usr/local/share/verilator/include
-VERILATOR_LIB = /usr/local/share/verilator/include/vltstd/libverilated.a
-CXXFLAGS = -I$(OBJ_DIR) -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -std=c++17
 
-all: $(TARGET)
+# 目标文件目录
+OBJ_DIR_RTL = obj_dir_rtl
+OBJ_DIR_SIM = obj_dir_sim
 
-$(TARGET): $(VERILATED_SRCS) sim_main.cpp
-	$(CXX) $(CXXFLAGS) -o $@ sim_main.cpp $(VERILATED_SRCS) $(VERILATOR_LIB)
+# 第一步：只编译RTL生成静态库
+$(OBJ_DIR_RTL)/V$(TOP_MODULE).mk: $(RTL_SOURCES)
+	$(VERILATOR) --cc --top-module $(TOP_MODULE) \
+		-Mdir $(OBJ_DIR_RTL) $(RTL_SOURCES)
+	cd $(OBJ_DIR_RTL) && make -f V$(TOP_MODULE).mk
+
+# 第二步：链接RTL库和sc_main
+sim: $(OBJ_DIR_RTL)/V$(TOP_MODULE).mk $(SC_MAIN)
+	$(CXX) -I$(OBJ_DIR_RTL) -I/usr/local/share/verilator/include \
+		$(SC_MAIN) $(OBJ_DIR_RTL)/*.o \
+		-o sim
+	@echo "只重新编译了sc_main，RTL部分已使用预编译"
+
+# 第三步：运行
+run: sim
+	./sim
 
 clean:
-	rm -rf $(TARGET)
+	rm -rf $(OBJ_DIR_RTL) sim

@@ -3,6 +3,8 @@ VERILATOR_CFLAGS += --trace -cc -MMD -cc -O3 --x-assign fast \
                     --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT \
                     --timescale "1ns/1ns" --no-timing
 
+WORK_DIR  = $(shell pwd)
+BUILD_DIR = $(WORK_DIR)/build
 VSRCS_DIR := $(NEMU2NPC_HOME)/vsrc
 RTL_DIR   := $(NEMU2NPC_HOME)/rtl
 VBUILD    := $(BUILD_DIR)/verilated
@@ -15,11 +17,16 @@ VERILATED_SRCS := \
   $(VBUILD)/V$(VTOP).cpp \
   $(VBUILD)/V$(VTOP)__Syms.cpp
 
+VBUILD := $(BUILD_DIR)/verilated
+VLIB := $(VBUILD)/libvcore.a
+
 verilate:
 	@echo + VERILATE RTL
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
 	  --top-module $(VTOP) \
 	  -O3 --Mdir $(VBUILD)
+	@echo "+ AR $@"
+	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 
 .PHONY: verilate

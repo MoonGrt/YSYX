@@ -22,14 +22,13 @@ CXX := g++
 endif
 LD := $(CXX)
 
-ifeq ($(CONFIG_NPC),y)
+# ifeq ($(CONFIG_NPC),y)
 INC_PATH += build/verilated
 VERILATOR_ROOT = /usr/local/share/verilator
 INC_PATH += $(VERILATOR_ROOT)/include
 INC_PATH += $(VERILATOR_ROOT)/include/vltstd
-# include build/verilated/VMiniRVSOC_classes.mk
-include /usr/local/share/verilator/include/verilated.mk
-endif
+# include /usr/local/share/verilator/include/verilated.mk
+# endif
 
 INCLUDES = $(addprefix -I, $(INC_PATH))
 CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
@@ -72,9 +71,10 @@ $(BINARY):: $(OBJS) $(ARCHIVES)
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 else
-$(BINARY):: verilate $(OBJS) $(ARCHIVES)
+RTL_OBJS := $(wildcard build/verilated/*.o)
+$(BINARY):: $(OBJS) $(ARCHIVES)
 	@echo + LD $@
-	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
+	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(RTL_OBJS)
 endif
 
 clean:
