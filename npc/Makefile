@@ -34,8 +34,8 @@ GTKWAVE =gtkwave
 VERILATOR = verilator
 VERILATOR_CFLAGS += --trace -cc -exe -MMD --build -cc -O3 --x-assign fast \
                     --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT \
-                    --timescale "1ns/1ns" --no-timing \
-                    -CFLAGS -ggdb -LDFLAGS -ggdb -j 8
+					--timescale "1ns/1ns" --no-timing \
+					-CFLAGS -ggdb -LDFLAGS -ggdb -j 8
 
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -50,7 +50,7 @@ CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
 override ARGS ?= --log=$(BUILD_DIR)/npc-log.txt
 IMG ?=
-NPC_EXEC := $(BIN) $(ARGS)
+NPC_EXEC := $(BIN) $(ARGS) $(IMG)
 
 $(BIN): $(VSRCS) $(CSRCS)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
@@ -61,7 +61,7 @@ $(BIN): $(VSRCS) $(CSRCS)
 		--top-module $(TOPNAME) $^
 
 run: $(BIN)
-	$(NPC_EXEC) $(IMG)
+	$(NPC_EXEC)
 
 gdb: $(BIN)
 	gdb --args $(NPC_EXEC)
