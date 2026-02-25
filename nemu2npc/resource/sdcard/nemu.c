@@ -1,5 +1,5 @@
 /*
- * NEMU (NJU Emulator) sdhost driver.
+ * NPC (NJU Emulator) sdhost driver.
  *
  * Author:      Zihao Yu <yuzihao@ict.ac.cn>
  *
@@ -537,6 +537,6 @@ static struct platform_driver nemu_driver = {
 module_platform_driver(nemu_driver);
 
 MODULE_ALIAS("platform:sdhost-nemu");
-MODULE_DESCRIPTION("NEMU SDHost driver");
+MODULE_DESCRIPTION("NPC SDHost driver");
 MODULE_LICENSE("GPL v2");
 MODULE_AUTHOR("Zihao Yu");
