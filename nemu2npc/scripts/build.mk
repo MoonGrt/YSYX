@@ -21,18 +21,23 @@ else
 CXX := g++
 endif
 LD := $(CXX)
+
+ifeq ($(CONFIG_NPC),y)
+INC_PATH += build/verilated
+VERILATOR_ROOT = /usr/local/share/verilator
+INC_PATH += $(VERILATOR_ROOT)/include
+INC_PATH += $(VERILATOR_ROOT)/include/vltstd
+# include build/verilated/VMiniRVSOC_classes.mk
+include /usr/local/share/verilator/include/verilated.mk
+endif
+
 INCLUDES = $(addprefix -I, $(INC_PATH))
 CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
 LDFLAGS := -O2 $(LDFLAGS)
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 
-ifeq ($(CONFIG_NPC),y)
-VERILATOR_ROOT = /usr/local/share/verilator
-include obj_dir/VMiniRVSOC_classes.mk
-include $(VERILATOR_ROOT)/include/verilated.mk
-endif
-
+# Compilation patterns
 $(OBJ_DIR)/%.o: %.c
 	@echo + CC $<
 	@mkdir -p $(dir $@)
@@ -63,11 +68,11 @@ endif
 app: $(BINARY)
 
 ifeq ($(CONFIG_NEMU),y)
-$(BINARY):: $(VERILATED_OBJS) $(OBJS) $(ARCHIVES)
+$(BINARY):: $(OBJS) $(ARCHIVES)
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 else
-$(BINARY):: verilate $(VERILATED_OBJS) $(OBJS) $(ARCHIVES)
+$(BINARY):: verilate $(OBJS) $(ARCHIVES)
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 endif
