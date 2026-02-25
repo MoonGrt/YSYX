@@ -27,7 +27,11 @@ endif
 LD := $(CXX)
 
 INCLUDES = $(addprefix -I, $(INC_PATH))
+ifeq ($(CONFIG_NEMU),y)
 CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
+else
+CFLAGS  := -O2 -MMD -Wall $(INCLUDES) $(CFLAGS)
+endif
 LDFLAGS := -O2 $(LDFLAGS)
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
@@ -39,19 +43,11 @@ $(OBJ_DIR)/%.o: %.c
 	@$(CC) $(CFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
 
-ifeq ($(CONFIG_NEMU),y)
 $(OBJ_DIR)/%.o: %.cc
 	@echo + CXX $<
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
-else
-$(OBJ_DIR)/%.o: %.cc
-	@echo + CXX $<
-	@mkdir -p $(dir $@)
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) -Wno-error=sign-compare -c -o $@ $<
-	$(call call_fixdep, $(@:.o=.d), $@)
-endif
 
 # Depencies
 -include $(OBJS:.o=.d)
