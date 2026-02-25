@@ -138,7 +138,7 @@ echo -e "\n============ End of preset commands =============\n"
 /root/nemutrap/good-trap
 ```
 
-* 若在不方便输入的环境(如NEMU, verilator仿真等)中测试, 可采用如下两种方式的其中一种, 避免登录时输入
+* 若在不方便输入的环境(如NPC, verilator仿真等)中测试, 可采用如下两种方式的其中一种, 避免登录时输入
   * 通过紧急模式登录
 ```
 cd /lib/systemd/system
@@ -167,6 +167,6 @@ sudo losetup -d /dev/loop0  # 删除loop设备
 * 修改`npc/csrc/device/sdcard.c`中`init_sdcard()`中打开的镜像文件路径, 即可使用制作的镜像.
 在i9-9900k上测试, 约90s后看到debian的登录提示符.
 
-* 当以可写方式启动镜像时, NEMU遇到错误或通过Ctrl+C直接退出NEMU时, 可能会损坏镜像的崩溃一致性, 此时可以通过fsck命令修复分区.
+* 当以可写方式启动镜像时, NPC遇到错误或通过Ctrl+C直接退出NPC时, 可能会损坏镜像的崩溃一致性, 此时可以通过fsck命令修复分区.
 
 * 更多命令可参考[这里](https://github.com/carlosedp/riscv-bringup/blob/master/Debian-Rootfs-Guide.md).
