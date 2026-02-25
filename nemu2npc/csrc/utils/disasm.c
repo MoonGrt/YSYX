@@ -51,9 +51,9 @@ void init_disasm() {
   cs_arch arch = MUXDEF(CONFIG_CORE_minirv,  CS_ARCH_RISCV,
                  MUXDEF(CONFIG_CORE_riscv32, CS_ARCH_RISCV,
                  MUXDEF(CONFIG_CORE_riscv64, CS_ARCH_RISCV, -1)));
-  cs_mode mode = MUXDEF(CONFIG_CORE_minirv,  CS_MODE_32,
-                 MUXDEF(CONFIG_CORE_riscv32, CS_MODE_MIPS32,
-                 MUXDEF(CONFIG_CORE_riscv64, MUXDEF(CONFIG_ISA64, CS_MODE_RISCV64, CS_MODE_RISCV32) | CS_MODE_RISCVC, -1)));
+  cs_mode mode = MUXDEF(CONFIG_CORE_minirv,  CS_MODE_RISCV32,
+                 MUXDEF(CONFIG_CORE_riscv32, CS_MODE_RISCV32,
+                 MUXDEF(CONFIG_CORE_riscv64, CS_MODE_RISCV64, -1)));
 #endif
   int ret = cs_open_dl(arch, mode, &handle);
   assert(ret == CS_ERR_OK);
