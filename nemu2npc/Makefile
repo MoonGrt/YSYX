@@ -25,8 +25,13 @@ endif
 remove_quote = $(patsubst "%",%,$(1))
 
 # Extract variabls from menuconfig
-GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
-ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))
+ifeq ($(CONFIG_NEMU),y)
+  GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
+  ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))
+else
+  GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
+  ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))
+endif
 NAME    = $(GUEST_ISA)-npc-$(ENGINE)
 
 # Include all filelist.mk to merge file lists
