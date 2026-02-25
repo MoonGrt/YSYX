@@ -1,9 +1,10 @@
+GTKWAVE ?= gtkwave
 VERILATOR ?= verilator
+VERILATOR_ROOT = /usr/local/share/verilator
 VERILATOR_CFLAGS += --trace -cc -MMD -cc -O3 --x-assign fast \
                     --x-initial fast --noassert -Wno-WIDTH -Wno-UNOPTFLAT \
                     --timescale "1ns/1ns" --no-timing \
                     -CFLAGS -ggdb -LDFLAGS -ggdb -j 8
-VERILATOR_ROOT = /usr/local/share/verilator
 
 WORK_DIR  = $(shell pwd)
 BUILD_DIR = $(WORK_DIR)/build
