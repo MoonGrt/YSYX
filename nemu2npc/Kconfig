@@ -1,6 +1,16 @@
 mainmenu "NPC Configuration Menu"
 
 choice
+  prompt "CPU Backend"
+  default NEMU
+config NEMU
+  bool "NEMU: Emulator"
+config NPC
+  bool "NPC:Proxy Core"
+endchoice
+
+if NEMU
+choice
   prompt "Base ISA"
   default ISA_riscv
 config ISA_x86
@@ -12,6 +22,20 @@ config ISA_riscv
 config ISA_loongarch32r
   bool "loongarch32r"
 endchoice
+endif
+
+if NPC
+  choice
+  prompt "Base Core"
+  default MiniRV
+config MiniRV
+  bool "minirv"
+config Riscv32
+  bool "riscv32"
+config Riscv64
+  bool "riscv64"
+endchoice
+endif
 
 config ISA
   string
