@@ -12,10 +12,7 @@ VBUILD    := $(BUILD_DIR)/verilated
 VTOP      := MiniRVSOC
 VSRCS     := $(shell find $(RTL_DIR) -name "*.sv")
 VSRCS     += $(shell find $(VSRCS_DIR) -name "*.v")
-
 RTL_OBJS  := $(wildcard $(VBUILD)/*.o)
-
-VLIB := $(VBUILD)/libvcore.a
 
 $(VBUILD)/V$(VTOP).mk: $(RTL_DIR)/$(VTOP).sv
 	@echo + VERILATE RTL
