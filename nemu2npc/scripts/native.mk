@@ -15,7 +15,6 @@
 
 -include $(NEMU2NPC_HOME)/../Makefile
 include $(NEMU2NPC_HOME)/scripts/build.mk
-
 include $(NEMU2NPC_HOME)/tools/difftest.mk
 
 compile_git:

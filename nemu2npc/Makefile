@@ -52,12 +52,157 @@ CFLAGS  += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 LDFLAGS += $(CFLAGS_BUILD)
 
 # Include rules for menuconfig
-include $(NEMU2NPC_HOME)/scripts/config.mk
+COLOR_RED := $(shell echo "\033[1;31m")
+COLOR_END := $(shell echo "\033[0m")
 
-ifdef CONFIG_TARGET_AM
-include $(AM_HOME)/Makefile
-LINKAGE += $(ARCHIVES)
-else
+ifeq ($(wildcard .config),)
+$(warning $(COLOR_RED)Warning: .config does not exist!$(COLOR_END))
+$(warning $(COLOR_RED)To build the project, first run 'make menuconfig'.$(COLOR_END))
+endif
+
+Q            := @
+KCONFIG_PATH := $(NEMU2NPC_HOME)/tools/kconfig
+FIXDEP_PATH  := $(NEMU2NPC_HOME)/tools/fixdep
+Kconfig      := $(NEMU2NPC_HOME)/Kconfig
+rm-distclean += include/generated include/config .config .config.old
+silent := -s
+
+CONF   := $(KCONFIG_PATH)/build/conf
+MCONF  := $(KCONFIG_PATH)/build/mconf
+FIXDEP := $(FIXDEP_PATH)/build/fixdep
+
+$(CONF):
+	$(Q)$(MAKE) $(silent) -C $(KCONFIG_PATH) NAME=conf
+
+$(MCONF):
+	$(Q)$(MAKE) $(silent) -C $(KCONFIG_PATH) NAME=mconf
+
+$(FIXDEP):
+	$(Q)$(MAKE) $(silent) -C $(FIXDEP_PATH)
+
+menuconfig: $(MCONF) $(CONF) $(FIXDEP)
+	$(Q)$(MCONF) $(Kconfig)
+	$(Q)$(CONF) $(silent) --syncconfig $(Kconfig)
+
+savedefconfig: $(CONF)
+	$(Q)$< $(silent) --$@=configs/defconfig $(Kconfig)
+
+%defconfig: $(CONF) $(FIXDEP)
+	$(Q)$< $(silent) --defconfig=configs/$@ $(Kconfig)
+	$(Q)$< $(silent) --syncconfig $(Kconfig)
+
+.PHONY: menuconfig savedefconfig defconfig
+
+# Help text used by make help
+help:
+	@echo  '  menuconfig	  - Update current config utilising a menu based program'
+	@echo  '  savedefconfig   - Save current config as configs/defconfig (minimal config)'
+
+distclean: clean
+	-@rm -rf $(rm-distclean)
+
+.PHONY: help distclean
+
+define call_fixdep
+	@$(FIXDEP) $(1) $(2) unused > $(1).tmp
+	@mv $(1).tmp $(1)
+endef
+
 # Include rules to build NPC
 include $(NEMU2NPC_HOME)/scripts/native.mk
+-include $(NEMU2NPC_HOME)/../Makefile
+
+.DEFAULT_GOAL = app
+
+# Add necessary options if the target is a shared library
+ifeq ($(SHARE),1)
+SO = -so
+CFLAGS  += -fPIC -fvisibility=hidden
+LDFLAGS += -shared -fPIC
 endif
+
+WORK_DIR  = $(shell pwd)
+BUILD_DIR = $(WORK_DIR)/build
+
+INC_PATH := $(WORK_DIR)/include $(INC_PATH)
+OBJ_DIR  = $(BUILD_DIR)/obj-$(NAME)$(SO)
+BINARY   = $(BUILD_DIR)/$(NAME)$(SO)
+
+# Compilation flags
+ifeq ($(CC),clang)
+CXX := clang++
+else
+CXX := g++
+endif
+LD := $(CXX)
+INCLUDES = $(addprefix -I, $(INC_PATH))
+CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
+LDFLAGS := -O2 $(LDFLAGS)
+
+OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
+
+# Compilation patterns
+$(OBJ_DIR)/%.o: %.c
+	@echo + CC $<
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) -c -o $@ $<
+	$(call call_fixdep, $(@:.o=.d), $@)
+
+$(OBJ_DIR)/%.o: %.cc
+	@echo + CXX $<
+	@mkdir -p $(dir $@)
+	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $<
+	$(call call_fixdep, $(@:.o=.d), $@)
+
+# Depencies
+-include $(OBJS:.o=.d)
+
+# Some convenient rules
+
+.PHONY: app clean
+
+app: $(BINARY)
+
+$(BINARY):: $(OBJS) $(ARCHIVES)
+	@echo + LD $@
+	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
+
+clean:
+	-rm -rf $(BUILD_DIR)
+
+include $(NEMU2NPC_HOME)/tools/difftest.mk
+
+compile_git:
+	$(call git_commit, "compile NPC")
+$(BINARY):: compile_git
+
+# Some convenient rules
+
+override ARGS ?= --log=$(BUILD_DIR)/npc-log.txt
+override ARGS += $(ARGS_DIFF)
+
+# Command to execute NPC
+IMG ?=
+NPC_EXEC := $(BINARY) $(ARGS)
+
+run-env: $(BINARY) $(DIFF_REF_SO)
+
+run: run-env
+	$(call git_commit, "run NPC")
+	$(NPC_EXEC) $(IMG)
+
+run-batch: run-env
+	$(call git_commit, "run NPC batch mode")
+	$(NPC_EXEC) -b $(IMG)
+
+gdb: run-env
+	$(call git_commit, "gdb NPC")
+	gdb -s $(BINARY) --args $(NPC_EXEC) -b
+
+clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile"))
+$(clean-tools):
+	-@$(MAKE) -s -C $@ clean
+clean-tools: $(clean-tools)
+clean-all: clean distclean clean-tools
+
+.PHONY: run gdb run-env clean-tools clean-all $(clean-tools)
