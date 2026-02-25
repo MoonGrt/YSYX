@@ -23,6 +23,10 @@ $(VBUILD)/V$(VTOP).mk: $(RTL_DIR)/$(VTOP).sv
 	@echo "+ AR $@"
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 
+$(VBUILD)/libV$(VTOP).a: $(VBUILD)/V$(VTOP).mk
+	@$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
+	@ar rcs $@ $(VBUILD)/*.o
+
 rtl: $(RTL_DIR)/$(VTOP).sv
 	@echo + VERILATE RTL
 	@mkdir -p $(VBUILD)
