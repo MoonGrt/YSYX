@@ -6,7 +6,7 @@ VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;
 
 extern "C" {
-  void rtl_init() {
+  void rtl_init(int argc, char *argv[]) {
     Verilated::commandArgs(argc, argv);
     Verilated::mkdir("logs");
   }

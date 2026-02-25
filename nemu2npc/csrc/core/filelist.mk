@@ -16,4 +16,5 @@
 ifeq ($(CONFIG_NPC),y)
   INC_PATH += $(NEMU2NPC_HOME)/csrc/core/$(GUEST_ISA)/include
   DIRS-y += csrc/core/$(GUEST_ISA)
+  CXXSRC += csrc/core/riscv32/exec.cc
 endif

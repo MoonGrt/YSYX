@@ -15,7 +15,7 @@ VERILATED_SRCS := \
   $(VBUILD)/V$(VTOP).cpp \
   $(VBUILD)/V$(VTOP)__Syms.cpp
 
-verilate: $(OBJS)
+verilate:
 	@echo + VERILATE RTL
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
