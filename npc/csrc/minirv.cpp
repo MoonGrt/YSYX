@@ -11,7 +11,7 @@
 #define optional_argument 2
 static char *log_file = NULL;
 static char *img_file = NULL;
-#define PRINTARG
+// #define PRINTARG
 static int parse_args(int argc, char *argv[]) {
 #ifdef PRINTARG
   printf("[NPC] ARGC = %d\n", argc);
