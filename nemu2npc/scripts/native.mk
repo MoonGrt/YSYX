@@ -29,21 +29,21 @@ override ARGS += $(ARGS_DIFF)
 
 # Command to execute NPC
 IMG ?=
-NEMU_EXEC := $(BINARY) $(ARGS)
+NPC_EXEC := $(BINARY) $(ARGS)
 
 run-env: $(BINARY) $(DIFF_REF_SO)
 
 run: run-env
 	$(call git_commit, "run NPC")
-	$(NEMU_EXEC) $(IMG)
+	$(NPC_EXEC) $(IMG)
 
 run-batch: run-env
 	$(call git_commit, "run NPC batch mode")
-	$(NEMU_EXEC) -b $(IMG)
+	$(NPC_EXEC) -b $(IMG)
 
 gdb: run-env
 	$(call git_commit, "gdb NPC")
-	gdb -s $(BINARY) --args $(NEMU_EXEC) -b
+	gdb -s $(BINARY) --args $(NPC_EXEC) -b
 
 clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile"))
 $(clean-tools):

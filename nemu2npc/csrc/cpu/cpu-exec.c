@@ -55,7 +55,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
       printf("  Watchpoint %d triggered: %s\n", wp->NO, wp->expr_str);
       printf("  Old value = 0x%x, New value = 0x%x\n", wp->last_val, val);
       wp->last_val = val;
-      nemu_state.state = NEMU_STOP;
+      nemu_state.state = NPC_STOP;
       return;
     }
     wp = wp->next;
@@ -100,7 +100,7 @@ static void execute(uint64_t n) {
     exec_once(&s, cpu.pc);
     g_nr_guest_inst ++;
     trace_and_difftest(&s, cpu.pc);
-    if (nemu_state.state != NEMU_RUNNING) break;
+    if (nemu_state.state != NPC_RUNNING) break;
     IFDEF(CONFIG_DEVICE, device_update());
   }
 }
@@ -124,10 +124,10 @@ void assert_fail_msg() {
 void cpu_exec(uint64_t n) {
   g_print_step = (n < MAX_INST_TO_PRINT);
   switch (nemu_state.state) {
-    case NEMU_END: case NEMU_ABORT: case NEMU_QUIT:
+    case NPC_END: case NPC_ABORT: case NPC_QUIT:
       printf("Program execution has ended. To restart the program, exit NPC and run again.\n");
       return;
-    default: nemu_state.state = NEMU_RUNNING;
+    default: nemu_state.state = NPC_RUNNING;
   }
 
   uint64_t timer_start = get_time();
@@ -135,13 +135,13 @@ void cpu_exec(uint64_t n) {
   uint64_t timer_end = get_time();
   g_timer += timer_end - timer_start;
   switch (nemu_state.state) {
-    case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
-    case NEMU_END: case NEMU_ABORT:
+    case NPC_RUNNING: nemu_state.state = NPC_STOP; break;
+    case NPC_END: case NPC_ABORT:
       Log("npc: %s at pc = " FMT_WORD,
-          (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
+          (nemu_state.state == NPC_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
           (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           nemu_state.halt_pc);
       // fall through
-    case NEMU_QUIT: statistic();
+    case NPC_QUIT: statistic();
   }
 }
