@@ -15,14 +15,9 @@ VSRCS     += $(shell find $(VSRCS_DIR) -name "*.v")
 
 RTL_OBJS  := $(wildcard $(VBUILD)/*.o)
 
-VERILATED_SRCS := \
-  $(VBUILD)/V$(VTOP).cpp \
-  $(VBUILD)/V$(VTOP)__Syms.cpp
-
-VBUILD := $(BUILD_DIR)/verilated
 VLIB := $(VBUILD)/libvcore.a
 
-$(VLIB):
+$(VBUILD)/V$(VTOP).mk: $(RTL_DIR)/$(VTOP).sv
 	@echo + VERILATE RTL
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \

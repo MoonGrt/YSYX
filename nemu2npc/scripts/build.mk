@@ -72,7 +72,7 @@ $(BINARY):: $(OBJS) $(ARCHIVES)
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 else
 
-$(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES)
+$(BINARY):: $(VBUILD)/V$(VTOP).mk $(OBJS) $(ARCHIVES)
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(RTL_OBJS)
 endif
