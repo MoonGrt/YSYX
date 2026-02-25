@@ -13,7 +13,7 @@
 # See the Mulan PSL v2 for more details.
 #**************************************************************************************/
 
-ifeq ($(CONFIG_NEMU),y)
-  INC_PATH += $(NEMU2NPC_HOME)/csrc/isa/$(GUEST_ISA)/include
-  DIRS-y += csrc/isa/$(GUEST_ISA)
+ifeq ($(CONFIG_NPC),y)
+  INC_PATH += $(NEMU2NPC_HOME)/csrc/core/$(GUEST_ISA)/include
+  DIRS-y += csrc/core/$(GUEST_ISA)
 endif

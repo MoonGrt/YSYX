@@ -100,9 +100,14 @@ static int parse_args(int argc, char *argv[]) {
   }
   return 0;
 }
-
+void rtl_init(void);
 /* Perform some global initialization. */
 void init_monitor(int argc, char *argv[]) {
+#if defined(CONFIG_NEMU)
+
+#elif defined(CONFIG_NPC)
+  // rtl_init();
+#endif
   /* Parse arguments. */
   parse_args(argc, argv);
   /* Set random seed. */
