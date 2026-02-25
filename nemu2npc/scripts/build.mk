@@ -27,17 +27,11 @@ LDFLAGS := -O2 $(LDFLAGS)
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 
-# Compilation patterns
-# VERILATED_OBJS = $(OBJ_DIR)/build/verilated/Vcore.o \
-#                   $(OBJ_DIR)/build/verilated/Vcore__Syms.o
-
-# $(VERILATED_OBJS): $(OBJ_DIR)/build/verilated/%.o: build/verilated/%.cpp
-# 	@echo + CXX(verilator) $<
-# 	@mkdir -p $(dir $@)
-# 	@$(CXX) $(CFLAGS) $(CXXFLAGS) -Wno-error=sign-compare -c -o $@ $<
-
+ifeq ($(CONFIG_NPC),y)
 VERILATOR_ROOT = /usr/local/share/verilator
+include obj_dir/VMiniRVSOC_classes.mk
 include $(VERILATOR_ROOT)/include/verilated.mk
+endif
 
 $(OBJ_DIR)/%.o: %.c
 	@echo + CC $<
@@ -45,11 +39,19 @@ $(OBJ_DIR)/%.o: %.c
 	@$(CC) $(CFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
 
+ifeq ($(CONFIG_NEMU),y)
+$(OBJ_DIR)/%.o: %.cc
+	@echo + CXX $<
+	@mkdir -p $(dir $@)
+	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $<
+	$(call call_fixdep, $(@:.o=.d), $@)
+else
 $(OBJ_DIR)/%.o: %.cc
 	@echo + CXX $<
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CFLAGS) $(CXXFLAGS) -Wno-error=sign-compare -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
+endif
 
 # Depencies
 -include $(OBJS:.o=.d)
