@@ -21,10 +21,6 @@ DIRS-BLACKLIST-$(CONFIG_TARGET_AM) += csrc/monitor/sdb
 SHARE = $(if $(CONFIG_TARGET_SHARE),1,0)
 LIBS += $(if $(CONFIG_TARGET_NATIVE_ELF),-lreadline -ldl -pie,)
 
-# CXXSRC += \
-#   build/verilated/VMiniRVSOC.cpp \
-#   build/verilated/VMiniRVSOC__Syms.cpp
-
 ifdef mainargs
 ASFLAGS += -DBIN_PATH=\"$(mainargs)\"
 endif
