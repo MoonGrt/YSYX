@@ -23,6 +23,7 @@
 #define __EXPORT __attribute__((visibility("default")))
 enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };
 
+#if defined(CONFIG_NEMU)
 #if defined(CONFIG_ISA_x86)
 # define DIFFTEST_REG_SIZE (sizeof(uint32_t) * 9) // GPRs + pc
 #elif defined(CONFIG_ISA_mips32)
@@ -35,6 +36,21 @@ enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };
 # define DIFFTEST_REG_SIZE (sizeof(uint32_t) * 33) // GPRs + pc
 #else
 # error Unsupport ISA
+#endif
+
+#elif defined(CONFIG_NPC)
+
+#if defined(CONFIG_CORE_minirv)
+
+#elif defined(CONFIG_CORE_riscv32)
+#define RISCV_GPR_TYPE MUXDEF(CONFIG_RV64, uint64_t, uint32_t)
+#define RISCV_GPR_NUM  MUXDEF(CONFIG_RVE , 16, 32)
+#define DIFFTEST_REG_SIZE (sizeof(RISCV_GPR_TYPE) * (RISCV_GPR_NUM + 1)) // GPRs + pc
+#elif defined(CORE_riscv64)
+
+#else
+# error Unsupport ISA
+#endif
 #endif
 
 #endif
