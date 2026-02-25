@@ -106,8 +106,8 @@ void init_monitor(int argc, char *argv[]) {
 #if defined(CONFIG_NEMU)
 
 #elif defined(CONFIG_NPC)
-  Verilated::commanArgs(argc, argv);
-  Verilated::mkdir("logs");
+  Verilated::commandArgs(argc, argv);
+  Verited::mkdir("logs");
 #endif
 
   /* Parse arguments. */
