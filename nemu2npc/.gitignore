@@ -1,0 +1,26 @@
+*.*
+*
+!*/
+!Makefile
+!*.mk
+!*.scala
+!*.[cSh]
+!*.v
+!*.cc
+!.gitignore
+!.scalafmt.conf
+!README.md
+!Kconfig
+include/config
+include/generated
+build/
+
+# mill
+!*.mill
+!.mill-version
+out/
+rtl/
+.bsp/
+.idea/
+.idea_modules/
+test_run_dir/
