@@ -34,7 +34,7 @@ static char* rl_gets() {
     line_read = NULL;
   }
 
-  line_read = readline("(nemu) ");
+  line_read = readline("(npc) ");
 
   if (line_read && *line_read) {
     add_history(line_read);
@@ -157,7 +157,7 @@ static int cmd_test(char *args) {
     if (result != golden) {
       printf("  X Line %d: mismatch\n", line_no);
       printf("    expr   : %s", expr_str);
-      printf("    nemu   : %u\n", result);
+      printf("    npc   : %u\n", result);
       printf("    golden : %u\n", golden);
       assert(0);
     }

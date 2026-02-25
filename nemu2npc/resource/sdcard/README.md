@@ -5,8 +5,8 @@
 
 ## 使用方法
 
-* 将本目录下的`nemu.c`复制到`linux/drivers/mmc/host/`目录下
-* 在`linux/drivers/mmc/host/Makefile`中添加一行`obj-y += nemu.o`
+* 将本目录下的`npc.c`复制到`linux/drivers/mmc/host/`目录下
+* 在`linux/drivers/mmc/host/Makefile`中添加一行`obj-y += npc.o`
 * 在menuconfig中取消`General setup -> Initial RAM filesystem and RAM disk (initramfs/initrd) support`
 * 在menuconfig中选中`Device Drivers -> MMC/SD/SDIO card support`
 * 在dts中加入以下节点
@@ -14,7 +14,7 @@
 / {
   soc {
     sdhci: mmc {
-      compatible = "nemu-sdhost";
+      compatible = "npc-sdhost";
       reg = <0x0 0xa3000000 0x0 0x1000>;
     };
   };

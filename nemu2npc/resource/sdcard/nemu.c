@@ -521,7 +521,7 @@ static int nemu_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id nemu_match[] = {
-	{ .compatible = "nemu-sdhost" },
+	{ .compatible = "npc-sdhost" },
 	{ }
 };
 MODULE_DEVICE_TABLE(of, nemu_match);
@@ -530,13 +530,13 @@ static struct platform_driver nemu_driver = {
 	.probe      = nemu_probe,
 	.remove     = nemu_remove,
 	.driver     = {
-		.name		= "sdhost-nemu",
+		.name		= "sdhost-npc",
 		.of_match_table	= nemu_match,
 	},
 };
 module_platform_driver(nemu_driver);
 
-MODULE_ALIAS("platform:sdhost-nemu");
+MODULE_ALIAS("platform:sdhost-npc");
 MODULE_DESCRIPTION("NPC SDHost driver");
 MODULE_LICENSE("GPL v2");
 MODULE_AUTHOR("Zihao Yu");
