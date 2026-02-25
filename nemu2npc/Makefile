@@ -25,9 +25,14 @@ endif
 remove_quote = $(patsubst "%",%,$(1))
 
 # Extract variabls from menuconfig
-GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
+ifeq ($(CONFIG_NEMU),y)
+  GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
+  NAME = $(GUEST_ISA)-nemu-$(ENGINE)
+else
+  GUEST_ISA ?= $(call remove_quote,$(CONFIG_CORE))
+  NAME = $(GUEST_ISA)-npc-$(ENGINE)
+endif
 ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))
-NAME    = $(GUEST_ISA)-nemu-$(ENGINE)
 
 # Include all filelist.mk to merge file lists
 FILELIST_MK = $(shell find -L ./csrc -name "filelist.mk")

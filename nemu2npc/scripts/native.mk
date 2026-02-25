@@ -14,9 +14,11 @@
 #**************************************************************************************/
 
 -include $(NEMU2NPC_HOME)/../Makefile
+ifeq ($(CONFIG_NPC),y)
+include $(NEMU2NPC_HOME)/scripts/verilate.mk
+endif
 include $(NEMU2NPC_HOME)/scripts/build.mk
 include $(NEMU2NPC_HOME)/tools/difftest.mk
-include $(NEMU2NPC_HOME)/rtl/verilate.mk
 
 compile_git:
 	$(call git_commit, "compile NPC")

@@ -1,5 +1,15 @@
-mainmenu "NPC Configuration Menu"
+mainmenu "Configuration Menu"
 
+choice
+  prompt "CPU Backend"
+  default NEMU
+config NEMU
+  bool "NEMU: Emulator"
+config NPC
+  bool "NPC:Proxy Core"
+endchoice
+
+if NEMU
 choice
   prompt "Base ISA"
   default ISA_riscv
@@ -12,6 +22,20 @@ config ISA_riscv
 config ISA_loongarch32r
   bool "loongarch32r"
 endchoice
+endif
+
+if NPC
+choice
+  prompt "Base Core"
+  default CORE_riscv32
+config CORE_minirv
+  bool "minirv"
+config CORE_riscv32
+  bool "riscv32"
+config CORE_riscv64
+  bool "riscv64"
+endchoice
+endif
 
 config ISA
   string
@@ -20,6 +44,13 @@ config ISA
   default "riscv32" if ISA_riscv && !RV64
   default "riscv64" if ISA_riscv &&  RV64
   default "loongarch32r" if ISA_loongarch32r
+  default "none"
+
+config CORE
+  string
+  default "minirv" if CORE_minirv
+  default "riscv32" if CORE_riscv32
+  default "riscv64" if CORE_riscv64
   default "none"
 
 config ISA64
@@ -33,7 +64,7 @@ source "csrc/isa/riscv32/Kconfig"
 endif
 
 choice
-  prompt "NPC execution engine"
+  prompt "NEMU execution engine"
   default ENGINE_INTERPRETER
 
 config ENGINE_INTERPRETER
@@ -193,7 +224,7 @@ config DIFFTEST
   default n
   help
     Enable differential testing with a reference design.
-    Note that this will significantly reduce the performance of NPC.
+    Note that this will significantly reduce the performance of NEMU.
 
 choice
   prompt "Reference design"
@@ -231,7 +262,7 @@ config WATCHPOINT
   bool "Enable watchpoint support"
   default y
   help
-    Enable hardware/software watchpoints in NPC.
+    Enable hardware/software watchpoints in NEMU.
     This will allow setting watchpoints with the 'w' command
     and automatically pause execution when the value changes.
 
