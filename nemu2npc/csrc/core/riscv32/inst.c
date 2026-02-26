@@ -174,8 +174,6 @@ int isa_exec_once(Decode *s) {
   s->snpc = RTL_Decode.snpc;
   s->dnpc = RTL_Decode.dnpc;
   s->isa.inst = RTL_Decode.isa.inst;
-  printf("RTL_Decode.pc: %x, RTL_Decode.snpc: %x, RTL_Decode.dnpc: %x, RTL_Decode.isa.inst: %x\n", 
-          RTL_Decode.pc, RTL_Decode.snpc, RTL_Decode.dnpc, RTL_Decode.isa.inst);
   rtl_step();
   return 0;
 #endif
