@@ -79,15 +79,7 @@ static void tick(){
 static void reset(){
   printf("[NPC] Resetting ...\n");
   top->reset = 1;
-  // ======== 上升沿 ========
-  top->clock = 0;
-  top->eval();
-  tfp->dump(sim_time++);
-  // ======== 下降沿 ========
-  top->clock = 1;
-  top->eval();
-  tfp->dump(sim_time++);
-  
+  tick();
   top->reset = 0;
 }
 
@@ -102,8 +94,7 @@ extern "C" {
     Verilated::traceEverOn(true);  // 必须先打开 trace
     top->trace(tfp, 99);  // 99 是 trace depth
     tfp->open("build/wave.vcd");
-  }
-  void rtl_reset() {
+    // 复位
     reset();
   }
   void rtl_step() {

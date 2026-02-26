@@ -107,7 +107,6 @@ void init_monitor(int argc, char *argv[]) {
 
 #elif defined(CONFIG_NPC)
   rtl_init(argc, argv);
-  rtl_reset();
 #endif
   /* Parse arguments. */
   parse_args(argc, argv);
