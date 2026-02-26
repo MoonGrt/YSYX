@@ -68,7 +68,7 @@ $(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES)
 	$(CXX) -o $@ -I$(VBUILD) \
 		-I/usr/local/share/verilator/include \
 		-I/usr/local/share/verilator/include/vltstd \
-		$(OBJS) $(LDFLAGS) $(LIBS) $(VLIB)
+		$(OBJS) $(LIBS) $(VLIB)
 endif
 
 clean:
