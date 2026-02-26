@@ -31,8 +31,7 @@ extern "C" {
       set_nemu_state(MEMU_END, top->io_pc, code);
     else
       invalid_inst(top->io_pc);
-    // 停止仿真
-    Verilated::gotFinish(true);
+    Verilated::gotFinish(true);  // 停止仿真
   }
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;
@@ -101,12 +100,6 @@ extern "C" {
     Verilated::traceEverOn(true);  // 必须先打开 trace
     top->trace(tfp, 99);  // 99 是 trace depth
     tfp->open("build/wave.vcd");
-
-    // /* Initialize memory. */
-    // init_mem();
-    // /* Load the image to memory.*/
-    // load_img();
-
     // 复位
     reset();
   }
