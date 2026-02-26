@@ -234,14 +234,11 @@ int main(int argc, char **argv){
   for (int i = 0; i < argc; i++)
     printf("[NPC] ARGV[%d] = '%s'\n", i, argv[i]);
 #endif
-
   // 初始化 Verilator 环境
-  // Verilated::commandArgs(argc, argv);
+  Verilated::commandArgs(argc, argv);
   Verilated::mkdir("logs");
-
   // 初始化仿真环境
   init(argc, argv);
-
   // 创建 build 目录（如果不存在）
   Verilated::mkdir("build");
   // 创建 VCD 波形对象
@@ -263,7 +260,6 @@ int main(int argc, char **argv){
     log_write("0x%08x: 0x%08x\n", top->io_pc, top->io_inst);
     if (is_ebreak) break;
   }
-
   return exit();
 }
 
