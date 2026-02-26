@@ -44,12 +44,12 @@ extern "C" {
 
 static vluint64_t sim_time = 0;
 static void tick(){
-  // ======== 下降沿 ========
-  top->clock = 0;
-  top->eval();
-  tfp->dump(sim_time++);
   // ======== 上升沿 ========
   top->clock = 1;
+  top->eval();
+  tfp->dump(sim_time++);
+  // ======== 下降沿 ========
+  top->clock = 0;
   top->eval();
   tfp->dump(sim_time++);
   // ======== 刷新 ========
@@ -63,7 +63,9 @@ static void tick(){
 static void reset(){
   // printf("[MEMU] Resetting ...\n");
   top->reset = 1;
-  tick();
+  top->clock = 0;
+  top->eval();
+  tfp->dump(sim_time++);
   top->reset = 0;
   // printf("[MEMU] Resetting ...\n");
 }
