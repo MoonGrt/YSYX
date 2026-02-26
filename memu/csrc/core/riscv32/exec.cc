@@ -3,23 +3,16 @@
 #include "VMiniRVSOC.h"
 
 #include <common.h>
+#include <utils.h>
+#include <cpu/cpu.h>
 #include <cpu/decode.h>
 #include <memory/paddr.h>
 #include <memory/host.h>
 #include "../../utils/local-include/itrace.h"
 
-// #define DEBUG
-
-extern "C" void set_nemu_state(int state, vaddr_t pc, int halt_ret);
-extern "C" void invalid_inst(vaddr_t thispc);
-
 Decode RTL_Decode;
-
 VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;
-
-typedef uint32_t word_t;
-typedef uint32_t paddr_t;
 
 extern "C" {
   #define EBREAK_CODE    0
@@ -27,11 +20,8 @@ extern "C" {
   #define OTHER_E_CODE   2
   #define UNIMPL_CODE    3
   void ebreak(uint8_t code) {
-    if (code == EBREAK_CODE)
-      set_nemu_state(MEMU_END, top->io_pc, code);
-    else
-      invalid_inst(top->io_pc);
-    // 停止仿真
+    if (code == EBREAK_CODE) MEMUTRAP(top->io_pc, code);
+    else INV(top->io_pc);
     Verilated::gotFinish(true);
   }
   int pmem_read(int raddr){
@@ -43,12 +33,11 @@ extern "C" {
   }
   void pmem_write(int waddr, char wmask, int wdata){
     waddr = waddr & ~0x3u;
-    if (in_pmem(waddr))
-      for(int i = 0; i < 4; i++)
-        if(wmask & (1 << i)) {
-          IFDEF(CONFIG_MTRACE, display_pwrite(waddr + i, 4, (waddr >> (i * 8)) & 0xff));
-          host_write(guest_to_host(waddr + i), 4, (waddr >> (i * 8)) & 0xff);
-        }
+    if (in_pmem(waddr)) for(int i = 0; i < 4; i++)
+      if(wmask & (1 << i)) {
+        IFDEF(CONFIG_MTRACE, display_pwrite(waddr + i, 4, (waddr >> (i * 8)) & 0xff));
+        host_write(guest_to_host(waddr + i), 4, (waddr >> (i * 8)) & 0xff);
+      }
   }
 }
 
@@ -71,7 +60,7 @@ static void tick(){
 }
 
 static void reset(){
-  printf("[MEMU] Resetting ...\n");
+  // printf("[MEMU] Resetting ...\n");
   top->reset = 1;
   tick();
   top->reset = 0;
@@ -84,14 +73,8 @@ void exit(void) {
   delete top;
 }
 
-// #define PRINTARG
 extern "C" {
   void rtl_init(int argc, char *argv[]) {
-#ifdef PRINTARG
-    printf("[MEMU] ARGC = %d\n", argc);
-    for (int i = 0; i < argc; i++)
-      printf("[MEMU] ARGV[%d] = '%s'\n", i, argv[i]);
-#endif
     // 初始化仿真对象
     Verilated::commandArgs(argc, argv);
     Verilated::mkdir("logs");
@@ -101,12 +84,6 @@ extern "C" {
     Verilated::traceEverOn(true);  // 必须先打开 trace
     top->trace(tfp, 99);  // 99 是 trace depth
     tfp->open("build/wave.vcd");
-
-    // /* Initialize memory. */
-    // init_mem();
-    // /* Load the image to memory.*/
-    // load_img();
-
     // 复位
     reset();
   }

@@ -20,9 +20,14 @@
 
 void cpu_exec(uint64_t n);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void set_nemu_state(int state, vaddr_t pc, int halt_ret);
 void invalid_inst(vaddr_t thispc);
-
+#ifdef __cplusplus
+}
+#endif
 #define MEMUTRAP(thispc, code) set_nemu_state(MEMU_END, thispc, code)
 #define INV(thispc) invalid_inst(thispc)
 

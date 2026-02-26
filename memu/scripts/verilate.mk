@@ -48,13 +48,13 @@ rtl: $(RTL_DIR)/$(VTOP).sv
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 
 TEST := csrc/minirv.cpp
-ARGS ?= --log=$(BUILD_DIR)/memu-test-log.txt
+TEST_ARGS ?= --log=$(BUILD_DIR)/memu-test-log.txt
 test: $(VLIB) $(TEST)
 	@mkdir -p $(dir $@)
 	$(CXX) -I$(VBUILD) -I/usr/local/share/verilator/include \
 		-I/usr/local/share/verilator/include/vltstd \
 		$(TEST) $(VLIB) -o $(BUILD_DIR)/test
-	$(BUILD_DIR)/test $(ARGS)
+	$(BUILD_DIR)/test $(TEST_ARGS)
 
 verilog:
 	 $(call git_commit, "generate verilog")
