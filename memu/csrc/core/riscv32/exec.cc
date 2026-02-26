@@ -7,7 +7,7 @@
 #include <memory/host.h>
 #include <common.h>
 
-#define DEBUG
+// #define DEBUG
 
 extern "C" void set_nemu_state(int state, vaddr_t pc, int halt_ret);
 extern "C" void invalid_inst(vaddr_t thispc);
