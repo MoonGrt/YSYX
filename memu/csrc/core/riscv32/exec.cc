@@ -7,6 +7,7 @@
 #include <common.h>
 
 extern "C" void set_nemu_state(int state, vaddr_t pc, int halt_ret);
+extern "C" void invalid_inst(vaddr_t thispc);
 
 Decode RTL_Decode;
 
@@ -117,7 +118,7 @@ extern "C" {
   // }
   void ebreak(uint8_t code) {
     if (code == EBREAK_CODE)
-      set_nemu_state(MEMU_END, top->io_pc, code);
+      invalid_inst(top->io_pc);
     else
       set_nemu_state(MEMU_END, top->io_pc, code);
     // 停止仿真
