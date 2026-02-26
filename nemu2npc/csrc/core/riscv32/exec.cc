@@ -166,7 +166,7 @@ extern "C" {
 #endif
 
     // 初始化仿真对象
-    Verilated::commandArgs(argc, argv);
+    // Verilated::commandArgs(argc, argv);
     Verilated::mkdir("logs");
     // 创建 build 目录（如果不存在）
     Verilated::mkdir("build");
