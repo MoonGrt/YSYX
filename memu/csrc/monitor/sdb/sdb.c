@@ -1,7 +1,7 @@
 /***************************************************************************************
 * Copyright (c) 2014-2024 Zihao Yu, Nanjing University
 *
-* NEMU is licensed under Mulan PSL v2.
+* MEMU is licensed under Mulan PSL v2.
 * You can use this software according to the terms and conditions of the Mulan PSL v2.
 * You may obtain a copy of Mulan PSL v2 at:
 *          http://license.coscl.org.cn/MulanPSL2
@@ -34,7 +34,7 @@ static char* rl_gets() {
     line_read = NULL;
   }
 
-  line_read = readline("(nemu) ");
+  line_read = readline("(npc) ");
 
   if (line_read && *line_read) {
     add_history(line_read);
@@ -51,13 +51,13 @@ static int cmd_c(char *args) {
 }
 
 static int cmd_q(char *args) {
-  nemu_state.state = NEMU_QUIT;
+  nemu_state.state = MEMU_QUIT;
   return -1;
 }
 
 static int cmd_r(char *args) {
   init_isa();
-  nemu_state.state = NEMU_STOP;
+  nemu_state.state = MEMU_STOP;
   return 0;
 }
 
@@ -157,7 +157,7 @@ static int cmd_test(char *args) {
     if (result != golden) {
       printf("  X Line %d: mismatch\n", line_no);
       printf("    expr   : %s", expr_str);
-      printf("    nemu   : %u\n", result);
+      printf("    npc   : %u\n", result);
       printf("    golden : %u\n", golden);
       assert(0);
     }
@@ -237,7 +237,7 @@ static struct {
   { "p", "Evaluate expression EXPR", cmd_p },
   { "w", "Set watchpoint on EXPR", cmd_w },
   { "d", "Delete watchpoint N", cmd_d },
-  { "q", "Exit NEMU", cmd_q },
+  { "q", "Exit MEMU", cmd_q },
 };
 
 #define NR_CMD ARRLEN(cmd_table)
@@ -302,6 +302,7 @@ void sdb_mainloop() {
         break;
       }
     }
+
     if (i == NR_CMD) { printf("  Unknown command '%s'\n", cmd); }
   }
 }

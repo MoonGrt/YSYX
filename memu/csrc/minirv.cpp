@@ -11,13 +11,7 @@
 #define optional_argument 2
 static char *log_file = NULL;
 static char *img_file = NULL;
-// #define PRINTARG
 static int parse_args(int argc, char *argv[]) {
-#ifdef PRINTARG
-  printf("[NPC] ARGC = %d\n", argc);
-  for (int i = 0; i < argc; i++)
-    printf("[NPC] ARGV[%d] = '%s'\n", i, argv[i]);
-#endif
   const struct option table[] = {
     {"help", no_argument      , NULL, 'h'},
     {"log" , required_argument, NULL, 'l'},
@@ -118,8 +112,8 @@ static void load_img(void) {
 
 static void welcome() {
   Log("Build time: %s, %s", __TIME__, __DATE__);
-  // printf("Welcome to %s-NPC!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
-  printf("[NPC] Welcome to MiniRV-NPC!\n");
+  // printf("Welcome to %s-MEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
+  printf("[MEMU] Welcome to MiniRV-MEMU!\n");
 }
 
 
@@ -204,7 +198,7 @@ extern "C" {
       msg   = exc_info[code].msg;
     }
     // 统一打印
-    printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
+    printf("[MEMU] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
     printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
     // 停止仿真
     Verilated::gotFinish(true);
@@ -232,14 +226,19 @@ static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
   tfp->dump(sim_time++);
 }
 
+#define PRINTARG
 int exit(void);
 int main(int argc, char **argv){
+#ifdef PRINTARG
+  printf("[MEMU] ARGC = %d\n", argc);
+  for (int i = 0; i < argc; i++)
+    printf("[MEMU] ARGV[%d] = '%s'\n", i, argv[i]);
+#endif
+  // 初始化 Verilator 环境
   Verilated::commandArgs(argc, argv);
   Verilated::mkdir("logs");
-
   // 初始化仿真环境
   init(argc, argv);
-
   // 创建 build 目录（如果不存在）
   Verilated::mkdir("build");
   // 创建 VCD 波形对象
@@ -248,12 +247,12 @@ int main(int argc, char **argv){
   tfp->open("build/wave.vcd");
 
   // ===== 复位 =====
-  printf("[NPC] Resetting ...\n");
+  printf("[MEMU] Resetting ...\n");
   top->reset = 1;
   tick(top, tfp);
   top->reset = 0;
   // 主仿真
-  std::cout << "[NPC] Simulation start" << std::endl;
+  std::cout << "[MEMU] Simulation start" << std::endl;
   log_write("0x%08x: %08x\n", top->io_pc, top->io_inst);
   // while (!Verilated::gotFinish()){
   for (int i = 0; i < 100000 && !Verilated::gotFinish(); i++) {
@@ -261,7 +260,6 @@ int main(int argc, char **argv){
     log_write("0x%08x: 0x%08x\n", top->io_pc, top->io_inst);
     if (is_ebreak) break;
   }
-
   return exit();
 }
 

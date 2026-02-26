@@ -67,7 +67,7 @@ gdb: $(BIN)
 	gdb --args $(NPC_EXEC)
 
 wave: $(WAVE_FILE)
-	$(GTKWAVE) $(WAVE_FILE)
+	$(GTKWAVE) $(WAVE_FILE) > /dev/null 2>&1 &
 
 clean:
 	-rm -rf $(BUILD_DIR)
