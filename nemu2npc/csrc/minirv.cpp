@@ -236,7 +236,7 @@ int main(int argc, char **argv){
 #endif
 
   // 初始化 Verilator 环境
-  Verilated::commandArgs(argc, argv);
+  // Verilated::commandArgs(argc, argv);
   Verilated::mkdir("logs");
 
   // 初始化仿真环境
