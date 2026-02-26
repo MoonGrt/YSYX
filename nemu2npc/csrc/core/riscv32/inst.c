@@ -165,8 +165,12 @@ static int decode_exec(Decode *s) {
 }
 
 int isa_exec_once(Decode *s) {
-  rtl_step();
+#if defined(CONFIG_NEMU)
   s->isa.inst = inst_fetch(&s->snpc, 4);
   IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
   return decode_exec(s);
+#elif defined(CONFIG_NPC)
+  rtl_step();
+  return 0;
+#endif
 }
