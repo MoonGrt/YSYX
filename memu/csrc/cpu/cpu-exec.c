@@ -1,7 +1,7 @@
 /***************************************************************************************
 * Copyright (c) 2014-2024 Zihao Yu, Nanjing University
 *
-* NPC is licensed under Mulan PSL v2.
+* MEMU is licensed under Mulan PSL v2.
 * You can use this software according to the terms and conditions of the Mulan PSL v2.
 * You may obtain a copy of Mulan PSL v2 at:
 *          http://license.coscl.org.cn/MulanPSL2
@@ -130,7 +130,7 @@ void cpu_exec(uint64_t n) {
   g_print_step = (n < MAX_INST_TO_PRINT);
   switch (nemu_state.state) {
     case NPC_END: case NPC_ABORT: case NPC_QUIT:
-      printf("Program execution has ended. To restart the program, exit NPC and run again.\n");
+      printf("Program execution has ended. To restart the program, exit MEMU and run again.\n");
       return;
     default: nemu_state.state = NPC_RUNNING;
   }

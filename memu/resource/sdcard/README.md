@@ -1,5 +1,5 @@
 
-# NPC sdhost驱动
+# MEMU sdhost驱动
 
 本驱动裁剪自`linux/drivers/mmc/host/bcm2835.c`, 去除了DMA和中断, 改成直接轮询, 处理器无需支持DMA和中断即可运行.
 

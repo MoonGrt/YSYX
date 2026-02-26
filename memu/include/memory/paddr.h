@@ -1,7 +1,7 @@
 /***************************************************************************************
 * Copyright (c) 2014-2024 Zihao Yu, Nanjing University
 *
-* NPC is licensed under Mulan PSL v2.
+* MEMU is licensed under Mulan PSL v2.
 * You can use this software according to the terms and conditions of the Mulan PSL v2.
 * You may obtain a copy of Mulan PSL v2 at:
 *          http://license.coscl.org.cn/MulanPSL2
@@ -22,9 +22,9 @@
 #define PMEM_RIGHT ((paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1)
 #define RESET_VECTOR (PMEM_LEFT + CONFIG_PC_RESET_OFFSET)
 
-/* convert the guest physical address in the guest program to host virtual address in NPC */
+/* convert the guest physical address in the guest program to host virtual address in MEMU */
 uint8_t* guest_to_host(paddr_t paddr);
-/* convert the host virtual address in NPC to guest physical address in the guest program */
+/* convert the host virtual address in MEMU to guest physical address in the guest program */
 paddr_t host_to_guest(uint8_t *haddr);
 
 static inline bool in_pmem(paddr_t addr) {

@@ -108,7 +108,7 @@ extern "C" {
   //     msg   = exc_info[code].msg;
   //   }
   //   // 统一打印
-  //   printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
+  //   printf("[MEMU] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
   //   printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
   //   // 停止仿真
   //   Verilated::gotFinish(true);
@@ -157,11 +157,11 @@ static void tick(){
 }
 
 static void reset(){
-  printf("[NPC] Resetting ...\n");
+  printf("[MEMU] Resetting ...\n");
   top->reset = 1;
   tick();
   top->reset = 0;
-  // printf("[NPC] Resetting ...\n");
+  // printf("[MEMU] Resetting ...\n");
 }
 
 void exit(void) {
@@ -174,9 +174,9 @@ void exit(void) {
 extern "C" {
   void rtl_init(int argc, char *argv[]) {
 #ifdef PRINTARG
-    printf("[NPC] ARGC = %d\n", argc);
+    printf("[MEMU] ARGC = %d\n", argc);
     for (int i = 0; i < argc; i++)
-      printf("[NPC] ARGV[%d] = '%s'\n", i, argv[i]);
+      printf("[MEMU] ARGV[%d] = '%s'\n", i, argv[i]);
 #endif
     // 初始化仿真对象
     Verilated::commandArgs(argc, argv);

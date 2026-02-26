@@ -1,7 +1,7 @@
 /***************************************************************************************
 * Copyright (c) 2014-2024 Zihao Yu, Nanjing University
 *
-* NPC is licensed under Mulan PSL v2.
+* MEMU is licensed under Mulan PSL v2.
 * You can use this software according to the terms and conditions of the Mulan PSL v2.
 * You may obtain a copy of Mulan PSL v2 at:
 *          http://license.coscl.org.cn/MulanPSL2
@@ -237,7 +237,7 @@ static struct {
   { "p", "Evaluate expression EXPR", cmd_p },
   { "w", "Set watchpoint on EXPR", cmd_w },
   { "d", "Delete watchpoint N", cmd_d },
-  { "q", "Exit NPC", cmd_q },
+  { "q", "Exit MEMU", cmd_q },
 };
 
 #define NR_CMD ARRLEN(cmd_table)

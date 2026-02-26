@@ -1,7 +1,7 @@
 #***************************************************************************************
 # Copyright (c) 2014-2024 Zihao Yu, Nanjing University
 #
-# NPC is licensed under Mulan PSL v2.
+# MEMU is licensed under Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
 #          http://license.coscl.org.cn/MulanPSL2
@@ -18,7 +18,7 @@ include $(MEMU_HOME)/scripts/build.mk
 include $(MEMU_HOME)/tools/difftest.mk
 
 compile_git:
-	$(call git_commit, "compile NPC")
+	$(call git_commit, "compile MEMU")
 $(BINARY):: compile_git
 
 # Some convenient rules
@@ -26,22 +26,22 @@ $(BINARY):: compile_git
 override ARGS ?= --log=$(BUILD_DIR)/npc-log.txt
 override ARGS += $(ARGS_DIFF)
 
-# Command to execute NPC
+# Command to execute MEMU
 IMG ?=
 NPC_EXEC := $(BINARY) $(ARGS)
 
 run-env: $(BINARY) $(DIFF_REF_SO)
 
 run: run-env
-	$(call git_commit, "run NPC")
+	$(call git_commit, "run MEMU")
 	$(NPC_EXEC) $(IMG)
 
 run-batch: run-env
-	$(call git_commit, "run NPC batch mode")
+	$(call git_commit, "run MEMU batch mode")
 	$(NPC_EXEC) -b $(IMG)
 
 gdb: run-env
-	$(call git_commit, "gdb NPC")
+	$(call git_commit, "gdb MEMU")
 	gdb -s $(BINARY) --args $(NPC_EXEC) -b
 
 clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile"))

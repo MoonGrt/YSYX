@@ -1,12 +1,12 @@
-# NPC
+# MEMU
 
 `make run`
 
-NPC(NJU Emulator) is a simple but complete full-system emulator designed for teaching purpose.
+MEMU(NJU Emulator) is a simple but complete full-system emulator designed for teaching purpose.
 Currently it supports x86, mips32, riscv32 and riscv64.
-To build programs run above NPC, refer to the [AM project](https://github.com/NJU-ProjectN/abstract-machine).
+To build programs run above MEMU, refer to the [AM project](https://github.com/NJU-ProjectN/abstract-machine).
 
-The main features of NPC include
+The main features of MEMU include
 * a small monitor with a simple debugger
   * single step
   * register/memory examination

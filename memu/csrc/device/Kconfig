@@ -3,7 +3,7 @@ menuconfig DEVICE
   bool "Devices"
   default n
   help
-    Provide device support for NPC.
+    Provide device support for MEMU.
 
 if DEVICE
 
