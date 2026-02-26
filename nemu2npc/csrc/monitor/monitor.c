@@ -51,19 +51,14 @@ static long load_img() {
     Log("No image is given. Use the default build-in image.");
     return 4096; // built-in image size
   }
-
   FILE *fp = fopen(img_file, "rb");
   Assert(fp, "Can not open '%s'", img_file);
-
   fseek(fp, 0, SEEK_END);
   long size = ftell(fp);
-
   Log("The image is %s, size = %ld", img_file, size);
-
   fseek(fp, 0, SEEK_SET);
   int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
   assert(ret == 1);
-
   fclose(fp);
   return size;
 }
@@ -100,7 +95,8 @@ static int parse_args(int argc, char *argv[]) {
   }
   return 0;
 }
-void rtl_init(int argc, char *argv[]);
+// void rtl_init(int argc, char *argv[]);
+#include "../../core/riscv32/local-include/exec.h"
 /* Perform some global initialization. */
 void init_monitor(int argc, char *argv[]) {
 #if defined(CONFIG_NEMU)

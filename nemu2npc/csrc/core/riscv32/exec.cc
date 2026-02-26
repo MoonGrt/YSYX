@@ -123,13 +123,13 @@ extern "C" {
   }
 }
 
-#include "local-include/reg.h"
-#include <cpu/cpu.h>
-#include <cpu/ifetch.h>
-#include <cpu/decode.h>
-#include "../../utils/local-include/itrace.h"
+// #include "local-include/reg.h"
+// #include <cpu/cpu.h>
+// #include <cpu/ifetch.h>
+// #include <cpu/decode.h>
+// #include "../../utils/local-include/itrace.h"
 
-int isa_exec_once(Decode *s) {
-  printf("[NPC] Executing instruction: 0x%08x\n", s->pc);
-  return 0;
-}
+// int isa_exec_once(Decode *s) {
+//   printf("[NPC] Executing instruction: 0x%08x\n", s->pc);
+//   return 0;
+// }
