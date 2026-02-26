@@ -9,11 +9,6 @@
 #include <memory/host.h>
 #include "../../utils/local-include/itrace.h"
 
-// #define DEBUG
-
-// extern "C" void set_nemu_state(int state, vaddr_t pc, int halt_ret);
-// extern "C" void invalid_inst(vaddr_t thispc);
-
 Decode RTL_Decode;
 
 VMiniRVSOC *top = new VMiniRVSOC;
