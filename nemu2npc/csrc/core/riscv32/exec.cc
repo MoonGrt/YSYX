@@ -75,7 +75,7 @@ typedef uint32_t paddr_t;
 //   for(int i = 0; i < 4; i++)
 //     if(mask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
 // }
-#include <pthread.h>
+
 extern "C" {
   #define EBREAK_CODE    0
   #define ZERO_INST_CODE 1
@@ -111,7 +111,6 @@ extern "C" {
     raddr = raddr & ~0x3u;
     word_t data= paddr_read(raddr, 4);
 #ifdef DEBUG
-    printf("[tid=%lu] addr=0x%08x\n", pthread_self(), raddr);
     printf("paddr_read:  addr=0x%08x,   data=0x%08x\n", raddr, data);
 #endif
     return data;
