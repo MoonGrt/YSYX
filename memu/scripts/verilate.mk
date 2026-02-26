@@ -48,6 +48,10 @@ test: $(VLIB) $(TEST)
 		$(TEST) $(VLIB) -o $(BUILD_DIR)/test
 	$(BUILD_DIR)/test $(ARGS)
 
+verilog:
+	$(call git_commit, "generate verilog")
+	mkdir -p $(RTL_DIR)
+	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
 wave: $(WAVE_FILE)
 	$(GTKWAVE) $(WAVE_FILE) > /dev/null 2>&1 &
