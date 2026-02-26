@@ -156,8 +156,15 @@ int exit(void) {
   }
 }
 
+#define PRINTARG
 extern "C" {
   void rtl_init(int argc, char *argv[]) {
+#ifdef PRINTARG
+    printf("[NPC] ARGC = %d\n", argc);
+    for (int i = 0; i < argc; i++)
+      printf("[NPC] ARGV[%d] = '%s'\n", i, argv[i]);
+#endif
+
     // 初始化仿真对象
     Verilated::commandArgs(argc, argv);
     Verilated::mkdir("logs");

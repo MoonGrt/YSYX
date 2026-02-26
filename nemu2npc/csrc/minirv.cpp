@@ -11,13 +11,7 @@
 #define optional_argument 2
 static char *log_file = NULL;
 static char *img_file = NULL;
-// #define PRINTARG
 static int parse_args(int argc, char *argv[]) {
-#ifdef PRINTARG
-  printf("[NPC] ARGC = %d\n", argc);
-  for (int i = 0; i < argc; i++)
-    printf("[NPC] ARGV[%d] = '%s'\n", i, argv[i]);
-#endif
   const struct option table[] = {
     {"help", no_argument      , NULL, 'h'},
     {"log" , required_argument, NULL, 'l'},
@@ -232,8 +226,16 @@ static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
   tfp->dump(sim_time++);
 }
 
+#define PRINTARG
 int exit(void);
 int main(int argc, char **argv){
+#ifdef PRINTARG
+  printf("[NPC] ARGC = %d\n", argc);
+  for (int i = 0; i < argc; i++)
+    printf("[NPC] ARGV[%d] = '%s'\n", i, argv[i]);
+#endif
+
+  // 初始化 Verilator 环境
   Verilated::commandArgs(argc, argv);
   Verilated::mkdir("logs");
 
