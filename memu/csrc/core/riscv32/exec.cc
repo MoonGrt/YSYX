@@ -3,9 +3,11 @@
 #include "VMiniRVSOC.h"
 
 #include <cpu/decode.h>
-#include <memory/paddr.h>
+// #include <memory/paddr.h>
+#include <memory/host.h>
 #include <common.h>
 
+extern "C" uint8_t* guest_to_host(paddr_t paddr);
 extern "C" void set_nemu_state(int state, vaddr_t pc, int halt_ret);
 extern "C" void invalid_inst(vaddr_t thispc);
 
@@ -141,18 +143,15 @@ extern "C" {
 //   }
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;
-    word_t data= paddr_read(raddr, 4);
-#ifdef DEBUG
-    printf("paddr_read:  addr=0x%08x,   data=0x%08x\n", raddr, data);
-#endif
-    return data;
+    word_t ret = host_read(guest_to_host(raddr), 4);
+    return ret;
   }
   void pmem_write(int waddr, char wmask, int wdata){
-#ifdef DEBUG
-    printf("paddr_write: addr=0x%08x, mask=0x%x, data=0x%08x\n", waddr, wmask, wdata);
-#endif
-    waddr = waddr & ~0x3u;
-    paddr_write(waddr, wmask, wdata);
+// #ifdef DEBUG
+//     printf("paddr_write: addr=0x%08x, mask=0x%x, data=0x%08x\n", waddr, wmask, wdata);
+// #endif
+//     waddr = waddr & ~0x3u;
+//     paddr_write(waddr, wmask, wdata);
   }
 }
 
