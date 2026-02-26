@@ -7,13 +7,13 @@
 #include <memory/host.h>
 #include <common.h>
 
+#define DEBUG
+
 extern "C" uint8_t* guest_to_host(paddr_t paddr);
 extern "C" void set_nemu_state(int state, vaddr_t pc, int halt_ret);
 extern "C" void invalid_inst(vaddr_t thispc);
 
 Decode RTL_Decode;
-
-// #define DEBUG
 
 VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -143,8 +143,11 @@ extern "C" {
 //   }
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;
-    word_t ret = host_read(guest_to_host(raddr), 4);
-    return ret;
+    word_t data = host_read(guest_to_host(raddr), 4);
+#ifdef DEBUG
+    printf("paddr_read:  addr=0x%08x,   data=0x%08x\n", raddr, data);
+#endif
+    return data;
   }
   void pmem_write(int waddr, char wmask, int wdata){
 // #ifdef DEBUG
