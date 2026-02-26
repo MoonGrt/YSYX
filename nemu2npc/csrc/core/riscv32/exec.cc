@@ -140,9 +140,9 @@ static void tick(){
   // ======== 刷新 ========
   tfp->flush();
   RTL_Decode.pc = top->io_pc;
+  RTL_Decode.snpc = top->io_snpc;
+  RTL_Decode.dnpc = top->io_dnpc;
   RTL_Decode.isa.inst = top->io_inst;
-  RTL_Decode.dnpc = top->io_pc;
-  RTL_Decode.snpc = top->io_pc + 4;
 }
 
 static void reset(){

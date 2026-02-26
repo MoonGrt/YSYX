@@ -171,9 +171,9 @@ int isa_exec_once(Decode *s) {
   return decode_exec(s);
 #elif defined(CONFIG_NPC)
   s->pc = RTL_Decode.pc;
-  s->isa.inst = RTL_Decode.isa.inst;
-  s->dnpc = RTL_Decode.dnpc;
   s->snpc = RTL_Decode.snpc;
+  s->dnpc = RTL_Decode.dnpc;
+  s->isa.inst = RTL_Decode.isa.inst;
   rtl_step();
   return 0;
 #endif
