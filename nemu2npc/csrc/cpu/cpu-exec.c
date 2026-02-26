@@ -19,6 +19,11 @@
 #include <locale.h>
 #include "../monitor/sdb/sdb.h"
 #include "../utils/local-include/itrace.h"
+#if defined(CONFIG_NEMU)
+
+#elif defined(CONFIG_NPC)
+  #include "../../core/riscv32/local-include/exec.h"
+#endif
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -137,6 +142,11 @@ void cpu_exec(uint64_t n) {
   switch (nemu_state.state) {
     case NPC_RUNNING: nemu_state.state = NPC_STOP; break;
     case NPC_END: case NPC_ABORT:
+      #if defined(CONFIG_NEMU)
+
+      #elif defined(CONFIG_NPC)
+        rtl_exit();
+      #endif
       Log("npc: %s at pc = " FMT_WORD,
           (nemu_state.state == NPC_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
           (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),

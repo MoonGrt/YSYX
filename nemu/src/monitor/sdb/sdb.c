@@ -302,7 +302,6 @@ void sdb_mainloop() {
         break;
       }
     }
-
     if (i == NR_CMD) { printf("  Unknown command '%s'\n", cmd); }
   }
 }

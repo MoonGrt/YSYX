@@ -3,5 +3,6 @@
 
 void rtl_init(int argc, char *argv[]);
 void rtl_step(void);
+void rtl_exit(void);
 
 #endif
