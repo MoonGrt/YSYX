@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
 
 #elif defined(CONFIG_NPC)
   rtl_init(argc, argv);
+  rtl_step();
 #endif
   /* Start engine. */
   engine_start();
