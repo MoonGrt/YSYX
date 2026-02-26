@@ -3,7 +3,7 @@ VERILATOR ?= verilator
 VERILATOR_ROOT = /usr/local/share/verilator
 VERILATOR_CFLAGS += --trace -cc -MMD -cc -O3 --x-assign fast --x-initial fast \
                     --timescale "1ns/1ns" --no-timing \
-                    -CFLAGS -ggdb -LDFLAGS -ggdb -j 8 --assert
+                    -CFLAGS -ggdb -LDFLAGS -ggdb -j 8 -O3
 
 BUILD_DIR := build
 VSRCS_DIR := $(NEMU2NPC_HOME)/vsrc
