@@ -49,6 +49,6 @@ rtl: $(RTL_DIR)/$(VTOP).sv
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 
 wave: $(WAVE_FILE)
-	$(GTKWAVE) $(WAVE_FILE)
+	$(GTKWAVE) $(WAVE_FILE) &
 
 .PHONY: verilate
