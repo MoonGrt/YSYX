@@ -4,7 +4,7 @@
 
 #include <memory/paddr.h>
 
-#define DEBUG
+// #define DEBUG
 
 VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -142,7 +142,7 @@ static void reset(){
   top->reset = 1;
   tick();
   top->reset = 0;
-  printf("[NPC] Resetting ...\n");
+  // printf("[NPC] Resetting ...\n");
 }
 
 int exit(void) {
