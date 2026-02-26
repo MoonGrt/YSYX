@@ -1,4 +1,3 @@
--include $(MEMU_HOME)/../Makefile
 
 GTKWAVE ?= gtkwave
 VERILATOR ?= verilator
@@ -51,7 +50,7 @@ test: $(VLIB) $(TEST)
 	$(BUILD_DIR)/test $(ARGS)
 
 verilog:
-	$(call git_commit, "generate verilog")
+	# $(call git_commit, "generate verilog")
 	mkdir -p $(RTL_DIR)
 	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
