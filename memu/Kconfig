@@ -190,7 +190,7 @@ config MTRACE
 config MTRACE_LO
   depends on MTRACE
   hex "MTRACE lower bound address"
-  default 0x00000000
+  default 0x80000000
   help
     Only trace memory accesses whose physical address is
     greater than or equal to this value.
@@ -198,7 +198,7 @@ config MTRACE_LO
 config MTRACE_HI
   depends on MTRACE
   hex "MTRACE upper bound address"
-  default 0xffffffff
+  default 0x87ffffff
   help
     Only trace memory accesses whose physical address is
     less than this value.
