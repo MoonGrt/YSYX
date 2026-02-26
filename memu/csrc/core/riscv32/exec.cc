@@ -14,8 +14,8 @@ Decode RTL_Decode;
 VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;
 
-typedef uint32_t word_t;
-typedef uint32_t paddr_t;
+// typedef uint32_t word_t;
+// typedef uint32_t paddr_t;
 
 extern "C" {
   #define EBREAK_CODE    0
