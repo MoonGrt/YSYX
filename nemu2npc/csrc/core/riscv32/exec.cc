@@ -111,6 +111,7 @@ extern "C" {
     static uint32_t last_addr = 0xffffffff;
     static word_t data;
     if (raddr == last_addr) {
+      last_addr = raddr;
       return data;
     }
     raddr = raddr & ~0x3u;
