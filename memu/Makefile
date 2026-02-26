@@ -14,7 +14,7 @@
 #**************************************************************************************/
 
 # Sanity check
-ifeq ($(wildcard $(MEMU_HOME)/csrc/npc-main.c),)
+ifeq ($(wildcard $(MEMU_HOME)/csrc/memu-main.c),)
   $(error MEMU_HOME=$(MEMU_HOME) is not a MEMU repo)
 endif
 
@@ -27,11 +27,10 @@ remove_quote = $(patsubst "%",%,$(1))
 # Extract variabls from menuconfig
 ifeq ($(CONFIG_NEMU),y)
   GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
-  NAME = $(GUEST_ISA)-nemu-$(ENGINE)
 else
   GUEST_ISA ?= $(call remove_quote,$(CONFIG_CORE))
-  NAME = $(GUEST_ISA)-npc-$(ENGINE)
 endif
+NAME = $(GUEST_ISA)-memu-$(ENGINE)
 ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))
 
 # Include all filelist.mk to merge file lists
