@@ -34,10 +34,6 @@ run-env: $(BINARY) $(DIFF_REF_SO)
 
 run: run-env
 	$(call git_commit, "run MEMU")
-	$(MEMU_EXEC) $(IMG)
-
-run-batch: run-env
-	$(call git_commit, "run MEMU batch mode")
 	$(MEMU_EXEC) -b $(IMG)
 
 gdb: run-env
