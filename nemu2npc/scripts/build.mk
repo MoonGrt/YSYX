@@ -28,11 +28,11 @@ LD := $(CXX)
 
 INCLUDES = $(addprefix -I, $(INC_PATH))
 ifeq ($(CONFIG_NEMU),y)
-CFLAGS  := -O3 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
+CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
 else
-CFLAGS  := -O3 -MMD -Werror $(INCLUDES) $(CFLAGS)
+CFLAGS  := -O2 -MMD -Werror $(INCLUDES) $(CFLAGS)
 endif
-LDFLAGS := -O3 $(LDFLAGS)
+LDFLAGS := -O2 $(LDFLAGS)
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 
