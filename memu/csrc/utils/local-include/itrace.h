@@ -17,5 +17,6 @@ void trace_dread(paddr_t addr, int len, IOMap *map);
 void trace_dwrite(paddr_t addr, int len, word_t data, IOMap *map);
 void display_pread(paddr_t addr, int len);
 void display_pwrite(paddr_t addr, int len, word_t data);
+void etrace_exec(uint32_t pc);
 
 #endif
