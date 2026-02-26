@@ -100,6 +100,7 @@ class RAM_DPI extends BlackBox {
 // ---------------------------
 class EBreak extends BlackBox {
   val io = IO(new Bundle {
+    val clk  = Input(Clock())
     val trap = Input(Bool())
     val code = Input(UInt(8.W))
   })
@@ -300,6 +301,7 @@ class ID extends Module {
     )
   )
   // 输出到 EBreak 模块
+  trap.io.clk  := clock
   trap.io.trap := ~reset.asBool && is_unimpl
   trap.io.code := exc_code
   // halt 信号
