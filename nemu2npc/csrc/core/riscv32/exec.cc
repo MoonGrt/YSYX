@@ -76,7 +76,7 @@ static void tick(){
 static void reset(){
   printf("[NPC] Resetting ...\n");
   top->reset = 1;
-  tick();
+  // tick();
   top->reset = 0;
   printf("[NPC] Resetting ...\n");
 }
