@@ -48,7 +48,7 @@ rtl: $(RTL_DIR)/$(VTOP).sv
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 
 TEST := csrc/minirv.cpp
-ARGS ?= --log=$(BUILD_DIR)/memu-log.txt
+TEST_ARGS ?= --log=$(BUILD_DIR)/memu-test-log.txt
 test: $(VLIB) $(TEST)
 	@mkdir -p $(dir $@)
 	$(CXX) -I$(VBUILD) -I/usr/local/share/verilator/include \
