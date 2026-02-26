@@ -26,7 +26,7 @@ Makefile.%: tests/%.c latest
 run: all
 	@cat $(RESULT)
 
-run-batch: all
+run-sdb: all
 	@cat $(RESULT)
 
 gdb: all

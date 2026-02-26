@@ -23,7 +23,7 @@ $(BINARY):: compile_git
 
 # Some convenient rules
 
-override ARGS ?= --log=$(BUILD_DIR)/npc-log.txt
+override ARGS ?= --log=$(BUILD_DIR)/memu-log.txt
 override ARGS += $(ARGS_DIFF)
 
 # Command to execute MEMU
@@ -33,12 +33,12 @@ MEMU_EXEC := $(BINARY) $(ARGS)
 run-env: $(BINARY) $(DIFF_REF_SO)
 
 run: run-env
-	$(call git_commit, "run MEMU")
-	$(MEMU_EXEC) $(IMG)
-
-run-batch: run-env
-	$(call git_commit, "run MEMU batch mode")
+	$(call git_commit, "run NEMU batch mode")
 	$(MEMU_EXEC) -b $(IMG)
+
+run-sdb: run-env
+	$(call git_commit, "run NEMU")
+	$(MEMU_EXEC) $(IMG)
 
 gdb: run-env
 	$(call git_commit, "gdb MEMU")

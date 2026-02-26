@@ -5,8 +5,8 @@ choice
   default NEMU
 config NEMU
   bool "NEMU: Emulator"
-config MEMU
-  bool "MEMU:Proxy Core"
+config NPC
+  bool "NPC: Proxy Core"
 endchoice
 
 if NEMU
@@ -24,7 +24,7 @@ config ISA_loongarch32r
 endchoice
 endif
 
-if MEMU
+if NPC
 choice
   prompt "Base Core"
   default CORE_riscv32
@@ -190,7 +190,7 @@ config MTRACE
 config MTRACE_LO
   depends on MTRACE
   hex "MTRACE lower bound address"
-  default 0x00000000
+  default 0x80000000
   help
     Only trace memory accesses whose physical address is
     greater than or equal to this value.
@@ -198,7 +198,7 @@ config MTRACE_LO
 config MTRACE_HI
   depends on MTRACE
   hex "MTRACE upper bound address"
-  default 0xffffffff
+  default 0x87ffffff
   help
     Only trace memory accesses whose physical address is
     less than this value.
@@ -234,7 +234,7 @@ choice
   depends on DIFFTEST
 config DIFFTEST_REF_QEMU
   bool "QEMU, communicate with socket"
-if ISA_riscv
+if ISA_riscv || CORE_riscv32
 config DIFFTEST_REF_SPIKE
   bool "Spike"
 endif
