@@ -165,7 +165,6 @@ static int decode_exec(Decode *s) {
 }
 
 int isa_exec_once(Decode *s) {
-  printf("exec_once\n");
   // rtl_step();
   s->isa.inst = inst_fetch(&s->snpc, 4);
   IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
