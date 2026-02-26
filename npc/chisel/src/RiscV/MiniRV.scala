@@ -335,6 +335,8 @@ class MiniRV extends Module {
   import Parameters._
   val io = IO(new Bundle {
     val pc   = Output(UInt(32.W))
+    val snpc = Output(UInt(32.W))
+    val dnpc = Output(UInt(32.W))
     val inst = Input(UInt(32.W))
 
     val mem_we    = Output(Bool())
@@ -350,6 +352,8 @@ class MiniRV extends Module {
 
   // IF
   io.pc := ifStage.io.pc
+  io.snpc := ifStage.io.pcn
+  io.dnpc := exStage.io.exout
   ifStage.io.jumpen := idStage.io.jumpen
   ifStage.io.jump   := exStage.io.exout
   ifStage.io.halt   := idStage.io.halt
@@ -400,6 +404,8 @@ class MiniRV extends Module {
 class MiniRVSOC extends Module {
   val io = IO(new Bundle {
     val pc   = Output(UInt(32.W))
+    val snpc = Output(UInt(32.W))
+    val dnpc = Output(UInt(32.W))
     val inst = Output(UInt(32.W))
   })
 
@@ -420,5 +426,7 @@ class MiniRVSOC extends Module {
 
   // 输出
   io.pc   := cpu.io.pc
+  io.snpc := cpu.io.snpc
+  io.dnpc := cpu.io.dnpc
   io.inst := cpu.io.inst
 }
