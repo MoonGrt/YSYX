@@ -16,9 +16,40 @@ VerilatedVcdC *tfp = new VerilatedVcdC;
 typedef uint32_t word_t;
 typedef uint32_t paddr_t;
 
+static char *img_file = NULL;
+
 #define MEM_BASE 0x80000000L
 #define MEM_SIZE 0x01000000L
 uint8_t *mem = NULL;
+void init_mem(){
+  mem = (uint8_t *)malloc(MEM_SIZE);
+  assert(mem);
+  memset(mem, 0, MEM_SIZE);
+};
+static const uint32_t img [] = {
+  0x00500513,  // 0x00 addi a0, zero, 5; a0 = 5
+  0x00300593,  // 0x04 addi a1, zero, 3; a1 = 3
+  0x00b50633,  // 0x08 add a2, a0, a1  ; a2 = a0 + a1
+  0x00028823,  // 0x0c sb  zero, 16(t0); 存储 0 到 t0+16
+  0x0102c503,  // 0x10 lbu a0, 16(t0)  ; 从 t0+16 读一个字节
+  0x00100073,  // 0x04 ebreak
+  0xdeadbeef,  // 0x08 deadbeef
+};
+
+static void load_img(void) {
+  long img_size = 0;
+  if (img_file == NULL) {
+    // 使用默认内置 image
+    img_size = sizeof(img);
+    memcpy(mem, img, img_size);
+  } else {
+    // 使用用户提供的 image 文件
+    FILE *fp = fopen(img_file, "rb");
+    assert(fp);
+    img_size = fread(mem, 1, MEM_SIZE, fp);
+    fclose(fp);
+  }
+}
 
 static inline bool in_mem(paddr_t addr){
   return addr - MEM_BASE <= MEM_SIZE && addr >= MEM_BASE;
@@ -132,6 +163,10 @@ extern "C" {
     tfp->open("build/wave.vcd");
     // 初始化寄存器
     bool is_ebreak = false;
+    /* Initialize memory. */
+    init_mem();
+    /* Load the image to memory.*/
+    load_img();
     // 复位
     reset();
   }
