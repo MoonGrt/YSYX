@@ -66,3 +66,8 @@ else
 # Include rules to build MEMU
 include $(MEMU_HOME)/scripts/native.mk
 endif
+
+verilog:
+	$(call git_commit, "generate verilog")
+	mkdir -p $(RTL_DIR)
+	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)

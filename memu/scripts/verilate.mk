@@ -5,7 +5,7 @@ VERILATOR_CFLAGS += --trace -cc -MMD -cc -O3 --x-assign fast --x-initial fast \
                     --timescale "1ns/1ns" --no-timing \
                     -CFLAGS -ggdb -LDFLAGS -ggdb -j 8
 
-BUILD_DIR := build
+WORK_DIR  = $(shell pwd)
 VSRCS_DIR := $(MEMU_HOME)/vsrc
 RTL_DIR   := $(MEMU_HOME)/rtl
 VBUILD    := $(BUILD_DIR)/verilated
@@ -48,10 +48,6 @@ test: $(VLIB) $(TEST)
 		$(TEST) $(VLIB) -o $(BUILD_DIR)/test
 	$(BUILD_DIR)/test $(ARGS)
 
-verilog:
-	$(call git_commit, "generate verilog")
-	mkdir -p $(RTL_DIR)
-	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
 wave: $(WAVE_FILE)
 	$(GTKWAVE) $(WAVE_FILE) > /dev/null 2>&1 &
