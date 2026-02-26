@@ -4,6 +4,11 @@
 
 #include <cpu/decode.h>
 #include <memory/paddr.h>
+#include <common.h>
+
+extern "C"{
+void set_nemu_state(int state, vaddr_t pc, int halt_ret);
+}
 
 Decode RTL_Decode;
 
@@ -109,6 +114,8 @@ extern "C" {
     printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
     // 停止仿真
     Verilated::gotFinish(true);
+    // 停止NEMU
+    set_nemu_state(NPC_END, top->io_pc, 0);
   }
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;
