@@ -123,7 +123,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000001 ????? ????? 100 ????? 01100 11", div, R,
       R(rd) = (src2 == 0) ? -1 :
               ((sword_t)src1 == INT32_MIN && (sword_t)src2 == -1) ? INT32_MIN :
-              (sword_t)src1 / (sword_t)src2);
+              (sword_t)src1 * (sword_t)src2);
   INSTPAT("0000001 ????? ????? 101 ????? 01100 11", divu, R,
       R(rd) = (src2 == 0) ? 0xFFFFFFFF : src1 / src2);
   INSTPAT("0000001 ????? ????? 110 ????? 01100 11", rem, R,
