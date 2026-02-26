@@ -14,6 +14,11 @@
 ***************************************************************************************/
 
 #include <common.h>
+#if defined(CONFIG_NEMU)
+
+#elif defined(CONFIG_NPC)
+  #include "../../core/riscv32/local-include/exec.h"
+#endif
 
 void init_monitor(int, char *[]);
 void am_init_monitor();
@@ -26,6 +31,12 @@ int main(int argc, char *argv[]) {
   am_init_monitor();
 #else
   init_monitor(argc, argv);
+#endif
+  /* Initialize the RISC-V execution engine. */
+#if defined(CONFIG_NEMU)
+
+#elif defined(CONFIG_NPC)
+  rtl_init(argc, argv);
 #endif
   /* Start engine. */
   engine_start();

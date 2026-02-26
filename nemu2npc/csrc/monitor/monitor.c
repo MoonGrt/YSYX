@@ -16,11 +16,6 @@
 #include <isa.h>
 #include <memory/paddr.h>
 #include "../../utils/local-include/itrace.h"
-#if defined(CONFIG_NEMU)
-
-#elif defined(CONFIG_NPC)
-  #include "../../core/riscv32/local-include/exec.h"
-#endif
 
 void init_rand();
 void init_log(const char *log_file);
@@ -125,12 +120,6 @@ void init_monitor(int argc, char *argv[]) {
   parse_elf(elf_file);
   /* Initialize disassembler. */
   IFDEF(CONFIG_ITRACE, init_disasm());
-  /* Initialize the RISC-V execution engine. */
-#if defined(CONFIG_NEMU)
-
-#elif defined(CONFIG_NPC)
-  rtl_init(argc, argv);
-#endif
   /* Display welcome message. */
   welcome();
 }
