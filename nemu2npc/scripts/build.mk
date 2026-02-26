@@ -65,11 +65,10 @@ $(BINARY):: $(OBJS) $(ARCHIVES)
 else
 $(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES)
 	@echo + LD $@
-	# @$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB)
-	$(CXX) -I$(VBUILD) \ 
+	$(CXX) -o $@ -I$(VBUILD) \
 		-I/usr/local/share/verilator/include \
 		-I/usr/local/share/verilator/include/vltstd \
-		$(OBJS) $(VLIB) -o $(BUILD_DIR)/test
+		$(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB)
 endif
 
 clean:
