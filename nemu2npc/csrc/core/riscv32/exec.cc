@@ -2,48 +2,17 @@
 #include <verilated_vcd_c.h>
 #include "VMiniRVSOC.h"
 
+#include "local-include/reg.h"
+#include <cpu/cpu.h>
+#include <cpu/ifetch.h>
+#include <cpu/decode.h>
+#include <memory/paddr.h>
+#include "../../utils/local-include/itrace.h"
+
 // #define DEBUG
 
 VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;
-
-typedef uint32_t word_t;
-typedef uint32_t paddr_t;
-
-#define MEM_BASE 0x80000000L
-#define MEM_SIZE 0x01000000L
-uint8_t *mem = NULL;
-
-static inline bool in_mem(paddr_t addr){
-  return addr - MEM_BASE <= MEM_SIZE && addr >= MEM_BASE;
-}
-uint8_t* guest_to_host(paddr_t paddr){
-  if (in_mem(paddr)) return mem + paddr - MEM_BASE;
-  else return NULL;
-}
-word_t paddr_read(paddr_t addr, int len){
-  uint8_t *host = guest_to_host(addr);
-  if (!host) return 0;
-  word_t result = 0;
-  switch (len) {
-    case 1: result = *host; break;
-    case 2: result = *(uint16_t *)host; break;
-    case 4: result = *(uint32_t *)host; break;
-    default: return 0;
-  }
-#ifdef DEBUG
-  printf("paddr_read:  addr=0x%08x,  len=%d,   data=0x%08x\n", addr, len, result);
-#endif
-  return result;
-}
-void paddr_write(paddr_t addr, int mask, word_t data){
-#ifdef DEBUG
-  printf("paddr_write: addr=0x%08x, mask=0x%x, data=0x%08x\n", addr, mask, data);
-#endif
-  if (addr < MEM_BASE || addr >= MEM_BASE + MEM_SIZE) return;
-  for(int i = 0; i < 4; i++)
-    if(mask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
-}
 
 extern "C" {
   #define EBREAK_CODE    0
@@ -117,6 +86,9 @@ extern "C" {
     Verilated::traceEverOn(true);  // 必须先打开 trace
     top->trace(tfp, 99);  // 99 是 trace depth
     tfp->open("build/wave.vcd");
+  }
+  void rtl_reset() {
+    reset();
   }
   void rtl_step() {
     tick();
