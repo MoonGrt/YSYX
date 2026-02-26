@@ -6,6 +6,7 @@
 #include <cpu/decode.h>
 #include <memory/paddr.h>
 #include <memory/host.h>
+#include "../../utils/local-include/itrace.h"
 
 // #define DEBUG
 
@@ -36,21 +37,18 @@ extern "C" {
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;
     if (in_pmem(raddr)) {
-#ifdef DEBUG
-      printf("paddr_read:  addr=0x%08x,   data=0x%08x\n", raddr, host_read(guest_to_host(raddr), 4));
-#endif
+      IFDEF(CONFIG_MTRACE, display_pread(raddr, 4));
       return host_read(guest_to_host(raddr), 4);
     } else return 0;
   }
   void pmem_write(int waddr, char wmask, int wdata){
     waddr = waddr & ~0x3u;
-#ifdef DEBUG
-    printf("paddr_write: addr=0x%08x, mask=0x%x, data=0x%08x\n", waddr, wmask, wdata);
-#endif
     if (in_pmem(waddr))
       for(int i = 0; i < 4; i++)
-        if(wmask & (1 << i)) 
+        if(wmask & (1 << i))  {
+          IFDEF(CONFIG_MTRACE, display_pwrite(waddr + i, 4, (waddr >> (i * 8)) & 0xff));
           host_write(guest_to_host(waddr + i), 4, (waddr >> (i * 8)) & 0xff);
+        }
   }
 }
 
