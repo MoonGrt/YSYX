@@ -147,7 +147,7 @@ extern "C" {
   }
   void pmem_write(int waddr, char wmask, int wdata){
     waddr = waddr & ~0x3u;
-    if (in_pmem(waddr)) {}
+    if (in_pmem(waddr))
       for(int i = 0; i < 4; i++)
         if(wmask & (1 << i)) host_write(guest_to_host(waddr + i), 4, (waddr >> (i * 8)) & 0xff);
   }
