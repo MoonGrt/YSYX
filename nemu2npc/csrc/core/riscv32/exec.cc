@@ -87,29 +87,35 @@ extern "C" {
   #define ZERO_INST_CODE 1
   #define OTHER_E_CODE   2
   #define UNIMPL_CODE    3
-  bool is_ebreak;
+  // bool is_ebreak;
+  // void ebreak(uint8_t code) {
+  //   // 异常信息映射：颜色 + 消息
+  //   is_ebreak = (code == EBREAK_CODE);
+  //   struct {
+  //     const char* color;
+  //     const char* msg;
+  //   } exc_info[] = {
+  //     [EBREAK_CODE]  = {"\33[1;32m", "EBREAK: HIT GOOD TRAP"},
+  //     [ZERO_INST_CODE]= {"\33[1;34m", "ALL ZERO INSTRUCTION"},
+  //     [OTHER_E_CODE] = {"\33[1;33m", "E-INSTRUCTION EXCEPTION"},
+  //     [UNIMPL_CODE]  = {"\33[1;31m", "UNIMPLEMENTED INSTRUCTION"},
+  //   };
+  //   // 默认异常（安全）
+  //   const char* color = "\33[1;31m";
+  //   const char* msg   = "UNKNOWN EXCEPTION";
+  //   if (code <= ZERO_INST_CODE) {
+  //     color = exc_info[code].color;
+  //     msg   = exc_info[code].msg;
+  //   }
+  //   // 统一打印
+  //   printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
+  //   printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
+  //   // 停止仿真
+  //   Verilated::gotFinish(true);
+  //   // 停止NEMU
+  //   set_nemu_state(NPC_END, top->io_pc, 0);
+  // }
   void ebreak(uint8_t code) {
-    // 异常信息映射：颜色 + 消息
-    is_ebreak = (code == EBREAK_CODE);
-    struct {
-      const char* color;
-      const char* msg;
-    } exc_info[] = {
-      [EBREAK_CODE]  = {"\33[1;32m", "EBREAK: HIT GOOD TRAP"},
-      [ZERO_INST_CODE]= {"\33[1;34m", "ALL ZERO INSTRUCTION"},
-      [OTHER_E_CODE] = {"\33[1;33m", "E-INSTRUCTION EXCEPTION"},
-      [UNIMPL_CODE]  = {"\33[1;31m", "UNIMPLEMENTED INSTRUCTION"},
-    };
-    // 默认异常（安全）
-    const char* color = "\33[1;31m";
-    const char* msg   = "UNKNOWN EXCEPTION";
-    if (code <= ZERO_INST_CODE) {
-      color = exc_info[code].color;
-      msg   = exc_info[code].msg;
-    }
-    // 统一打印
-    printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
-    printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
     // 停止仿真
     Verilated::gotFinish(true);
     // 停止NEMU
@@ -158,15 +164,10 @@ static void reset(){
   // printf("[NPC] Resetting ...\n");
 }
 
-int exit(void) {
+void exit(void) {
   tfp->close();
   delete tfp;
   delete top;
-  if (is_ebreak) {
-    return 0;
-  } else {
-    return 1;
-  }
 }
 
 // #define PRINTARG
@@ -192,8 +193,6 @@ extern "C" {
     // /* Load the image to memory.*/
     // load_img();
 
-    // 初始化寄存器
-    bool is_ebreak = false;
     // 复位
     reset();
   }
