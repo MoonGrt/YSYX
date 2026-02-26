@@ -36,7 +36,7 @@ extern "C" {
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;
     if (in_pmem(raddr)) return host_read(guest_to_host(raddr), 4);
-    return 0;
+    else return 0;
   }
   void pmem_write(int waddr, char wmask, int wdata){
     waddr = waddr & ~0x3u;
