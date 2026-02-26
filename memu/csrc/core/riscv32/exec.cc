@@ -20,10 +20,9 @@ extern "C" {
   #define UNIMPL_CODE    3
   void ebreak(uint8_t code) {
     if (code == EBREAK_CODE)
-      // set_nemu_state(MEMU_END, top->io_pc, code);
       MEMUTRAP(top->io_pc, code);
     else
-      invalid_inst(top->io_pc);
+      INV(top->io_pc);
     Verilated::gotFinish(true);  // 停止仿真
   }
   int pmem_read(int raddr){
