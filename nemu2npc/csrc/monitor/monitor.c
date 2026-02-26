@@ -103,11 +103,6 @@ static int parse_args(int argc, char *argv[]) {
 
 /* Perform some global initialization. */
 void init_monitor(int argc, char *argv[]) {
-#if defined(CONFIG_NEMU)
-
-#elif defined(CONFIG_NPC)
-  rtl_init(argc, argv);
-#endif
   /* Parse arguments. */
   parse_args(argc, argv);
   /* Set random seed. */
@@ -130,6 +125,12 @@ void init_monitor(int argc, char *argv[]) {
   parse_elf(elf_file);
   /* Initialize disassembler. */
   IFDEF(CONFIG_ITRACE, init_disasm());
+  /* Initialize the RISC-V execution engine. */
+#if defined(CONFIG_NEMU)
+
+#elif defined(CONFIG_NPC)
+  rtl_init(argc, argv);
+#endif
   /* Display welcome message. */
   welcome();
 }
