@@ -113,13 +113,13 @@ extern "C" {
   //   // 停止仿真
   //   Verilated::gotFinish(true);
   //   // 停止NEMU
-  //   set_nemu_state(NPC_END, top->io_pc, 0);
+  //   set_nemu_state(MEMU_END, top->io_pc, 0);
   // }
   void ebreak(uint8_t code) {
     // 停止仿真
     Verilated::gotFinish(true);
     // 停止NEMU
-    set_nemu_state(NPC_END, top->io_pc, 0);
+    set_nemu_state(MEMU_END, top->io_pc, 0);
   }
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;

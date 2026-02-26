@@ -28,21 +28,21 @@ override ARGS += $(ARGS_DIFF)
 
 # Command to execute MEMU
 IMG ?=
-NPC_EXEC := $(BINARY) $(ARGS)
+MEMU_EXEC := $(BINARY) $(ARGS)
 
 run-env: $(BINARY) $(DIFF_REF_SO)
 
 run: run-env
 	$(call git_commit, "run MEMU")
-	$(NPC_EXEC) $(IMG)
+	$(MEMU_EXEC) $(IMG)
 
 run-batch: run-env
 	$(call git_commit, "run MEMU batch mode")
-	$(NPC_EXEC) -b $(IMG)
+	$(MEMU_EXEC) -b $(IMG)
 
 gdb: run-env
 	$(call git_commit, "gdb MEMU")
-	gdb -s $(BINARY) --args $(NPC_EXEC) -b
+	gdb -s $(BINARY) --args $(MEMU_EXEC) -b
 
 clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile"))
 $(clean-tools):

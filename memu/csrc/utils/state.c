@@ -15,10 +15,10 @@
 
 #include <utils.h>
 
-NPCState nemu_state = { .state = NPC_STOP };
+MEMUState nemu_state = { .state = MEMU_STOP };
 
 int is_exit_status_bad() {
-  int good = (nemu_state.state == NPC_END && nemu_state.halt_ret == 0) ||
-    (nemu_state.state == NPC_QUIT);
+  int good = (nemu_state.state == MEMU_END && nemu_state.halt_ret == 0) ||
+    (nemu_state.state == MEMU_QUIT);
   return !good;
 }
