@@ -5,8 +5,7 @@ VERILATOR_CFLAGS += --trace -cc -MMD -cc -O3 --x-assign fast --x-initial fast \
                     --timescale "1ns/1ns" --no-timing \
                     -CFLAGS -ggdb -LDFLAGS -ggdb -j 8
 
-WORK_DIR  = $(shell pwd)
-BUILD_DIR = $(WORK_DIR)/build
+BUILD_DIR := build
 VSRCS_DIR := $(NEMU2NPC_HOME)/vsrc
 RTL_DIR   := $(NEMU2NPC_HOME)/rtl
 VBUILD    := $(BUILD_DIR)/verilated
@@ -56,6 +55,6 @@ test: $(VLIB) $(TEST)
 		$(TEST) $(VBUILD)/*.o  -o $(BUILD_DIR)/sim
 
 wave: $(WAVE_FILE)
-	$(GTKWAVE) $(WAVE_FILE) &
+	$(GTKWAVE) $(WAVE_FILE) > /dev/null 2>&1 &
 
 .PHONY: verilate
