@@ -124,6 +124,21 @@ extern "C" {
     // 停止仿真
     Verilated::gotFinish(true);
   }
+//   int pmem_read(int raddr){
+//     raddr = raddr & ~0x3u;
+//     word_t data= paddr_read(raddr, 4);
+// #ifdef DEBUG
+//     printf("paddr_read:  addr=0x%08x,   data=0x%08x\n", raddr, data);
+// #endif
+//     return data;
+//   }
+//   void pmem_write(int waddr, char wmask, int wdata){
+// #ifdef DEBUG
+//     printf("paddr_write: addr=0x%08x, mask=0x%x, data=0x%08x\n", waddr, wmask, wdata);
+// #endif
+//     waddr = waddr & ~0x3u;
+//     paddr_write(waddr, wmask, wdata);
+//   }
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;
     word_t data= paddr_read(raddr, 4);
