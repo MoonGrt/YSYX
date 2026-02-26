@@ -30,9 +30,9 @@ INCLUDES = $(addprefix -I, $(INC_PATH))
 ifeq ($(CONFIG_NEMU),y)
 CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
 else
-CFLAGS  := -O -MMD -Werror $(INCLUDES) $(CFLAGS)
+CFLAGS  := -O3 -MMD -Werror $(INCLUDES) $(CFLAGS)
 endif
-LDFLAGS := -O $(LDFLAGS)
+LDFLAGS := -O3 $(LDFLAGS)
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 
