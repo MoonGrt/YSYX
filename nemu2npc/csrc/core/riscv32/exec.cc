@@ -7,9 +7,8 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 #include <memory/paddr.h>
-#include "../../utils/local-include/itrace.h"
 
-// #define DEBUG
+#define DEBUG
 
 VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -46,11 +45,20 @@ extern "C" {
     Verilated::gotFinish(true);
   }
   int pmem_read(int raddr){
+#ifdef DEBUG
+    printf("paddr_read:  addr=0x%08x", raddr);
+#endif
     raddr = raddr & ~0x3u;
     word_t data= paddr_read(raddr, 4);
+#ifdef DEBUG
+    printf(",   data=0x%08x\n", data);
+#endif
     return data;
   }
   void pmem_write(int waddr, char wmask, int wdata){
+#ifdef DEBUG
+    printf("paddr_write: addr=0x%08x, mask=0x%x, data=0x%08x\n", waddr, wmask, wdata);
+#endif
     waddr = waddr & ~0x3u;
     paddr_write(waddr, wmask, wdata);
   }
