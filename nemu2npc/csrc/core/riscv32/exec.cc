@@ -140,6 +140,7 @@ static void tick(){
   top->clock = 1;
   top->eval();
   tfp->dump(sim_time++);
+  tfp->flush();
 }
 
 static void reset(){
@@ -148,6 +149,17 @@ static void reset(){
   tick();
   top->reset = 0;
   printf("[NPC] Resetting ...\n");
+}
+
+int exit(void) {
+  tfp->close();
+  delete tfp;
+  delete top;
+  if (is_ebreak) {
+    return 0;
+  } else {
+    return 1;
+  }
 }
 
 extern "C" {
@@ -172,5 +184,8 @@ extern "C" {
   }
   void rtl_step() {
     tick();
+  }
+  void rtl_exit() {
+    exit();
   }
 }
