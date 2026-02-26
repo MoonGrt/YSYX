@@ -146,11 +146,10 @@ extern "C" {
     return 0;
   }
   void pmem_write(int waddr, char wmask, int wdata){
-// #ifdef DEBUG
-//     printf("paddr_write: addr=0x%08x, mask=0x%x, data=0x%08x\n", waddr, wmask, wdata);
-// #endif
-//     waddr = waddr & ~0x3u;
-//     paddr_write(waddr, wmask, wdata);
+    waddr = waddr & ~0x3u;
+    if (in_pmem(waddr)) {}
+      for(int i = 0; i < 4; i++)
+        if(wmask & (1 << i)) host_write(guest_to_host(waddr + i), 4, (waddr >> (i * 8)) & 0xff);
   }
 }
 
