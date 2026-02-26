@@ -21,7 +21,7 @@ WAVE_FILE := $(BUILD_DIR)/wave.vcd
 CXXSRC += csrc/core/riscv32/exec.cc
 
 ifeq ($(CONFIG_NPC),y)
-INC_PATH += build/verilated
+INC_PATH += $(VBUILD)
 INC_PATH += $(VERILATOR_ROOT)/include
 INC_PATH += $(VERILATOR_ROOT)/include/vltstd
 endif
@@ -47,6 +47,13 @@ rtl: $(RTL_DIR)/$(VTOP).sv
 	  -O3 --Mdir $(VBUILD)
 	@echo "+ AR $@"
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
+
+TEST := csrc/minirv.cpp
+test: $(VLIB) $(TEST)
+	@mkdir -p $(dir $@)
+	$(CXX) -I$(VBUILD) -I/usr/local/share/verilator/include \
+		-I/usr/local/share/verilator/include/vltstd \
+		$(TEST) $(VBUILD)/*.o  -o $(BUILD_DIR)/sim
 
 wave: $(WAVE_FILE)
 	$(GTKWAVE) $(WAVE_FILE) &
