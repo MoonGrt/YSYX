@@ -143,6 +143,9 @@ extern "C" {
 //   }
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;
+#ifdef DEBUG
+    printf("paddr_read:  addr=0x%08x,   data=0x%08x\n", raddr, 1);
+#endif
     word_t data = host_read(guest_to_host(raddr), 4);
 #ifdef DEBUG
     printf("paddr_read:  addr=0x%08x,   data=0x%08x\n", raddr, data);
