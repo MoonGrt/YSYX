@@ -108,8 +108,15 @@ static void reset(){
 
 extern "C" {
   void rtl_init(int argc, char *argv[]) {
+    // 初始化仿真对象
     Verilated::commandArgs(argc, argv);
     Verilated::mkdir("logs");
+    // 创建 build 目录（如果不存在）
+    Verilated::mkdir("build");
+    // 创建 VCD 波形对象
+    Verilated::traceEverOn(true);  // 必须先打开 trace
+    top->trace(tfp, 99);  // 99 是 trace depth
+    tfp->open("build/wave.vcd");
   }
   void rtl_step() {
     tick();
