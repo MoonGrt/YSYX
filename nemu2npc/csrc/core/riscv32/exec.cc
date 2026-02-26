@@ -4,7 +4,7 @@
 
 #include <memory/paddr.h>
 
-// #define DEBUG
+#define DEBUG
 
 VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;
