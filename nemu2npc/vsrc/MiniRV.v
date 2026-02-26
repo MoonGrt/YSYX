@@ -1,8 +1,9 @@
 module ROM_DPI(
   input  wire [31:0] addr,
-  output reg  [31:0] data
+  output wire [31:0] data
 );
-  always @(*) data = pmem_read(addr);
+  // always @(*) data = pmem_read(addr);
+  assign data = pmem_read(addr);
 endmodule
 
 module RAM_DPI(

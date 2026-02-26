@@ -17,7 +17,7 @@
 #if defined(CONFIG_NEMU)
 
 #elif defined(CONFIG_NPC)
-  #include "../../core/riscv32/local-include/exec.h"
+#include "../../core/riscv32/local-include/exec.h"
 #endif
 
 void init_monitor(int, char *[]);
