@@ -234,7 +234,7 @@ choice
   depends on DIFFTEST
 config DIFFTEST_REF_QEMU
   bool "QEMU, communicate with socket"
-if ISA_riscv
+if ISA_riscv || CORE_riscv32
 config DIFFTEST_REF_SPIKE
   bool "Spike"
 endif
