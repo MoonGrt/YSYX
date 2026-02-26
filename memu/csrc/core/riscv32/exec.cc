@@ -3,13 +3,12 @@
 #include "VMiniRVSOC.h"
 
 #include <cpu/decode.h>
-// #include <memory/paddr.h>
+#include <memory/paddr.h>
 #include <memory/host.h>
 #include <common.h>
 
 #define DEBUG
 
-extern "C" uint8_t* guest_to_host(paddr_t paddr);
 extern "C" void set_nemu_state(int state, vaddr_t pc, int halt_ret);
 extern "C" void invalid_inst(vaddr_t thispc);
 
@@ -143,15 +142,8 @@ extern "C" {
 //   }
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;
-#ifdef DEBUG
-printf("paddr_read: addr=0x%08x, hostaddr=%p\n",
-       raddr, (void*)guest_to_host(raddr));
-#endif
-    word_t data = host_read(guest_to_host(raddr), 4);
-#ifdef DEBUG
-    printf("paddr_read:  addr=0x%08x,   data=0x%08x\n", raddr, data);
-#endif
-    return data;
+    if (in_pmem(raddr)) return host_read(guest_to_host(raddr), 4);
+    return 0;
   }
   void pmem_write(int waddr, char wmask, int wdata){
 // #ifdef DEBUG
