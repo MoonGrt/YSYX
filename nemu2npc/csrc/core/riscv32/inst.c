@@ -18,6 +18,11 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 #include "../../utils/local-include/itrace.h"
+#if defined(CONFIG_NEMU)
+
+#elif defined(CONFIG_NPC)
+  #include "../../core/riscv32/local-include/exec.h"
+#endif
 
 static vaddr_t *csr_register(word_t imm) {
   switch (imm) {
@@ -158,7 +163,7 @@ static int decode_exec(Decode *s) {
   R(0) = 0; // reset $zero to 0
   return 0;
 }
-#include "../../core/riscv32/local-include/exec.h"
+
 int isa_exec_once(Decode *s) {
   printf("exec_once\n");
   rtl_step();
