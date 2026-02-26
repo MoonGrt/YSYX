@@ -31,7 +31,7 @@ $(VBUILD)/V$(VTOP).mk: $(RTL_DIR)/$(VTOP).sv
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
 	  --top-module $(VTOP) \
-	  -O3 --Mdir $(VBUILD)
+	  --Mdir $(VBUILD)
 	@echo "+ AR $@"
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 
