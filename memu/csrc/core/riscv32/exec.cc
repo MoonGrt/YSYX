@@ -112,13 +112,13 @@ extern "C" {
   //   printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
   //   // 停止仿真
   //   Verilated::gotFinish(true);
-  //   // 停止NEMU
+  //   // 停止MEMU
   //   set_nemu_state(MEMU_END, top->io_pc, 0);
   // }
   void ebreak(uint8_t code) {
     // 停止仿真
     Verilated::gotFinish(true);
-    // 停止NEMU
+    // 停止MEMU
     set_nemu_state(MEMU_END, top->io_pc, 0);
   }
   int pmem_read(int raddr){
