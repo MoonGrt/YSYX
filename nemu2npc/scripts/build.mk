@@ -46,7 +46,7 @@ $(OBJ_DIR)/%.o: %.c
 $(OBJ_DIR)/%.o: %.cc
 	@echo + CXX $<
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $<
+	@$(CXX) $(CFLAGS)  -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
 
 # Depencies
@@ -65,10 +65,11 @@ $(BINARY):: $(OBJS) $(ARCHIVES)
 else
 $(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES)
 	@echo + LD $@
-	$(CXX) -o $@ -I$(VBUILD) \
-		-I/usr/local/share/verilator/include \
-		-I/usr/local/share/verilator/include/vltstd \
-		$(OBJS) $(LIBS) $(VLIB)
+	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB)
+	# $(CXX) -o $@ -I$(VBUILD) \
+	# 	-I/usr/local/share/verilator/include \
+	# 	-I/usr/local/share/verilator/include/vltstd \
+	# 	$(OBJS) $(LIBS) $(VLIB)
 endif
 
 clean:
