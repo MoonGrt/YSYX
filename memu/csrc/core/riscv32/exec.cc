@@ -20,7 +20,8 @@ extern "C" {
   #define UNIMPL_CODE    3
   void ebreak(uint8_t code) {
     if (code == EBREAK_CODE)
-      set_nemu_state(MEMU_END, top->io_pc, code);
+      // set_nemu_state(MEMU_END, top->io_pc, code);
+      MEMUTRAP(top->io_pc, code);
     else
       invalid_inst(top->io_pc);
     Verilated::gotFinish(true);  // 停止仿真
@@ -74,14 +75,8 @@ void exit(void) {
   delete top;
 }
 
-// #define PRINTARG
 extern "C" {
   void rtl_init(int argc, char *argv[]) {
-#ifdef PRINTARG
-    printf("[MEMU] ARGC = %d\n", argc);
-    for (int i = 0; i < argc; i++)
-      printf("[MEMU] ARGV[%d] = '%s'\n", i, argv[i]);
-#endif
     // 初始化仿真对象
     Verilated::commandArgs(argc, argv);
     Verilated::mkdir("logs");
