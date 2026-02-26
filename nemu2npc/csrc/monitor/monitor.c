@@ -16,7 +16,11 @@
 #include <isa.h>
 #include <memory/paddr.h>
 #include "../../utils/local-include/itrace.h"
-#include "../../core/riscv32/local-include/exec.h"
+#if defined(CONFIG_NEMU)
+
+#elif defined(CONFIG_NPC)
+  #include "../../core/riscv32/local-include/exec.h"
+#endif
 
 void init_rand();
 void init_log(const char *log_file);
