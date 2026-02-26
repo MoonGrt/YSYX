@@ -110,7 +110,7 @@ extern "C" {
   int pmem_read(int raddr){
     static uint32_t last_addr = 0xffffffff;
     static word_t data;
-    if (raddr != last_addr) {
+    if (raddr == last_addr) {
       return data;
     }
     raddr = raddr & ~0x3u;
