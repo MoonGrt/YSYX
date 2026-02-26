@@ -1,3 +1,5 @@
+-include $(MEMU_HOME)/../Makefile
+
 GTKWAVE ?= gtkwave
 VERILATOR ?= verilator
 VERILATOR_ROOT = /usr/local/share/verilator
