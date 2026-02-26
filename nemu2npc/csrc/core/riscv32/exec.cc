@@ -45,13 +45,10 @@ extern "C" {
     Verilated::gotFinish(true);
   }
   int pmem_read(int raddr){
-#ifdef DEBUG
-    printf("paddr_read:  addr=0x%08x", raddr);
-#endif
     raddr = raddr & ~0x3u;
     word_t data= paddr_read(raddr, 4);
 #ifdef DEBUG
-    printf(",   data=0x%08x\n", data);
+    printf("paddr_read:  addr=0x%08x,   data=0x%08x\n", raddr, data);
 #endif
     return data;
   }
