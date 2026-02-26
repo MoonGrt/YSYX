@@ -32,7 +32,7 @@ CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
 else
 CFLAGS  := -O -MMD -Werror $(INCLUDES) $(CFLAGS)
 endif
-LDFLAGS := -O2 $(LDFLAGS)
+LDFLAGS := -O $(LDFLAGS)
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 
