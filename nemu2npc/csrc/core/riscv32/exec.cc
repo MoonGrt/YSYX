@@ -79,9 +79,16 @@ static void tick(){
 static void reset(){
   printf("[NPC] Resetting ...\n");
   top->reset = 1;
-  tick();
+  // ======== 上升沿 ========
+  top->clock = 0;
+  top->eval();
+  tfp->dump(sim_time++);
+  // ======== 下降沿 ========
+  top->clock = 1;
+  top->eval();
+  tfp->dump(sim_time++);
+  
   top->reset = 0;
-  printf("[NPC] Resetting ...\n");
 }
 
 extern "C" {
