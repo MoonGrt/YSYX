@@ -170,6 +170,10 @@ int isa_exec_once(Decode *s) {
   IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
   return decode_exec(s);
 #elif defined(CONFIG_NPC)
+  s->pc = RTL_Decode.pc;
+  s->isa.inst = RTL_Decode.isa.inst;
+  s->dnpc = RTL_Decode.dnpc;
+  s->snpc = RTL_Decode.snpc;
   rtl_step();
   return 0;
 #endif

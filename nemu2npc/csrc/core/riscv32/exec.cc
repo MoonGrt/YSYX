@@ -2,7 +2,10 @@
 #include <verilated_vcd_c.h>
 #include "VMiniRVSOC.h"
 
+#include <cpu/decode.h>
 #include <memory/paddr.h>
+
+Decode RTL_Decode;
 
 // #define DEBUG
 
@@ -134,7 +137,12 @@ static void tick(){
   top->clock = 1;
   top->eval();
   tfp->dump(sim_time++);
+  // ======== 刷新 ========
   tfp->flush();
+  RTL_Decode.pc = top->io_pc;
+  RTL_Decode.isa.inst = top->io_inst;
+  RTL_Decode.dnpc = top->io_pc;
+  RTL_Decode.snpc = top->io_pc + 4;
 }
 
 static void reset(){
