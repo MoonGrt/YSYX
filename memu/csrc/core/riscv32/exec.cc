@@ -172,9 +172,6 @@ void exit(void) {
 
 // #define PRINTARG
 extern "C" {
-    void rtl_reset() {
-    reset();
-  }
   void rtl_init(int argc, char *argv[]) {
 #ifdef PRINTARG
     printf("[MEMU] ARGC = %d\n", argc);
@@ -197,9 +194,11 @@ extern "C" {
     // load_img();
 
     // 复位
-    rtl_reset();
+    reset();
   }
-
+  void rtl_reset() {
+    reset();
+  }
   void rtl_step() {
     tick();
   }
