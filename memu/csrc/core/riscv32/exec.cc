@@ -19,8 +19,10 @@ extern "C" {
   #define OTHER_E_CODE   2
   #define UNIMPL_CODE    3
   void ebreak(uint8_t code) {
-    if (code == EBREAK_CODE)
+    if (code == EBREAK_CODE) {
       MEMUTRAP(top->io_pc, code);
+      // log_write()
+    }
     else
       INV(top->io_pc);
     Verilated::gotFinish(true);  // 停止仿真
@@ -44,12 +46,12 @@ extern "C" {
 
 static vluint64_t sim_time = 0;
 static void tick(){
-  // ======== 上升沿 ========
-  top->clock = 1;
-  top->eval();
-  tfp->dump(sim_time++);
   // ======== 下降沿 ========
   top->clock = 0;
+  top->eval();
+  tfp->dump(sim_time++);
+  // ======== 上升沿 ========
+  top->clock = 1;
   top->eval();
   tfp->dump(sim_time++);
   // ======== 刷新 ========
@@ -63,9 +65,7 @@ static void tick(){
 static void reset(){
   // printf("[MEMU] Resetting ...\n");
   top->reset = 1;
-  top->clock = 0;
-  top->eval();
-  tfp->dump(sim_time++);
+  tick();
   top->reset = 0;
   // printf("[MEMU] Resetting ...\n");
 }
