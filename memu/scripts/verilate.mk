@@ -54,7 +54,7 @@ test: $(VLIB) $(TEST)
 	$(CXX) -I$(VBUILD) -I/usr/local/share/verilator/include \
 		-I/usr/local/share/verilator/include/vltstd \
 		$(TEST) $(VLIB) -o $(BUILD_DIR)/test
-	$(BUILD_DIR)/test $(ARGS)
+	$(BUILD_DIR)/test $(TEST_ARGS)
 
 verilog:
 	 $(call git_commit, "generate verilog")
