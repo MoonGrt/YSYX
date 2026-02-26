@@ -51,7 +51,7 @@ test: $(VLIB) $(TEST)
 verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(RTL_DIR)
-	mill -i $(PRJ).runMain $(TOPNAME) --target-dir $(RTL_DIR)
+	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
 wave: $(WAVE_FILE)
 	$(GTKWAVE) $(WAVE_FILE) > /dev/null 2>&1 &
