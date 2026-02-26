@@ -118,9 +118,9 @@ extern "C" {
   // }
   void ebreak(uint8_t code) {
     if (code == EBREAK_CODE)
-      invalid_inst(top->io_pc);
-    else
       set_nemu_state(MEMU_END, top->io_pc, code);
+    else
+      invalid_inst(top->io_pc);
     // 停止仿真
     Verilated::gotFinish(true);
   }
