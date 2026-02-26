@@ -3,6 +3,7 @@
 #include "VMiniRVSOC.h"
 
 #include <common.h>
+#include <utils.h>
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
 #include <memory/paddr.h>
@@ -19,13 +20,9 @@ extern "C" {
   #define OTHER_E_CODE   2
   #define UNIMPL_CODE    3
   void ebreak(uint8_t code) {
-    if (code == EBREAK_CODE) {
-      MEMUTRAP(top->io_pc, code);
-      // log_write()
-    }
-    else
-      INV(top->io_pc);
-    Verilated::gotFinish(true);  // 停止仿真
+    if (code == EBREAK_CODE) MEMUTRAP(top->io_pc, code);
+    else INV(top->io_pc);
+    Verilated::gotFinish(true);
   }
   int pmem_read(int raddr){
     raddr = raddr & ~0x3u;
