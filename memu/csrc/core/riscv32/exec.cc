@@ -192,6 +192,9 @@ extern "C" {
     // init_mem();
     // /* Load the image to memory.*/
     // load_img();
+
+    // 复位
+    reset();
   }
   void rtl_reset() {
     reset();
