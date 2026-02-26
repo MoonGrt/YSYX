@@ -16,6 +16,7 @@ VSRCS     := $(shell find $(RTL_DIR) -name "*.sv")
 VSRCS     += $(shell find $(VSRCS_DIR) -name "*.v")
 RTL_OBJS  := $(VBUILD)/V$(VTOP)__ALL.a
 VLIB      := $(VBUILD)/libV$(VTOP).a
+WAVE_FILE := $(BUILD_DIR)/wave.vcd
 
 CXXSRC += csrc/core/riscv32/exec.cc
 
@@ -46,5 +47,8 @@ rtl: $(RTL_DIR)/$(VTOP).sv
 	  -O3 --Mdir $(VBUILD)
 	@echo "+ AR $@"
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
+
+wave: $(WAVE_FILE)
+	$(GTKWAVE) $(WAVE_FILE)
 
 .PHONY: verilate
