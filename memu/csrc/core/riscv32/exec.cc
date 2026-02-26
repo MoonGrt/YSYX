@@ -3,6 +3,7 @@
 #include "VMiniRVSOC.h"
 
 #include <common.h>
+#include <cpu/cpu.h>
 #include <cpu/decode.h>
 #include <memory/paddr.h>
 #include <memory/host.h>
@@ -10,8 +11,8 @@
 
 // #define DEBUG
 
-extern "C" void set_nemu_state(int state, vaddr_t pc, int halt_ret);
-extern "C" void invalid_inst(vaddr_t thispc);
+// extern "C" void set_nemu_state(int state, vaddr_t pc, int halt_ret);
+// extern "C" void invalid_inst(vaddr_t thispc);
 
 Decode RTL_Decode;
 
