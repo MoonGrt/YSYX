@@ -10,6 +10,7 @@ VSRCS_DIR := $(MEMU_HOME)/vsrc
 RTL_DIR   := $(MEMU_HOME)/rtl
 VBUILD    := $(BUILD_DIR)/verilated
 
+PRJ       := chisel
 VTOP      := MiniRVSOC
 VSRCS     := $(shell find $(RTL_DIR) -name "*.sv")
 VSRCS     += $(shell find $(VSRCS_DIR) -name "*.v")
@@ -38,15 +39,6 @@ $(VLIB): $(VBUILD)/V$(VTOP).mk
 	@$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 	@ar rcs $@ $(VBUILD)/*.o
 
-rtl: $(RTL_DIR)/$(VTOP).sv
-	@echo + VERILATE RTL
-	@mkdir -p $(VBUILD)
-	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
-	  --top-module $(VTOP) \
-	  -O3 --Mdir $(VBUILD)
-	@echo "+ AR $@"
-	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
-
 TEST := csrc/minirv.cpp
 ARGS ?= --log=$(BUILD_DIR)/npc-log.txt
 test: $(VLIB) $(TEST)
@@ -56,7 +48,12 @@ test: $(VLIB) $(TEST)
 		$(TEST) $(VLIB) -o $(BUILD_DIR)/test
 	$(BUILD_DIR)/test $(ARGS)
 
+verilog:
+	$(call git_commit, "generate verilog")
+	mkdir -p $(RTL_DIR)
+	mill -i $(PRJ).runMain $(TOPNAME) --target-dir $(RTL_DIR)
+
 wave: $(WAVE_FILE)
 	$(GTKWAVE) $(WAVE_FILE) > /dev/null 2>&1 &
 
-.PHONY: verilate
+.PHONY: test verilog wave
