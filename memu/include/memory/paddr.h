@@ -22,28 +22,24 @@
 #define PMEM_RIGHT ((paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1)
 #define RESET_VECTOR (PMEM_LEFT + CONFIG_PC_RESET_OFFSET)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* convert the guest physical address in the guest program to host virtual address in MEMU */
 uint8_t* guest_to_host(paddr_t paddr);
 /* convert the host virtual address in MEMU to guest physical address in the guest program */
 paddr_t host_to_guest(uint8_t *haddr);
 
+#ifdef __cplusplus
+}
+#endif
+
 static inline bool in_pmem(paddr_t addr) {
   return addr - CONFIG_MBASE < CONFIG_MSIZE;
 }
 
-#if defined(CONFIG_NPC)
-#ifdef __cplusplus
-extern "C" {
-#endif
-#endif
-
 word_t paddr_read(paddr_t addr, int len);
 void paddr_write(paddr_t addr, int len, word_t data);
-
-#if defined(CONFIG_NPC)
-#ifdef __cplusplus
-}
-#endif
-#endif
 
 #endif
