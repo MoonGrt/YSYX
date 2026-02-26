@@ -28,11 +28,11 @@ LD := $(CXX)
 
 INCLUDES = $(addprefix -I, $(INC_PATH))
 ifeq ($(CONFIG_NEMU),y)
-CFLAGS  := -O3 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
+CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
 else
-CFLAGS  := -O3 -MMD -Werror $(INCLUDES) $(CFLAGS)
+CFLAGS  := -O2 -MMD -Werror $(INCLUDES) $(CFLAGS)
 endif
-LDFLAGS := -O3 $(LDFLAGS)
+LDFLAGS := -O2 $(LDFLAGS)
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 
@@ -66,10 +66,6 @@ else
 $(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES)
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB)
-	# $(CXX) -o $@ -I$(VBUILD) \
-	# 	-I/usr/local/share/verilator/include \
-	# 	-I/usr/local/share/verilator/include/vltstd \
-	# 	$(OBJS) $(LIBS) $(VLIB)
 endif
 
 clean:
