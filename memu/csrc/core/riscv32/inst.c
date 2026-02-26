@@ -13,18 +13,12 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include "local-include/reg.h"
-#include <cpu/cpu.h>
-#include <cpu/ifetch.h>
 #include <cpu/decode.h>
-#include "../../utils/local-include/itrace.h"
 #if defined(CONFIG_NEMU)
 
 #elif defined(CONFIG_NPC)
   #include "../../core/riscv32/local-include/exec.h"
 #endif
-
-
 
 int isa_exec_once(Decode *s) {
   s->pc = RTL_Decode.pc;
