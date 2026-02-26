@@ -5,8 +5,8 @@ choice
   default NEMU
 config NEMU
   bool "NEMU: Emulator"
-config MEMU
-  bool "MEMU:Proxy Core"
+config NPC
+  bool "NPC: Proxy Core"
 endchoice
 
 if NEMU
@@ -24,7 +24,7 @@ config ISA_loongarch32r
 endchoice
 endif
 
-if MEMU
+if NPC
 choice
   prompt "Base Core"
   default CORE_riscv32
