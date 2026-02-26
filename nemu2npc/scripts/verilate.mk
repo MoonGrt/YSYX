@@ -52,7 +52,8 @@ test: $(VLIB) $(TEST)
 	@mkdir -p $(dir $@)
 	$(CXX) -I$(VBUILD) -I/usr/local/share/verilator/include \
 		-I/usr/local/share/verilator/include/vltstd \
-		$(TEST) $(VBUILD)/*.o  -o $(BUILD_DIR)/sim
+		$(TEST) $(VBUILD)/*.o  -o $(BUILD_DIR)/test
+	$(BUILD_DIR)/test
 
 wave: $(WAVE_FILE)
 	$(GTKWAVE) $(WAVE_FILE) > /dev/null 2>&1 &
