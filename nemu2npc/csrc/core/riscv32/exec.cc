@@ -6,9 +6,7 @@
 #include <memory/paddr.h>
 #include <common.h>
 
-extern "C"{
-void set_nemu_state(int state, vaddr_t pc, int halt_ret);
-}
+extern "C" void set_nemu_state(int state, vaddr_t pc, int halt_ret);
 
 Decode RTL_Decode;
 
