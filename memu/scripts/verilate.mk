@@ -48,7 +48,7 @@ rtl: $(RTL_DIR)/$(VTOP).sv
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 
 TEST := csrc/minirv.cpp
-ARGS ?= --log=$(BUILD_DIR)/npc-log.txt
+ARGS ?= --log=$(BUILD_DIR)/memu-test-log.txt
 test: $(VLIB) $(TEST)
 	@mkdir -p $(dir $@)
 	$(CXX) -I$(VBUILD) -I/usr/local/share/verilator/include \
@@ -57,7 +57,7 @@ test: $(VLIB) $(TEST)
 	$(BUILD_DIR)/test $(ARGS)
 
 verilog:
-	$(call git_commit, "generate verilog")
+	 $(call git_commit, "generate verilog")
 	mkdir -p $(RTL_DIR)
 	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
