@@ -2,10 +2,6 @@
 #include <verilated_vcd_c.h>
 #include "VMiniRVSOC.h"
 
-// #include "local-include/reg.h"
-// #include <cpu/cpu.h>
-// #include <cpu/ifetch.h>
-// #include <cpu/decode.h>
 #include <memory/paddr.h>
 
 #define DEBUG
