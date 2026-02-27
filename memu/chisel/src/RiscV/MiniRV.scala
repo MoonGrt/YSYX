@@ -414,12 +414,12 @@ class MiniRV extends Module {
   difftest.io.clk  := clock
   difftest.io.pc   := ifStage.io.pc
   difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.exout, ifStage.io.npc)
-  difftest.io.inst := commitInst
+  difftest.io.inst := idStage.io.inst
   for (i <- 0 until 32) {
     difftest.io.gpr(i) := idStage.regfile(i)
   }
   for (i <- 0 until 4) {
-    difftest.io.csr(i) := csrFile(i)
+    difftest.io.csr(i) := 0.U(32.W)  // 未实现 CSR
   }
 }
 
@@ -427,8 +427,6 @@ class MiniRV extends Module {
 // MiniRV SOC：自包含 CPU + ROM + RAM
 // ---------------------------
 class MiniRVSOC extends Module {
-  val io = IO(new Bundle)
-
   val cpu = Module(new MiniRV)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)
