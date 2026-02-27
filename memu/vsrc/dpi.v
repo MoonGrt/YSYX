@@ -50,7 +50,7 @@ import "DPI-C" function void dpi_paddr_write(input int addr, input byte len, inp
 module ROM_DPI(
   input  wire        en,
   input  wire [31:0] addr,
-  output wire [31:0] data
+  output reg  [31:0] data
 );
   always @(*) begin
     data = 0;
