@@ -48,10 +48,14 @@ import "DPI-C" function int  dpi_paddr_read(input int addr, input byte len);
 import "DPI-C" function void dpi_paddr_write(input int addr, input byte len, input int data);
 
 module ROM_DPI(
+  input  wire        en,
   input  wire [31:0] addr,
   output wire [31:0] data
 );
-  assign data = dpi_paddr_read(addr, 4);
+  always @(*) begin
+    data = 0;
+    if (en) data = dpi_paddr_read(addr, 4);
+  end
 endmodule
 module RAM_DPI(
   input  wire        re,
