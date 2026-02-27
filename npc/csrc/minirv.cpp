@@ -3,7 +3,7 @@
 #include "VMiniRVSOC.h"
 #include <iostream>
 
-#define DEBUG
+// #define DEBUG
 
 #include <getopt.h>
 #define no_argument       0
