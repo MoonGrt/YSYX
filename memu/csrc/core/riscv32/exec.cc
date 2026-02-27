@@ -10,6 +10,7 @@
 #include <memory/host.h>
 #include "../../utils/local-include/itrace.h"
 
+Decode RTL_Decode;
 VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;
 
@@ -63,6 +64,10 @@ static void tick(){
   tfp->dump(sim_time++);
   // ======== 刷新 ========
   tfp->flush();
+  RTL_Decode.pc = cpu.pc;
+  RTL_Decode.snpc = cpu.pc + 4;
+  RTL_Decode.dnpc = cpu.npc;
+  RTL_Decode.isa.inst = cpu.inst;
 }
 
 static void reset(){
