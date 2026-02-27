@@ -101,20 +101,9 @@ static void exec_once(Decode *s, vaddr_t pc) {
 static void execute(uint64_t n) {
   Decode s;
   for (;n > 0; n --) {
-#if defined(CONFIG_NEMU)
-#elif defined(CONFIG_NPC)
-    s.pc = RTL_Decode.pc;
-    s.snpc = RTL_Decode.snpc;
-    s.dnpc = RTL_Decode.dnpc;
-    s.isa.inst = RTL_Decode.isa.inst;
-    trace_and_difftest(&s, cpu.pc);
-#endif
     exec_once(&s, cpu.pc);
     g_nr_guest_inst ++;
-#if defined(CONFIG_NEMU)
     trace_and_difftest(&s, cpu.pc);
-#elif defined(CONFIG_NPC)
-#endif
     if (nemu_state.state != MEMU_RUNNING) break;
     IFDEF(CONFIG_DEVICE, device_update());
   }
