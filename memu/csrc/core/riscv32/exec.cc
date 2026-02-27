@@ -34,7 +34,7 @@ extern "C" {
   void dpi_paddr_write(int addr, char len, int data){
     if (in_pmem(addr)) paddr_write(addr, len, data);
   #ifdef CONFIG_DEVICE
-    mmio_write(addr, len, data);
+    if (addr != 0) mmio_write(addr, len, data);
   #endif
   }
   void diff(int pc, int npc, int inst, int* gpr, int* csr) {
