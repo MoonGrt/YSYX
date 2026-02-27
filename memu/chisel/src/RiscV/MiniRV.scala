@@ -107,6 +107,20 @@ class EBreak extends BlackBox {
 }
 
 // ---------------------------
+// DiffTest BlackBox (差分测试模块)
+// ---------------------------
+class DiffTest extends BlackBox {
+  val io = IO(new Bundle {
+    val clk  = Input(Clock())
+    val pc   = Input(UInt(32.W))
+    val npc  = Input(UInt(32.W))
+    val inst = Input(UInt(32.W))
+    val gpr  = Input(Vec(32, UInt(32.W)))
+    val csr  = Input(Vec(4, UInt(32.W)))
+  })
+}
+
+// ---------------------------
 // 工具：符号扩展
 // ---------------------------
 object Sext {
@@ -123,7 +137,7 @@ class IF extends Module {
     val halt   = Input(Bool())  // halt 信号
     val jumpen = Input(Bool())  // 跳转使能
     val jump   = Input(UInt(32.W))  // 跳转地址
-    val pcn    = Output(UInt(32.W))  // 下一个 PC
+    val npc    = Output(UInt(32.W))  // 下一个 PC
     val pc     = Output(UInt(32.W))  // 当前 PC 输出
   })
   val pc = RegInit("h80000000".U(32.W))
@@ -133,11 +147,11 @@ class IF extends Module {
     when (io.jumpen) {
       pc := io.jump
     }.otherwise {
-      pc := io.pcn
+      pc := io.npc
     }
   }
   io.pc  := pc
-  io.pcn := pc + 4.U(32.W)
+  io.npc := pc + 4.U(32.W)
 }
 
 // ---------------------------
@@ -337,8 +351,6 @@ class MiniRV extends Module {
   import Parameters._
   val io = IO(new Bundle {
     val pc   = Output(UInt(32.W))
-    val snpc = Output(UInt(32.W))
-    val dnpc = Output(UInt(32.W))
     val inst = Input(UInt(32.W))
 
     val mem_we    = Output(Bool())
@@ -354,8 +366,6 @@ class MiniRV extends Module {
 
   // IF
   io.pc := ifStage.io.pc
-  io.snpc := ifStage.io.pcn
-  io.dnpc := Mux(idStage.io.jumpen, exStage.io.exout, ifStage.io.pcn)
   ifStage.io.jumpen := idStage.io.jumpen
   ifStage.io.jump   := exStage.io.exout
   ifStage.io.halt   := idStage.io.halt
@@ -391,25 +401,33 @@ class MiniRV extends Module {
     exStage.io.exout,  // 默认EX输出
     Seq(
       idStage.io.memRen -> mem_data,  // Memory read
-      idStage.io.jumpen -> ifStage.io.pcn  // Jump
+      idStage.io.jumpen -> ifStage.io.npc  // Jump
     )
   )
 
   idStage.io.wb_en   := idStage.io.regWen
   idStage.io.wb_rd   := idStage.io.rd_addr
   idStage.io.wb_data := wb_data
+
+  // DiffTest
+  val difftest = Module(new DiffTest)
+  difftest.io.clk  := clock
+  difftest.io.pc   := ifStage.io.pc
+  difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.exout, ifStage.io.npc)
+  difftest.io.inst := commitInst
+  for (i <- 0 until 32) {
+    difftest.io.gpr(i) := idStage.regfile(i)
+  }
+  for (i <- 0 until 4) {
+    difftest.io.csr(i) := csrFile(i)
+  }
 }
 
 // ---------------------------
 // MiniRV SOC：自包含 CPU + ROM + RAM
 // ---------------------------
 class MiniRVSOC extends Module {
-  val io = IO(new Bundle {
-    val pc   = Output(UInt(32.W))
-    val snpc = Output(UInt(32.W))
-    val dnpc = Output(UInt(32.W))
-    val inst = Output(UInt(32.W))
-  })
+  val io = IO(new Bundle)
 
   val cpu = Module(new MiniRV)
   val rom = Module(new ROM_DPI)
@@ -425,10 +443,4 @@ class MiniRVSOC extends Module {
   ram.io.mask  := cpu.io.mem_mask
   ram.io.wdata := cpu.io.mem_wdata
   cpu.io.mem_rdata := ram.io.rdata
-
-  // 输出
-  io.pc   := cpu.io.pc
-  io.snpc := cpu.io.snpc
-  io.dnpc := cpu.io.dnpc
-  io.inst := cpu.io.inst
 }
