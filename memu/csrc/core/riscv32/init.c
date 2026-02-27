@@ -28,6 +28,8 @@ static const uint32_t img [] = {
   0x00010113,
   0x800000b7,
   0x44008093,
+  0x00100073,  // 0x04 ebreak
+  0xdeadbeef,  // 0x08 deadbeef
 };
 
 static void restart() {
