@@ -23,28 +23,6 @@ extern "C" {
     else INV(cpu.pc);
     Verilated::gotFinish(true);
   }
-  // int pmem_read(int raddr){
-  //   raddr = raddr & ~0x3u;
-  //   if (in_pmem(raddr)) {
-  //     IFDEF(CONFIG_MTRACE, display_pread(raddr, 4));
-  //     return host_read(guest_to_host(raddr), 4);
-  //   } else return 0;
-  // }
-  // void pmem_write(int waddr, char wmask, int wdata){
-  //   waddr = waddr & ~0x3u;
-  //   if (in_pmem(waddr)) {
-  //     if (wmask == 0xF) {
-  //       IFDEF(CONFIG_MTRACE, display_pwrite(waddr, 4, wdata));
-  //       host_write(guest_to_host(waddr), 4, wdata);
-  //     } else {
-  //     for(int i = 0; i < 4; i++)
-  //       if (wmask & (1 << i)) {
-  //         IFDEF(CONFIG_MTRACE, display_pwrite(waddr + i, 4, (waddr >> (i * 8)) & 0xff));
-  //         host_write(guest_to_host(waddr + i), 4, (waddr >> (i * 8)) & 0xff);
-  //       }
-  //     }
-  //   }
-  // }
   int dpi_paddr_read(int addr, char len){
     return paddr_read(addr, len);
   }
