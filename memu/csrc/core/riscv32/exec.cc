@@ -32,7 +32,7 @@ extern "C" {
     return 0;
   }
   void dpi_paddr_write(int addr, char len, int data){
-    if (in_pmem(addr)) paddr_write(addr, len, data);
+    if (in_pmem(addr)) {paddr_write(addr, len, data); return;}
   #ifdef CONFIG_DEVICE
     if (addr != 0) mmio_write(addr, len, data);
   #endif
