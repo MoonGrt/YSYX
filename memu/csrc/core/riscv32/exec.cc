@@ -27,7 +27,7 @@ extern "C" {
   int dpi_paddr_read(int addr, char len){
     if (in_pmem(addr)) return paddr_read(addr, len);
   #ifdef CONFIG_DEVICE
-    return mmio_read(addr, len);
+    if (addr != 0) return mmio_read(addr, len);
   #endif
     return 0;
   }
