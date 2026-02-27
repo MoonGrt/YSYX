@@ -27,6 +27,62 @@ module PMem(
   end
 endmodule
 
+// import "DPI-C" function void diff(
+//   input int pc, input int snpc, input int dnpc, input int inst,
+//   input int regs_0,  input int regs_1,  input int regs_2,  input int regs_3,
+//   input int regs_4,  input int regs_5,  input int regs_6,  input int regs_7,
+//   input int regs_8,  input int regs_9,  input int regs_10, input int regs_11,
+//   input int regs_12, input int regs_13, input int regs_14, input int regs_15,
+//   input int regs_16, input int regs_17, input int regs_18, input int regs_19,
+//   input int regs_20, input int regs_21, input int regs_22, input int regs_23,
+//   input int regs_24, input int regs_25, input int regs_26, input int regs_27,
+//   input int regs_28, input int regs_29, input int regs_30, input int regs_31
+// );
+import "DPI-C" function void diff(
+  input int pc, input int npc, input int inst,
+  input int regs [0:31], input int csrs [0:3]
+);
+module difftest (
+  input         clk,
+  input         rst,
+  input         commit,
+
+  input  [31:0] pc, npc,
+  input  [31:0] inst,
+
+  input  [31:0] gpr [0:31],
+  input  [31:0] csr_mstatus,
+  input  [31:0] csr_mtvec,
+  input  [31:0] csr_mepc,
+  input  [31:0] csr_mcause
+);
+
+  int regs [0:31];
+  int csrs [0:3];
+
+  integer i;
+
+  always @(*) begin
+    for (i = 0; i < 32; i = i + 1)
+      regs[i] = gpr[i];
+    csrs[0] = csr_mstatus;
+    csrs[1] = csr_mtvec;
+    csrs[2] = csr_mepc;
+    csrs[3] = csr_mcause;
+  end
+
+  always @(posedge clk) diff(pc, npc, inst, regs, csrs);
+
+endmodule
+
+
+
+
+
+
+
+
+
 
 
 module ROM_DPI(
