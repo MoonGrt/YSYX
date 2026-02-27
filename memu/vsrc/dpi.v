@@ -83,6 +83,7 @@ module RAM_DPI(
   output reg  [31:0] rdata
 );
   always @(*) begin
+    rdata = 0;
     if (re) rdata = pmem_read(addr);
     if (we) pmem_write(addr, mask, wdata);
   end
