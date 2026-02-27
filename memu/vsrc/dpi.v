@@ -44,11 +44,7 @@ import "DPI-C" function void diff(
 );
 module difftest (
   input clk,
-  input commit,
-
-  input [31:0] pc, npc,
-  input [31:0] inst,
-
+  input [31:0] pc, npc, inst,
   input [31:0] gpr [0:31],
   input [31:0] csr [0:3]
 );
