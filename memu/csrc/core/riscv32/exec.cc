@@ -39,6 +39,9 @@ extern "C" {
         host_write(guest_to_host(waddr + i), 4, (waddr >> (i * 8)) & 0xff);
       }
   }
+  void diff(int pc, int npc, int inst, int* regs, int* csrs) {
+    // TODO: 
+  }
 }
 
 static vluint64_t sim_time = 0;
