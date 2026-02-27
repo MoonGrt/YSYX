@@ -222,12 +222,15 @@ class ID extends Module {
     val immen   = Output(Bool())
     val rd_addr = Output(UInt(5.W))
 
+    // Control signals
     val halt   = Output(Bool())
     val jumpen = Output(Bool())
     val memBen = Output(Bool())
     val memRen = Output(Bool())
     val memWen = Output(Bool())
     val regWen = Output(Bool())
+
+    val regfileOut = Output(Vec(32, UInt(32.W)))
   })
 
   val decoded = ListLookup(
@@ -320,6 +323,9 @@ class ID extends Module {
   trap.io.code := exc_code
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
+
+  // 输出 regfile
+  io.regfileOut := regfile
 }
 
 // ---------------------------
@@ -416,7 +422,7 @@ class MiniRV extends Module {
   difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.exout, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
   for (i <- 0 until 32) {
-    difftest.io.gpr(i) := idStage.regfile(i)
+    difftest.io.gpr(i) := idStage.io.regfileOut(i)
   }
   for (i <- 0 until 4) {
     difftest.io.csr(i) := 0.U(32.W)  // 未实现 CSR
