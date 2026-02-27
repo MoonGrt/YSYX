@@ -27,46 +27,38 @@ module PMem(
   end
 endmodule
 
-// import "DPI-C" function void diff(
-//   input int pc, input int snpc, input int dnpc, input int inst,
-//   input int regs_0,  input int regs_1,  input int regs_2,  input int regs_3,
-//   input int regs_4,  input int regs_5,  input int regs_6,  input int regs_7,
-//   input int regs_8,  input int regs_9,  input int regs_10, input int regs_11,
-//   input int regs_12, input int regs_13, input int regs_14, input int regs_15,
-//   input int regs_16, input int regs_17, input int regs_18, input int regs_19,
-//   input int regs_20, input int regs_21, input int regs_22, input int regs_23,
-//   input int regs_24, input int regs_25, input int regs_26, input int regs_27,
-//   input int regs_28, input int regs_29, input int regs_30, input int regs_31
-// );
 import "DPI-C" function void diff(
   input int pc, input int npc, input int inst,
-  input int regs [0:31], input int csrs [0:3]
+  input int gpr [0:31], input int csr [0:3]
 );
-module difftest (
+module DiffTest (
   input clk,
   input [31:0] pc, npc, inst,
-  input [31:0] gpr [0:31],
-  input [31:0] csr [0:3]
+  input [31:0] csr_0,  csr_1,  csr_2,  csr_3,
+  input [31:0] gpr_0,  gpr_1,  gpr_2,  gpr_3,
+  input [31:0] gpr_4,  gpr_5,  gpr_6,  gpr_7,
+  input [31:0] gpr_8,  gpr_9,  gpr_10, gpr_11,
+  input [31:0] gpr_12, gpr_13, gpr_14, gpr_15,
+  input [31:0] gpr_16, gpr_17, gpr_18, gpr_19,
+  input [31:0] gpr_20, gpr_21, gpr_22, gpr_23,
+  input [31:0] gpr_24, gpr_25, gpr_26, gpr_27,
+  input [31:0] gpr_28, gpr_29, gpr_30, gpr_31
 );
-
-  int regs [0:31];
-  int csrs [0:3];
-
-  integer i, j;
+  int gpr [0:31];
+  int csr [0:3];
   always @(*) begin
-    for (i = 0; i < 32; i = i + 1)
-      regs[i] = gpr[i];
-    for (j = 0; j < 4; j = j + 1)
-      csrs[j] = csr[j];
+    csr[0]  = csr_0;  csr[1]  = csr_1;  csr[2]  = csr_2;  csr[3]  = csr_3;
+    gpr[0]  = gpr_0;  gpr[1]  = gpr_1;  gpr[2]  = gpr_2;  gpr[3]  = gpr_3;
+    gpr[4]  = gpr_4;  gpr[5]  = gpr_5;  gpr[6]  = gpr_6;  gpr[7]  = gpr_7;
+    gpr[8]  = gpr_8;  gpr[9]  = gpr_9;  gpr[10] = gpr_10; gpr[11] = gpr_11;
+    gpr[12] = gpr_12; gpr[13] = gpr_13; gpr[14] = gpr_14; gpr[15] = gpr_15;
+    gpr[16] = gpr_16; gpr[17] = gpr_17; gpr[18] = gpr_18; gpr[19] = gpr_19;
+    gpr[20] = gpr_20; gpr[21] = gpr_21; gpr[22] = gpr_22; gpr[23] = gpr_23;
+    gpr[24] = gpr_24; gpr[25] = gpr_25; gpr[26] = gpr_26; gpr[27] = gpr_27;
+    gpr[28] = gpr_28; gpr[29] = gpr_29; gpr[30] = gpr_30; gpr[31] = gpr_31;
   end
-
-  always @(posedge clk) diff(pc, npc, inst, regs, csrs);
-
+  always @(posedge clk) diff(pc, npc, inst, gpr, csr);
 endmodule
-
-
-
-
 
 
 

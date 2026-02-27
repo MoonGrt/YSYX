@@ -20,8 +20,8 @@ extern "C" {
   #define OTHER_E_CODE   2
   #define UNIMPL_CODE    3
   void ebreak(uint8_t code) {
-    if (code == EBREAK_CODE) MEMUTRAP(top->io_pc, code);
-    else INV(top->io_pc);
+    if (code == EBREAK_CODE) MEMUTRAP(cpu.pc, code);
+    else INV(cpu.pc);
     Verilated::gotFinish(true);
   }
   int pmem_read(int raddr){
@@ -39,8 +39,14 @@ extern "C" {
         host_write(guest_to_host(waddr + i), 4, (waddr >> (i * 8)) & 0xff);
       }
   }
-  void diff(int pc, int npc, int inst, int* regs, int* csrs) {
-    // TODO: 
+  void diff(int pc, int npc, int inst, int* gpr, int* csr) {
+    cpu.pc = pc;
+    cpu.csr.mstatus = csr[0];
+    cpu.csr.mepc = csr[1];
+    cpu.csr.mcause = csr[2];
+    cpu.csr.mtvec = csr[3];
+    for (int i = 0; i < 32; i++)
+      cpu.gpr[i] = gpr[i];
   }
 }
 
@@ -56,10 +62,6 @@ static void tick(){
   tfp->dump(sim_time++);
   // ======== 刷新 ========
   tfp->flush();
-  RTL_Decode.pc = top->io_pc;
-  RTL_Decode.snpc = top->io_snpc;
-  RTL_Decode.dnpc = top->io_dnpc;
-  RTL_Decode.isa.inst = top->io_inst;
 }
 
 static void reset(){

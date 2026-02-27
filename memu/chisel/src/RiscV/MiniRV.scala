@@ -323,7 +323,6 @@ class ID extends Module {
   trap.io.code := exc_code
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
-
   // 输出 regfile
   io.regfileOut := regfile
 }
