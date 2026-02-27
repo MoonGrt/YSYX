@@ -41,6 +41,7 @@ extern "C" {
   void diff(int pc, int npc, int inst, int* gpr, int* csr) {
     cpu.pc = pc;
     cpu.npc = npc;
+    cpu.inst = inst;
     cpu.csr.mstatus = csr[0];
     cpu.csr.mepc = csr[1];
     cpu.csr.mcause = csr[2];

@@ -21,9 +21,8 @@
 #endif
 
 int isa_exec_once(Decode *s) {
-  s->pc = cpu.pc;
-  s->snpc = cpu.pc + 4;
   s->dnpc = cpu.npc;
+  s->isa.inst = cpu.inst;
   rtl_step();
   return 0;
 }
