@@ -30,6 +30,7 @@ extern "C" {
   //   if (addr != 0) return mmio_read(addr, len);
   // #endif
   //   return 0;
+    if (addr == 0) return 0;
     IFDEF(CONFIG_MTRACE, display_pread(addr, len));
     if (likely(in_pmem(addr))) return pmem_read(addr, len);
     IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
