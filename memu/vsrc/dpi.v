@@ -43,25 +43,23 @@ import "DPI-C" function void diff(
   input int regs [0:31], input int csrs [0:3]
 );
 module difftest (
-  input         clk,
-  input         rst,
-  input         commit,
+  input clk,
+  input commit,
 
-  input  [31:0] pc, npc,
-  input  [31:0] inst,
+  input [31:0] pc, npc,
+  input [31:0] inst,
 
-  input  [31:0] gpr [0:31],
-  input  [31:0] csr_mstatus,
-  input  [31:0] csr_mtvec,
-  input  [31:0] csr_mepc,
-  input  [31:0] csr_mcause
+  input [31:0] gpr [0:31],
+  input [31:0] csr_mstatus,
+  input [31:0] csr_mtvec,
+  input [31:0] csr_mepc,
+  input [31:0] csr_mcause
 );
 
   int regs [0:31];
   int csrs [0:3];
 
   integer i;
-
   always @(*) begin
     for (i = 0; i < 32; i = i + 1)
       regs[i] = gpr[i];
@@ -73,7 +71,7 @@ module difftest (
 
   always @(posedge clk) diff(pc, npc, inst, regs, csrs);
 
-endmodule
+endmodul
 
 
 
