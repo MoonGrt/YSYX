@@ -391,7 +391,7 @@ class MiniRV extends Module {
   // Memory
   io.mem_re    := idStage.io.memRen
   io.mem_we    := idStage.io.memWen
-  io.mem_addr  := Cat(exStage.io.exout(31, 2), 0.U(2.W))
+  io.mem_addr  := exStage.io.exout
   io.mem_wdata := Mux(idStage.io.memBen,
                       idStage.io.rs2 << (exStage.io.exout(1,0) << 3),
                       idStage.io.rs2)
