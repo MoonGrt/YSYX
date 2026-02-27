@@ -26,11 +26,26 @@ static const uint32_t img [] = {
   0x00500513,  // 0x00 addi a0, zero, 5; a0 = 5
   0x00300593,  // 0x04 addi a1, zero, 3; a1 = 3
   0x00b50633,  // 0x08 add a2, a0, a1  ; a2 = a0 + a1
+
+  0x00000413,  // s0,0
+  0x80051137,  // sp,0x80051
+  0x00010113,  // sp,sp
+  0x800000b7,  // ra,0x80000
+
   0x00100073,  // 0x04 ebreak
   0xdeadbeef,  // 0x08 deadbeef
 };
 
+static void restart() {
+  /* Set the initial program counter. */
+  cpu.pc = RESET_VECTOR;
+  /* The zero register is always 0. */
+  cpu.gpr[0] = 0;
+}
+
 void init_isa() {
   /* Load built-in image. */
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
+  /* Initialize this virtual computer system. */
+  restart();
 }

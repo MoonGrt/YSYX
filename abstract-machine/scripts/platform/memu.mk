@@ -33,6 +33,9 @@ run: insert-arg
 run-sdb: insert-arg
 	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) run-sdb ARGS="$(NEMUFLAGS)" IMG=$(IMAGE).bin
 
+wave: run
+	$(MAKE) -C $(MEMU_HOME) wave
+
 gdb: insert-arg
 	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) gdb ARGS="$(NEMUFLAGS)" IMG=$(IMAGE).bin
 

@@ -29,6 +29,9 @@ run: all
 run-sdb: all
 	@cat $(RESULT)
 
+wave: all
+	@cat $(RESULT)
+
 gdb: all
 
 clean:

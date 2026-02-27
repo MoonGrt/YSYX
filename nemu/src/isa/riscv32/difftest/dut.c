@@ -19,6 +19,10 @@
 
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   bool result = true;
+  if (ref_r->pc != pc) {
+    printf("new pc is different at " FMT_WORD "! ref: " FMT_WORD "\n", pc, ref_r->pc);
+    result = false;
+  }
   for(int i = 0; i < 32; i++) {
     if(ref_r->gpr[i] != gpr(i)) {
       printf("reg[%d] is different at pc = " FMT_WORD " ref: " FMT_WORD ",  nemu: " FMT_WORD "\n", i, pc, ref_r->gpr[i], gpr(i));
