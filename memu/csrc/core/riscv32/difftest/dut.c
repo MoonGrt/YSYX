@@ -19,7 +19,7 @@
 
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   bool result = true;
-  printf("checking registers...");
+  printf("isa difftest checkregs...\n");
   if (ref_r->pc != pc) {
     printf("new pc is different at " FMT_WORD "! ref: " FMT_WORD "\n", pc, ref_r->pc);
     result = false;
