@@ -10,7 +10,6 @@
 #include <memory/host.h>
 #include "../../utils/local-include/itrace.h"
 
-Decode RTL_Decode;
 VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;
 
@@ -41,6 +40,7 @@ extern "C" {
   }
   void diff(int pc, int npc, int inst, int* gpr, int* csr) {
     cpu.pc = pc;
+    cpu.npc = npc;
     cpu.csr.mstatus = csr[0];
     cpu.csr.mepc = csr[1];
     cpu.csr.mcause = csr[2];

@@ -21,10 +21,6 @@
 #endif
 
 int isa_exec_once(Decode *s) {
-  s->pc = RTL_Decode.pc;
-  s->snpc = RTL_Decode.snpc;
-  s->dnpc = RTL_Decode.dnpc;
-  s->isa.inst = RTL_Decode.isa.inst;
   rtl_step();
   return 0;
 }
