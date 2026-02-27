@@ -23,11 +23,16 @@
 
 // this is not consistent with uint8_t
 static const uint32_t img [] = {
+  0x00500513,  // 0x00 addi a0, zero, 5; a0 = 5
+  0x00300593,  // 0x04 addi a1, zero, 3; a1 = 3
+  0x00b50633,  // 0x08 add a2, a0, a1  ; a2 = a0 + a1
+
   0x00000413,
   0x80051137,
   0x00010113,
   0x800000b7,
   0x44008093,
+
   0x00100073,  // 0x04 ebreak
   0xdeadbeef,  // 0x08 deadbeef
 };
