@@ -44,46 +44,26 @@ endmodule
 
 
 
-import "DPI-C" function int  dpi_paddr_read(input int addr, input int len);
-import "DPI-C" function void dpi_paddr_write(input int addr, input int len, input int data);
+import "DPI-C" function int  dpi_paddr_read(input int addr, input byte len);
+import "DPI-C" function void dpi_paddr_write(input int addr, input byte len, input int data);
 
-// module ROM_DPI(
-//   input  wire [31:0] addr,
-//   output wire [31:0] data
-// );
-//   assign data = pmem_read(addr);
-// endmodule
-// module RAM_DPI(
-//   input  wire        re,
-//   input  wire        we,
-//   input  wire [31:0] addr,
-//   input  wire [ 7:0] mask,
-//   input  wire [31:0] wdata,
-//   output reg  [31:0] rdata
-// );
-//   always @(*) begin
-//     rdata = 0;
-//     if (re) rdata = pmem_read(addr);
-//     if (we) pmem_write(addr, mask, wdata);
-//   end
-// endmodule
 module ROM_DPI(
   input  wire [31:0] addr,
   output wire [31:0] data
 );
-  assign data = paddr_read(addr, 4);
+  assign data = dpi_paddr_read(addr, 4);
 endmodule
 module RAM_DPI(
   input  wire        re,
   input  wire        we,
-  input  wire [ 4:0] len,
+  input  wire [ 7:0] len,
   input  wire [31:0] addr,
   input  wire [31:0] wdata,
   output reg  [31:0] rdata
 );
   always @(*) begin
     rdata = 0;
-    if (re) rdata = paddr_read(addr, len);
-    if (we) paddr_write(addr, len, wdata);
+    if (re) rdata = dpi_paddr_read(addr, len);
+    if (we) dpi_paddr_write(addr, len, wdata);
   end
 endmodule

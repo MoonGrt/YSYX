@@ -45,10 +45,10 @@ extern "C" {
   //     }
   //   }
   // }
-  int dpi_paddr_read(int addr, int len){
+  int dpi_paddr_read(int addr, char len){
     return paddr_read(addr, len);
   }
-  void dpi_paddr_write(int addr, int len, int data){
+  void dpi_paddr_write(int addr, char len, int data){
     paddr_write(addr, len, data);
   }
   void diff(int pc, int npc, int inst, int* gpr, int* csr) {
