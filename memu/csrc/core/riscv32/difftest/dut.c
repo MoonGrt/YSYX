@@ -29,7 +29,7 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
       result = false;
     }
   }
-#if defined(CONFIG_NEMU)
+// #if defined(CONFIG_NEMU)
   if (ref_r->csr.mstatus != cpu.csr.mstatus) {
     printf("mstatus is different at pc = " FMT_WORD "! ref: " FMT_WORD ", npc: " FMT_WORD "\n", pc, ref_r->csr.mstatus, cpu.csr.mstatus);
     result = false;
@@ -46,9 +46,9 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
     printf("mepc is different at pc = " FMT_WORD "! ref: " FMT_WORD ", npc: " FMT_WORD "\n", pc, ref_r->csr.mepc, cpu.csr.mepc);
     result = false;
   }
-#elif defined(CONFIG_NPC)
+// #elif defined(CONFIG_NPC)
 
-#endif
+// #endif
   return result;
 }
 
