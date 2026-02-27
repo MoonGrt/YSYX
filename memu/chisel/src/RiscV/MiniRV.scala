@@ -345,7 +345,7 @@ class EX extends Module {
   // -------- ALU --------
   io.exout := Mux(
     io.immen,
-    io.rs1 + io.imm, io.rs1 - io.rs2
+    io.rs1 + io.imm, io.rs1 + io.rs2
   )
 }
 
