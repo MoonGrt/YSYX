@@ -25,9 +25,9 @@ int isa_exec_once(Decode *s) {
   // s->pc = RTL_Decode.pc;
   // s->snpc = RTL_Decode.snpc;
   // s->dnpc = RTL_Decode.dnpc;
-  // s->isa.inst = RTL_Decode.isa.inst;
+  s->isa.inst = RTL_Decode.isa.inst;
   s->dnpc = cpu.npc;
-  s->isa.inst = cpu.inst;
+  // s->isa.inst = cpu.inst;
   IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
   rtl_step();
   return 0;
