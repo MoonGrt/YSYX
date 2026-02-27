@@ -77,7 +77,7 @@ import chisel3.util._
 // ---------------------------
 class ROM_DPI extends BlackBox{
   val io = IO(new Bundle {
-    val en   = Input(Bool())
+    // val en   = Input(Bool())
     val addr = Input(UInt(32.W))
     val data = Output(UInt(32.W))
   })
@@ -435,7 +435,7 @@ class MiniRVSOC extends Module {
   val ram = Module(new RAM_DPI)
 
   // 指令取值
-  rom.io.en   := ~reset.asBool
+  // rom.io.en   := ~reset.asBool
   rom.io.addr := cpu.io.pc
   cpu.io.inst := rom.io.data
 
