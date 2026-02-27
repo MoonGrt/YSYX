@@ -446,7 +446,7 @@ class MiniRVSOC extends Module {
   // 数据访存
   ram.io.re    := cpu.io.mem_re
   ram.io.we    := cpu.io.mem_we
-  ram.io.addr  := cpu.io.mem_addr
+  ram.io.addr  := cpu.io.mem_addr & 0xFFFFFFFC.U  // 4K 对齐
   ram.io.mask  := cpu.io.mem_mask
   ram.io.wdata := cpu.io.mem_wdata
   cpu.io.mem_rdata := ram.io.rdata
