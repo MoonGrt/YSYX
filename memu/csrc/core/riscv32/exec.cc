@@ -71,11 +71,11 @@ static void tick(){
 }
 
 static void reset(){
-  // printf("[MEMU] Resetting ...\n");
+  printf("[MEMU] Resetting ...\n");
   top->reset = 1;
   tick();
   top->reset = 0;
-  // printf("[MEMU] Resetting ...\n");
+  printf("[MEMU] Resetting ...\n");
 }
 
 void exit(void) {
