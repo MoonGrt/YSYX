@@ -53,8 +53,7 @@ module ROM_DPI(
   output reg  [31:0] data
 );
   always @(*) begin
-    if (en) data = dpi_paddr_read(addr, 4);
-    else data = 0;
+    data = dpi_paddr_read(addr, 4);
   end
 endmodule
 module RAM_DPI(
