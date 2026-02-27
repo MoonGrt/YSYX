@@ -355,7 +355,7 @@ class MiniRV extends Module {
   // IF
   io.pc := ifStage.io.pc
   io.snpc := ifStage.io.pcn
-  io.dnpc := exStage.io.exout
+  io.dnpc := Mux(idStage.io.jumpen, exStage.io.exout, ifStage.io.pcn)
   ifStage.io.jumpen := idStage.io.jumpen
   ifStage.io.jump   := exStage.io.exout
   ifStage.io.halt   := idStage.io.halt
