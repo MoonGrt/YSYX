@@ -38,40 +38,7 @@ endmodule
 //   input int regs_24, input int regs_25, input int regs_26, input int regs_27,
 //   input int regs_28, input int regs_29, input int regs_30, input int regs_31
 // );
-import "DPI-C" function void diff(
-  input int pc, input int npc, input int inst,
-  input int regs [0:31], input int csrs [0:3]
-);
-module difftest (
-  input clk,
-  input commit,
 
-  input [31:0] pc, npc,
-  input [31:0] inst,
-
-  input [31:0] gpr [0:31],
-  input [31:0] csr_mstatus,
-  input [31:0] csr_mtvec,
-  input [31:0] csr_mepc,
-  input [31:0] csr_mcause
-);
-
-  int regs [0:31];
-  int csrs [0:3];
-
-  integer i;
-  always @(*) begin
-    for (i = 0; i < 32; i = i + 1)
-      regs[i] = gpr[i];
-    csrs[0] = csr_mstatus;
-    csrs[1] = csr_mtvec;
-    csrs[2] = csr_mepc;
-    csrs[3] = csr_mcause;
-  end
-
-  always @(posedge clk) diff(pc, npc, inst, regs, csrs);
-
-endmodule
 
 
 
