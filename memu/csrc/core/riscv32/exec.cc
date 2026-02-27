@@ -40,7 +40,7 @@ extern "C" {
       }
   }
   void diff(int pc, int npc, int inst, int* gpr, int* csr) {
-    printf("%d", inst);
+    printf("diff: %d", inst);
     cpu.pc = pc;
     cpu.npc = npc;
     cpu.inst = inst;
