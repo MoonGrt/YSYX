@@ -90,19 +90,19 @@ module ROM_DPI(
   input  wire [31:0] addr,
   output wire [31:0] data
 );
-  assign data = paddr_read(addr);
+  assign data = paddr_read(addr, 4);
 endmodule
 module RAM_DPI(
   input  wire        re,
   input  wire        we,
-  input  wire [ 7:0] len,
+  input  wire [ 4:0] len,
   input  wire [31:0] addr,
   input  wire [31:0] wdata,
   output reg  [31:0] rdata
 );
   always @(*) begin
     rdata = 0;
-    if (re) rdata = paddr_read(addr);
-    if (we) paddr_write(addr, mask, wdata);
+    if (re) rdata = paddr_read(addr, len);
+    if (we) paddr_write(addr, len, wdata);
   end
 endmodule
