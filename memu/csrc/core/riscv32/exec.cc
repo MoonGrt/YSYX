@@ -24,10 +24,11 @@ extern "C" {
     Verilated::gotFinish(true);
   }
   int dpi_paddr_read(int addr, char len){
-    return paddr_read(addr, len);
+    if (in_pmem(addr)) return paddr_read(addr, len);
+    else return 0;
   }
   void dpi_paddr_write(int addr, char len, int data){
-    paddr_write(addr, len, data);
+    if (in_pmem(addr)) paddr_write(addr, len, data);
   }
   void diff(int pc, int npc, int inst, int* gpr, int* csr) {
     cpu.pc = pc;
