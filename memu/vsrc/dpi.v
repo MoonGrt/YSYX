@@ -75,6 +75,7 @@ module ROM_DPI(
 endmodule
 
 module RAM_DPI(
+  input  wire        re,
   input  wire        we,
   input  wire [31:0] addr,
   input  wire [ 7:0] mask,
@@ -82,7 +83,7 @@ module RAM_DPI(
   output reg  [31:0] rdata
 );
   always @(*) begin
-    rdata = pmem_read(addr);
+    if (re) rdata = pmem_read(addr);
     if (we) pmem_write(addr, mask, wdata);
   end
 endmodule

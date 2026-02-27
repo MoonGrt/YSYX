@@ -87,6 +87,7 @@ class ROM_DPI extends BlackBox{
 // ---------------------------
 class RAM_DPI extends BlackBox {
   val io = IO(new Bundle {
+    val re    = Input(Bool())
     val we    = Input(Bool())
     val addr  = Input(UInt(32.W))
     val mask  = Input(UInt(8.W))
@@ -358,6 +359,7 @@ class MiniRV extends Module {
     val pc   = Output(UInt(32.W))
     val inst = Input(UInt(32.W))
 
+    val mem_re    = Output(Bool())
     val mem_we    = Output(Bool())
     val mem_addr  = Output(UInt(32.W))
     val mem_mask  = Output(UInt(8.W))
@@ -387,6 +389,7 @@ class MiniRV extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
+  io.mem_re    := idStage.io.memRen
   io.mem_we    := idStage.io.memWen
   io.mem_addr  := exStage.io.exout
   io.mem_wdata := Mux(idStage.io.memBen,
@@ -441,6 +444,7 @@ class MiniRVSOC extends Module {
   cpu.io.inst := rom.io.data
 
   // 数据访存
+  ram.io.re    := cpu.io.mem_re
   ram.io.we    := cpu.io.mem_we
   ram.io.addr  := cpu.io.mem_addr
   ram.io.mask  := cpu.io.mem_mask
