@@ -25,17 +25,23 @@ extern "C" {
     Verilated::gotFinish(true);
   }
   int dpi_paddr_read(int addr, char len){
-    if (in_pmem(addr)) return paddr_read(addr, len);
-  #ifdef CONFIG_DEVICE
-    if (addr != 0) return mmio_read(addr, len);
-  #endif
-    return 0;
+  //   if (in_pmem(addr)) return paddr_read(addr, len);
+  // #ifdef CONFIG_DEVICE
+  //   if (addr != 0) return mmio_read(addr, len);
+  // #endif
+  //   return 0;
+    IFDEF(CONFIG_MTRACE, display_pread(addr, len));
+    if (likely(in_pmem(addr))) return pmem_read(addr, len);
+    IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   }
   void dpi_paddr_write(int addr, char len, int data){
-    if (in_pmem(addr)) {paddr_write(addr, len, data); return;}
-  #ifdef CONFIG_DEVICE
-    if (addr != 0) mmio_write(addr, len, data);
-  #endif
+  //   if (in_pmem(addr)) {paddr_write(addr, len, data); return;}
+  // #ifdef CONFIG_DEVICE
+  //   if (addr != 0) mmio_write(addr, len, data);
+  // #endif
+    IFDEF(CONFIG_MTRACE, display_pwrite(addr, len, data));
+    if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
+    IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   }
   void diff(int pc, int npc, int inst, int* gpr, int* csr) {
     cpu.pc = pc;
