@@ -50,23 +50,18 @@ module difftest (
   input [31:0] inst,
 
   input [31:0] gpr [0:31],
-  input [31:0] csr_mstatus,
-  input [31:0] csr_mtvec,
-  input [31:0] csr_mepc,
-  input [31:0] csr_mcause
+  input [31:0] csr [0:3]
 );
 
   int regs [0:31];
   int csrs [0:3];
 
-  integer i;
+  integer i, j;
   always @(*) begin
     for (i = 0; i < 32; i = i + 1)
       regs[i] = gpr[i];
-    csrs[0] = csr_mstatus;
-    csrs[1] = csr_mtvec;
-    csrs[2] = csr_mepc;
-    csrs[3] = csr_mcause;
+    for (j = 0; j < 4; j = j + 1)
+      csrs[j] = csr[j];
   end
 
   always @(posedge clk) diff(pc, npc, inst, regs, csrs);
