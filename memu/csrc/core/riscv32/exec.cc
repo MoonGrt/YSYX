@@ -8,6 +8,7 @@
 #include <cpu/decode.h>
 #include <memory/paddr.h>
 #include <memory/host.h>
+#include <device/mmio.h>
 #include "../../utils/local-include/itrace.h"
 
 VMiniRVSOC *top = new VMiniRVSOC;
@@ -25,10 +26,16 @@ extern "C" {
   }
   int dpi_paddr_read(int addr, char len){
     if (in_pmem(addr)) return paddr_read(addr, len);
-    else return 0;
+  #ifdef CONFIG_DEVICE
+    return mmio_read(addr, len);
+  #endif
+    return 0;
   }
   void dpi_paddr_write(int addr, char len, int data){
     if (in_pmem(addr)) paddr_write(addr, len, data);
+  #ifdef CONFIG_DEVICE
+    mmio_write(addr, len, data);
+  #endif
   }
   void diff(int pc, int npc, int inst, int* gpr, int* csr) {
     cpu.pc = pc;
