@@ -42,7 +42,7 @@ import "DPI-C" function void diff(
   input int pc, input int npc, input int inst,
   input int regs [0:31], input int csrs [0:3]
 );
-module difftest (
+module diff (
   input clk,
   input [31:0] pc, npc, inst,
   input [31:0] gpr [0:31],
