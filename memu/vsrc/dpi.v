@@ -71,7 +71,7 @@ module difftest (
 
   always @(posedge clk) diff(pc, npc, inst, regs, csrs);
 
-endmodul
+endmodule
 
 
 
