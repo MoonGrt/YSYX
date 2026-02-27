@@ -24,7 +24,6 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc, vaddr_t npc) {
     result = false;
   }
   for(int i = 0; i < 32; i++) {
-    printf("reg[%d] is " FMT_WORD ", ref: " FMT_WORD "\n", i, gpr(i), ref_r->gpr[i]);
     if(ref_r->gpr[i] != gpr(i)) {
       printf("reg[%d] is different at pc = " FMT_WORD " ref: " FMT_WORD ",  npc: " FMT_WORD "\n", i, pc, ref_r->gpr[i], gpr(i));
       result = false;
