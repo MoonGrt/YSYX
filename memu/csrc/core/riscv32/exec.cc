@@ -8,6 +8,7 @@
 #include <cpu/decode.h>
 #include <memory/paddr.h>
 #include <memory/host.h>
+#include <device/mmio.h>
 #include "../../utils/local-include/itrace.h"
 
 VMiniRVSOC *top = new VMiniRVSOC;
@@ -23,27 +24,16 @@ extern "C" {
     else INV(cpu.pc);
     Verilated::gotFinish(true);
   }
-  int pmem_read(int raddr){
-    raddr = raddr & ~0x3u;
-    if (in_pmem(raddr)) {
-      IFDEF(CONFIG_MTRACE, display_pread(raddr, 4));
-      return host_read(guest_to_host(raddr), 4);
-    } else return 0;
+  int dpi_paddr_read(int addr, char len){
+    if (addr == 0) return 0;
+    IFDEF(CONFIG_MTRACE, display_pread(addr, len));
+    if (likely(in_pmem(addr))) return pmem_read(addr, len);
+    IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   }
-  void pmem_write(int waddr, char wmask, int wdata){
-    waddr = waddr & ~0x3u;
-    if (in_pmem(waddr)) {
-      if (wmask == 0xF) {
-        IFDEF(CONFIG_MTRACE, display_pwrite(waddr, 4, wdata));
-        host_write(guest_to_host(waddr), 4, wdata);
-      } else {
-      for(int i = 0; i < 4; i++)
-        if (wmask & (1 << i)) {
-          IFDEF(CONFIG_MTRACE, display_pwrite(waddr + i, 4, (waddr >> (i * 8)) & 0xff));
-          host_write(guest_to_host(waddr + i), 4, (waddr >> (i * 8)) & 0xff);
-        }
-      }
-    }
+  void dpi_paddr_write(int addr, char len, int data){
+    IFDEF(CONFIG_MTRACE, display_pwrite(addr, len, data));
+    if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
+    IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   }
   void diff(int pc, int npc, int inst, int* gpr, int* csr) {
     cpu.pc = pc;
