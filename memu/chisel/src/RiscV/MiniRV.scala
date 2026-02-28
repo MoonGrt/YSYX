@@ -89,8 +89,8 @@ class RAM_DPI extends BlackBox {
   val io = IO(new Bundle {
     val re    = Input(Bool())
     val we    = Input(Bool())
+    val len   = Input(UInt(8.W))
     val addr  = Input(UInt(32.W))
-    val mask  = Input(UInt(8.W))
     val wdata = Input(UInt(32.W))
     val rdata = Output(UInt(32.W))
   })
@@ -361,8 +361,8 @@ class MiniRV extends Module {
 
     val mem_re    = Output(Bool())
     val mem_we    = Output(Bool())
+    val mem_len   = Output(UInt(4.W))
     val mem_addr  = Output(UInt(32.W))
-    val mem_mask  = Output(UInt(8.W))
     val mem_wdata = Output(UInt(32.W))
     val mem_rdata = Input(UInt(32.W))
   })
@@ -392,20 +392,14 @@ class MiniRV extends Module {
   io.mem_re    := idStage.io.memRen
   io.mem_we    := idStage.io.memWen
   io.mem_addr  := exStage.io.exout
-  io.mem_wdata := Mux(idStage.io.memBen,
-                      idStage.io.rs2 << (exStage.io.exout(1,0) << 3),
-                      idStage.io.rs2)
-  io.mem_mask  := Mux(idStage.io.memBen,
-                     (1.U << exStage.io.exout(1,0)).asUInt,  // LBU/LB mask
-                      "b1111".U)  // SW/SW
+  io.mem_wdata := idStage.io.rs2
+  io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
 
   // Write Back
   val byte_shift = (exStage.io.exout(1,0) << 3)  // 位移量
   val byte_data = (io.mem_rdata >> byte_shift)(7,0)  // 取目标字节
-  val mem_data = Mux(idStage.io.memBen,
-                    Cat(Fill(24, 0.U), byte_data),
-                    io.mem_rdata)
-  val wb_data  = MuxCase(
+  val mem_data = io.mem_rdata
+  val wb_data = MuxCase(
     exStage.io.exout,  // 默认EX输出
     Seq(
       idStage.io.memRen -> mem_data,  // Memory read
@@ -446,8 +440,8 @@ class MiniRVSOC extends Module {
   // 数据访存
   ram.io.re    := cpu.io.mem_re
   ram.io.we    := cpu.io.mem_we
+  ram.io.len   := cpu.io.mem_len
   ram.io.addr  := cpu.io.mem_addr
-  ram.io.mask  := cpu.io.mem_mask
   ram.io.wdata := cpu.io.mem_wdata
   cpu.io.mem_rdata := ram.io.rdata
 }

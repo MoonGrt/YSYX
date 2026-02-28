@@ -17,10 +17,10 @@
 #include <cpu/difftest.h>
 #include "../local-include/reg.h"
 
-bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
+bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc, vaddr_t npc) {
   bool result = true;
-  if (ref_r->pc != pc) {
-    printf("new pc is different at " FMT_WORD "! ref: " FMT_WORD "\n", pc, ref_r->pc);
+  if (ref_r->pc != npc) {
+    printf("npc is different at " FMT_WORD "! ref: " FMT_WORD "\n", npc, ref_r->pc);
     result = false;
   }
   for(int i = 0; i < 32; i++) {
