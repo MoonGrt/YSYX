@@ -180,7 +180,7 @@ class Riscv32E_ID extends Module {
   io.jumpen := (jumpsel === JUMP_JALR)
 
   // -------- EX功能 --------
-  io.exsel := exsel
+  io.exsel := 0.U
 
   // -------- WB功能 --------
   io.rd_addr := rd
