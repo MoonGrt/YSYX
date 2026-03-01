@@ -74,7 +74,8 @@ object Riscv32E_Instructions {
   // Implemented instructions
   val IMPLED = Seq(
     LW, LBU, SW, SB,
-    ADD, ADDI, SUB, AND, OR, XOR, ANDI, ORI, XORI, SLL, SRL, SRA, SLLI, SRLI, SRAI, SLT, SLTU, SLTI, SLTIU
+    ADD, ADDI, SUB, AND, OR, XOR, ANDI, ORI, XORI, 
+    SLL, SRL, SRA, SLLI, SRLI, SRAI, SLT, SLTU, SLTI, SLTIU,
     JAL, JALR, LUI, AUIPC,
     E, EBREAK
   )
