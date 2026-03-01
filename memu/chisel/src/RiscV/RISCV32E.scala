@@ -248,21 +248,6 @@ class Riscv32E_ID extends Module {
   val rs1 = io.inst(19,15)
   val rs2 = io.inst(24,20)
 
-  // -------------------------
-  // CSR 地址映射
-  // -------------------------
-  val csr_addr = immi
-  val csr_id = MuxLookup(csr_addr(11,0), 0.U)(Seq(
-    0x300.U -> 1.U,  // mstatus
-    0x341.U -> 2.U,  // mepc
-    0x342.U -> 3.U,  // mcause
-    0x305.U -> 4.U,  // mtvec
-    0xf11.U -> 5.U,  // mvendorid
-    0xf12.U -> 6.U,  // marchid
-  ))
-  val csr_valid = csr_id =/= 0.U
-  val csr_old   = Mux(csr_valid, CSR(csr_id), 0.U)
-
   // -------- 立即数 --------
   // sext 12bit value to 32bit value.
   val immi = io.inst(31,20)  // imm for I-type
@@ -313,6 +298,17 @@ class Riscv32E_ID extends Module {
     )
   }
   // CSR
+  val csr_addr = immi
+  val csr_id = MuxLookup(csr_addr(11,0), 0.U)(Seq(
+    0x300.U -> 1.U,  // mstatus
+    0x341.U -> 2.U,  // mepc
+    0x342.U -> 3.U,  // mcause
+    0x305.U -> 4.U,  // mtvec
+    0xf11.U -> 5.U,  // mvendorid
+    0xf12.U -> 6.U,  // marchid
+  ))
+  val csr_valid = csr_id =/= 0.U
+  val csr_old   = Mux(csr_valid, CSR(csr_id), 0.U)
   val csr_new = MuxCase(csr_old, Seq(
     (csrsel === CSR_W) -> io.op1,
     (csrsel === CSR_S) -> (csr_old | io.op1),
