@@ -271,7 +271,8 @@ class Riscv32E_ID extends Module {
   io.regWen  := wbsel =/= WB_NONE
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := Mux(
-      exsel === EX_JALR, pc + 4.U, io.wb_data)
+      exsel === EX_JALR, io.pc + 4.U, io.wb_data
+    )
   }
 
   // -------- 异常处理 --------
@@ -405,7 +406,7 @@ class Riscv32E extends Module {
   val difftest = Module(new DiffTest)
   difftest.io.clk  := clock
   difftest.io.pc   := ifStage.io.pc
-  difftest.io.npc  := Mux(idStage.io.bren  , exStage.io.aluout, ifStage.io.npc)
+  difftest.io.npc  := Mux(exStage.io.bren, exStage.io.aluout, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
   for (i <- 0 until WORD_LEN) {
     difftest.io.gpr(i) := idStage.io.regfileOut(i)
