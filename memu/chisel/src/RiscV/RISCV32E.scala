@@ -122,6 +122,7 @@ object Riscv32E_Parameters {
 // IF 模块：Instruction Fetch
 // ---------------------------
 class Riscv32E_IF extends Module {
+  import Riscv32E_Parameters._
   val io = IO(new Bundle {
     val halt   = Input(Bool())  // halt 信号
     val jumpen = Input(Bool())  // 跳转使能
