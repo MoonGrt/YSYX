@@ -104,6 +104,7 @@ class Riscv32E_ID extends Module {
     val exsel   = Output(UInt(EX_SEL_LEN.W))
     val op1     = Output(UInt(32.W))
     val op2     = Output(UInt(32.W))
+    val rs2     = Output(UInt(32.W))
     val rd_addr = Output(UInt(5.W))
 
     // Control signals
@@ -166,6 +167,7 @@ class Riscv32E_ID extends Module {
   val imm_u_old = io.inst(31,12) << 12
 
   // -------- EX操作数 --------
+  io.rs2 := regfile(rs2)
   // Determine 1st operand data signal
   io.op1 := MuxCase(0.U(32.W), Seq(
     (op1sel === OP1_RS1) -> regfile(rs1),
