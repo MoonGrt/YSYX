@@ -67,7 +67,6 @@ object Riscv32E_Parameters {
 
   val EX_SEL_LEN = 1
   val EX_ADD  = 0.U(EX_SEL_LEN.W)
-  val EX_JALR = 1.U(EX_SEL_LEN.W)
 
   val JUMP_SEL_LEN = 1
   val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
@@ -228,20 +227,17 @@ class Riscv32E_ID extends Module {
 // EX 模块
 // ---------------------------
 class Riscv32E_EX extends Module {
+  import Riscv32E_Parameters._
   val io = IO(new Bundle {
-    val rs1   = Input(UInt(32.W))
-    val rs2   = Input(UInt(32.W))
-    val pc    = Input(UInt(32.W))
-    val imm   = Input(UInt(32.W))
-    val immen = Input(Bool())
+    val op1   = Input(UInt(32.W))
+    val op2   = Input(UInt(32.W))
     val exsel = Input(UInt(EX_SEL_LEN.W))
     val exout = Output(UInt(32.W))
   })
   // -------- ALU --------
-  io.exout := Mux(
-    io.immen,
-    io.rs1 + io.imm, io.rs1 + io.rs2
-  )
+  io.exout := MuxCase(0.U(WORD_LEN.W), Seq(
+    (exsel === EX_ADD) -> (io.op1 + io.op2),
+  ))
 }
 
 // ---------------------------
@@ -276,18 +272,15 @@ class Riscv32E extends Module {
   idStage.io.inst := io.inst
 
   // EX
-  exStage.io.pc    := ifStage.io.pc
-  exStage.io.rs1   := idStage.io.rs1
-  exStage.io.rs2   := idStage.io.rs2
-  exStage.io.imm   := idStage.io.imm
-  exStage.io.immen := idStage.io.immen
+  exStage.io.op1   := idStage.io.op1
+  exStage.io.op2   := idStage.io.op2
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
   io.mem_re    := idStage.io.memRen
   io.mem_we    := idStage.io.memWen
   io.mem_addr  := exStage.io.exout
-  io.mem_wdata := idStage.io.rs2
+  io.mem_wdata := idStage.io.op2
   io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
 
   // Write Back
