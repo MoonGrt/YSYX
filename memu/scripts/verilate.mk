@@ -7,14 +7,14 @@ VERILATOR_CFLAGS += --trace -cc -MMD -cc -O3 --x-assign fast --x-initial fast \
                     -CFLAGS -ggdb -LDFLAGS -ggdb -j 8
 
 WORK_DIR  = $(shell pwd)
-VSRCS_DIR := $(MEMU_HOME)/vsrc
 RTL_DIR   := $(MEMU_HOME)/rtl
+VSRCS_DIR := $(MEMU_HOME)/vsrc
 VBUILD    := $(BUILD_DIR)/verilated
 
-SCALA_DIR  := $(MEMU_HOME)/src
+PRJ        := chisel
+SCALA_DIR  := $(PRJ)/src
 SCALA_SRCS := $(shell find $(SCALA_DIR) -name "*.scala")
 
-PRJ       := chisel
 TOP       := MiniRV
 VTOP      := $(TOP)TOP
 VSRCS     := $(shell find $(RTL_DIR) -name "*.sv")
