@@ -329,12 +329,12 @@ class Riscv32E_EX extends Module {
   ))
   // -------- Branch --------
   io.bren := MuxCase(false.B, Seq(
-    (io.exsel === BR_BEQ)  ->  (io.op1 === io.op2),
-    (io.exsel === BR_BNE)  -> !(io.op1 === io.op2),
-    // (io.exsel === BR_BLT)  ->  (io.op1.asSInt() < io.op2.asSInt()),
-    // (io.exsel === BR_BGE)  -> !(io.op1.asSInt() < io.op2.asSInt()),
-    (io.exsel === BR_BLTU) ->  (io.op1 < io.op2),
-    (io.exsel === BR_BGEU) -> !(io.op1 < io.op2),
+    (io.exsel === EX_BEQ)  ->  (io.op1 === io.op2),
+    (io.exsel === EX_BNE)  -> !(io.op1 === io.op2),
+    // (io.exsel === EX_BLT)  ->  (io.op1.asSInt() < io.op2.asSInt()),
+    // (io.exsel === EX_BGE)  -> !(io.op1.asSInt() < io.op2.asSInt()),
+    (io.exsel === EX_BLTU) ->  (io.op1 < io.op2),
+    (io.exsel === EX_BGEU) -> !(io.op1 < io.op2),
   ))
   io.braddr := io.pc + io.immsb
 }
