@@ -162,18 +162,18 @@ class Riscv32E_ID extends Module {
 
   // -------- EX操作数 --------
   // Determine 1st operand data signal
-  val op1_data = MuxCase(0.U(WORD_LEN.W), Seq(
-    (op1_sel === OP1_RS1) -> regfile(rs1),
-    (op1_sel === OP1_PC)  -> prev.reg_pc,
-    (op1_sel === OP1_IMZ) -> imm_z_uext,
+  val op1_data = MuxCase(0.U(32.W), Seq(
+    (op1sel === OP1_RS1) -> regfile(rs1),
+    (op1sel === OP1_PC)  -> io.pc,
+    (op1sel === OP1_IMZ) -> imm_z_uext,
   ))
   // Determine 2nd operand data signal
-  val op2_data = MuxCase(0.U(WORD_LEN.W), Seq(
-    (op2_sel === OP2_RS2) -> regfile(rs2),
-    (op2_sel === OP2_IMI) -> imm_i_sext,
-    (op2_sel === OP2_IMS) -> imm_s_sext,
-    (op2_sel === OP2_IMJ) -> imm_j_sext,
-    (op2_sel === OP2_IMU) -> imm_u_shifted, // for LUI and AUIPC
+  val op2_data = MuxCase(0.U(32.W), Seq(
+    (op2sel === OP2_RS2) -> regfile(rs2),
+    (op2sel === OP2_IMI) -> imm_i_sext,
+    (op2sel === OP2_IMS) -> imm_s_sext,
+    (op2sel === OP2_IMJ) -> imm_j_sext,
+    (op2sel === OP2_IMU) -> imm_u_shifted, // for LUI and AUIPC
   ))
 
   // -------- JUMP功能 --------
