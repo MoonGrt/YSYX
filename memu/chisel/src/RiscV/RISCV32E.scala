@@ -99,7 +99,6 @@ class Riscv32E_ID extends Module {
     val wb_data = Input(UInt(32.W))
 
     // 输出到 EX
-    val exsel   = Output(UInt(EX_SEL_LEN.W))
     val rd_addr = Output(UInt(5.W))
 
     // Control signals
@@ -160,8 +159,6 @@ class Riscv32E_ID extends Module {
   // -------- JUMP功能 --------
   io.jumpen := (jumpsel === JUMP_JALR)
 
-  // -------- EX功能 --------
-  io.exsel := exsel
 
   // -------- WB功能 --------
   io.rd_addr := rd
