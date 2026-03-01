@@ -15,7 +15,7 @@ object Sext {
 // ---------------------------
 // IF 模块：Instruction Fetch
 // ---------------------------
-class IF extends Module {
+class MiniRV_IF extends Module {
   val io = IO(new Bundle {
     val halt   = Input(Bool())  // halt 信号
     val jumpen = Input(Bool())  // 跳转使能
@@ -40,7 +40,7 @@ class IF extends Module {
 // ---------------------------
 // ID 模块：Instruction Decode + GPR
 // ---------------------------
-object Instructions {
+object MiniRV_Instructions {
   // Load/Store
   val LW     = BitPat("b?????????????????010?????0000011")
   val LBU    = BitPat("b?????????????????100?????0000011")
@@ -59,7 +59,7 @@ object Instructions {
   // Implemented instructions
   val IMPLEMENTED = Seq(LW, LBU, SW, SB, ADD, ADDI, JALR, LUI, E, EBREAK)
 }
-object Parameters {
+object MiniRV_Parameters {
   val IMM_SEL_LEN = 2
   val IMMN = 0.U(IMM_SEL_LEN.W)
   val IMMI = 1.U(IMM_SEL_LEN.W)
@@ -86,9 +86,9 @@ object Parameters {
   val MEM_WW   = 3.U(MEM_SEL_LEN.W)
   val MEM_WB   = 4.U(MEM_SEL_LEN.W)
 }
-class ID extends Module {
-  import Instructions._
-  import Parameters._
+class MiniRV_ID extends Module {
+  import MiniRV_Instructions._
+  import MiniRV_Parameters._
   val io = IO(new Bundle {
     val inst    = Input(UInt(32.W))
 
@@ -213,8 +213,8 @@ class ID extends Module {
 // ---------------------------
 // EX 模块
 // ---------------------------
-class EX extends Module {
-  import Parameters._
+class MiniRV_EX extends Module {
+  import MiniRV_Parameters._
   val io = IO(new Bundle {
     val pc    = Input(UInt(32.W))
     val rs1   = Input(UInt(32.W))
@@ -249,9 +249,9 @@ class MiniRV extends Module {
     val mem_rdata = Input(UInt(32.W))
   })
 
-  val ifStage = Module(new IF)
-  val idStage = Module(new ID)
-  val exStage = Module(new EX)
+  val ifStage = Module(new MiniRV_IF)
+  val idStage = Module(new MiniRV_ID)
+  val exStage = Module(new MiniRV_EX)
 
   // IF
   io.pc := ifStage.io.pc
