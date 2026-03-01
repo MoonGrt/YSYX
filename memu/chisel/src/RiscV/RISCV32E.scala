@@ -184,6 +184,7 @@ class Riscv32E_ID extends Module {
     val memWen = Output(Bool())
     val regWen = Output(Bool())
 
+    // Diff
     val gprOut = Output(Vec(32, UInt(WORD_LEN.W)))
     val csrOut = Output(Vec(4, UInt(WORD_LEN.W)))
   })
