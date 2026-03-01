@@ -184,8 +184,8 @@ class MiniRV_ID extends Module {
   val trap = Module(new EBreak)
   // 定义异常编码规则
   // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
-  val impl_inst = MiniRV_Instructions.IMPLEMENTED.filterNot(inst =>
-    inst == Instructions.E || inst == Instructions.EBREAK
+  val impl_inst = IMPLEMENTED.filterNot(inst =>
+    inst == E || inst == EBREAK
   )
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
   val is_zero = (io.inst === 0.U)
