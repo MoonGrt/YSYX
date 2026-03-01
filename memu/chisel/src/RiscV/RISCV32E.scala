@@ -136,7 +136,7 @@ class Riscv32E_IF extends Module {
     pc := pc
   }.otherwise {
     when (io.bren) {
-      pc := io.jump
+      pc := io.braddr
     }.otherwise {
       pc := io.npc
     }
@@ -397,7 +397,7 @@ class Riscv32E extends Module {
   val wb_data = MuxCase(
     exStage.io.aluout, Seq(
       idStage.io.memRen -> mem_data,  // Memory read
-      idStage.io.bren   -> ifStage.io.npc  // Jump
+      exStage.io.bren   -> ifStage.io.npc  // Jump
     )
   )
 
