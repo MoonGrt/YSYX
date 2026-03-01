@@ -189,7 +189,7 @@ class Riscv32E_ID extends Module {
     val memWen = Output(Bool())
     val regWen = Output(Bool())
 
-    val regfileOut = Output(Vec(WORD_LEN, UInt(WORD_LEN.W)))
+    val gprOut = Output(Vec(WORD_LEN, UInt(WORD_LEN.W)))
   })
 
   val List(op1sel, op2sel, exsel, wbsel, memsel) = ListLookup(
@@ -320,7 +320,7 @@ class Riscv32E_ID extends Module {
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
   // 输出 GPR
-  io.regfileOut := GPR
+  io.gprOut := GPR
 }
 
 // ---------------------------
@@ -428,7 +428,7 @@ class Riscv32E extends Module {
   difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
   for (i <- 0 until WORD_LEN) {
-    difftest.io.gpr(i) := idStage.io.regfileOut(i)
+    difftest.io.gpr(i) := idStage.io.gprOut(i)
   }
   for (i <- 0 until 4) {
     difftest.io.csr(i) := 0.U(WORD_LEN.W)  // 未实现 CSR
