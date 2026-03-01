@@ -49,7 +49,7 @@ $(VLIB): $(VBUILD)/V$(VTOP).mk
 	@$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 	@ar rcs $@ $(VBUILD)/*.o
 
-rtl:
+rtl: $(SCALA_SRCS)
 	$(call git_commit, "generate verilog")
 	mkdir -p $(RTL_DIR)
 	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
