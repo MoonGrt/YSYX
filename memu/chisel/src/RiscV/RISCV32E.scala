@@ -171,8 +171,6 @@ class Riscv32E_ID extends Module {
   trap.io.clk  := clock
   trap.io.trap := ~reset.asBool && is_unimpl
   trap.io.code := exc_code
-  // halt 信号
-  io.halt := ~reset.asBool && is_unimpl
   // 输出 regfile
   io.regfileOut := regfile
 }
@@ -241,13 +239,7 @@ class Riscv32E extends Module {
   val byte_shift = (exStage.io.exout(1,0) << 3)  // 位移量
   val byte_data = (io.mem_rdata >> byte_shift)(7,0)  // 取目标字节
   val mem_data = io.mem_rdata
-  val wb_data = MuxCase(
-    exStage.io.exout,  // 默认EX输出
-    Seq(
-      idStage.io.memRen -> mem_data,  // Memory read
-      idStage.io.jumpen -> ifStage.io.npc  // Jump
-    )
-  )
+  val wb_data = 0.U
 
   idStage.io.wb_en   := 0.U
   idStage.io.wb_rd   := 0.U
