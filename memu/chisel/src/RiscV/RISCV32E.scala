@@ -64,6 +64,8 @@ object Riscv32E_Instructions {
   )
 }
 object Riscv32E_Parameters {
+  val WORD_LEN = 32
+
   val OP1_SEL_LEN = 2
   val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
   val OP1_PC   = 1.U(OP1_SEL_LEN.W)
@@ -123,11 +125,11 @@ class Riscv32E_IF extends Module {
   val io = IO(new Bundle {
     val halt   = Input(Bool())  // halt 信号
     val jumpen = Input(Bool())  // 跳转使能
-    val jump   = Input(UInt(32.W))  // 跳转地址
-    val npc    = Output(UInt(32.W))  // 下一个 PC
-    val pc     = Output(UInt(32.W))  // 当前 PC 输出
+    val jump   = Input(UInt(WORD_LEN.W))  // 跳转地址
+    val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
+    val pc     = Output(UInt(WORD_LEN.W))  // 当前 PC 输出
   })
-  val pc = RegInit("h80000000".U(32.W))
+  val pc = RegInit("h80000000".U(WORD_LEN.W))
   when (io.halt) {
     pc := pc
   }.otherwise {
@@ -138,7 +140,7 @@ class Riscv32E_IF extends Module {
     }
   }
   io.pc  := pc
-  io.npc := pc + 4.U(32.W)
+  io.npc := pc + 4.U(WORD_LEN.W)
 }
 
 // ---------------------------
@@ -148,20 +150,20 @@ class Riscv32E_ID extends Module {
   import Riscv32E_Instructions._
   import Riscv32E_Parameters._
   val io = IO(new Bundle {
-    val pc      = Input(UInt(32.W))
-    val inst    = Input(UInt(32.W))
+    val pc      = Input(UInt(WORD_LEN.W))
+    val inst    = Input(UInt(WORD_LEN.W))
 
     // 写回接口（来自 WB）
     val wb_en   = Input(Bool())
     val wb_rd   = Input(UInt(5.W))
-    val wb_data = Input(UInt(32.W))
+    val wb_data = Input(UInt(WORD_LEN.W))
 
     // 输出到 EX
     val exsel   = Output(UInt(EX_SEL_LEN.W))
-    val op1     = Output(UInt(32.W))
-    val op2     = Output(UInt(32.W))
-    val immsb   = Output(UInt(32.W))
-    val rs2     = Output(UInt(32.W))
+    val op1     = Output(UInt(WORD_LEN.W))
+    val op2     = Output(UInt(WORD_LEN.W))
+    val immsb   = Output(UInt(WORD_LEN.W))
+    val rs2     = Output(UInt(WORD_LEN.W))
     val rd_addr = Output(UInt(5.W))
 
     // Control signals
@@ -172,7 +174,7 @@ class Riscv32E_ID extends Module {
     val memWen = Output(Bool())
     val regWen = Output(Bool())
 
-    val regfileOut = Output(Vec(32, UInt(32.W)))
+    val regfileOut = Output(Vec(WORD_LEN, UInt(WORD_LEN.W)))
   })
 
   val List(op1sel, op2sel, exsel, jumpsel, wbsel, memsel) = ListLookup(
@@ -212,7 +214,7 @@ class Riscv32E_ID extends Module {
   )
 
   // -------- 寄存器堆 --------
-  val regfile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
+  val regfile = RegInit(VecInit(Seq.fill(WORD_LEN)(0.U(WORD_LEN.W))))
 
   // -------- 指令字段 --------
   val rd  = io.inst(11,7)
@@ -245,13 +247,13 @@ class Riscv32E_ID extends Module {
   io.immsb := immsb
   io.rs2 := regfile(rs2)
   // Determine 1st operand data signal
-  io.op1 := MuxCase(0.U(32.W), Seq(
+  io.op1 := MuxCase(0.U(WORD_LEN.W), Seq(
     (op1sel === OP1_RS1) -> regfile(rs1),
     (op1sel === OP1_PC)  -> io.pc,
     (op1sel === OP1_IMZ) -> immuz,
   ))
   // Determine 2nd operand data signal
-  io.op2 := MuxCase(0.U(32.W), Seq(
+  io.op2 := MuxCase(0.U(WORD_LEN.W), Seq(
     (op2sel === OP2_RS2) -> regfile(rs2),
     (op2sel === OP2_IMI) -> immi,
     (op2sel === OP2_IMS) -> imms,
@@ -305,17 +307,17 @@ class Riscv32E_ID extends Module {
 class Riscv32E_EX extends Module {
   import Riscv32E_Parameters._
   val io = IO(new Bundle {
-    val pc     = Input(UInt(32.W))
-    val op1    = Input(UInt(32.W))
-    val op2    = Input(UInt(32.W))
-    val immsb  = Input(UInt(32.W))
+    val pc     = Input(UInt(WORD_LEN.W))
+    val op1    = Input(UInt(WORD_LEN.W))
+    val op2    = Input(UInt(WORD_LEN.W))
+    val immsb  = Input(UInt(WORD_LEN.W))
     val exsel  = Input(UInt(EX_SEL_LEN.W))
-    val aluout = Output(UInt(32.W))
+    val aluout = Output(UInt(WORD_LEN.W))
     val bren   = Output(Bool())
-    val braddr = Output(UInt(32.W))
+    val braddr = Output(UInt(WORD_LEN.W))
   })
   // -------- ALU --------
-  io.aluout := MuxCase(0.U(32.W), Seq(
+  io.aluout := MuxCase(0.U(WORD_LEN.W), Seq(
     (io.exsel === EX_ADD)  -> (io.op1 + io.op2),
     (io.exsel === EX_SUB)  -> (io.op1 - io.op2),
     (io.exsel === EX_AND)  -> (io.op1 & io.op2),
@@ -346,15 +348,15 @@ class Riscv32E extends Module {
   import Riscv32E_Instructions._
   import Riscv32E_Parameters._
   val io = IO(new Bundle {
-    val pc   = Output(UInt(32.W))
-    val inst = Input(UInt(32.W))
+    val pc   = Output(UInt(WORD_LEN.W))
+    val inst = Input(UInt(WORD_LEN.W))
 
     val mem_re    = Output(Bool())
     val mem_we    = Output(Bool())
     val mem_len   = Output(UInt(4.W))
-    val mem_addr  = Output(UInt(32.W))
-    val mem_wdata = Output(UInt(32.W))
-    val mem_rdata = Input(UInt(32.W))
+    val mem_addr  = Output(UInt(WORD_LEN.W))
+    val mem_wdata = Output(UInt(WORD_LEN.W))
+    val mem_rdata = Input(UInt(WORD_LEN.W))
   })
 
   val ifStage = Module(new Riscv32E_IF)
@@ -406,11 +408,11 @@ class Riscv32E extends Module {
   difftest.io.pc   := ifStage.io.pc
   difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.aluout, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
-  for (i <- 0 until 32) {
+  for (i <- 0 until WORD_LEN) {
     difftest.io.gpr(i) := idStage.io.regfileOut(i)
   }
   for (i <- 0 until 4) {
-    difftest.io.csr(i) := 0.U(32.W)  // 未实现 CSR
+    difftest.io.csr(i) := 0.U(WORD_LEN.W)  // 未实现 CSR
   }
 }
 
