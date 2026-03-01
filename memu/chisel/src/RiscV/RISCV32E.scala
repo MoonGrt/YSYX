@@ -98,7 +98,7 @@ object Riscv32E_Parameters {
   val EX_BGE  = 14.U(EX_SEL_LEN.W)
   val EX_BLTU = 15.U(EX_SEL_LEN.W)
   val EX_BGEU = 16.U(EX_SEL_LEN.W)
-  val EX_JAL  = 16.U(EX_SEL_LEN.W)
+  val EX_JAL  = 17.U(EX_SEL_LEN.W)
 
   val JUMP_SEL_LEN = 2
   val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
@@ -246,9 +246,6 @@ class Riscv32E_ID extends Module {
   // Decode imm of I-type instruction
   val immz = io.inst(19, 15)
   val immuz = Cat(Fill(27, 0.U), immz)  // for CSR instructions
-
-  val imm_s_old = Sext(Cat(io.inst(31,25), io.inst(11,7)), 12)
-  val imm_u_old = io.inst(31,12) << 12
 
   // -------- EX功能 --------
   io.exsel := exsel
