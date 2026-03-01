@@ -72,7 +72,12 @@ object Riscv32E_Instructions {
   val E      = BitPat("b?????????????????????????1110011")
   val EBREAK = BitPat("b00000000000100000000000001110011")
   // Implemented instructions
-  val IMPLED = Seq(LW, LBU, SW, SB, ADD, ADDI, JAL, JALR, LUI, AUIPC, E, EBREAK)
+  val IMPLED = Seq(
+    LW, LBU, SW, SB,
+    ADD, ADDI, SUB,
+    JAL, JALR, LUI, AUIPC,
+    E, EBREAK
+  )
 }
 object Riscv32E_Parameters {
   val OP1_SEL_LEN = 2
