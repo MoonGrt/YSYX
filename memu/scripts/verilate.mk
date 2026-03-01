@@ -37,30 +37,19 @@ $(RTL_DIR)/$(VTOP).sv: $(SCALA_SRCS)
 	mkdir -p $(RTL_DIR)
 	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
-$(VBUILD)/V$(VTOP).mk: $(RTL_DIR)/$(VTOP).sv
+$(VLIB): $(RTL_DIR)/$(VTOP).sv
 	@echo + VERILATE RTL
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
 	  --top-module $(VTOP) -O3 --Mdir $(VBUILD)
 	@echo "+ AR $@"
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
-
-$(VLIB): $(VBUILD)/V$(VTOP).mk
 	@$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 	@ar rcs $@ $(VBUILD)/*.o
 
-rtl: $(SCALA_SRCS)
-	$(call git_commit, "generate verilog")
-	mkdir -p $(RTL_DIR)
-	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
+rtl: $(RTL_DIR)/$(VTOP).sv
 
-verilate: $(RTL_DIR)/$(VTOP).sv
-	@echo + VERILATE RTL
-	@mkdir -p $(VBUILD)
-	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
-	  --top-module $(VTOP) -O3 --Mdir $(VBUILD)
-	@echo "+ AR $@"
-	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
+verilate: $(VLIB)
 
 wave: $(WAVE_FILE)
 	$(GTKWAVE) $(WAVE_FILE) > /dev/null 2>&1 &
