@@ -230,10 +230,10 @@ class Riscv32E_ID extends Module {
   val immss = Cat(Fill(20, imms(11)), imms)
   // Decode imm of B-type instruction
   val immb = Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8))
-  val immsb = Cat(Fill(19, immb(11)), immb, 0.U(1.U))
+  val immsb = Cat(Fill(19, immb(11)), immb, 0.U(1.W))
   // Decode imm of J-type instruction
   val immj = Cat(io.inst(31), io.inst(19, 12), io.inst(20), io.inst(30, 21))
-  val immsj = Cat(Fill(11, immj(19)), immj, 0.U(1.U))  // Set LSB to zero
+  val immsj = Cat(Fill(11, immj(19)), immj, 0.U(1.W))  // Set LSB to zero
   // Decode imm of U-type instruction
   val immu = Cat(io.inst(31, 12), Fill(12, 0.U))  // for LUI and AUIPC
   // Decode imm of I-type instruction
