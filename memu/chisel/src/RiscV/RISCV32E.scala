@@ -160,6 +160,7 @@ class Riscv32E_ID extends Module {
     val exsel   = Output(UInt(EX_SEL_LEN.W))
     val op1     = Output(UInt(32.W))
     val op2     = Output(UInt(32.W))
+    val immsb   = Output(UInt(32.W))
     val rs2     = Output(UInt(32.W))
     val rd_addr = Output(UInt(5.W))
 
@@ -236,7 +237,12 @@ class Riscv32E_ID extends Module {
   val immz = io.inst(19, 15)
   val immuz = Cat(Fill(27, 0.U), immz)  // for CSR instructions
 
-  // -------- EX操作数 --------
+  // -------- JUMP功能 --------
+  io.jumpen := (jumpsel === JUMP_JAL) || (jumpsel === JUMP_JALR)
+
+  // -------- EX功能 --------
+  io.exsel := exsel
+  io.immsb := immsb
   io.rs2 := regfile(rs2)
   // Determine 1st operand data signal
   io.op1 := MuxCase(0.U(32.W), Seq(
@@ -252,12 +258,6 @@ class Riscv32E_ID extends Module {
     (op2sel === OP2_IMJ) -> immsj,
     (op2sel === OP2_IMU) -> immu,  // for LUI and AUIPC
   ))
-
-  // -------- JUMP功能 --------
-  io.jumpen := (jumpsel === JUMP_JAL) || (jumpsel === JUMP_JALR)
-
-  // -------- EX功能 --------
-  io.exsel := exsel
 
   // -------- WB功能 --------
   io.rd_addr := rd
@@ -306,9 +306,9 @@ class Riscv32E_EX extends Module {
   import Riscv32E_Parameters._
   val io = IO(new Bundle {
     val pc     = Input(UInt(32.W))
-    val immsb = Input(UInt(32.W))
     val op1    = Input(UInt(32.W))
     val op2    = Input(UInt(32.W))
+    val immsb  = Input(UInt(32.W))
     val exsel  = Input(UInt(EX_SEL_LEN.W))
     val aluout = Output(UInt(32.W))
     val bren   = Output(Bool())
@@ -372,6 +372,8 @@ class Riscv32E extends Module {
   idStage.io.inst := io.inst
 
   // EX
+  exStage.io.pc    := idStage.io.pc
+  exStage.io.immsb := 0
   exStage.io.op1   := idStage.io.op1
   exStage.io.op2   := idStage.io.op2
   exStage.io.exsel := idStage.io.exsel
@@ -388,8 +390,7 @@ class Riscv32E extends Module {
   val byte_data = (io.mem_rdata >> byte_shift)(7,0)  // 取目标字节
   val mem_data = io.mem_rdata
   val wb_data = MuxCase(
-    exStage.io.aluout,  // 默认EX输出
-    Seq(
+    exStage.io.aluout, Seq(
       idStage.io.memRen -> mem_data,  // Memory read
       idStage.io.jumpen -> ifStage.io.npc  // Jump
     )
