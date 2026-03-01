@@ -98,6 +98,19 @@ class Riscv32E_ID extends Module {
     val wb_rd   = Input(UInt(5.W))
     val wb_data = Input(UInt(32.W))
 
+    // 输出到 EX
+    val exsel   = Output(UInt(EX_SEL_LEN.W))
+    val op1     = Output(UInt(32.W))
+    val op2     = Output(UInt(32.W))
+    val rd_addr = Output(UInt(5.W))
+
+    // Control signals
+    val halt   = Output(Bool())
+    val jumpen = Output(Bool())
+    val memBen = Output(Bool())
+    val memRen = Output(Bool())
+    val memWen = Output(Bool())
+    val regWen = Output(Bool())
 
     val regfileOut = Output(Vec(32, UInt(32.W)))
   })
@@ -145,7 +158,37 @@ class Riscv32E_ID extends Module {
   val imm_z = io.inst(19, 15)
   val imm_z_uext = Cat(Fill(27, 0.U), imm_z)  // for CSR instructions
 
+  // -------- EX操作数 --------
+  // Determine 1st operand data signal
+  io.op1 := MuxCase(0.U(32.W), Seq(
+    (op1sel === OP1_RS1) -> regfile(rs1),
+    (op1sel === OP1_PC)  -> io.pc,
+    (op1sel === OP1_IMZ) -> imm_z_uext,
+  ))
+  // Determine 2nd operand data signal
+  io.op2 := MuxCase(0.U(32.W), Seq(
+    (op2sel === OP2_RS2) -> regfile(rs2),
+    (op2sel === OP2_IMI) -> imm_i_sext,
+    (op2sel === OP2_IMS) -> imm_s_sext,
+    (op2sel === OP2_IMJ) -> imm_j_sext,
+    (op2sel === OP2_IMU) -> imm_u_shifted,  // for LUI and AUIPC
+  ))
 
+  // -------- JUMP功能 --------
+  io.jumpen := (jumpsel === JUMP_JALR)
+
+  // -------- EX功能 --------
+  io.exsel := exsel
+
+  // -------- WB功能 --------
+  io.rd_addr := rd
+  io.memBen  := ~reset.asBool && ((memsel === MEM_RB) || (memsel === MEM_WB))
+  io.memRen  := ~reset.asBool && ((memsel === MEM_RW) || (memsel === MEM_RB))
+  io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
+  io.regWen  := wbsel =/= WB_NONE
+  when (io.wb_en && io.wb_rd =/= 0.U) {
+    regfile(io.wb_rd) := io.wb_data
+  }
 
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
@@ -171,6 +214,8 @@ class Riscv32E_ID extends Module {
   trap.io.clk  := clock
   trap.io.trap := ~reset.asBool && is_unimpl
   trap.io.code := exc_code
+  // halt 信号
+  io.halt := ~reset.asBool && is_unimpl
   // 输出 regfile
   io.regfileOut := regfile
 }
@@ -216,43 +261,49 @@ class Riscv32E extends Module {
 
   // IF
   io.pc := ifStage.io.pc
-  ifStage.io.jumpen := 0.U
+  ifStage.io.jumpen := idStage.io.jumpen
   ifStage.io.jump   := exStage.io.exout
-  ifStage.io.halt   := 0.U
+  ifStage.io.halt   := idStage.io.halt
 
   // ID
   idStage.io.inst := io.inst
 
   // EX
-  exStage.io.op1   := 0.U
-  exStage.io.op2   := 0.U
-  exStage.io.exsel := 0.U
+  exStage.io.op1   := idStage.io.op1
+  exStage.io.op2   := idStage.io.op2
+  exStage.io.exsel := idStage.io.exsel
 
   // Memory
-  io.mem_re    := 0.U
-  io.mem_we    := 0.U
-  io.mem_addr  := 0.U
-  io.mem_wdata := 0.U
-  io.mem_len   := 0.U
+  io.mem_re    := idStage.io.memRen
+  io.mem_we    := idStage.io.memWen
+  io.mem_addr  := exStage.io.exout
+  io.mem_wdata := idStage.io.op2
+  io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
 
   // Write Back
   val byte_shift = (exStage.io.exout(1,0) << 3)  // 位移量
   val byte_data = (io.mem_rdata >> byte_shift)(7,0)  // 取目标字节
   val mem_data = io.mem_rdata
-  val wb_data = 0.U
+  val wb_data = MuxCase(
+    exStage.io.exout,  // 默认EX输出
+    Seq(
+      idStage.io.memRen -> mem_data,  // Memory read
+      idStage.io.jumpen -> ifStage.io.npc  // Jump
+    )
+  )
 
-  idStage.io.wb_en   := 0.U
-  idStage.io.wb_rd   := 0.U
+  idStage.io.wb_en   := idStage.io.regWen
+  idStage.io.wb_rd   := idStage.io.rd_addr
   idStage.io.wb_data := wb_data
 
   // DiffTest
   val difftest = Module(new DiffTest)
   difftest.io.clk  := clock
   difftest.io.pc   := ifStage.io.pc
-  difftest.io.npc  := 0.U
-  difftest.io.inst := 0.U
+  difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.exout, ifStage.io.npc)
+  difftest.io.inst := idStage.io.inst
   for (i <- 0 until 32) {
-    difftest.io.gpr(i) := 0.U
+    difftest.io.gpr(i) := idStage.io.regfileOut(i)
   }
   for (i <- 0 until 4) {
     difftest.io.csr(i) := 0.U(32.W)  // 未实现 CSR
