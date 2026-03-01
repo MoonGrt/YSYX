@@ -17,9 +17,9 @@ SCALA_SRCS := $(shell find $(SCALA_DIR) -name "*.scala")
 
 TOP       := MiniRV
 VTOP      := $(TOP)TOP
-VSRCS      = $(RTL_DIR)/$(VTOP).sv \
+RTL_OBJS  := $(RTL_DIR)/$(VTOP).sv
+VSRCS      = $(RTL_OBJS) \
              $(shell find $(VSRCS_DIR) -name "*.v")
-RTL_OBJS  := $(VBUILD)/V$(VTOP)__ALL.a
 VLIB      := $(VBUILD)/libV$(VTOP).a
 WAVE_FILE := $(BUILD_DIR)/wave.vcd
 
@@ -31,13 +31,13 @@ INC_PATH += $(VERILATOR_ROOT)/include
 INC_PATH += $(VERILATOR_ROOT)/include/vltstd
 endif
 
-$(RTL_DIR)/$(VTOP).sv: $(SCALA_SRCS)
+$(RTL_OBJS): $(SCALA_SRCS)
 	$(call git_commit, "generate verilog")
 	@echo "+ CHISEL  (scala -> verilog)"
 	@mkdir -p $(RTL_DIR)
 	@mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
-$(VLIB): $(RTL_DIR)/$(VTOP).sv
+$(VLIB): $(RTL_OBJS)
 	@echo "+ VERILATE RTL"
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
@@ -46,7 +46,7 @@ $(VLIB): $(RTL_DIR)/$(VTOP).sv
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 	ar rcs $@ $(VBUILD)/*.o
 
-rtl: $(RTL_DIR)/$(VTOP).sv
+rtl: $(RTL_OBJS)
 
 verilate: $(VLIB)
 
