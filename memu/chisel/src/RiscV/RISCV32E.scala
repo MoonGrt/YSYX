@@ -135,10 +135,9 @@ class Riscv32E_ID extends Module {
   val regfile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
 
   // -------- 指令字段 --------
-  val opcode = io.inst(6,0)
-  val rd     = io.inst(11,7)
-  val rs1    = io.inst(19,15)
-  val rs2    = io.inst(24,20)
+  val rd  = io.inst(11,7)
+  val rs1 = io.inst(19,15)
+  val rs2 = io.inst(24,20)
 
   // -------- 立即数 --------
   // sext 12bit value to 32bit value.
@@ -171,7 +170,7 @@ class Riscv32E_ID extends Module {
     (op2sel === OP2_RS2) -> regfile(rs2),
     (op2sel === OP2_IMI) -> imm_i_sext,
     (op2sel === OP2_IMS) -> imm_s_sext,
-    // (op2sel === OP2_IMJ) -> imm_j_sext,
+    (op2sel === OP2_IMJ) -> 0.U,
     (op2sel === OP2_IMU) -> imm_u_shifted,  // for LUI and AUIPC
   ))
 
