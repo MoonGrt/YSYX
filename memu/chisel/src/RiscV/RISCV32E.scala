@@ -310,7 +310,6 @@ class Riscv32E_EX extends Module {
     // (io.exsel === EX_SLT)  -> (io.op1.asSInt() < io.op2.asSInt()).asUInt(),
     (io.exsel === EX_SLTU) -> (io.op1 < io.op2),
   ))
-  
 }
 
 // ---------------------------
