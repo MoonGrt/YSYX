@@ -373,9 +373,9 @@ class Riscv32E extends Module {
 
   // EX
   exStage.io.pc    := idStage.io.pc
-  exStage.io.immsb := 0
   exStage.io.op1   := idStage.io.op1
   exStage.io.op2   := idStage.io.op2
+  exStage.io.immsb := idStage.io.immsb
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
