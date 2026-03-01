@@ -235,7 +235,7 @@ class Riscv32E extends Module {
   io.mem_we    := 0.U
   io.mem_addr  := 0.U
   io.mem_wdata := 0.U
-  io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
+  io.mem_len   := 0.U
 
   // Write Back
   val byte_shift = (exStage.io.exout(1,0) << 3)  // 位移量
@@ -257,10 +257,10 @@ class Riscv32E extends Module {
   val difftest = Module(new DiffTest)
   difftest.io.clk  := clock
   difftest.io.pc   := ifStage.io.pc
-  difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.exout, ifStage.io.npc)
-  difftest.io.inst := idStage.io.inst
+  difftest.io.npc  := 0.U
+  difftest.io.inst := 0.U
   for (i <- 0 until 32) {
-    difftest.io.gpr(i) := idStage.io.regfileOut(i)
+    difftest.io.gpr(i) := 0.U
   }
   for (i <- 0 until 4) {
     difftest.io.csr(i) := 0.U(32.W)  // 未实现 CSR
