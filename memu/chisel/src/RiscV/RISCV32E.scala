@@ -193,49 +193,49 @@ class Riscv32E_ID extends Module {
     io.inst,
     List(OP1_RS1, OP2_RS2, EX_ADD, WB_EX, MEM_NONE, CSR_NONE),
     Array(
-      LW     -> List( OP1_RS1, OP2_IMI, EX_ADD , WB_MEM , MEM_RW  , CSR_NONE),  // x[rs1] + sext(immi)
-      LBU    -> List( OP1_RS1, OP2_IMI, EX_ADD , WB_MEM , MEM_RB  , CSR_NONE),  // x[rs1] + sext(immi)
-      SW     -> List( OP1_RS1, OP2_IMS, EX_ADD , WB_NONE, MEM_WW  , CSR_NONE),  // x[rs1] + sext(imms)
-      SB     -> List( OP1_RS1, OP2_IMS, EX_ADD , WB_NONE, MEM_WB  , CSR_NONE),  // x[rs1] + sext(imms)
+      LW     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RW  , CSR_NONE),  // x[rs1] + sext(immi)
+      LBU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RB  , CSR_NONE),  // x[rs1] + sext(immi)
+      SW     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WW  , CSR_NONE),  // x[rs1] + sext(imms)
+      SB     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WB  , CSR_NONE),  // x[rs1] + sext(imms)
 
-      ADD    -> List( OP1_RS1, OP2_RS2, EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] + x[rs2]
-      ADDI   -> List( OP1_RS1, OP2_IMI, EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] + sext(immi)
-      SUB    -> List( OP1_RS1, OP2_RS2, EX_SUB , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] - x[rs2]
-      AND    -> List( OP1_RS1, OP2_RS2, EX_AND , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] & x[rs2]
-      OR     -> List( OP1_RS1, OP2_RS2, EX_OR  , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] | x[rs2]
-      XOR    -> List( OP1_RS1, OP2_RS2, EX_XOR , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] ^ x[rs2]
-      ANDI   -> List( OP1_RS1, OP2_IMI, EX_AND , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] & sext(immi)
-      ORI    -> List( OP1_RS1, OP2_IMI, EX_OR  , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] | sext(immi)
-      XORI   -> List( OP1_RS1, OP2_IMI, EX_XOR , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] ^ sext(immi)
-      SLL    -> List( OP1_RS1, OP2_RS2, EX_SLL , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] << x[rs2](4,0)
-      SRL    -> List( OP1_RS1, OP2_RS2, EX_SRL , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] >>u x[rs2](4,0)
-      SRA    -> List( OP1_RS1, OP2_RS2, EX_SRA , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] >>s x[rs2](4,0)
-      SLLI   -> List( OP1_RS1, OP2_IMI, EX_SLL , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] << immsi(4,0)
-      SRLI   -> List( OP1_RS1, OP2_IMI, EX_SRL , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] >>u immsi(4,0)
-      SRAI   -> List( OP1_RS1, OP2_IMI, EX_SRA , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] >>s immsi(4,0)
-      SLT    -> List( OP1_RS1, OP2_RS2, EX_SLT , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] <s x[rs2]
-      SLTU   -> List( OP1_RS1, OP2_RS2, EX_SLTU, WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] <u x[rs2]
-      SLTI   -> List( OP1_RS1, OP2_IMI, EX_SLT , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] <s immsi
-      SLTIU  -> List( OP1_RS1, OP2_IMI, EX_SLTU, WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] <u immsi
+      ADD    -> List(OP1_RS1 , OP2_RS2 , EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] + x[rs2]
+      ADDI   -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] + sext(immi)
+      SUB    -> List(OP1_RS1 , OP2_RS2 , EX_SUB , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] - x[rs2]
+      AND    -> List(OP1_RS1 , OP2_RS2 , EX_AND , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] & x[rs2]
+      OR     -> List(OP1_RS1 , OP2_RS2 , EX_OR  , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] | x[rs2]
+      XOR    -> List(OP1_RS1 , OP2_RS2 , EX_XOR , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] ^ x[rs2]
+      ANDI   -> List(OP1_RS1 , OP2_IMI , EX_AND , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] & sext(immi)
+      ORI    -> List(OP1_RS1 , OP2_IMI , EX_OR  , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] | sext(immi)
+      XORI   -> List(OP1_RS1 , OP2_IMI , EX_XOR , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] ^ sext(immi)
+      SLL    -> List(OP1_RS1 , OP2_RS2 , EX_SLL , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] << x[rs2](4,0)
+      SRL    -> List(OP1_RS1 , OP2_RS2 , EX_SRL , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] >>u x[rs2](4,0)
+      SRA    -> List(OP1_RS1 , OP2_RS2 , EX_SRA , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] >>s x[rs2](4,0)
+      SLLI   -> List(OP1_RS1 , OP2_IMI , EX_SLL , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] << immsi(4,0)
+      SRLI   -> List(OP1_RS1 , OP2_IMI , EX_SRL , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] >>u immsi(4,0)
+      SRAI   -> List(OP1_RS1 , OP2_IMI , EX_SRA , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] >>s immsi(4,0)
+      SLT    -> List(OP1_RS1 , OP2_RS2 , EX_SLT , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] <s x[rs2]
+      SLTU   -> List(OP1_RS1 , OP2_RS2 , EX_SLTU, WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] <u x[rs2]
+      SLTI   -> List(OP1_RS1 , OP2_IMI , EX_SLT , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] <s immsi
+      SLTIU  -> List(OP1_RS1 , OP2_IMI , EX_SLTU, WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] <u immsi
 
-      BEQ    -> List( OP1_RS1, OP2_RS2, EX_BEQ , WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] === x[rs2] then PC+sext(imm_b)
-      BNE    -> List( OP1_RS1, OP2_RS2, EX_BNE , WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] =/= x[rs2] then PC+sext(imm_b)
-      BGE    -> List( OP1_RS1, OP2_RS2, EX_BGE , WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] >=s x[rs2] then PC+sext(imm_b)
-      BGEU   -> List( OP1_RS1, OP2_RS2, EX_BGEU, WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] >=u x[rs2] then PC+sext(imm_b)
-      BLT    -> List( OP1_RS1, OP2_RS2, EX_BLT , WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] <s x[rs2]  then PC+sext(imm_b)
-      BLTU   -> List( OP1_RS1, OP2_RS2, EX_BLTU, WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] <u x[rs2]  then PC+sext(imm_b)
-      JAL    -> List( OP1_PC , OP2_IMJ, EX_JAL , WB_PC  , MEM_NONE, CSR_NONE),  // x[rd] <- PC+4 and PC+sext(imm_j)
-      JALR   -> List( OP1_RS1, OP2_IMI, EX_JAL , WB_PC  , MEM_NONE, CSR_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+      BEQ    -> List(OP1_RS1 , OP2_RS2 , EX_BEQ , WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] === x[rs2] then PC+sext(imm_b)
+      BNE    -> List(OP1_RS1 , OP2_RS2 , EX_BNE , WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] =/= x[rs2] then PC+sext(imm_b)
+      BGE    -> List(OP1_RS1 , OP2_RS2 , EX_BGE , WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] >=s x[rs2] then PC+sext(imm_b)
+      BGEU   -> List(OP1_RS1 , OP2_RS2 , EX_BGEU, WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] >=u x[rs2] then PC+sext(imm_b)
+      BLT    -> List(OP1_RS1 , OP2_RS2 , EX_BLT , WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] <s x[rs2]  then PC+sext(imm_b)
+      BLTU   -> List(OP1_RS1 , OP2_RS2 , EX_BLTU, WB_NONE, MEM_NONE, CSR_NONE),  // x[rs1] <u x[rs2]  then PC+sext(imm_b)
+      JAL    -> List(OP1_PC  , OP2_IMJ , EX_JAL , WB_PC  , MEM_NONE, CSR_NONE),  // x[rd] <- PC+4 and PC+sext(imm_j)
+      JALR   -> List(OP1_RS1 , OP2_IMI , EX_JAL , WB_PC  , MEM_NONE, CSR_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
 
-      LUI    -> List(OP1_NONE, OP2_IMU, EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // sext(immu[31:12] << 12)
-      AUIPC  -> List(OP1_PC  , OP2_IMU, EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // PC + sext(immu[31:12] << 12)
+      LUI    -> List(OP1_NONE, OP2_IMU , EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // sext(immu[31:12] << 12)
+      AUIPC  -> List(OP1_PC  , OP2_IMU , EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // PC + sext(immu[31:12] << 12)
 
-      CSRRW  -> List(OP1_RS1, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_W   ), // CSRs[csr] <- x[rs1]
-      CSRRWI -> List(OP1_IMZ, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_W   ), // CSRs[csr] <- uext(imm_z)
-      CSRRS  -> List(OP1_RS1, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_S   ), // CSRs[csr] <- CSRs[csr] | x[rs1]
-      CSRRSI -> List(OP1_IMZ, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_S   ), // CSRs[csr] <- CSRs[csr] | uext(imm_z)
-      CSRRC  -> List(OP1_RS1, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~x[rs1]
-      CSRRCI -> List(OP1_IMZ, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
+      CSRRW  -> List(OP1_RS1 , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_W   ), // CSRs[csr] <- x[rs1]
+      CSRRWI -> List(OP1_IMZ , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_W   ), // CSRs[csr] <- uext(imm_z)
+      CSRRS  -> List(OP1_RS1 , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_S   ), // CSRs[csr] <- CSRs[csr] | x[rs1]
+      CSRRSI -> List(OP1_IMZ , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_S   ), // CSRs[csr] <- CSRs[csr] | uext(imm_z)
+      CSRRC  -> List(OP1_RS1 , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~x[rs1]
+      CSRRCI -> List(OP1_IMZ , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
     ),
   )
 
