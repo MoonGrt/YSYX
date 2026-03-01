@@ -160,34 +160,32 @@ class Riscv32E_ID extends Module {
 
   // -------- EX操作数 --------
   // Determine 1st operand data signal
-  io.op1 := 0.U
-  // io.op1 := MuxCase(0.U(32.W), Seq(
-  //   (op1sel === OP1_RS1) -> regfile(rs1),
-  //   (op1sel === OP1_PC)  -> io.pc,
-  //   (op1sel === OP1_IMZ) -> imm_z_uext,
-  // ))
+  io.op1 := MuxCase(0.U(32.W), Seq(
+    (op1sel === OP1_RS1) -> regfile(rs1),
+    (op1sel === OP1_PC)  -> io.pc,
+    (op1sel === OP1_IMZ) -> imm_z_uext,
+  ))
   // Determine 2nd operand data signal
-  io.op2 := 0.U
-  // io.op2 := MuxCase(0.U(32.W), Seq(
-  //   (op2sel === OP2_RS2) -> regfile(rs2),
-  //   (op2sel === OP2_IMI) -> imm_i_sext,
-  //   (op2sel === OP2_IMS) -> imm_s_sext,
-  //   // (op2sel === OP2_IMJ) -> imm_j_sext,
-  //   (op2sel === OP2_IMU) -> imm_u_shifted,  // for LUI and AUIPC
-  // ))
+  io.op2 := MuxCase(0.U(32.W), Seq(
+    (op2sel === OP2_RS2) -> regfile(rs2),
+    (op2sel === OP2_IMI) -> imm_i_sext,
+    (op2sel === OP2_IMS) -> imm_s_sext,
+    (op2sel === OP2_IMJ) -> imm_j_sext,
+    (op2sel === OP2_IMU) -> imm_u_shifted,  // for LUI and AUIPC
+  ))
 
   // -------- JUMP功能 --------
   io.jumpen := (jumpsel === JUMP_JALR)
 
   // -------- EX功能 --------
-  io.exsel := 0.U
+  io.exsel := exsel
 
   // -------- WB功能 --------
   io.rd_addr := rd
   io.memBen  := ~reset.asBool && ((memsel === MEM_RB) || (memsel === MEM_WB))
   io.memRen  := ~reset.asBool && ((memsel === MEM_RW) || (memsel === MEM_RB))
   io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
-  io.regWen  := ~reset.asBool && (wbsel =/= WB_NONE)
+  io.regWen  := wbsel =/= WB_NONE
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := io.wb_data
   }
