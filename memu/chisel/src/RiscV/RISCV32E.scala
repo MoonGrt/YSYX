@@ -115,7 +115,7 @@ class Riscv32E_ID extends Module {
     val regfileOut = Output(Vec(32, UInt(32.W)))
   })
 
-  val List(op1sel, op2sel, exsel, jumpsel, wbsel, memsel) = ListLookup(
+  val decoded = ListLookup(
     io.inst,
     List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),
     Array(
@@ -130,6 +130,12 @@ class Riscv32E_ID extends Module {
       AUIPC -> List( OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(imm_u[31:12] << 12)
     ),
   )
+  val op1sel  = decoded(0)
+  val op2sel  = decoded(1)
+  val exsel   = decoded(2)
+  val jumpsel = decoded(3)
+  val wbsel   = decoded(4)
+  val memsel  = decoded(5)
 
   // -------- 寄存器堆 --------
   val regfile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
