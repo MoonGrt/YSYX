@@ -104,6 +104,7 @@ class Riscv32E_ID extends Module {
     val exsel   = Output(UInt(EX_SEL_LEN.W))
     val op1     = Output(UInt(32.W))
     val op2     = Output(UInt(32.W))
+    val rs2     = Output(UInt(32.W))
     val rd_addr = Output(UInt(5.W))
 
     // Control signals
