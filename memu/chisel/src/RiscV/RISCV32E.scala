@@ -126,8 +126,8 @@ class Riscv32E_IF extends Module {
   import Riscv32E_Parameters._
   val io = IO(new Bundle {
     val halt   = Input(Bool())  // halt 信号
-    val jumpen = Input(Bool())  // 跳转使能
-    val jump   = Input(UInt(WORD_LEN.W))  // 跳转地址
+    val bren   = Input(Bool())  // 跳转使能
+    val braddr = Input(UInt(WORD_LEN.W))  // 跳转地址
     val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
     val pc     = Output(UInt(WORD_LEN.W))  // 当前 PC 输出
   })
@@ -135,7 +135,7 @@ class Riscv32E_IF extends Module {
   when (io.halt) {
     pc := pc
   }.otherwise {
-    when (io.jumpen) {
+    when (io.bren) {
       pc := io.jump
     }.otherwise {
       pc := io.npc
@@ -170,7 +170,6 @@ class Riscv32E_ID extends Module {
 
     // Control signals
     val halt   = Output(Bool())
-    val jumpen = Output(Bool())
     val memBen = Output(Bool())
     val memRen = Output(Bool())
     val memWen = Output(Bool())
@@ -183,10 +182,10 @@ class Riscv32E_ID extends Module {
     io.inst,
     List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),
     Array(
-      LW    -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RW),  // x[rs1] + sext(immi)
-      LBU   -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RB),  // x[rs1] + sext(immi)
-      SW    -> List( OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imms)
-      SB    -> List( OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imms)
+      LW    -> List( OP1_RS1, OP2_IMI, EX_ADD , JUMP_NONE, WB_MEM,  MEM_RW),  // x[rs1] + sext(immi)
+      LBU   -> List( OP1_RS1, OP2_IMI, EX_ADD , JUMP_NONE, WB_MEM,  MEM_RB),  // x[rs1] + sext(immi)
+      SW    -> List( OP1_RS1, OP2_IMS, EX_ADD , JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imms)
+      SB    -> List( OP1_RS1, OP2_IMS, EX_ADD , JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imms)
 
       ADD   -> List( OP1_RS1, OP2_RS2, EX_ADD , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] + x[rs2]
       ADDI  -> List( OP1_RS1, OP2_IMI, EX_ADD , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] + sext(immi)
@@ -208,10 +207,10 @@ class Riscv32E_ID extends Module {
       SLTI  -> List( OP1_RS1, OP2_IMI, EX_SLT , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <s immsi
       SLTIU -> List( OP1_RS1, OP2_IMI, EX_SLTU, JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <u immsi
 
-      JAL   -> List(  OP1_PC, OP2_IMJ, EX_ADD,  JUMP_JAL, WB_PC, MEM_NONE), // x[rd] <- PC+4 and PC+sext(immj)
-      JALR  -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_JALR, WB_PC, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(immi))&~1
-      LUI   -> List(OP1_NONE, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(immu[31:12] << 12)
-      AUIPC -> List(  OP1_PC, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(immu[31:12] << 12)
+      JAL   -> List(  OP1_PC, OP2_IMJ, EX_ADD , JUMP_JAL , WB_PC, MEM_NONE), // x[rd] <- PC+4 and PC+sext(immj)
+      JALR  -> List( OP1_RS1, OP2_IMI, EX_ADD , JUMP_JALR, WB_PC, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(immi))&~1
+      LUI   -> List(OP1_NONE, OP2_IMU, EX_ADD , JUMP_NONE, WB_EX, MEM_NONE),  // sext(immu[31:12] << 12)
+      AUIPC -> List(  OP1_PC, OP2_IMU, EX_ADD , JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(immu[31:12] << 12)
     ),
   )
 
@@ -244,9 +243,6 @@ class Riscv32E_ID extends Module {
   val imm_i_old = Sext(io.inst(31,20), 12)
   val imm_s_old = Sext(Cat(io.inst(31,25), io.inst(11,7)), 12)
   val imm_u_old = io.inst(31,12) << 12
-
-  // -------- JUMP功能 --------
-  io.jumpen := (jumpsel === JUMP_JAL) || (jumpsel === JUMP_JALR)
 
   // -------- EX功能 --------
   io.exsel := exsel
@@ -334,7 +330,6 @@ class Riscv32E_EX extends Module {
     // (io.exsel === EX_SRA)  -> (io.op1.asSInt() >> io.op2(4,0)).asUInt(),
     // (io.exsel === EX_SLT)  -> (io.op1.asSInt() < io.op2.asSInt()).asUInt(),
     (io.exsel === EX_SLTU) -> (io.op1 < io.op2),
-    (io.exsel === EX_JALR) -> ((io.op1 + io.op2) & ~1.U(WORD_LEN.W)),
   ))
   // -------- Branch --------
   io.bren := MuxCase(false.B, Seq(
@@ -345,7 +340,8 @@ class Riscv32E_EX extends Module {
     (io.exsel === EX_BLTU) ->  (io.op1 < io.op2),
     (io.exsel === EX_BGEU) -> !(io.op1 < io.op2),
   ))
-  io.braddr := io.pc + io.immsb
+  io.braddr := Mux(io.exsel === EX_JALR,
+    io.op1 + io.op2, io.pc + io.immsb)
 }
 
 // ---------------------------
@@ -372,8 +368,8 @@ class Riscv32E extends Module {
 
   // IF
   io.pc := ifStage.io.pc
-  ifStage.io.jumpen := idStage.io.jumpen
-  ifStage.io.jump   := exStage.io.aluout
+  ifStage.io.bren   := exStage.io.bren
+  ifStage.io.braddr := exStage.io.braddr
   ifStage.io.halt   := idStage.io.halt
 
   // ID
@@ -401,7 +397,7 @@ class Riscv32E extends Module {
   val wb_data = MuxCase(
     exStage.io.aluout, Seq(
       idStage.io.memRen -> mem_data,  // Memory read
-      idStage.io.jumpen -> ifStage.io.npc  // Jump
+      idStage.io.bren   -> ifStage.io.npc  // Jump
     )
   )
 
@@ -413,7 +409,7 @@ class Riscv32E extends Module {
   val difftest = Module(new DiffTest)
   difftest.io.clk  := clock
   difftest.io.pc   := ifStage.io.pc
-  difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.aluout, ifStage.io.npc)
+  difftest.io.npc  := Mux(idStage.io.bren  , exStage.io.aluout, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
   for (i <- 0 until WORD_LEN) {
     difftest.io.gpr(i) := idStage.io.regfileOut(i)
