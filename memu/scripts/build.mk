@@ -15,7 +15,7 @@ OBJ_DIR  = $(BUILD_DIR)/obj-$(NAME)$(SO)
 BINARY   = $(BUILD_DIR)/$(NAME)$(SO)
 
 ifeq ($(CONFIG_NPC),y)
-include $(MEMU_HOME)/scripts/verilate.mk
+include $(MEMU_HOME)/scripts/rtl.mk
 endif
 
 # Compilation flags
