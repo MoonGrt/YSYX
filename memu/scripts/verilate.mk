@@ -17,8 +17,8 @@ SCALA_SRCS := $(shell find $(SCALA_DIR) -name "*.scala")
 
 TOP       := MiniRV
 VTOP      := $(TOP)TOP
-VSRCS     := $(shell find $(RTL_DIR) -name "*.sv")
-VSRCS     += $(shell find $(VSRCS_DIR) -name "*.v")
+VSRCS = $(shell find $(RTL_DIR) -name "*.sv") \
+        $(shell find $(VSRCS_DIR) -name "*.v")
 RTL_OBJS  := $(VBUILD)/V$(VTOP)__ALL.a
 VLIB      := $(VBUILD)/libV$(VTOP).a
 WAVE_FILE := $(BUILD_DIR)/wave.vcd
