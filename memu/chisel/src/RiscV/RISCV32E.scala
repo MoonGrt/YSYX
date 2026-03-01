@@ -149,9 +149,9 @@ class Riscv32E_ID extends Module {
   // // Decode imm of B-type instruction
   // val imm_b = Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8))
   // val imm_b_sext = Cat(Fill(19, imm_b(11)), imm_b, 0.U(1.U))
-  // Decode imm of J-type instruction
-  val imm_j = Cat(io.inst(31), io.inst(19, 12), io.inst(20), io.inst(30, 21))
-  val imm_j_sext = Cat(Fill(11, imm_j(19)), imm_j, 0.U(1.U))  // Set LSB to zero
+  // // Decode imm of J-type instruction
+  // val imm_j = Cat(io.inst(31), io.inst(19, 12), io.inst(20), io.inst(30, 21))
+  // val imm_j_sext = Cat(Fill(11, imm_j(19)), imm_j, 0.U(1.U))  // Set LSB to zero
   // Decode imm of U-type instruction
   val imm_u = io.inst(31, 12)
   val imm_u_shifted = Cat(imm_u, Fill(12, 0.U))  // for LUI and AUIPC
@@ -171,7 +171,7 @@ class Riscv32E_ID extends Module {
     (op2sel === OP2_RS2) -> regfile(rs2),
     (op2sel === OP2_IMI) -> imm_i_sext,
     (op2sel === OP2_IMS) -> imm_s_sext,
-    (op2sel === OP2_IMJ) -> imm_j_sext,
+    // (op2sel === OP2_IMJ) -> imm_j_sext,
     (op2sel === OP2_IMU) -> imm_u_shifted,  // for LUI and AUIPC
   ))
 
