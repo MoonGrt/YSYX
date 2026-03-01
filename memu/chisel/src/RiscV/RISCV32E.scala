@@ -191,7 +191,7 @@ class Riscv32E_ID extends Module {
 
   val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(
     io.inst,
-    List(OP1_RS1, OP2_RS2, EX_ADD, WB_EX, MEM_NONE),
+    List(OP1_RS1, OP2_RS2, EX_ADD, WB_EX, MEM_NONE, CSR_NONE),
     Array(
       LW     -> List( OP1_RS1, OP2_IMI, EX_ADD , WB_MEM , MEM_RW  , CSR_NONE),  // x[rs1] + sext(immi)
       LBU    -> List( OP1_RS1, OP2_IMI, EX_ADD , WB_MEM , MEM_RB  , CSR_NONE),  // x[rs1] + sext(immi)
