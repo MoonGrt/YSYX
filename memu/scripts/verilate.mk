@@ -27,6 +27,8 @@ INC_PATH += $(VERILATOR_ROOT)/include
 INC_PATH += $(VERILATOR_ROOT)/include/vltstd
 endif
 
+$(RTL_DIR)/$(VTOP).sv: verilog
+
 $(VBUILD)/V$(VTOP).mk: $(RTL_DIR)/$(VTOP).sv
 	@echo + VERILATE RTL
 	@mkdir -p $(VBUILD)
@@ -46,15 +48,6 @@ rtl: $(RTL_DIR)/$(VTOP).sv
 	  --top-module $(VTOP) -O3 --Mdir $(VBUILD)
 	@echo "+ AR $@"
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
-
-TEST := csrc/minirv.cpp
-TEST_ARGS ?= --log=$(BUILD_DIR)/memu-test-log.txt
-test: $(VLIB) $(TEST)
-	@mkdir -p $(dir $@)
-	$(CXX) -I$(VBUILD) -I/usr/local/share/verilator/include \
-		-I/usr/local/share/verilator/include/vltstd \
-		$(TEST) $(VLIB) -o $(BUILD_DIR)/test
-	$(BUILD_DIR)/test $(TEST_ARGS)
 
 verilog:
 	 $(call git_commit, "generate verilog")

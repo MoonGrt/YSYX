@@ -3,75 +3,6 @@ package riscv
 import chisel3._
 import chisel3.util._
 
-// // ---------------------------
-// // ROM BlackBox (只读指令存储器)
-// // ---------------------------
-// class ROM_DPI extends BlackBox with HasBlackBoxInline {
-//   val io = IO(new Bundle {
-//     val addr = Input(UInt(32.W))
-//     val data = Output(UInt(32.W))
-//   })
-//   // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
-//   setInline("ROM_DPI.v",
-//     s"""
-//       |import "DPI-C" function void pmem_read(input int addr, output int data);
-//       |module ROM_DPI(
-//       |  input  wire [31:0] addr,
-//       |  output wire [31:0] data
-//       |);
-//       |  always @(*) data = pmem_read(addr);
-//       |endmodule
-//     """.stripMargin)
-// }
-
-// // ---------------------------
-// // RAM BlackBox (可读写数据存储器)
-// // ---------------------------
-// class RAM_DPI extends BlackBox with HasBlackBoxInline {
-//   val io = IO(new Bundle {
-//     val we    = Input(Bool())
-//     val addr  = Input(UInt(32.W))
-//     val mask  = Input(UInt(8.W))
-//     val wdata = Input(UInt(32.W))
-//     val rdata = Output(UInt(32.W))
-//   })
-//   // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
-//   setInline("RAM_DPI.v",
-//     s"""
-//       |import "DPI-C" function int  pmem_read(input int raddr);
-//       |import "DPI-C" function void pmem_write(input int waddr, input int wdata, input byte wmask);
-//       |module RAM_DPI(
-//       |  input  wire        we,
-//       |  input  wire [31:0] addr,
-//       |  input  wire [ 7:0] mask,
-//       |  input  wire [31:0] wdata,
-//       |  output wire [31:0] rdata
-//       |);
-//       |  always @(*) begin
-//       |    rdata = pmem_read(addr);
-//       |    if (we) pmem_write(addr, wdata, wmask);
-//       |  end
-//       |endmodule
-//     """.stripMargin)
-// }
-
-// // ---------------------------
-// // EBreak BlackBox (异常处理模块)
-// // ---------------------------
-// class EBreak_DPI extends BlackBox with HasBlackBoxInline {
-//   val io = IO(new Bundle {
-//     val trap = Input(Bool())
-//   })
-//   // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
-//   setInline("EBreak_DPI.v",
-//     s"""
-//       |import "DPI-C" function void ebreak();
-//       |module EBreak_DPI(input wire trap);
-//       |  always @(*) if (trap) ebreak();
-//       |endmodule
-//     """.stripMargin)
-// }
-
 // ---------------------------
 // ROM BlackBox (只读指令存储器)
 // ---------------------------
@@ -350,9 +281,9 @@ class EX extends Module {
 }
 
 // ---------------------------
-// MiniRV CPU（单周期）
+// RISCV32E CPU（单周期）
 // ---------------------------
-class MiniRV extends Module {
+class RISCV32E extends Module {
   import Instructions._
   import Parameters._
   val io = IO(new Bundle {
@@ -426,10 +357,10 @@ class MiniRV extends Module {
 }
 
 // ---------------------------
-// MiniRV SOC：自包含 CPU + ROM + RAM
+// RISCV32E SOC：自包含 CPU + ROM + RAM
 // ---------------------------
-class MiniRVSOC extends Module {
-  val cpu = Module(new MiniRV)
+class RISCV32ESOC extends Module {
+  val cpu = Module(new RISCV32E)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)
 
