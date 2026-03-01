@@ -17,7 +17,7 @@ SCALA_SRCS := $(shell find $(SCALA_DIR) -name "*.scala")
 
 TOP       := MiniRV
 VTOP      := $(TOP)TOP
-VSRCS      = $(shell find $(RTL_DIR) -name "*.sv") \
+VSRCS      = $(RTL_DIR)/$(VTOP).sv \
              $(shell find $(VSRCS_DIR) -name "*.v")
 RTL_OBJS  := $(VBUILD)/V$(VTOP)__ALL.a
 VLIB      := $(VBUILD)/libV$(VTOP).a
