@@ -414,7 +414,7 @@ class Riscv32E extends Module {
   val difftest = Module(new DiffTest)
   difftest.io.clk  := clock
   difftest.io.pc   := ifStage.io.pc
-  difftest.io.npc  := Mux(exStage.io.bren, exStage.io.aluout, ifStage.io.npc)
+  difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
   for (i <- 0 until WORD_LEN) {
     difftest.io.gpr(i) := idStage.io.regfileOut(i)
