@@ -58,7 +58,7 @@ object Riscv32E_Parameters {
   val OP1_IMZ  = 2.U(OP1_SEL_LEN.W)
   val OP1_NONE = 3.U(OP1_SEL_LEN.W)
 
-  val OP2_SEL_LEN = 1
+  val OP2_SEL_LEN = 3
   val OP2_NONE = 0.U(OP2_SEL_LEN.W)
   val OP2_RS2  = 1.U(OP2_SEL_LEN.W)
   val OP2_IMI  = 2.U(OP2_SEL_LEN.W)
@@ -142,25 +142,22 @@ class Riscv32E_ID extends Module {
 
   // -------- 立即数 --------
   // sext 12bit value to 32bit value.
-  val imm_i = io.inst(31, 20) // imm for I-type
+  val imm_i = io.inst(31, 20)  // imm for I-type
   val imm_i_sext = Cat(Fill(20, imm_i(11)), imm_i)
-  val imm_s = Cat(io.inst(31, 25), io.inst(11, 7)) // imm for S-type
+  val imm_s = Cat(io.inst(31, 25), io.inst(11, 7))  // imm for S-type
   val imm_s_sext = Cat(Fill(20, imm_s(11)), imm_s)
   // Decode imm of B-type instruction
   val imm_b = Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8))
-  // imm[0] does not exist in B-type instruction. This is because the first bit of program counter
-  // is always zero (p.126). Size of instruction is 32bit or 16bit, so instruction pointer (pc)
-  // address always points an even address.
   val imm_b_sext = Cat(Fill(19, imm_b(11)), imm_b, 0.U(1.U))
   // Decode imm of J-type instruction
   val imm_j = Cat(io.inst(31), io.inst(19, 12), io.inst(20), io.inst(30, 21))
-  val imm_j_sext = Cat(Fill(11, imm_j(19)), imm_j, 0.U(1.U)) // Set LSB to zero
+  val imm_j_sext = Cat(Fill(11, imm_j(19)), imm_j, 0.U(1.U))  // Set LSB to zero
   // Decode imm of U-type instruction
   val imm_u = io.inst(31, 12)
-  val imm_u_shifted = Cat(imm_u, Fill(12, 0.U)) // for LUI and AUIPC
+  val imm_u_shifted = Cat(imm_u, Fill(12, 0.U))  // for LUI and AUIPC
   // Decode imm of I-type instruction
   val imm_z = io.inst(19, 15)
-  val imm_z_uext = Cat(Fill(27, 0.U), imm_z) // for CSR instructions
+  val imm_z_uext = Cat(Fill(27, 0.U), imm_z)  // for CSR instructions
 
   // -------- EX操作数 --------
   // Determine 1st operand data signal
@@ -175,7 +172,7 @@ class Riscv32E_ID extends Module {
     (op2sel === OP2_IMI) -> imm_i_sext,
     (op2sel === OP2_IMS) -> imm_s_sext,
     (op2sel === OP2_IMJ) -> imm_j_sext,
-    (op2sel === OP2_IMU) -> imm_u_shifted, // for LUI and AUIPC
+    (op2sel === OP2_IMU) -> imm_u_shifted,  // for LUI and AUIPC
   ))
 
   // -------- JUMP功能 --------
