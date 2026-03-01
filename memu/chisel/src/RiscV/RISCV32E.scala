@@ -240,6 +240,10 @@ class Riscv32E_ID extends Module {
   val immz = io.inst(19, 15)
   val immuz = Cat(Fill(27, 0.U), immz)  // for CSR instructions
 
+  val imm_i_old = Sext(io.inst(31,20), 12)
+  val imm_s_old = Sext(Cat(io.inst(31,25), io.inst(11,7)), 12)
+  val imm_u_old = io.inst(31,12) << 12
+
   // -------- JUMP功能 --------
   io.jumpen := (jumpsel === JUMP_JAL) || (jumpsel === JUMP_JALR)
 
@@ -248,16 +252,16 @@ class Riscv32E_ID extends Module {
   io.immsb := immsb
   io.rs2 := regfile(rs2)
   // Determine 1st operand data signal
-  io.op1 := MuxCase(0.U(WORD_LEN.W), Seq(
+  io.op1 := MuxCase(0.U(32.W), Seq(
     (op1sel === OP1_RS1) -> regfile(rs1),
     (op1sel === OP1_PC)  -> io.pc,
-    (op1sel === OP1_IMZ) -> immuz,
+    (op1sel === OP1_IMZ) -> imm_z_uext,
   ))
   // Determine 2nd operand data signal
-  io.op2 := MuxCase(0.U(WORD_LEN.W), Seq(
+  io.op2 := MuxCase(0.U(32.W), Seq(
     (op2sel === OP2_RS2) -> regfile(rs2),
-    (op2sel === OP2_IMI) -> immi,
-    (op2sel === OP2_IMS) -> imms,
+    (op2sel === OP2_IMI) -> imm_i_old,
+    (op2sel === OP2_IMS) -> imm_s_old,
     (op2sel === OP2_IMJ) -> immsj,
     (op2sel === OP2_IMU) -> immu,  // for LUI and AUIPC
   ))
