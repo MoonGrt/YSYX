@@ -29,11 +29,14 @@ extern "C" {
     IFDEF(CONFIG_MTRACE, display_pread(addr, len));
     if (likely(in_pmem(addr))) return pmem_read(addr, len);
     IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
+    out_of_bound(addr);
+    return 0;
   }
   void dpi_paddr_write(int addr, char len, int data){
     IFDEF(CONFIG_MTRACE, display_pwrite(addr, len, data));
     if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
     IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
+    out_of_bound(addr);
   }
   void diff(int pc, int npc, int inst, int* gpr, int* csr) {
     cpu.pc = pc;
