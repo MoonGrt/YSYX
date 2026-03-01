@@ -98,6 +98,7 @@ object Riscv32E_Parameters {
   val EX_BGE  = 14.U(EX_SEL_LEN.W)
   val EX_BLTU = 15.U(EX_SEL_LEN.W)
   val EX_BGEU = 16.U(EX_SEL_LEN.W)
+  val EX_JALR = 16.U(EX_SEL_LEN.W)
 
   val JUMP_SEL_LEN = 2
   val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
