@@ -98,16 +98,6 @@ class Riscv32E_ID extends Module {
     val wb_rd   = Input(UInt(5.W))
     val wb_data = Input(UInt(32.W))
 
-    // 输出到 EX
-    val rd_addr = Output(UInt(5.W))
-
-    // Control signals
-    val halt   = Output(Bool())
-    val jumpen = Output(Bool())
-    val memBen = Output(Bool())
-    val memRen = Output(Bool())
-    val memWen = Output(Bool())
-    val regWen = Output(Bool())
 
     val regfileOut = Output(Vec(32, UInt(32.W)))
   })
@@ -156,19 +146,6 @@ class Riscv32E_ID extends Module {
   val imm_z_uext = Cat(Fill(27, 0.U), imm_z)  // for CSR instructions
 
 
-  // -------- JUMP功能 --------
-  io.jumpen := (jumpsel === JUMP_JALR)
-
-
-  // -------- WB功能 --------
-  io.rd_addr := rd
-  io.memBen  := ~reset.asBool && ((memsel === MEM_RB) || (memsel === MEM_WB))
-  io.memRen  := ~reset.asBool && ((memsel === MEM_RW) || (memsel === MEM_RB))
-  io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
-  io.regWen  := wbsel =/= WB_NONE
-  when (io.wb_en && io.wb_rd =/= 0.U) {
-    regfile(io.wb_rd) := io.wb_data
-  }
 
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
@@ -241,7 +218,7 @@ class Riscv32E extends Module {
 
   // IF
   io.pc := ifStage.io.pc
-  ifStage.io.jumpen := idStage.io.jumpen
+  ifStage.io.jumpen := 0.U
   ifStage.io.jump   := exStage.io.exout
   ifStage.io.halt   := idStage.io.halt
 
@@ -254,9 +231,9 @@ class Riscv32E extends Module {
   exStage.io.exsel := 0.U
 
   // Memory
-  io.mem_re    := idStage.io.memRen
-  io.mem_we    := idStage.io.memWen
-  io.mem_addr  := exStage.io.exout
+  io.mem_re    := 0.U
+  io.mem_we    := 0.U
+  io.mem_addr  := 0.U
   io.mem_wdata := 0.U
   io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
 
@@ -272,8 +249,8 @@ class Riscv32E extends Module {
     )
   )
 
-  idStage.io.wb_en   := idStage.io.regWen
-  idStage.io.wb_rd   := idStage.io.rd_addr
+  idStage.io.wb_en   := 0.U
+  idStage.io.wb_rd   := 0.U
   idStage.io.wb_data := wb_data
 
   // DiffTest
