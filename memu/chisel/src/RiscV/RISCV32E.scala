@@ -336,21 +336,20 @@ class Riscv32E_EX extends Module {
     (io.exsel === EX_XOR)  -> (io.op1 ^ io.op2),
     (io.exsel === EX_SLL)  -> (io.op1 << io.op2(4,0)),
     (io.exsel === EX_SRL)  -> (io.op1 >> io.op2(4,0)),
-    // (io.exsel === EX_SRA)  -> (io.op1.asSInt() >> io.op2(4,0)).asUInt(),
-    // (io.exsel === EX_SLT)  -> (io.op1.asSInt() < io.op2.asSInt()).asUInt(),
+    (io.exsel === EX_SRA)  -> (io.op1.asSInt >> io.op2(4,0)).asUInt,
+    (io.exsel === EX_SLT)  -> (io.op1.asSInt < io.op2.asSInt).asUInt,
     (io.exsel === EX_SLTU) -> (io.op1 < io.op2),
   ))
   // -------- Branch --------
-  // io.bren := MuxCase(false.B, Seq(
-  //   (io.exsel === EX_JAL)  ->  1.U,
-  //   (io.exsel === EX_BEQ)  ->  (io.op1 === io.op2),
-  //   (io.exsel === EX_BNE)  -> !(io.op1 === io.op2),
-  //   (io.exsel === EX_BLT)  ->  (io.op1.asSInt() < io.op2.asSInt()),
-  //   (io.exsel === EX_BGE)  -> !(io.op1.asSInt() < io.op2.asSInt()),
-  //   (io.exsel === EX_BLTU) ->  (io.op1 < io.op2),
-  //   (io.exsel === EX_BGEU) -> !(io.op1 < io.op2),
-  // ))
-  io.bren := io.op1.asSInt < io.op2.asSInt
+  io.bren := MuxCase(false.B, Seq(
+    (io.exsel === EX_JAL)  ->  1.U,
+    (io.exsel === EX_BEQ)  ->  (io.op1 === io.op2),
+    (io.exsel === EX_BNE)  -> !(io.op1 === io.op2),
+    (io.exsel === EX_BLT)  ->  (io.op1.asSInt < io.op2.asSInt),
+    (io.exsel === EX_BGE)  -> !(io.op1.asSInt < io.op2.asSInt),
+    (io.exsel === EX_BLTU) ->  (io.op1 < io.op2),
+    (io.exsel === EX_BGEU) -> !(io.op1 < io.op2),
+  ))
   io.braddr := Mux(io.exsel === EX_JAL,
     io.op1 + io.op2, io.pc + io.immsb)
 }
