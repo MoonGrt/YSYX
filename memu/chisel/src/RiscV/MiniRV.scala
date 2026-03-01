@@ -184,7 +184,7 @@ class MiniRV_ID extends Module {
   val trap = Module(new EBreak)
   // 定义异常编码规则
   // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
-  val impl_inst = Instructions.IMPLEMENTED.filterNot(inst =>
+  val impl_inst = MiniRV_Instructions.IMPLEMENTED.filterNot(inst =>
     inst == Instructions.E || inst == Instructions.EBREAK
   )
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
@@ -235,8 +235,8 @@ class MiniRV_EX extends Module {
 // MiniRV CPU（单周期）
 // ---------------------------
 class MiniRV extends Module {
-  import Instructions._
-  import Parameters._
+  import MiniRV_Instructions._
+  import MiniRV_Parameters._
   val io = IO(new Bundle {
     val pc   = Output(UInt(32.W))
     val inst = Input(UInt(32.W))
