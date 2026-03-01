@@ -173,11 +173,11 @@ class Riscv32E_ID extends Module {
   io.exsel := exsel
 
   // -------- WB功能 --------
-  io.rd_addr := rd
-  io.memBen  := ~reset.asBool && ((memsel === MEM_RB) || (memsel === MEM_WB))
-  io.memRen  := ~reset.asBool && ((memsel === MEM_RW) || (memsel === MEM_RB))
-  io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
-  io.regWen  := wbsel =/= WB_NONE
+  io.rd_addr := 0.U
+  io.memBen  := 0.U
+  io.memRen  := 0.U
+  io.memWen  := 0.U
+  io.regWen  := 0.U
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := io.wb_data
   }
