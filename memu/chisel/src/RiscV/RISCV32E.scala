@@ -44,11 +44,12 @@ object Riscv32E_Instructions {
   val JALR   = BitPat("b?????????????????000?????1100111")
   // Load immediate
   val LUI    = BitPat("b?????????????????????????0110111")
+  val AUIPC  = BitPat("b?????????????????????????0010111")
   // E - Type
   val E      = BitPat("b?????????????????????????1110011")
   val EBREAK = BitPat("b00000000000100000000000001110011")
   // Implemented instructions
-  val IMPLEMENTED = Seq(LW, LBU, SW, SB, ADD, ADDI, JALR, LUI, E, EBREAK)
+  val IMPLED = Seq(LW, LBU, SW, SB, ADD, ADDI, JALR, LUI, AUIPC, E, EBREAK)
 }
 object Riscv32E_Parameters {
   val OP1_SEL_LEN = 2
@@ -73,8 +74,9 @@ object Riscv32E_Parameters {
 
   val WB_SEL_LEN = 2
   val WB_NONE = 0.U(WB_SEL_LEN.W)
-  val WB_EX   = 1.U(WB_SEL_LEN.W)
-  val WB_MEM  = 2.U(WB_SEL_LEN.W)
+  val WB_PC   = 1.U(WB_SEL_LEN.W)
+  val WB_EX   = 2.U(WB_SEL_LEN.W)
+  val WB_MEM  = 3.U(WB_SEL_LEN.W)
 
   val MEM_SEL_LEN = 3
   val MEM_NONE = 0.U(MEM_SEL_LEN.W)
@@ -115,15 +117,15 @@ class Riscv32E_ID extends Module {
     io.inst,
     List(OP1_RS1, OP2_IMN, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),
     Array(
-      LW    -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RW),  // x[rs1] + sext(imm_i)
-      LBU   -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RB),  // x[rs1] + sext(imm_i)
-      SW    -> List(OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
-      SB    -> List(OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
-      ADD   -> List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
-      ADDI  -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
-      JALR  -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
-      LUI   -> List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
-      AUIPC -> List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(imm_u[31:12] << 12)
+      LW    -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RW),  // x[rs1] + sext(imm_i)
+      LBU   -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RB),  // x[rs1] + sext(imm_i)
+      SW    -> List( OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
+      SB    -> List( OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
+      ADD   -> List( OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
+      ADDI  -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
+      JALR  -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_JALR, WB_PC, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+      LUI   -> List(OP1_NONE, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
+      AUIPC -> List( OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(imm_u[31:12] << 12)
     ),
   )
 
@@ -137,24 +139,41 @@ class Riscv32E_ID extends Module {
   val rs2    = io.inst(24,20)
 
   // -------- 立即数 --------
-  val imm_i = Sext(io.inst(31,20), 12)
-  val imm_s = Sext(Cat(io.inst(31,25), io.inst(11,7)), 12)
-  val imm_u = io.inst(31,12) << 12
+  // sext 12bit value to 32bit value.
+  val imm_i = inst(31, 20) // imm for I-type
+  val imm_i_sext = Cat(Fill(20, imm_i(11)), imm_i)
+  val imm_s = Cat(inst(31, 25), inst(11, 7)) // imm for S-type
+  val imm_s_sext = Cat(Fill(20, imm_s(11)), imm_s)
+  // Decode imm of B-type instruction
+  val imm_b = Cat(inst(31), inst(7), inst(30, 25), inst(11, 8))
+  // imm[0] does not exist in B-type instruction. This is because the first bit of program counter
+  // is always zero (p.126). Size of instruction is 32bit or 16bit, so instruction pointer (pc)
+  // address always points an even address.
+  val imm_b_sext = Cat(Fill(19, imm_b(11)), imm_b, 0.U(1.U))
+  // Decode imm of J-type instruction
+  val imm_j = Cat(inst(31), inst(19, 12), inst(20), inst(30, 21))
+  val imm_j_sext = Cat(Fill(11, imm_j(19)), imm_j, 0.U(1.U)) // Set LSB to zero
+  // Decode imm of U-type instruction
+  val imm_u = inst(31, 12)
+  val imm_u_shifted = Cat(imm_u, Fill(12, 0.U)) // for LUI and AUIPC
+  // Decode imm of I-type instruction
+  val imm_z = inst(19, 15)
+  val imm_z_uext = Cat(Fill(27, 0.U), imm_z) // for CSR instructions
 
   // -------- EX操作数 --------
   // Determine 1st operand data signal
-  val op1 = MuxCase(0.U(32.W), Seq(
-    (op1sel === OP1_RS1) -> regfile(rs1),
-    (op1sel === OP1_PC)  -> io.pc,
-    // (op1sel === OP1_IMZ) -> imm_z_uext,
+  val op1_data = MuxCase(0.U(WORD_LEN.W), Seq(
+    (op1_sel === OP1_RS1) -> regfile(rs1),
+    (op1_sel === OP1_PC)  -> prev.reg_pc,
+    (op1_sel === OP1_IMZ) -> imm_z_uext,
   ))
   // Determine 2nd operand data signal
-  val op2 = MuxCase(0.U(32.W), Seq(
-    (op2sel === OP2_RS2) -> regfile(rs2),
-    (op2sel === OP2_IMI) -> imm_i,
-    (op2sel === OP2_IMS) -> imm_s,
-    // (op2sel === OP2_IMJ) -> imm_j_sext,
-    (op2sel === OP2_IMU) -> imm_u, // for LUI and AUIPC
+  val op2_data = MuxCase(0.U(WORD_LEN.W), Seq(
+    (op2_sel === OP2_RS2) -> regfile(rs2),
+    (op2_sel === OP2_IMI) -> imm_i_sext,
+    (op2_sel === OP2_IMS) -> imm_s_sext,
+    (op2_sel === OP2_IMJ) -> imm_j_sext,
+    (op2_sel === OP2_IMU) -> imm_u_shifted, // for LUI and AUIPC
   ))
 
   // -------- JUMP功能 --------
@@ -177,7 +196,7 @@ class Riscv32E_ID extends Module {
   val trap = Module(new EBreak)
   // 定义异常编码规则
   // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
-  val impl_inst = IMPLEMENTED.filterNot(inst =>
+  val impl_inst = IMPLED.filterNot(inst =>
     inst == E || inst == EBREAK
   )
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
