@@ -178,39 +178,46 @@ class Riscv32E_ID extends Module {
     val regfileOut = Output(Vec(WORD_LEN, UInt(WORD_LEN.W)))
   })
 
-  val List(op1sel, op2sel, exsel, jumpsel, wbsel, memsel) = ListLookup(
+  val List(op1sel, op2sel, exsel, wbsel, memsel) = ListLookup(
     io.inst,
-    List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),
+    List(OP1_RS1, OP2_RS2, EX_ADD, WB_EX, MEM_NONE),
     Array(
-      LW    -> List( OP1_RS1, OP2_IMI, EX_ADD , JUMP_NONE, WB_MEM,  MEM_RW),  // x[rs1] + sext(immi)
-      LBU   -> List( OP1_RS1, OP2_IMI, EX_ADD , JUMP_NONE, WB_MEM,  MEM_RB),  // x[rs1] + sext(immi)
-      SW    -> List( OP1_RS1, OP2_IMS, EX_ADD , JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imms)
-      SB    -> List( OP1_RS1, OP2_IMS, EX_ADD , JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imms)
+      LW    -> List( OP1_RS1, OP2_IMI, EX_ADD , WB_MEM,  MEM_RW),  // x[rs1] + sext(immi)
+      LBU   -> List( OP1_RS1, OP2_IMI, EX_ADD , WB_MEM,  MEM_RB),  // x[rs1] + sext(immi)
+      SW    -> List( OP1_RS1, OP2_IMS, EX_ADD , WB_NONE, MEM_WW),  // x[rs1] + sext(imms)
+      SB    -> List( OP1_RS1, OP2_IMS, EX_ADD , WB_NONE, MEM_WB),  // x[rs1] + sext(imms)
 
-      ADD   -> List( OP1_RS1, OP2_RS2, EX_ADD , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] + x[rs2]
-      ADDI  -> List( OP1_RS1, OP2_IMI, EX_ADD , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] + sext(immi)
-      SUB   -> List( OP1_RS1, OP2_RS2, EX_SUB , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] - x[rs2]
-      AND   -> List( OP1_RS1, OP2_RS2, EX_AND , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] & x[rs2]
-      OR    -> List( OP1_RS1, OP2_RS2, EX_OR  , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] | x[rs2]
-      XOR   -> List( OP1_RS1, OP2_RS2, EX_XOR , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] ^ x[rs2]
-      ANDI  -> List( OP1_RS1, OP2_IMI, EX_AND , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] & sext(immi)
-      ORI   -> List( OP1_RS1, OP2_IMI, EX_OR  , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] | sext(immi)
-      XORI  -> List( OP1_RS1, OP2_IMI, EX_XOR , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] ^ sext(immi)
-      SLL   -> List( OP1_RS1, OP2_RS2, EX_SLL , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] << x[rs2](4,0)
-      SRL   -> List( OP1_RS1, OP2_RS2, EX_SRL , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] >>u x[rs2](4,0)
-      SRA   -> List( OP1_RS1, OP2_RS2, EX_SRA , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] >>s x[rs2](4,0)
-      SLLI  -> List( OP1_RS1, OP2_IMI, EX_SLL , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] << immsi(4,0)
-      SRLI  -> List( OP1_RS1, OP2_IMI, EX_SRL , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] >>u immsi(4,0)
-      SRAI  -> List( OP1_RS1, OP2_IMI, EX_SRA , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] >>s immsi(4,0)
-      SLT   -> List( OP1_RS1, OP2_RS2, EX_SLT , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <s x[rs2]
-      SLTU  -> List( OP1_RS1, OP2_RS2, EX_SLTU, JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <u x[rs2]
-      SLTI  -> List( OP1_RS1, OP2_IMI, EX_SLT , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <s immsi
-      SLTIU -> List( OP1_RS1, OP2_IMI, EX_SLTU, JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <u immsi
+      ADD   -> List( OP1_RS1, OP2_RS2, EX_ADD , WB_EX, MEM_NONE), // x[rs1] + x[rs2]
+      ADDI  -> List( OP1_RS1, OP2_IMI, EX_ADD , WB_EX, MEM_NONE), // x[rs1] + sext(immi)
+      SUB   -> List( OP1_RS1, OP2_RS2, EX_SUB , WB_EX, MEM_NONE), // x[rs1] - x[rs2]
+      AND   -> List( OP1_RS1, OP2_RS2, EX_AND , WB_EX, MEM_NONE), // x[rs1] & x[rs2]
+      OR    -> List( OP1_RS1, OP2_RS2, EX_OR  , WB_EX, MEM_NONE), // x[rs1] | x[rs2]
+      XOR   -> List( OP1_RS1, OP2_RS2, EX_XOR , WB_EX, MEM_NONE), // x[rs1] ^ x[rs2]
+      ANDI  -> List( OP1_RS1, OP2_IMI, EX_AND , WB_EX, MEM_NONE), // x[rs1] & sext(immi)
+      ORI   -> List( OP1_RS1, OP2_IMI, EX_OR  , WB_EX, MEM_NONE), // x[rs1] | sext(immi)
+      XORI  -> List( OP1_RS1, OP2_IMI, EX_XOR , WB_EX, MEM_NONE), // x[rs1] ^ sext(immi)
+      SLL   -> List( OP1_RS1, OP2_RS2, EX_SLL , WB_EX, MEM_NONE), // x[rs1] << x[rs2](4,0)
+      SRL   -> List( OP1_RS1, OP2_RS2, EX_SRL , WB_EX, MEM_NONE), // x[rs1] >>u x[rs2](4,0)
+      SRA   -> List( OP1_RS1, OP2_RS2, EX_SRA , WB_EX, MEM_NONE), // x[rs1] >>s x[rs2](4,0)
+      SLLI  -> List( OP1_RS1, OP2_IMI, EX_SLL , WB_EX, MEM_NONE), // x[rs1] << immsi(4,0)
+      SRLI  -> List( OP1_RS1, OP2_IMI, EX_SRL , WB_EX, MEM_NONE), // x[rs1] >>u immsi(4,0)
+      SRAI  -> List( OP1_RS1, OP2_IMI, EX_SRA , WB_EX, MEM_NONE), // x[rs1] >>s immsi(4,0)
+      SLT   -> List( OP1_RS1, OP2_RS2, EX_SLT , WB_EX, MEM_NONE), // x[rs1] <s x[rs2]
+      SLTU  -> List( OP1_RS1, OP2_RS2, EX_SLTU, WB_EX, MEM_NONE), // x[rs1] <u x[rs2]
+      SLTI  -> List( OP1_RS1, OP2_IMI, EX_SLT , WB_EX, MEM_NONE), // x[rs1] <s immsi
+      SLTIU -> List( OP1_RS1, OP2_IMI, EX_SLTU, WB_EX, MEM_NONE), // x[rs1] <u immsi
 
-      JAL   -> List(  OP1_PC, OP2_IMJ, EX_ADD , JUMP_JAL , WB_PC, MEM_NONE), // x[rd] <- PC+4 and PC+sext(immj)
-      JALR  -> List( OP1_RS1, OP2_IMI, EX_ADD , JUMP_JALR, WB_PC, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(immi))&~1
-      LUI   -> List(OP1_NONE, OP2_IMU, EX_ADD , JUMP_NONE, WB_EX, MEM_NONE),  // sext(immu[31:12] << 12)
-      AUIPC -> List(  OP1_PC, OP2_IMU, EX_ADD , JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(immu[31:12] << 12)
+      BEQ   -> List(OP1_RS1, OP2_RS2, EX_BEQ , WB_NONE, MEN_NONE), // x[rs1] === x[rs2] then PC+sext(imm_b)
+      BNE   -> List(OP1_RS1, OP2_RS2, EX_BNE , WB_NONE, MEN_NONE), // x[rs1] =/= x[rs2] then PC+sext(imm_b)
+      BGE   -> List(OP1_RS1, OP2_RS2, EX_BGE , WB_NONE, MEN_NONE), // x[rs1] >=s x[rs2] then PC+sext(imm_b)
+      BGEU  -> List(OP1_RS1, OP2_RS2, EX_BGEU, WB_NONE, MEN_NONE), // x[rs1] >=u x[rs2] then PC+sext(imm_b)
+      BLT   -> List(OP1_RS1, OP2_RS2, EX_BLT , WB_NONE, MEN_NONE), // x[rs1] <s x[rs2]  then PC+sext(imm_b)
+      BLTU  -> List(OP1_RS1, OP2_RS2, EX_BLTU, WB_NONE, MEN_NONE), // x[rs1] <u x[rs2]  then PC+sext(imm_b)
+      JAL   -> List(OP1_PC , OP2_IMJ, EX_ADD , WB_PC  , MEN_NONE), // x[rd] <- PC+4 and PC+sext(imm_j)
+      JALR  -> List(OP1_RS1, OP2_IMI, EX_JALR, WB_PC  , MEN_NONE), // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+
+      LUI   -> List(OP1_NONE, OP2_IMU, EX_ADD , WB_EX, MEM_NONE),  // sext(immu[31:12] << 12)
+      AUIPC -> List(OP1_PC  , OP2_IMU, EX_ADD , WB_EX, MEM_NONE),  // PC + sext(immu[31:12] << 12)
     ),
   )
 
@@ -271,7 +278,7 @@ class Riscv32E_ID extends Module {
   io.regWen  := wbsel =/= WB_NONE
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := Mux(
-      exsel === EX_JALR, io.pc + 4.U, io.wb_data
+      wbsel === WB_PC, io.pc + 4.U, io.wb_data
     )
   }
 
