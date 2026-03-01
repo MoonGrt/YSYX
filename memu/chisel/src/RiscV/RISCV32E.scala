@@ -275,9 +275,6 @@ class Riscv32E_EX extends Module {
   })
   // -------- ALU --------
   io.exout := MuxCase(0.U(32.W), Seq(
-    (io.exsel === EX_ADD) -> (io.op1 + io.op2),
-  ))
-  io.exout := MuxCase(0.U(32.W), Seq(
     (io.exsel === EX_ADD)  -> (io.op1 + io.op2),
     (io.exsel === EX_SUB)  -> (io.op1 - io.op2),
     (io.exsel === EX_AND)  -> (io.op1 & io.op2),
