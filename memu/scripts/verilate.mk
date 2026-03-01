@@ -39,7 +39,12 @@ $(VLIB): $(VBUILD)/V$(VTOP).mk
 	@$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 	@ar rcs $@ $(VBUILD)/*.o
 
-rtl: $(RTL_DIR)/$(VTOP).sv
+rtl:
+	$(call git_commit, "generate verilog")
+	mkdir -p $(RTL_DIR)
+	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
+
+verilate: $(RTL_DIR)/$(VTOP).sv
 	@echo + VERILATE RTL
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
@@ -47,12 +52,7 @@ rtl: $(RTL_DIR)/$(VTOP).sv
 	@echo "+ AR $@"
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 
-verilog:
-	$(call git_commit, "generate verilog")
-	mkdir -p $(RTL_DIR)
-	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
-
 wave: $(WAVE_FILE)
 	$(GTKWAVE) $(WAVE_FILE) > /dev/null 2>&1 &
 
-.PHONY: test verilog wave
+.PHONY: rtl verilate wave
