@@ -95,7 +95,6 @@ class Riscv32E_ID extends Module {
     val wb_data = Input(UInt(32.W))
 
     // 输出到 EX
-    val opsel   = Output(UInt(OP_SEL_LEN.W))
     val exsel   = Output(UInt(EX_SEL_LEN.W))
     val op1     = Output(UInt(32.W))
     val op2     = Output(UInt(32.W))
