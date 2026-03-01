@@ -314,7 +314,7 @@ class Riscv32E_EX extends Module {
     (io.exsel === EX_ADD, io.op1 + io.op2),
     (io.exsel === EX_SUB, io.op1 - io.op2),
     (io.exsel === EX_AND, io.op1 & io.op2),
-    (io.exsel === EX_OR, io.op1 | io.op2),
+    (io.exsel === EX_OR,  io.op1 | io.op2),
     (io.exsel === EX_XOR, io.op1 ^ io.op2),
     (io.exsel === EX_SLL, (io.op1 << io.op2(4,0)).asUInt()),
     (io.exsel === EX_SRL, (io.op1 >> io.op2(4,0)).asUInt()),
