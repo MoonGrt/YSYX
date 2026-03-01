@@ -298,13 +298,18 @@ class Riscv32E_EX extends Module {
     val exout = Output(UInt(32.W))
   })
   // -------- ALU --------
-  // val result = MuxCase(0.U(32.W), Seq(
-  //   (io.exsel === EX_SRL)  -> (io.op1 >> io.op2(4,0)).asUInt(),
-  //   (io.exsel === EX_SRA)  -> (io.op1.asSInt() >> io.op2(4,0)).asUInt(),
-  //   (io.exsel === EX_SLT)  -> (io.op1.asSInt() < io.op2.asSInt()).asUInt(),
-  //   (io.exsel === EX_SLTU) -> (io.op1 < io.op2).asUInt(),
-  // ))
-  io.exout := (io.op1 >> io.op2(4,0))
+  io.exout := MuxCase(0.U(32.W), Seq(
+    (io.exsel === EX_ADD)  -> (io.op1 + io.op2),
+    (io.exsel === EX_SUB)  -> (io.op1 - io.op2),
+    (io.exsel === EX_AND)  -> (io.op1 & io.op2),
+    (io.exsel === EX_OR)   -> (io.op1 | io.op2),
+    (io.exsel === EX_XOR)  -> (io.op1 ^ io.op2),
+    (io.exsel === EX_SLL)  -> (io.op1 << io.op2(4,0)),
+    (io.exsel === EX_SRL)  -> (io.op1 >> io.op2(4,0)),
+    (io.exsel === EX_SRA)  -> (io.op1.asSInt() >> io.op2(4,0)).asUInt(),
+    (io.exsel === EX_SLT)  -> (io.op1.asSInt() < io.op2.asSInt()).asUInt(),
+    (io.exsel === EX_SLTU) -> (io.op1 < io.op2),
+  ))
 }
 
 // ---------------------------
