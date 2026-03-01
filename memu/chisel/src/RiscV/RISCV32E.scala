@@ -186,7 +186,7 @@ class Riscv32E_ID extends Module {
 
     // Diff
     val gprOut = Output(Vec(32, UInt(WORD_LEN.W)))
-    val csrOut = Output(Vec(4, UInt(WORD_LEN.W)))
+    val csrOut = Output(Vec(6, UInt(WORD_LEN.W)))
   })
 
   val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(
