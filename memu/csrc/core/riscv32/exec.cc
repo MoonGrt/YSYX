@@ -1,6 +1,6 @@
 #include <verilated.h>
 #include <verilated_vcd_c.h>
-#include "VMiniRVSOC.h"
+#include "VMiniRVTOP.h"
 
 #include <common.h>
 #include <utils.h>
@@ -11,7 +11,7 @@
 #include <device/mmio.h>
 #include "../../utils/local-include/itrace.h"
 
-VMiniRVSOC *top = new VMiniRVSOC;
+VMiniRVTOP *top = new VMiniRVTOP;
 VerilatedVcdC *tfp = new VerilatedVcdC;
 
 extern "C" {
