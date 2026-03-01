@@ -51,11 +51,17 @@ object Riscv32E_Instructions {
   val IMPLEMENTED = Seq(LW, LBU, SW, SB, ADD, ADDI, JALR, LUI, E, EBREAK)
 }
 object Riscv32E_Parameters {
-  val IMM_SEL_LEN = 2
-  val IMMN = 0.U(IMM_SEL_LEN.W)
-  val IMMI = 1.U(IMM_SEL_LEN.W)
-  val IMMS = 2.U(IMM_SEL_LEN.W)
-  val IMMU = 3.U(IMM_SEL_LEN.W)
+  val OP1_SEL_LEN = 2
+  val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
+  val OP1_PC   = 1.U(OP1_SEL_LEN.W)
+  val OP1_NONE = 2.U(OP1_SEL_LEN.W)
+  val OP2_SEL_LEN = 1
+  val OP2_NONE = 0.U(OP2_SEL_LEN.W)
+  val OP2_RS2  = 1.U(OP2_SEL_LEN.W)
+  val OP2_IMI  = 2.U(OP2_SEL_LEN.W)
+  val OP2_IMS  = 3.U(OP2_SEL_LEN.W)
+  val OP2_IMJ  = 4.U(OP2_SEL_LEN.W)
+  val OP2_IMU  = 5.U(OP2_SEL_LEN.W)
 
   val EX_SEL_LEN = 1
   val EX_ADD  = 0.U(EX_SEL_LEN.W)
@@ -89,11 +95,10 @@ class Riscv32E_ID extends Module {
     val wb_data = Input(UInt(32.W))
 
     // 输出到 EX
+    val opsel   = Output(UInt(OP_SEL_LEN.W))
     val exsel   = Output(UInt(EX_SEL_LEN.W))
-    val rs1     = Output(UInt(32.W))
-    val rs2     = Output(UInt(32.W))
-    val imm     = Output(UInt(32.W))
-    val immen   = Output(Bool())
+    val op1     = Output(UInt(32.W))
+    val op2     = Output(UInt(32.W))
     val rd_addr = Output(UInt(5.W))
 
     // Control signals
@@ -107,29 +112,26 @@ class Riscv32E_ID extends Module {
     val regfileOut = Output(Vec(32, UInt(32.W)))
   })
 
-  val decoded = ListLookup(
-    io.inst,
-    List(IMMN, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
-    Array(
-      // Load/Store
-      LW   -> List(IMMI, EX_ADD, JUMP_NONE, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
-      LBU  -> List(IMMI, EX_ADD, JUMP_NONE, WB_MEM, MEM_RB),  // x[rs1] + sext(imm_i)
-      SW   -> List(IMMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
-      SB   -> List(IMMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
-      // Add
-      ADD  -> List(IMMN, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
-      ADDI -> List(IMMI, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
-      // Jump
-      JALR -> List(IMMI, EX_ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
-      // Load immediate
-      LUI  -> List(IMMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
-    ),
-  )
   val immsel  = decoded(0)
   val exsel   = decoded(1)
   val jumpsel = decoded(2)
   val wbsel   = decoded(3)
   val memsel  = decoded(4)
+  val List(op1sel, op2sel, exsel, jumpsel, wbsel, memsel) = ListLookup(
+    io.inst,
+    List(IMMN, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
+    Array(
+      LW    -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RW),  // x[rs1] + sext(imm_i)
+      LBU   -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RB),  // x[rs1] + sext(imm_i)
+      SW    -> List(OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
+      SB    -> List(OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
+      ADD   -> List(OP1_RS1, OP2_IMN, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
+      ADDI  -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
+      JALR  -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+      LUI   -> List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
+      AUIPC -> List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(imm_u[31:12] << 12)
+    ),
+  )
 
   // -------- 寄存器堆 --------
   val regfile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
@@ -146,14 +148,20 @@ class Riscv32E_ID extends Module {
   val imm_u = io.inst(31,12) << 12
 
   // -------- EX操作数 --------
-  io.rs1 := Mux(io.inst === LUI, 0.U(32.W), regfile(rs1))
-  io.rs2 := regfile(rs2)
-  io.imm := MuxLookup(immsel, 0.U)(Seq(
-    IMMI -> imm_i,
-    IMMS -> imm_s,
-    IMMU -> imm_u
+  // Determine 1st operand data signal
+  val op1 = MuxCase(0.U(32.W), Seq(
+    (op1sel === OP1_RS1) -> regfile(rs1),
+    (op1sel === OP1_PC)  -> io.pc,
+    // (op1sel === OP1_IMZ) -> imm_z_uext,
   ))
-  io.immen := (immsel =/= IMMN)
+  // Determine 2nd operand data signal
+  val op2 = MuxCase(0.U(32.W), Seq(
+    (op2sel === OP2_RS2) -> regfile(rs2),
+    (op2sel === OP2_IMI) -> imm_i,
+    (op2sel === OP2_IMS) -> imm_s,
+    // (op2sel === OP2_IMJ) -> imm_j_sext,
+    (op2sel === OP2_IMU) -> imm_u, // for LUI and AUIPC
+  ))
 
   // -------- JUMP功能 --------
   io.jumpen := (jumpsel === JUMP_JALR)
@@ -206,9 +214,9 @@ class Riscv32E_ID extends Module {
 // ---------------------------
 class Riscv32E_EX extends Module {
   val io = IO(new Bundle {
-    val pc    = Input(UInt(32.W))
     val rs1   = Input(UInt(32.W))
     val rs2   = Input(UInt(32.W))
+    val pc    = Input(UInt(32.W))
     val imm   = Input(UInt(32.W))
     val immen = Input(Bool())
     val exsel = Input(UInt(EX_SEL_LEN.W))
