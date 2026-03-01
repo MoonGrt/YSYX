@@ -55,6 +55,7 @@ object Riscv32E_Parameters {
   val OP1_SEL_LEN = 2
   val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
   val OP1_PC   = 1.U(OP1_SEL_LEN.W)
+  val OP1_IMZ  = 3.U(OP1_LEN.W)
   val OP1_NONE = 2.U(OP1_SEL_LEN.W)
   val OP2_SEL_LEN = 1
   val OP2_NONE = 0.U(OP2_SEL_LEN.W)
@@ -89,6 +90,7 @@ class Riscv32E_ID extends Module {
   import Riscv32E_Instructions._
   import Riscv32E_Parameters._
   val io = IO(new Bundle {
+    val pc      = Input(UInt(32.W))
     val inst    = Input(UInt(32.W))
 
     // 写回接口（来自 WB）
