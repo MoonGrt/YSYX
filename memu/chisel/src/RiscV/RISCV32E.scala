@@ -114,17 +114,17 @@ class Riscv32E_ID extends Module {
 
     val regfileOut = Output(Vec(32, UInt(32.W)))
   })
-exsel   := 0.U
-op1     := 0.U
-op2     := 0.U
-rd_addr := 0.U
-halt   := 0.U
-jumpen := 0.U
-memBen := 0.U
-memRen := 0.U
-memWen := 0.U
-regWen := 0.U
-regfileOut := 0.U
+io.exsel   := 0.U
+io.op1     := 0.U
+io.op2     := 0.U
+io.rd_addr := 0.U
+io.halt   := 0.U
+io.jumpen := 0.U
+io.memBen := 0.U
+io.memRen := 0.U
+io.memWen := 0.U
+io.regWen := 0.U
+io.regfileOut := 0.U
 }
 
 // ---------------------------
