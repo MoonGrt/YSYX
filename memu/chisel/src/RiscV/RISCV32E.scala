@@ -298,13 +298,13 @@ class Riscv32E_EX extends Module {
     val exout = Output(UInt(32.W))
   })
   // -------- ALU --------
-  val result = MuxCase(0.U(32.W), Seq(
-    (io.exsel === EX_SRL)  -> (io.op1 >> io.op2(4,0)).asUInt(),
-    (io.exsel === EX_SRA)  -> (io.op1.asSInt() >> io.op2(4,0)).asUInt(),
-    (io.exsel === EX_SLT)  -> (io.op1.asSInt() < io.op2.asSInt()).asUInt(),
-    (io.exsel === EX_SLTU) -> (io.op1 < io.op2).asUInt(),
-  ))
-  io.exout := result
+  // val result = MuxCase(0.U(32.W), Seq(
+  //   (io.exsel === EX_SRL)  -> (io.op1 >> io.op2(4,0)).asUInt(),
+  //   (io.exsel === EX_SRA)  -> (io.op1.asSInt() >> io.op2(4,0)).asUInt(),
+  //   (io.exsel === EX_SLT)  -> (io.op1.asSInt() < io.op2.asSInt()).asUInt(),
+  //   (io.exsel === EX_SLTU) -> (io.op1 < io.op2).asUInt(),
+  // ))
+  io.exout := (io.op1 >> io.op2(4,0)).asUInt()
 }
 
 // ---------------------------
