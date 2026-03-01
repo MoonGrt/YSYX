@@ -27,8 +27,6 @@ INC_PATH += $(VERILATOR_ROOT)/include
 INC_PATH += $(VERILATOR_ROOT)/include/vltstd
 endif
 
-$(RTL_DIR)/$(VTOP).sv: verilog
-
 $(VBUILD)/V$(VTOP).mk: $(RTL_DIR)/$(VTOP).sv
 	@echo + VERILATE RTL
 	@mkdir -p $(VBUILD)
@@ -50,7 +48,7 @@ rtl: $(RTL_DIR)/$(VTOP).sv
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 
 verilog:
-	 $(call git_commit, "generate verilog")
+	$(call git_commit, "generate verilog")
 	mkdir -p $(RTL_DIR)
 	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
