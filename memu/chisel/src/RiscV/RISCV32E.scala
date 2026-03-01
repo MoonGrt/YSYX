@@ -112,11 +112,6 @@ class Riscv32E_ID extends Module {
     val regfileOut = Output(Vec(32, UInt(32.W)))
   })
 
-  val immsel  = decoded(0)
-  val exsel   = decoded(1)
-  val jumpsel = decoded(2)
-  val wbsel   = decoded(3)
-  val memsel  = decoded(4)
   val List(op1sel, op2sel, exsel, jumpsel, wbsel, memsel) = ListLookup(
     io.inst,
     List(IMMN, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
