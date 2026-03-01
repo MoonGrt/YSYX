@@ -114,102 +114,17 @@ class Riscv32E_ID extends Module {
 
     val regfileOut = Output(Vec(32, UInt(32.W)))
   })
-
-  val decoded = ListLookup(
-    io.inst,
-    List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),
-    Array(
-      LW    -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RW),  // x[rs1] + sext(imm_i)
-      LBU   -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RB),  // x[rs1] + sext(imm_i)
-      SW    -> List( OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
-      SB    -> List( OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
-      ADD   -> List( OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
-      ADDI  -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
-      JALR  -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_JALR, WB_PC, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
-      LUI   -> List(OP1_NONE, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
-      AUIPC -> List( OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(imm_u[31:12] << 12)
-    ),
-  )
-  val op1sel  = decoded(0)
-  val op2sel  = decoded(1)
-  val exsel   = decoded(2)
-  val jumpsel = decoded(3)
-  val wbsel   = decoded(4)
-  val memsel  = decoded(5)
-
-  // -------- 寄存器堆 --------
-  val regfile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
-
-  // -------- 指令字段 --------
-  val rd  = io.inst(11,7)
-  val rs1 = io.inst(19,15)
-  val rs2 = io.inst(24,20)
-
-  // -------- 立即数 --------
-
-
-  // -------- EX操作数 --------
-  // Determine 1st operand data signal
-  io.op1 := 0.U(32.W)
-  // io.op1 := MuxCase(0.U(32.W), Seq(
-  //   (op1sel === OP1_RS1) -> regfile(rs1),
-  //   (op1sel === OP1_PC)  -> io.pc,
-  //   (op1sel === OP1_IMZ) -> imm_z_uext,
-  // ))
-  // Determine 2nd operand data signal
-  io.op2 := 0.U(32.W)
-  // io.op2 := MuxCase(0.U(32.W), Seq(
-  //   (op2sel === OP2_RS2) -> regfile(rs2),
-  //   (op2sel === OP2_IMI) -> imm_i_sext,
-  //   (op2sel === OP2_IMS) -> imm_s_sext,
-  //   // (op2sel === OP2_IMJ) -> imm_j_sext,
-  //   (op2sel === OP2_IMU) -> imm_u_shifted,  // for LUI and AUIPC
-  // ))
-
-  // -------- JUMP功能 --------
-  io.jumpen := 0.U
-
-  // -------- EX功能 --------
-  // io.exsel := 0.U
-
-  // -------- WB功能 --------
-  io.rd_addr := 0.U
-  io.memBen  := 0.U
-  io.memRen  := 0.U
-  io.memWen  := 0.U
-  io.regWen  := 0.U
-  when (io.wb_en && io.wb_rd =/= 0.U) {
-    regfile(io.wb_rd) := io.wb_data
-  }
-
-  // -------- 异常处理 --------
-  val trap = Module(new EBreak)
-  // 定义异常编码规则
-  // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
-  val impl_inst = IMPLED.filterNot(inst =>
-    inst == E || inst == EBREAK
-  )
-  val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
-  val is_zero = (io.inst === 0.U)
-  val is_ebreak = (io.inst === EBREAK)
-  val is_otherE = (io.inst === E) && (io.inst =/= EBREAK)
-  val exc_code = MuxCase(
-    1.U(8.W),  // 默认全零指令
-    Seq(
-      is_ebreak -> 0.U,  // EBREAK
-      is_zero -> 1.U,  // 全零指令
-      is_otherE -> 2.U,  // 其他E指令
-      is_unimpl -> 3.U  // 未实现指令
-    )
-  )
-  // 输出到 EBreak 模块
-  trap.io.clk  := clock
-  trap.io.trap := ~reset.asBool && is_unimpl
-  trap.io.code := exc_code
-  // halt 信号
-  io.halt := ~reset.asBool && is_unimpl
-  // 输出 regfile
-  io.regfileOut := regfile
+exsel   := 0.U
+op1     := 0.U
+op2     := 0.U
+rd_addr := 0.U
+halt   := 0.U
+jumpen := 0.U
+memBen := 0.U
+memRen := 0.U
+memWen := 0.U
+regWen := 0.U
+regfileOut := 0.U
 }
 
 // ---------------------------
