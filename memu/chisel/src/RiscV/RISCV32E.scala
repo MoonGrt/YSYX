@@ -218,7 +218,7 @@ class Riscv32E extends Module {
   io.pc := ifStage.io.pc
   ifStage.io.jumpen := 0.U
   ifStage.io.jump   := exStage.io.exout
-  ifStage.io.halt   := idStage.io.halt
+  ifStage.io.halt   := 0.U
 
   // ID
   idStage.io.inst := io.inst
