@@ -32,9 +32,9 @@ static void welcome() {
         "If it is not necessary, you can disable it in menuconfig"));
   Log("Build time: %s, %s", __TIME__, __DATE__);
 #if defined(CONFIG_NEMU)
-  printf("[MEMU] Welcome to %s-MEMU-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
+  printf("[MEMU] Welcome to %s-MEMU-nemu!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
 #elif defined(CONFIG_NPC)
-  printf("[MEMU] Welcome to %s-MEMU-NPC!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
+  printf("[MEMU] Welcome to %s-MEMU-npc!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
 #endif
   printf("[MEMU] For help, type \"help\"\n");
 }
