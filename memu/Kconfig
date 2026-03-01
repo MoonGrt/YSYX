@@ -48,7 +48,7 @@ config ISA
 
 config CORE
   string
-  default "minirv" if CORE_minirv
+  default "riscv32" if CORE_minirv
   default "riscv32" if CORE_riscv32
   default "riscv64" if CORE_riscv64
   default "none"

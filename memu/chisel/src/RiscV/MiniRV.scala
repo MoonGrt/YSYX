@@ -3,137 +3,10 @@ package riscv
 import chisel3._
 import chisel3.util._
 
-// // ---------------------------
-// // ROM BlackBox (只读指令存储器)
-// // ---------------------------
-// class ROM_DPI extends BlackBox with HasBlackBoxInline {
-//   val io = IO(new Bundle {
-//     val addr = Input(UInt(32.W))
-//     val data = Output(UInt(32.W))
-//   })
-//   // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
-//   setInline("ROM_DPI.v",
-//     s"""
-//       |import "DPI-C" function void pmem_read(input int addr, output int data);
-//       |module ROM_DPI(
-//       |  input  wire [31:0] addr,
-//       |  output wire [31:0] data
-//       |);
-//       |  always @(*) data = pmem_read(addr);
-//       |endmodule
-//     """.stripMargin)
-// }
-
-// // ---------------------------
-// // RAM BlackBox (可读写数据存储器)
-// // ---------------------------
-// class RAM_DPI extends BlackBox with HasBlackBoxInline {
-//   val io = IO(new Bundle {
-//     val we    = Input(Bool())
-//     val addr  = Input(UInt(32.W))
-//     val mask  = Input(UInt(8.W))
-//     val wdata = Input(UInt(32.W))
-//     val rdata = Output(UInt(32.W))
-//   })
-//   // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
-//   setInline("RAM_DPI.v",
-//     s"""
-//       |import "DPI-C" function int  pmem_read(input int raddr);
-//       |import "DPI-C" function void pmem_write(input int waddr, input int wdata, input byte wmask);
-//       |module RAM_DPI(
-//       |  input  wire        we,
-//       |  input  wire [31:0] addr,
-//       |  input  wire [ 7:0] mask,
-//       |  input  wire [31:0] wdata,
-//       |  output wire [31:0] rdata
-//       |);
-//       |  always @(*) begin
-//       |    rdata = pmem_read(addr);
-//       |    if (we) pmem_write(addr, wdata, wmask);
-//       |  end
-//       |endmodule
-//     """.stripMargin)
-// }
-
-// // ---------------------------
-// // EBreak BlackBox (异常处理模块)
-// // ---------------------------
-// class EBreak_DPI extends BlackBox with HasBlackBoxInline {
-//   val io = IO(new Bundle {
-//     val trap = Input(Bool())
-//   })
-//   // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
-//   setInline("EBreak_DPI.v",
-//     s"""
-//       |import "DPI-C" function void ebreak();
-//       |module EBreak_DPI(input wire trap);
-//       |  always @(*) if (trap) ebreak();
-//       |endmodule
-//     """.stripMargin)
-// }
-
-// ---------------------------
-// ROM BlackBox (只读指令存储器)
-// ---------------------------
-class ROM_DPI extends BlackBox{
-  val io = IO(new Bundle {
-    val addr = Input(UInt(32.W))
-    val data = Output(UInt(32.W))
-  })
-}
-
-// ---------------------------
-// RAM BlackBox (可读写数据存储器)
-// ---------------------------
-class RAM_DPI extends BlackBox {
-  val io = IO(new Bundle {
-    val re    = Input(Bool())
-    val we    = Input(Bool())
-    val len   = Input(UInt(8.W))
-    val addr  = Input(UInt(32.W))
-    val wdata = Input(UInt(32.W))
-    val rdata = Output(UInt(32.W))
-  })
-}
-
-// ---------------------------
-// EBreak BlackBox (异常处理模块)
-// ---------------------------
-class EBreak extends BlackBox {
-  val io = IO(new Bundle {
-    val clk  = Input(Clock())
-    val trap = Input(Bool())
-    val code = Input(UInt(8.W))
-  })
-}
-
-// ---------------------------
-// DiffTest BlackBox (差分测试模块)
-// ---------------------------
-class DiffTest extends BlackBox {
-  val io = IO(new Bundle {
-    val clk  = Input(Clock())
-    val pc   = Input(UInt(32.W))
-    val npc  = Input(UInt(32.W))
-    val inst = Input(UInt(32.W))
-    val gpr  = Input(Vec(32, UInt(32.W)))
-    val csr  = Input(Vec(4, UInt(32.W)))
-  })
-}
-
-// ---------------------------
-// 工具：符号扩展
-// ---------------------------
-object Sext {
-  def apply(x: UInt, bits: Int): UInt = {
-    Cat(Fill(32 - bits, x(bits - 1)), x)
-  }
-}
-
 // ---------------------------
 // IF 模块：Instruction Fetch
 // ---------------------------
-class IF extends Module {
+class MiniRV_IF extends Module {
   val io = IO(new Bundle {
     val halt   = Input(Bool())  // halt 信号
     val jumpen = Input(Bool())  // 跳转使能
@@ -158,7 +31,7 @@ class IF extends Module {
 // ---------------------------
 // ID 模块：Instruction Decode + GPR
 // ---------------------------
-object Instructions {
+object MiniRV_Instructions {
   // Load/Store
   val LW     = BitPat("b?????????????????010?????0000011")
   val LBU    = BitPat("b?????????????????100?????0000011")
@@ -177,7 +50,7 @@ object Instructions {
   // Implemented instructions
   val IMPLEMENTED = Seq(LW, LBU, SW, SB, ADD, ADDI, JALR, LUI, E, EBREAK)
 }
-object Parameters {
+object MiniRV_Parameters {
   val IMM_SEL_LEN = 2
   val IMMN = 0.U(IMM_SEL_LEN.W)
   val IMMI = 1.U(IMM_SEL_LEN.W)
@@ -204,9 +77,9 @@ object Parameters {
   val MEM_WW   = 3.U(MEM_SEL_LEN.W)
   val MEM_WB   = 4.U(MEM_SEL_LEN.W)
 }
-class ID extends Module {
-  import Instructions._
-  import Parameters._
+class MiniRV_ID extends Module {
+  import MiniRV_Instructions._
+  import MiniRV_Parameters._
   val io = IO(new Bundle {
     val inst    = Input(UInt(32.W))
 
@@ -302,8 +175,8 @@ class ID extends Module {
   val trap = Module(new EBreak)
   // 定义异常编码规则
   // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
-  val impl_inst = Instructions.IMPLEMENTED.filterNot(inst =>
-    inst == Instructions.E || inst == Instructions.EBREAK
+  val impl_inst = IMPLEMENTED.filterNot(inst =>
+    inst == E || inst == EBREAK
   )
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
   val is_zero = (io.inst === 0.U)
@@ -331,8 +204,8 @@ class ID extends Module {
 // ---------------------------
 // EX 模块
 // ---------------------------
-class EX extends Module {
-  import Parameters._
+class MiniRV_EX extends Module {
+  import MiniRV_Parameters._
   val io = IO(new Bundle {
     val pc    = Input(UInt(32.W))
     val rs1   = Input(UInt(32.W))
@@ -353,8 +226,8 @@ class EX extends Module {
 // MiniRV CPU（单周期）
 // ---------------------------
 class MiniRV extends Module {
-  import Instructions._
-  import Parameters._
+  import MiniRV_Instructions._
+  import MiniRV_Parameters._
   val io = IO(new Bundle {
     val pc   = Output(UInt(32.W))
     val inst = Input(UInt(32.W))
@@ -367,9 +240,9 @@ class MiniRV extends Module {
     val mem_rdata = Input(UInt(32.W))
   })
 
-  val ifStage = Module(new IF)
-  val idStage = Module(new ID)
-  val exStage = Module(new EX)
+  val ifStage = Module(new MiniRV_IF)
+  val idStage = Module(new MiniRV_ID)
+  val exStage = Module(new MiniRV_EX)
 
   // IF
   io.pc := ifStage.io.pc
@@ -426,9 +299,9 @@ class MiniRV extends Module {
 }
 
 // ---------------------------
-// MiniRV SOC：自包含 CPU + ROM + RAM
+// MiniRV TOP：自包含 CPU + ROM + RAM
 // ---------------------------
-class MiniRVSOC extends Module {
+class MiniRVTOP extends Module {
   val cpu = Module(new MiniRV)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)

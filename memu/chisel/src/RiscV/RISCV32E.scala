@@ -1,128 +1,17 @@
-package rv32
+package riscv
 
 import chisel3._
 import chisel3.util._
 
-// // ---------------------------
-// // ROM BlackBox (只读指令存储器)
-// // ---------------------------
-// class ROM_DPI extends BlackBox with HasBlackBoxInline {
-//   val io = IO(new Bundle {
-//     val addr = Input(UInt(32.W))
-//     val data = Output(UInt(32.W))
-//   })
-//   // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
-//   setInline("ROM_DPI.v",
-//     s"""
-//       |import "DPI-C" function void pmem_read(input int addr, output int data);
-//       |module ROM_DPI(
-//       |  input  wire [31:0] addr,
-//       |  output wire [31:0] data
-//       |);
-//       |  always @(*) data = pmem_read(addr);
-//       |endmodule
-//     """.stripMargin)
-// }
-
-// // ---------------------------
-// // RAM BlackBox (可读写数据存储器)
-// // ---------------------------
-// class RAM_DPI extends BlackBox with HasBlackBoxInline {
-//   val io = IO(new Bundle {
-//     val we    = Input(Bool())
-//     val addr  = Input(UInt(32.W))
-//     val mask  = Input(UInt(8.W))
-//     val wdata = Input(UInt(32.W))
-//     val rdata = Output(UInt(32.W))
-//   })
-//   // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
-//   setInline("RAM_DPI.v",
-//     s"""
-//       |import "DPI-C" function int  pmem_read(input int raddr);
-//       |import "DPI-C" function void pmem_write(input int waddr, input int wdata, input byte wmask);
-//       |module RAM_DPI(
-//       |  input  wire        we,
-//       |  input  wire [31:0] addr,
-//       |  input  wire [ 7:0] mask,
-//       |  input  wire [31:0] wdata,
-//       |  output wire [31:0] rdata
-//       |);
-//       |  always @(*) begin
-//       |    rdata = pmem_read(addr);
-//       |    if (we) pmem_write(addr, wdata, wmask);
-//       |  end
-//       |endmodule
-//     """.stripMargin)
-// }
-
-// // ---------------------------
-// // EBreak BlackBox (异常处理模块)
-// // ---------------------------
-// class EBreak_DPI extends BlackBox with HasBlackBoxInline {
-//   val io = IO(new Bundle {
-//     val trap = Input(Bool())
-//   })
-//   // Verilog 内联实现（DPI-C 或系统存储器可在这里实现）
-//   setInline("EBreak_DPI.v",
-//     s"""
-//       |import "DPI-C" function void ebreak();
-//       |module EBreak_DPI(input wire trap);
-//       |  always @(*) if (trap) ebreak();
-//       |endmodule
-//     """.stripMargin)
-// }
-
-// ---------------------------
-// ROM BlackBox (只读指令存储器)
-// ---------------------------
-class ROM_DPI extends BlackBox{
-  val io = IO(new Bundle {
-    val addr = Input(UInt(32.W))
-    val data = Output(UInt(32.W))
-  })
-}
-
-// ---------------------------
-// RAM BlackBox (可读写数据存储器)
-// ---------------------------
-class RAM_DPI extends BlackBox {
-  val io = IO(new Bundle {
-    val we    = Input(Bool())
-    val addr  = Input(UInt(32.W))
-    val mask  = Input(UInt(8.W))
-    val wdata = Input(UInt(32.W))
-    val rdata = Output(UInt(32.W))
-  })
-}
-
-// ---------------------------
-// EBreak BlackBox (异常处理模块)
-// ---------------------------
-class EBreak extends BlackBox {
-  val io = IO(new Bundle {
-    val trap = Input(Bool())
-    val code = Input(UInt(8.W))
-  })
-}
-
-// ---------------------------
-// 工具：符号扩展
-// ---------------------------
-object Sext {
-  def apply(x: UInt, bits: Int): UInt = {
-    Cat(Fill(32 - bits, x(bits - 1)), x)
-  }
-}
-
 // ---------------------------
 // IF 模块：Instruction Fetch
 // ---------------------------
-class IF extends Module {
+class Riscv32E_IF extends Module {
   val io = IO(new Bundle {
     val halt   = Input(Bool())  // halt 信号
     val jumpen = Input(Bool())  // 跳转使能
     val jump   = Input(UInt(32.W))  // 跳转地址
-    val pcn    = Output(UInt(32.W))  // 下一个 PC
+    val npc    = Output(UInt(32.W))  // 下一个 PC
     val pc     = Output(UInt(32.W))  // 当前 PC 输出
   })
   val pc = RegInit("h80000000".U(32.W))
@@ -132,17 +21,17 @@ class IF extends Module {
     when (io.jumpen) {
       pc := io.jump
     }.otherwise {
-      pc := io.pcn
+      pc := io.npc
     }
   }
   io.pc  := pc
-  io.pcn := pc + 4.U(32.W)
+  io.npc := pc + 4.U(32.W)
 }
 
 // ---------------------------
 // ID 模块：Instruction Decode + GPR
 // ---------------------------
-object Instructions {
+object Riscv32E_Instructions {
   // Load/Store
   val LW     = BitPat("b?????????????????010?????0000011")
   val LBU    = BitPat("b?????????????????100?????0000011")
@@ -161,7 +50,7 @@ object Instructions {
   // Implemented instructions
   val IMPLEMENTED = Seq(LW, LBU, SW, SB, ADD, ADDI, JALR, LUI, E, EBREAK)
 }
-object Parameters {
+object Riscv32E_Parameters {
   val IMM_SEL_LEN = 2
   val IMMN = 0.U(IMM_SEL_LEN.W)
   val IMMI = 1.U(IMM_SEL_LEN.W)
@@ -188,9 +77,9 @@ object Parameters {
   val MEM_WW   = 3.U(MEM_SEL_LEN.W)
   val MEM_WB   = 4.U(MEM_SEL_LEN.W)
 }
-class ID extends Module {
-  import Instructions._
-  import Parameters._
+class Riscv32E_ID extends Module {
+  import Riscv32E_Instructions._
+  import Riscv32E_Parameters._
   val io = IO(new Bundle {
     val inst    = Input(UInt(32.W))
 
@@ -207,12 +96,15 @@ class ID extends Module {
     val immen   = Output(Bool())
     val rd_addr = Output(UInt(5.W))
 
+    // Control signals
     val halt   = Output(Bool())
     val jumpen = Output(Bool())
     val memBen = Output(Bool())
     val memRen = Output(Bool())
     val memWen = Output(Bool())
     val regWen = Output(Bool())
+
+    val regfileOut = Output(Vec(32, UInt(32.W)))
   })
 
   val decoded = ListLookup(
@@ -271,10 +163,10 @@ class ID extends Module {
 
   // -------- WB功能 --------
   io.rd_addr := rd
-  io.memBen  := (memsel === MEM_RB) || (memsel === MEM_WB)
-  io.memRen := (memsel === MEM_RW) || (memsel === MEM_RB)
-  io.memWen := (memsel === MEM_WW) || (memsel === MEM_WB)
-  io.regWen := (wbsel =/= WB_NONE)
+  io.memBen  := ~reset.asBool && (memsel === MEM_RB) || (memsel === MEM_WB)
+  io.memRen  := ~reset.asBool && (memsel === MEM_RW) || (memsel === MEM_RB)
+  io.memWen  := ~reset.asBool && (memsel === MEM_WW) || (memsel === MEM_WB)
+  io.regWen  := ~reset.asBool && (wbsel =/= WB_NONE)
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := io.wb_data
   }
@@ -283,8 +175,8 @@ class ID extends Module {
   val trap = Module(new EBreak)
   // 定义异常编码规则
   // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
-  val impl_inst = Instructions.IMPLEMENTED.filterNot(inst =>
-    inst == Instructions.E || inst == Instructions.EBREAK
+  val impl_inst = IMPLEMENTED.filterNot(inst =>
+    inst == E || inst == EBREAK
   )
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
   val is_zero = (io.inst === 0.U)
@@ -300,17 +192,20 @@ class ID extends Module {
     )
   )
   // 输出到 EBreak 模块
+  trap.io.clk  := clock
   trap.io.trap := ~reset.asBool && is_unimpl
   trap.io.code := exc_code
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
+  // 输出 regfile
+  io.regfileOut := regfile
 }
 
 // ---------------------------
 // EX 模块
 // ---------------------------
-class EX extends Module {
-  import Parameters._
+class Riscv32E_EX extends Module {
+  import Riscv32E_Parameters._
   val io = IO(new Bundle {
     val pc    = Input(UInt(32.W))
     val rs1   = Input(UInt(32.W))
@@ -328,25 +223,26 @@ class EX extends Module {
 }
 
 // ---------------------------
-// MiniRV CPU（单周期）
+// Riscv32E CPU（单周期）
 // ---------------------------
-class MiniRV extends Module {
-  import Instructions._
-  import Parameters._
+class Riscv32E extends Module {
+  import Riscv32E_Instructions._
+  import Riscv32E_Parameters._
   val io = IO(new Bundle {
     val pc   = Output(UInt(32.W))
     val inst = Input(UInt(32.W))
 
+    val mem_re    = Output(Bool())
     val mem_we    = Output(Bool())
+    val mem_len   = Output(UInt(4.W))
     val mem_addr  = Output(UInt(32.W))
-    val mem_mask  = Output(UInt(8.W))
     val mem_wdata = Output(UInt(32.W))
     val mem_rdata = Input(UInt(32.W))
   })
 
-  val ifStage = Module(new IF)
-  val idStage = Module(new ID)
-  val exStage = Module(new EX)
+  val ifStage = Module(new Riscv32E_IF)
+  val idStage = Module(new Riscv32E_ID)
+  val exStage = Module(new Riscv32E_EX)
 
   // IF
   io.pc := ifStage.io.pc
@@ -366,44 +262,47 @@ class MiniRV extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
+  io.mem_re    := idStage.io.memRen
   io.mem_we    := idStage.io.memWen
   io.mem_addr  := exStage.io.exout
-  io.mem_wdata := Mux(idStage.io.memBen,
-                      idStage.io.rs2 << (exStage.io.exout(1,0) << 3),
-                      idStage.io.rs2)
-  io.mem_mask  := Mux(idStage.io.memBen,
-                     (1.U << exStage.io.exout(1,0)).asUInt,  // LBU/LB mask
-                      "b1111".U)  // SW/SW
+  io.mem_wdata := idStage.io.rs2
+  io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
 
   // Write Back
   val byte_shift = (exStage.io.exout(1,0) << 3)  // 位移量
   val byte_data = (io.mem_rdata >> byte_shift)(7,0)  // 取目标字节
-  val mem_data  = Mux(idStage.io.memBen,
-                      Cat(Fill(24, byte_data(7)), byte_data),  // 零扩展到 32 位
-                      io.mem_rdata)
-  val wb_data  = MuxCase(
+  val mem_data = io.mem_rdata
+  val wb_data = MuxCase(
     exStage.io.exout,  // 默认EX输出
     Seq(
       idStage.io.memRen -> mem_data,  // Memory read
-      idStage.io.jumpen -> ifStage.io.pcn  // Jump
+      idStage.io.jumpen -> ifStage.io.npc  // Jump
     )
   )
 
   idStage.io.wb_en   := idStage.io.regWen
   idStage.io.wb_rd   := idStage.io.rd_addr
   idStage.io.wb_data := wb_data
+
+  // DiffTest
+  val difftest = Module(new DiffTest)
+  difftest.io.clk  := clock
+  difftest.io.pc   := ifStage.io.pc
+  difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.exout, ifStage.io.npc)
+  difftest.io.inst := idStage.io.inst
+  for (i <- 0 until 32) {
+    difftest.io.gpr(i) := idStage.io.regfileOut(i)
+  }
+  for (i <- 0 until 4) {
+    difftest.io.csr(i) := 0.U(32.W)  // 未实现 CSR
+  }
 }
 
 // ---------------------------
-// MiniRV SOC：自包含 CPU + ROM + RAM
+// Riscv32E TOP：自包含 CPU + ROM + RAM
 // ---------------------------
-class MiniRVSOC extends Module {
-  val io = IO(new Bundle {
-    val pc   = Output(UInt(32.W))
-    val inst = Output(UInt(32.W))
-  })
-
-  val cpu = Module(new MiniRV)
+class Riscv32ETOP extends Module {
+  val cpu = Module(new Riscv32E)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)
 
@@ -412,13 +311,10 @@ class MiniRVSOC extends Module {
   cpu.io.inst := rom.io.data
 
   // 数据访存
+  ram.io.re    := cpu.io.mem_re
   ram.io.we    := cpu.io.mem_we
+  ram.io.len   := cpu.io.mem_len
   ram.io.addr  := cpu.io.mem_addr
-  ram.io.mask  := cpu.io.mem_mask
   ram.io.wdata := cpu.io.mem_wdata
   cpu.io.mem_rdata := ram.io.rdata
-
-  // 输出
-  io.pc   := cpu.io.pc
-  io.inst := cpu.io.inst
 }
