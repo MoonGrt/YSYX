@@ -231,23 +231,23 @@ class Riscv32E_ID extends Module {
 
   // -------- 立即数 --------
   // sext 12bit value to 32bit value.
-  val immi = io.inst(31, 20)  // imm for I-type
+  val immi = io.inst(31,20)  // imm for I-type
   val immsi = Cat(Fill(20, immi(11)), immi)
-  val imms = Cat(io.inst(31, 25), io.inst(11, 7))  // imm for S-type
+  val imms = Cat(io.inst(31,25), io.inst(11, 7))  // imm for S-type
   val immss = Cat(Fill(20, imms(11)), imms)
   // Decode imm of B-type instruction
-  val immb = Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8))
+  val immb = Cat(io.inst(31), io.inst(7), io.inst(30,25), io.inst(11,8))
   val immsb = Cat(Fill(19, immb(11)), immb, 0.U(1.W))
   // Decode imm of J-type instruction
-  val immj = Cat(io.inst(31), io.inst(19, 12), io.inst(20), io.inst(30, 21))
+  val immj = Cat(io.inst(31), io.inst(19,12), io.inst(20), io.inst(30,21))
   val immsj = Cat(Fill(11, immj(19)), immj, 0.U(1.W))  // Set LSB to zero
   // Decode imm of U-type instruction
-  val immu = Cat(io.inst(31, 12), Fill(12, 0.U))  // for LUI and AUIPC
+  val immu = Cat(io.inst(31,12), Fill(12, 0.U))  // for LUI and AUIPC
   // Decode imm of I-type instruction
   val immz = io.inst(19, 15)
   val immuz = Cat(Fill(27, 0.U), immz)  // for CSR instructions
 
-  val imm_i_old = Sext(io.inst(31,20), 12)
+  val imm_i_old = Sext(immi, 12)
   val imm_s_old = Sext(Cat(io.inst(31,25), io.inst(11,7)), 12)
   val imm_u_old = io.inst(31,12) << 12
 
@@ -264,7 +264,7 @@ class Riscv32E_ID extends Module {
   // Determine 2nd operand data signal
   io.op2 := MuxCase(0.U(32.W), Seq(
     (op2sel === OP2_RS2) -> regfile(rs2),
-    (op2sel === OP2_IMI) -> imm_i_old,
+    (op2sel === OP2_IMI) -> immsi,
     (op2sel === OP2_IMS) -> imm_s_old,
     (op2sel === OP2_IMJ) -> immsj,
     (op2sel === OP2_IMU) -> immu,  // for LUI and AUIPC
