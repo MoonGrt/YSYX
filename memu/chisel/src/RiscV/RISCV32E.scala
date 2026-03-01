@@ -55,8 +55,9 @@ object Riscv32E_Parameters {
   val OP1_SEL_LEN = 2
   val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
   val OP1_PC   = 1.U(OP1_SEL_LEN.W)
-  val OP1_IMZ  = 3.U(OP1_LEN.W)
-  val OP1_NONE = 2.U(OP1_SEL_LEN.W)
+  val OP1_IMZ  = 2.U(OP1_SEL_LEN.W)
+  val OP1_NONE = 3.U(OP1_SEL_LEN.W)
+
   val OP2_SEL_LEN = 1
   val OP2_NONE = 0.U(OP2_SEL_LEN.W)
   val OP2_RS2  = 1.U(OP2_SEL_LEN.W)
@@ -235,8 +236,8 @@ class Riscv32E_EX extends Module {
     val exout = Output(UInt(32.W))
   })
   // -------- ALU --------
-  io.exout := MuxCase(0.U(WORD_LEN.W), Seq(
-    (exsel === EX_ADD) -> (io.op1 + io.op2),
+  io.exout := MuxCase(0.U(32.W), Seq(
+    (io.exsel === EX_ADD) -> (io.op1 + io.op2),
   ))
 }
 
