@@ -4,32 +4,7 @@ import chisel3._
 import chisel3.util._
 
 // ---------------------------
-// IF 模块：Instruction Fetch
-// ---------------------------
-class Riscv32E_IF extends Module {
-  val io = IO(new Bundle {
-    val halt   = Input(Bool())  // halt 信号
-    val jumpen = Input(Bool())  // 跳转使能
-    val jump   = Input(UInt(32.W))  // 跳转地址
-    val npc    = Output(UInt(32.W))  // 下一个 PC
-    val pc     = Output(UInt(32.W))  // 当前 PC 输出
-  })
-  val pc = RegInit("h80000000".U(32.W))
-  when (io.halt) {
-    pc := pc
-  }.otherwise {
-    when (io.jumpen) {
-      pc := io.jump
-    }.otherwise {
-      pc := io.npc
-    }
-  }
-  io.pc  := pc
-  io.npc := pc + 4.U(32.W)
-}
-
-// ---------------------------
-// ID 模块：Instruction Decode + GPR
+// Configuration parameters
 // ---------------------------
 object Riscv32E_Instructions {
   // Load/Store
@@ -61,6 +36,13 @@ object Riscv32E_Instructions {
   val SLTU    = BitPat("b0000000??????????011?????0110011")
   val SLTI    = BitPat("b?????????????????010?????0010011")
   val SLTIU   = BitPat("b?????????????????011?????0010011")
+  // Branch
+  val BEQ     = BitPat("b?????????????????000?????1100011")
+  val BNE     = BitPat("b?????????????????001?????1100011")
+  val BLT     = BitPat("b?????????????????100?????1100011")
+  val BGE     = BitPat("b?????????????????101?????1100011")
+  val BLTU    = BitPat("b?????????????????110?????1100011")
+  val BGEU    = BitPat("b?????????????????111?????1100011")
 
   // Jump
   val JAL    = BitPat("b?????????????????????????1101111")
@@ -68,7 +50,7 @@ object Riscv32E_Instructions {
   // Load immediate
   val LUI    = BitPat("b?????????????????????????0110111")
   val AUIPC  = BitPat("b?????????????????????????0010111")
-  // E - Type
+  // Exception
   val E      = BitPat("b?????????????????????????1110011")
   val EBREAK = BitPat("b00000000000100000000000001110011")
   // Implemented instructions
@@ -76,6 +58,7 @@ object Riscv32E_Instructions {
     LW, LBU, SW, SB,
     ADD, ADDI, SUB, AND, OR, XOR, ANDI, ORI, XORI, 
     SLL, SRL, SRA, SLLI, SRLI, SRAI, SLT, SLTU, SLTI, SLTIU,
+    BEQ, BNE, BLT, BGE, BLTU, BGEU,
     JAL, JALR, LUI, AUIPC,
     E, EBREAK
   )
@@ -107,6 +90,12 @@ object Riscv32E_Parameters {
   val EX_SRA  =  8.U(EX_SEL_LEN.W)
   val EX_SLT  =  9.U(EX_SEL_LEN.W)
   val EX_SLTU = 10.U(EX_SEL_LEN.W)
+  val EX_BEQ  = 11.U(EX_SEL_LEN.W)
+  val EX_BNE  = 12.U(EX_SEL_LEN.W)
+  val EX_BLT  = 13.U(EX_SEL_LEN.W)
+  val EX_BGE  = 14.U(EX_SEL_LEN.W)
+  val EX_BLTU = 15.U(EX_SEL_LEN.W)
+  val EX_BGEU = 16.U(EX_SEL_LEN.W)
 
   val JUMP_SEL_LEN = 2
   val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
@@ -126,6 +115,35 @@ object Riscv32E_Parameters {
   val MEM_WW   = 3.U(MEM_SEL_LEN.W)
   val MEM_WB   = 4.U(MEM_SEL_LEN.W)
 }
+
+// ---------------------------
+// IF 模块：Instruction Fetch
+// ---------------------------
+class Riscv32E_IF extends Module {
+  val io = IO(new Bundle {
+    val halt   = Input(Bool())  // halt 信号
+    val jumpen = Input(Bool())  // 跳转使能
+    val jump   = Input(UInt(32.W))  // 跳转地址
+    val npc    = Output(UInt(32.W))  // 下一个 PC
+    val pc     = Output(UInt(32.W))  // 当前 PC 输出
+  })
+  val pc = RegInit("h80000000".U(32.W))
+  when (io.halt) {
+    pc := pc
+  }.otherwise {
+    when (io.jumpen) {
+      pc := io.jump
+    }.otherwise {
+      pc := io.npc
+    }
+  }
+  io.pc  := pc
+  io.npc := pc + 4.U(32.W)
+}
+
+// ---------------------------
+// ID 模块：Instruction Decode + GPR
+// ---------------------------
 class Riscv32E_ID extends Module {
   import Riscv32E_Instructions._
   import Riscv32E_Parameters._
@@ -160,35 +178,35 @@ class Riscv32E_ID extends Module {
     io.inst,
     List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),
     Array(
-      LW    -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RW),  // x[rs1] + sext(imm_i)
-      LBU   -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RB),  // x[rs1] + sext(imm_i)
-      SW    -> List( OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
-      SB    -> List( OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
+      LW    -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RW),  // x[rs1] + sext(immi)
+      LBU   -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RB),  // x[rs1] + sext(immi)
+      SW    -> List( OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imms)
+      SB    -> List( OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imms)
 
       ADD   -> List( OP1_RS1, OP2_RS2, EX_ADD , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] + x[rs2]
-      ADDI  -> List( OP1_RS1, OP2_IMI, EX_ADD , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] + sext(imm_i)
+      ADDI  -> List( OP1_RS1, OP2_IMI, EX_ADD , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] + sext(immi)
       SUB   -> List( OP1_RS1, OP2_RS2, EX_SUB , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] - x[rs2]
       AND   -> List( OP1_RS1, OP2_RS2, EX_AND , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] & x[rs2]
       OR    -> List( OP1_RS1, OP2_RS2, EX_OR  , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] | x[rs2]
       XOR   -> List( OP1_RS1, OP2_RS2, EX_XOR , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] ^ x[rs2]
-      ANDI  -> List( OP1_RS1, OP2_IMI, EX_AND , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] & sext(imm_i)
-      ORI   -> List( OP1_RS1, OP2_IMI, EX_OR  , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] | sext(imm_i)
-      XORI  -> List( OP1_RS1, OP2_IMI, EX_XOR , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] ^ sext(imm_i)
+      ANDI  -> List( OP1_RS1, OP2_IMI, EX_AND , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] & sext(immi)
+      ORI   -> List( OP1_RS1, OP2_IMI, EX_OR  , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] | sext(immi)
+      XORI  -> List( OP1_RS1, OP2_IMI, EX_XOR , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] ^ sext(immi)
       SLL   -> List( OP1_RS1, OP2_RS2, EX_SLL , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] << x[rs2](4,0)
       SRL   -> List( OP1_RS1, OP2_RS2, EX_SRL , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] >>u x[rs2](4,0)
       SRA   -> List( OP1_RS1, OP2_RS2, EX_SRA , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] >>s x[rs2](4,0)
-      SLLI  -> List( OP1_RS1, OP2_IMI, EX_SLL , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] << imm_i_sext(4,0)
-      SRLI  -> List( OP1_RS1, OP2_IMI, EX_SRL , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] >>u imm_i_sext(4,0)
-      SRAI  -> List( OP1_RS1, OP2_IMI, EX_SRA , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] >>s imm_i_sext(4,0)
+      SLLI  -> List( OP1_RS1, OP2_IMI, EX_SLL , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] << immsi(4,0)
+      SRLI  -> List( OP1_RS1, OP2_IMI, EX_SRL , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] >>u immsi(4,0)
+      SRAI  -> List( OP1_RS1, OP2_IMI, EX_SRA , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] >>s immsi(4,0)
       SLT   -> List( OP1_RS1, OP2_RS2, EX_SLT , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <s x[rs2]
       SLTU  -> List( OP1_RS1, OP2_RS2, EX_SLTU, JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <u x[rs2]
-      SLTI  -> List( OP1_RS1, OP2_IMI, EX_SLT , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <s imm_i_sext
-      SLTIU -> List( OP1_RS1, OP2_IMI, EX_SLTU, JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <u imm_i_sext
+      SLTI  -> List( OP1_RS1, OP2_IMI, EX_SLT , JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <s immsi
+      SLTIU -> List( OP1_RS1, OP2_IMI, EX_SLTU, JUMP_NONE, WB_EX, MEM_NONE), // x[rs1] <u immsi
 
-      JAL   -> List(  OP1_PC, OP2_IMJ, EX_ADD,  JUMP_JAL, WB_PC, MEM_NONE), // x[rd] <- PC+4 and PC+sext(imm_j)
-      JALR  -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_JALR, WB_PC, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
-      LUI   -> List(OP1_NONE, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
-      AUIPC -> List(  OP1_PC, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(imm_u[31:12] << 12)
+      JAL   -> List(  OP1_PC, OP2_IMJ, EX_ADD,  JUMP_JAL, WB_PC, MEM_NONE), // x[rd] <- PC+4 and PC+sext(immj)
+      JALR  -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_JALR, WB_PC, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(immi))&~1
+      LUI   -> List(OP1_NONE, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(immu[31:12] << 12)
+      AUIPC -> List(  OP1_PC, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(immu[31:12] << 12)
     ),
   )
 
@@ -202,26 +220,21 @@ class Riscv32E_ID extends Module {
 
   // -------- 立即数 --------
   // sext 12bit value to 32bit value.
-  val imm_i = io.inst(31, 20)  // imm for I-type
-  val imm_i_sext = Cat(Fill(20, imm_i(11)), imm_i)
-  val imm_s = Cat(io.inst(31, 25), io.inst(11, 7))  // imm for S-type
-  val imm_s_sext = Cat(Fill(20, imm_s(11)), imm_s)
-  // // Decode imm of B-type instruction
-  // val imm_b = Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8))
-  // val imm_b_sext = Cat(Fill(19, imm_b(11)), imm_b, 0.U(1.U))
+  val immi = io.inst(31, 20)  // imm for I-type
+  val immsi = Cat(Fill(20, immi(11)), immi)
+  val imms = Cat(io.inst(31, 25), io.inst(11, 7))  // imm for S-type
+  val immss = Cat(Fill(20, imms(11)), imms)
+  // Decode imm of B-type instruction
+  val immb = Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8))
+  val immsb = Cat(Fill(19, immb(11)), immb, 0.U(1.U))
   // Decode imm of J-type instruction
-  val imm_j = Cat(io.inst(31), io.inst(19, 12), io.inst(20), io.inst(30, 21))
-  val imm_j_sext = Cat(Fill(11, imm_j(19)), imm_j, 0.U(1.U))  // Set LSB to zero
+  val immj = Cat(io.inst(31), io.inst(19, 12), io.inst(20), io.inst(30, 21))
+  val immsj = Cat(Fill(11, immj(19)), immj, 0.U(1.U))  // Set LSB to zero
   // Decode imm of U-type instruction
-  val imm_u = io.inst(31, 12)
-  val imm_u_shifted = Cat(imm_u, Fill(12, 0.U))  // for LUI and AUIPC
+  val immu = Cat(immu, Fill(12, 0.U))  // for LUI and AUIPC
   // Decode imm of I-type instruction
-  val imm_z = io.inst(19, 15)
-  val imm_z_uext = Cat(Fill(27, 0.U), imm_z)  // for CSR instructions
-
-  val imm_i_old = Sext(io.inst(31,20), 12)
-  val imm_s_old = Sext(Cat(io.inst(31,25), io.inst(11,7)), 12)
-  val imm_u_old = io.inst(31,12) << 12
+  val immz = io.inst(19, 15)
+  val immuz = Cat(Fill(27, 0.U), immz)  // for CSR instructions
 
   // -------- EX操作数 --------
   io.rs2 := regfile(rs2)
@@ -229,15 +242,15 @@ class Riscv32E_ID extends Module {
   io.op1 := MuxCase(0.U(32.W), Seq(
     (op1sel === OP1_RS1) -> regfile(rs1),
     (op1sel === OP1_PC)  -> io.pc,
-    (op1sel === OP1_IMZ) -> imm_z_uext,
+    (op1sel === OP1_IMZ) -> immuz,
   ))
   // Determine 2nd operand data signal
   io.op2 := MuxCase(0.U(32.W), Seq(
     (op2sel === OP2_RS2) -> regfile(rs2),
-    (op2sel === OP2_IMI) -> imm_i_old,
-    (op2sel === OP2_IMS) -> imm_s_old,
-    (op2sel === OP2_IMJ) -> imm_j_sext,
-    (op2sel === OP2_IMU) -> imm_u_shifted,  // for LUI and AUIPC
+    (op2sel === OP2_IMI) -> immi,
+    (op2sel === OP2_IMS) -> imms,
+    (op2sel === OP2_IMJ) -> immsj,
+    (op2sel === OP2_IMU) -> immu,  // for LUI and AUIPC
   ))
 
   // -------- JUMP功能 --------
@@ -292,13 +305,17 @@ class Riscv32E_ID extends Module {
 class Riscv32E_EX extends Module {
   import Riscv32E_Parameters._
   val io = IO(new Bundle {
-    val op1   = Input(UInt(32.W))
-    val op2   = Input(UInt(32.W))
-    val exsel = Input(UInt(EX_SEL_LEN.W))
-    val exout = Output(UInt(32.W))
+    val pc     = Input(UInt(32.W))
+    val immsb = Input(UInt(32.W))
+    val op1    = Input(UInt(32.W))
+    val op2    = Input(UInt(32.W))
+    val exsel  = Input(UInt(EX_SEL_LEN.W))
+    val aluout = Output(UInt(32.W))
+    val bren   = Output(Bool())
+    val braddr = Output(UInt(32.W))
   })
   // -------- ALU --------
-  io.exout := MuxCase(0.U(32.W), Seq(
+  io.aluout := MuxCase(0.U(32.W), Seq(
     (io.exsel === EX_ADD)  -> (io.op1 + io.op2),
     (io.exsel === EX_SUB)  -> (io.op1 - io.op2),
     (io.exsel === EX_AND)  -> (io.op1 & io.op2),
@@ -310,6 +327,16 @@ class Riscv32E_EX extends Module {
     // (io.exsel === EX_SLT)  -> (io.op1.asSInt() < io.op2.asSInt()).asUInt(),
     (io.exsel === EX_SLTU) -> (io.op1 < io.op2),
   ))
+  // -------- Branch --------
+  io.bren := MuxCase(false.B, Seq(
+    (io.exsel === BR_BEQ)  ->  (io.op1 === io.op2),
+    (io.exsel === BR_BNE)  -> !(io.op1 === io.op2),
+    // (io.exsel === BR_BLT)  ->  (io.op1.asSInt() < io.op2.asSInt()),
+    // (io.exsel === BR_BGE)  -> !(io.op1.asSInt() < io.op2.asSInt()),
+    (io.exsel === BR_BLTU) ->  (io.op1 < io.op2),
+    (io.exsel === BR_BGEU) -> !(io.op1 < io.op2),
+  ))
+  io.braddr := io.pc + io.immsb
 }
 
 // ---------------------------
@@ -337,7 +364,7 @@ class Riscv32E extends Module {
   // IF
   io.pc := ifStage.io.pc
   ifStage.io.jumpen := idStage.io.jumpen
-  ifStage.io.jump   := exStage.io.exout
+  ifStage.io.jump   := exStage.io.aluout
   ifStage.io.halt   := idStage.io.halt
 
   // ID
@@ -352,16 +379,16 @@ class Riscv32E extends Module {
   // Memory
   io.mem_re    := idStage.io.memRen
   io.mem_we    := idStage.io.memWen
-  io.mem_addr  := exStage.io.exout
+  io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
   io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
 
   // Write Back
-  val byte_shift = (exStage.io.exout(1,0) << 3)  // 位移量
+  val byte_shift = (exStage.io.aluout(1,0) << 3)  // 位移量
   val byte_data = (io.mem_rdata >> byte_shift)(7,0)  // 取目标字节
   val mem_data = io.mem_rdata
   val wb_data = MuxCase(
-    exStage.io.exout,  // 默认EX输出
+    exStage.io.aluout,  // 默认EX输出
     Seq(
       idStage.io.memRen -> mem_data,  // Memory read
       idStage.io.jumpen -> ifStage.io.npc  // Jump
@@ -376,7 +403,7 @@ class Riscv32E extends Module {
   val difftest = Module(new DiffTest)
   difftest.io.clk  := clock
   difftest.io.pc   := ifStage.io.pc
-  difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.exout, ifStage.io.npc)
+  difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.aluout, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
   for (i <- 0 until 32) {
     difftest.io.gpr(i) := idStage.io.regfileOut(i)
