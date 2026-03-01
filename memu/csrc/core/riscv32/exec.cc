@@ -22,6 +22,8 @@ VerilatedVcdC *tfp = new VerilatedVcdC;
 #elif  CONFIG_CORE_riscv64
 #endif
 
+Decode rtl;
+
 extern "C" {
   #define EBREAK_CODE    0
   #define ZERO_INST_CODE 1
