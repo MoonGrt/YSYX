@@ -270,7 +270,8 @@ class Riscv32E_ID extends Module {
   io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
   io.regWen  := wbsel =/= WB_NONE
   when (io.wb_en && io.wb_rd =/= 0.U) {
-    regfile(io.wb_rd) := io.wb_data
+    regfile(io.wb_rd) := Mux(
+      exsel === EX_JALR, pc + 4.U, io.wb_data)
   }
 
   // -------- 异常处理 --------
@@ -394,12 +395,7 @@ class Riscv32E extends Module {
   val byte_shift = (exStage.io.aluout(1,0) << 3)  // 位移量
   val byte_data = (io.mem_rdata >> byte_shift)(7,0)  // 取目标字节
   val mem_data = io.mem_rdata
-  val wb_data = MuxCase(
-    exStage.io.aluout, Seq(
-      idStage.io.memRen -> mem_data,  // Memory read
-      exStage.io.bren   -> ifStage.io.npc  // Jump
-    )
-  )
+  val wb_data = Mux(idStage.io.memRen, mem_data, exStage.io.aluout)
 
   idStage.io.wb_en   := idStage.io.regWen
   idStage.io.wb_rd   := idStage.io.rd_addr
