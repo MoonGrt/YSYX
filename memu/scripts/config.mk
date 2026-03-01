@@ -26,7 +26,7 @@ KCONFIG_PATH := $(MEMU_HOME)/tools/kconfig
 FIXDEP_PATH  := $(MEMU_HOME)/tools/fixdep
 Kconfig      := $(MEMU_HOME)/Kconfig
 rm-distclean += include/generated include/config .config .config.old
-silent := -s
+silent       := -s
 
 CONF   := $(KCONFIG_PATH)/build/conf
 MCONF  := $(KCONFIG_PATH)/build/mconf
@@ -56,8 +56,38 @@ savedefconfig: $(CONF)
 
 # Help text used by make help
 help:
-	@echo  '  menuconfig	  - Update current config utilising a menu based program'
-	@echo  '  savedefconfig   - Save current config as configs/defconfig (minimal config)'
+	@echo 'Usage: make [target]'
+	@echo ''
+	@echo 'Config targets:'
+	@echo '  menuconfig      - Configure MEMU via menu-based interface'
+	@echo '  savedefconfig   - Save current config as configs/defconfig (minimal config)'
+	@echo '  defconfig       - Load default configuration'
+	@echo '  <xxx>defconfig  - Load configs/xxx defconfig'
+	@echo ''
+	@echo 'Build targets:'
+	@echo '  app             - Build MEMU binary (default target)'
+	@echo '  compile         - Compile MEMU (alias of app)'
+	@echo '  rtl             - Generate Verilog from Chisel'
+	@echo '  verilate        - Verilate RTL and build simulation library'
+	@echo ''
+	@echo 'Run targets:'
+	@echo '  run             - Run MEMU in batch mode'
+	@echo '  run-sdb         - Run MEMU with interactive debugger'
+	@echo '  gdb             - Run MEMU under gdb'
+	@echo ''
+	@echo 'Waveform targets:'
+	@echo '  wave            - Open waveform (gtkwave)'
+	@echo ''
+	@echo 'Clean targets:'
+	@echo '  clean           - Remove build directory'
+	@echo '  clean-tools     - Clean all tool sub-projects'
+	@echo '  clean-all       - Clean everything (build + tools)'
+	@echo '  distclean       - Remove build files and configuration'
+	@echo ''
+	@echo 'Variables (override by command line):'
+	@echo '  IMG=<file>      - Image to run'
+	@echo '  ARGS=<args>     - Arguments passed to MEMU'
+	@echo '  SHARE=1         - Build shared library (.so)'
 
 distclean: clean
 	-@rm -rf $(rm-distclean)

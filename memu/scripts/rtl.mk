@@ -1,4 +1,3 @@
-
 GTKWAVE ?= gtkwave
 VERILATOR ?= verilator
 VERILATOR_ROOT = /usr/local/share/verilator
@@ -15,7 +14,16 @@ PRJ        := chisel
 SCALA_DIR  := $(PRJ)/src
 SCALA_SRCS := $(shell find $(SCALA_DIR) -name "*.scala")
 
-TOP       := MiniRV
+ifeq ($(CONFIG_CORE_minirv),y)
+TOP := MiniRV
+endif
+ifeq ($(CONFIG_CORE_riscv32e),y)
+TOP := Riscv32E
+endif
+ifeq ($(CONFIG_CORE_riscv32),y)
+TOP := Riscv32
+endif
+
 VTOP      := $(TOP)TOP
 RTL_OBJS  := $(RTL_DIR)/$(VTOP).sv
 VSRCS      = $(RTL_OBJS) \
@@ -35,7 +43,7 @@ $(RTL_OBJS): $(SCALA_SRCS)
 	$(call git_commit, "generate verilog")
 	@echo "+ CHISEL  (scala -> verilog)"
 	@mkdir -p $(RTL_DIR)
-	@mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
+	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
 $(VLIB): $(RTL_OBJS)
 	@echo "+ VERILATE RTL"

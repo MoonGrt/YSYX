@@ -1,7 +1,3 @@
-#include <verilated.h>
-#include <verilated_vcd_c.h>
-#include "VMiniRVTOP.h"
-
 #include <common.h>
 #include <utils.h>
 #include <cpu/cpu.h>
@@ -11,8 +7,20 @@
 #include <device/mmio.h>
 #include "../../utils/local-include/itrace.h"
 
+#include <verilated.h>
+#include <verilated_vcd_c.h>
+
+#ifdef CONFIG_CORE_minirv
+#include "VMiniRVTOP.h"
 VMiniRVTOP *top = new VMiniRVTOP;
 VerilatedVcdC *tfp = new VerilatedVcdC;
+#elif  CONFIG_CORE_riscv32e
+#include "VRiscv32ETOP.h"
+VRiscv32ETOP *top = new VRiscv32ETOP;
+VerilatedVcdC *tfp = new VerilatedVcdC;
+#elif  CONFIG_CORE_riscv32
+#elif  CONFIG_CORE_riscv64
+#endif
 
 extern "C" {
   #define EBREAK_CODE    0
