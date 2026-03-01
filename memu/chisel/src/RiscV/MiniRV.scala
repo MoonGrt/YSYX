@@ -299,9 +299,9 @@ class MiniRV extends Module {
 }
 
 // ---------------------------
-// MiniRV SOC：自包含 CPU + ROM + RAM
+// MiniRV TOP：自包含 CPU + ROM + RAM
 // ---------------------------
-class MiniRVSOC extends Module {
+class MiniRVTOP extends Module {
   val cpu = Module(new MiniRV)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)

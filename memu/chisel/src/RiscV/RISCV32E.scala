@@ -299,9 +299,9 @@ class Riscv32E extends Module {
 }
 
 // ---------------------------
-// Riscv32E SOC：自包含 CPU + ROM + RAM
+// Riscv32E TOP：自包含 CPU + ROM + RAM
 // ---------------------------
-class Riscv32ESOC extends Module {
+class Riscv32ETOP extends Module {
   val cpu = Module(new Riscv32E)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)

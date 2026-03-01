@@ -12,7 +12,7 @@ RTL_DIR   := $(MEMU_HOME)/rtl
 VBUILD    := $(BUILD_DIR)/verilated
 
 PRJ       := chisel
-VTOP      := MiniRVSOC
+VTOP      := MiniRVTOP
 VSRCS     := $(shell find $(RTL_DIR) -name "*.sv")
 VSRCS     += $(shell find $(VSRCS_DIR) -name "*.v")
 RTL_OBJS  := $(VBUILD)/V$(VTOP)__ALL.a
