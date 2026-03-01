@@ -22,7 +22,7 @@ VerilatedVcdC *tfp = new VerilatedVcdC;
 #elif  CONFIG_CORE_riscv64
 #endif
 
-Decode rtl;
+Decode rtlDecode;
 
 extern "C" {
   #define EBREAK_CODE    0
@@ -47,6 +47,12 @@ extern "C" {
     IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   }
   void diff(int pc, int npc, int inst, int* gpr, int* csr) {
+    // Decode
+    rtlDecode.pc = pc;
+    rtlDecode.snpc = pc + 4;
+    rtlDecode.dnpc = npc;
+    rtlDecode.isa.inst = inst;
+    // CPU_state
     cpu.pc = pc;
     cpu.csr.mstatus = csr[0];
     cpu.csr.mepc = csr[1];
