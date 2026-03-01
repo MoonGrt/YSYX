@@ -248,6 +248,21 @@ class Riscv32E_ID extends Module {
   val rs1 = io.inst(19,15)
   val rs2 = io.inst(24,20)
 
+  // -------------------------
+  // CSR 地址映射
+  // -------------------------
+  val csr_addr = immi
+  val csr_id = MuxLookup(csr_addr(11,0), 7.U, Seq(
+    0x300.U -> 0.U, // mstatus
+    0x341.U -> 1.U, // mepc
+    0x342.U -> 2.U, // mcause
+    0x305.U -> 3.U, // mtvec
+    0xf11.U -> 4.U, // mvendorid
+    0xf12.U -> 5.U  // marchid
+  ))
+  val csr_valid = csr_id =/= 7.U
+  val csr_old   = Mux(csr_valid, CSR(csr_id), 0.U)
+
   // -------- 立即数 --------
   // sext 12bit value to 32bit value.
   val immi = io.inst(31,20)  // imm for I-type
@@ -286,6 +301,7 @@ class Riscv32E_ID extends Module {
   ))
 
   // -------- WB功能 --------
+  // GPR
   io.rd_addr := rd
   io.memBen  := ~reset.asBool && ((memsel === MEM_RB) || (memsel === MEM_WB))
   io.memRen  := ~reset.asBool && ((memsel === MEM_RW) || (memsel === MEM_RB))
@@ -296,8 +312,15 @@ class Riscv32E_ID extends Module {
       wbsel === WB_PC, io.pc + 4.U, io.wb_data
     )
   }
-
-
+  // CSR
+  val csr_new = MuxCase(csr_old, Seq(
+    (csrsel === CSR_W) -> io.op1,
+    (csrsel === CSR_S) -> (csr_old | io.op1),
+    (csrsel === CSR_C) -> (csr_old & ~io.op1)
+  ))
+  when (~reset.asBool && csr_valid && csrsel =/= CSR_NONE) {
+    CSR(csr_id) := csr_new
+  }
 
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
