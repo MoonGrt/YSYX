@@ -161,6 +161,10 @@ class Riscv32E_ID extends Module {
   val imm_z = io.inst(19, 15)
   val imm_z_uext = Cat(Fill(27, 0.U), imm_z)  // for CSR instructions
 
+  val imm_i_old = Sext(io.inst(31,20), 12)
+  val imm_s_old = Sext(Cat(io.inst(31,25), io.inst(11,7)), 12)
+  val imm_u_old = io.inst(31,12) << 12
+
   // -------- EX操作数 --------
   // Determine 1st operand data signal
   io.op1 := MuxCase(0.U(32.W), Seq(
@@ -171,8 +175,8 @@ class Riscv32E_ID extends Module {
   // Determine 2nd operand data signal
   io.op2 := MuxCase(0.U(32.W), Seq(
     (op2sel === OP2_RS2) -> regfile(rs2),
-    (op2sel === OP2_IMI) -> imm_i_sext,
-    (op2sel === OP2_IMS) -> imm_s_sext,
+    (op2sel === OP2_IMI) -> imm_i_old,
+    (op2sel === OP2_IMS) -> imm_s_old,
     (op2sel === OP2_IMJ) -> imm_j_sext,
     (op2sel === OP2_IMU) -> imm_u_shifted,  // for LUI and AUIPC
   ))
