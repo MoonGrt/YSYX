@@ -7,7 +7,7 @@ VERILATOR_CFLAGS += --trace -cc -MMD -cc -O3 --x-assign fast --x-initial fast \
                     -CFLAGS -ggdb -LDFLAGS -ggdb -j 8
 
 WORK_DIR  = $(shell pwd)
-RTL_DIR   := $(MEMU_HOME)/rtl
+RTL_DIR   := $(BUILD_DIR)/rtl
 VSRCS_DIR := $(MEMU_HOME)/vsrc
 VBUILD    := $(BUILD_DIR)/verilated
 
