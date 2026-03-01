@@ -419,10 +419,9 @@ class Riscv32E extends Module {
   io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
 
   // Write Back
-  val byte_shift = (exStage.io.aluout(1,0) << 3)  // 位移量
-  val byte_data = (io.mem_rdata >> byte_shift)(7,0)  // 取目标字节
-  val mem_data = io.mem_rdata
-  val wb_data = Mux(idStage.io.memRen, mem_data, exStage.io.aluout)
+  val wb_data  = Mux(
+    idStage.io.memRen, io.mem_rdata, exStage.io.aluout
+  )
 
   idStage.io.wb_en   := idStage.io.regWen
   idStage.io.wb_rd   := idStage.io.rd_addr
