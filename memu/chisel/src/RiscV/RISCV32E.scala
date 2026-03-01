@@ -69,9 +69,10 @@ object Riscv32E_Parameters {
   val EX_SEL_LEN = 1
   val EX_ADD  = 0.U(EX_SEL_LEN.W)
 
-  val JUMP_SEL_LEN = 1
+  val JUMP_SEL_LEN = 2
   val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
-  val JUMP_JALR = 1.U(JUMP_SEL_LEN.W)
+  val JUMP_JAL  = 1.U(JUMP_SEL_LEN.W)
+  val JUMP_JALR = 2.U(JUMP_SEL_LEN.W)
 
   val WB_SEL_LEN = 2
   val WB_NONE = 0.U(WB_SEL_LEN.W)
@@ -125,6 +126,7 @@ class Riscv32E_ID extends Module {
       SB    -> List( OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
       ADD   -> List( OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
       ADDI  -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
+      JAL   -> List(  OP1_PC, OP2_IMJ, EX_ADD,  JUMP_JAL, WB_PC, MEM_NONE), // x[rd] <- PC+4 and PC+sext(imm_j)
       JALR  -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_JALR, WB_PC, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
       LUI   -> List(OP1_NONE, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
       AUIPC -> List(  OP1_PC, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(imm_u[31:12] << 12)
@@ -175,7 +177,7 @@ class Riscv32E_ID extends Module {
   ))
 
   // -------- JUMP功能 --------
-  io.jumpen := (jumpsel === JUMP_JALR)
+  io.jumpen := (jumpsel === JUMP_JAL) || (jumpsel === JUMP_JALR)
 
   // -------- EX功能 --------
   io.exsel := exsel
