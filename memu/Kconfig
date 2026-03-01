@@ -9,7 +9,6 @@ config NPC
   bool "NPC: Proxy Core"
 endchoice
 
-if NEMU
 choice
   prompt "Base ISA"
   default ISA_riscv
@@ -22,7 +21,6 @@ config ISA_riscv
 config ISA_loongarch32r
   bool "loongarch32r"
 endchoice
-endif
 
 if NPC
 choice
