@@ -1,6 +1,6 @@
 #include <verilated.h>
 #include <verilated_vcd_c.h>
-#include "VMiniRVSOC.h"
+#include "VMiniRVTOP.h"
 
 #include <common.h>
 #include <utils.h>
@@ -11,7 +11,7 @@
 #include <device/mmio.h>
 #include "../../utils/local-include/itrace.h"
 
-VMiniRVSOC *top = new VMiniRVSOC;
+VMiniRVTOP *top = new VMiniRVTOP;
 VerilatedVcdC *tfp = new VerilatedVcdC;
 
 extern "C" {
@@ -29,6 +29,7 @@ extern "C" {
     IFDEF(CONFIG_MTRACE, display_pread(addr, len));
     if (likely(in_pmem(addr))) return pmem_read(addr, len);
     IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
+    return 0;
   }
   void dpi_paddr_write(int addr, char len, int data){
     IFDEF(CONFIG_MTRACE, display_pwrite(addr, len, data));
