@@ -255,7 +255,7 @@ class Riscv32E_ID extends Module {
   io.op1 := MuxCase(0.U(32.W), Seq(
     (op1sel === OP1_RS1) -> regfile(rs1),
     (op1sel === OP1_PC)  -> io.pc,
-    (op1sel === OP1_IMZ) -> imm_z_uext,
+    (op1sel === OP1_IMZ) -> immuz,
   ))
   // Determine 2nd operand data signal
   io.op2 := MuxCase(0.U(32.W), Seq(
