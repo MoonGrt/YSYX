@@ -34,18 +34,17 @@ endif
 $(RTL_DIR)/$(VTOP).sv: $(SCALA_SRCS)
 	$(call git_commit, "generate verilog")
 	@echo "+ CHISEL  (scala -> verilog)"
-	mkdir -p $(RTL_DIR)
-	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
+	@mkdir -p $(RTL_DIR)
+	@mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
 $(VLIB): $(RTL_DIR)/$(VTOP).sv
-	@echo + VERILATE RTL
+	@echo "+ VERILATE RTL"
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
 	  --top-module $(VTOP) -O3 --Mdir $(VBUILD)
 	@echo "+ AR $@"
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
-	@$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
-	@ar rcs $@ $(VBUILD)/*.o
+	ar rcs $@ $(VBUILD)/*.o
 
 rtl: $(RTL_DIR)/$(VTOP).sv
 
