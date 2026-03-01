@@ -205,7 +205,6 @@ class Riscv32E_ID extends Module {
 // EX 模块
 // ---------------------------
 class Riscv32E_EX extends Module {
-  import Riscv32E_Parameters._
   val io = IO(new Bundle {
     val pc    = Input(UInt(32.W))
     val rs1   = Input(UInt(32.W))
