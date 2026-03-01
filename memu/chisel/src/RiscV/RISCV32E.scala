@@ -127,7 +127,7 @@ class Riscv32E_ID extends Module {
       ADDI  -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
       JALR  -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_JALR, WB_PC, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
       LUI   -> List(OP1_NONE, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
-      AUIPC -> List(  OP1_PC, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(imm_u[31:12] << 12)
+      AUIPC -> List(  OP1_PC, OP2_IMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // PC + sext(imm_u[31:12] << 12)
     ),
   )
 
