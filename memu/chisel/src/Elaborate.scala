@@ -23,3 +23,16 @@ object MiniRVSOC extends App {
   )
   circt.stage.ChiselStage.emitSystemVerilogFile(new riscv.MiniRVSOC(), args, firtoolOptions)
 }
+
+object Riscv32ESOC extends App {
+  val firtoolOptions = Array(
+    "--lowering-options=" + List(
+      // make yosys happy
+      // see https://github.com/llvm/circt/blob/main/docs/VerilogGeneration.md
+      "disallowLocalVariables",
+      "disallowPackedArrays",
+      "locationInfoStyle=wrapInAtSquareBracket"
+    ).reduce(_ + "," + _)
+  )
+  circt.stage.ChiselStage.emitSystemVerilogFile(new riscv.Riscv32ESOC(), args, firtoolOptions)
+}
