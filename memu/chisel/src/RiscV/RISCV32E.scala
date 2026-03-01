@@ -146,13 +146,12 @@ class Riscv32E_IF extends Module {
     val pc     = Output(UInt(WORD_LEN.W))  // 当前 PC 输出
   })
   val pc = RegInit("h80000000".U(WORD_LEN.W))
-  when (io.halt) {
-    pc := pc
-  }.otherwise {
-    pc := Mux(io.bren, io.braddr, io.npc)
-  }
+  pc := MuxCase(io.npc, Seq(
+    io.halt -> pc,
+    io.bren -> io.braddr,
+  ))
   io.pc  := pc
-  io.npc := pc + 4.U(WORD_LEN.W)
+  io.npc := pc + 4.U
 }
 
 // ---------------------------
@@ -230,12 +229,12 @@ class Riscv32E_ID extends Module {
       LUI    -> List(OP1_NONE, OP2_IMU, EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // sext(immu[31:12] << 12)
       AUIPC  -> List(OP1_PC  , OP2_IMU, EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // PC + sext(immu[31:12] << 12)
 
-      CSRRW  -> List(OP1_RS1, OP2_NONE, EX_ADD , WB_CSR , MEN_NONE, CSR_W   ), // CSRs[csr] <- x[rs1]
-      CSRRWI -> List(OP1_IMZ, OP2_NONE, EX_ADD , WB_CSR , MEN_NONE, CSR_W   ), // CSRs[csr] <- uext(imm_z)
-      CSRRS  -> List(OP1_RS1, OP2_NONE, EX_ADD , WB_CSR , MEN_NONE, CSR_S   ), // CSRs[csr] <- CSRs[csr] | x[rs1]
-      CSRRSI -> List(OP1_IMZ, OP2_NONE, EX_ADD , WB_CSR , MEN_NONE, CSR_S   ), // CSRs[csr] <- CSRs[csr] | uext(imm_z)
-      CSRRC  -> List(OP1_RS1, OP2_NONE, EX_ADD , WB_CSR , MEN_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~x[rs1]
-      CSRRCI -> List(OP1_IMZ, OP2_NONE, EX_ADD , WB_CSR , MEN_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
+      CSRRW  -> List(OP1_RS1, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_W   ), // CSRs[csr] <- x[rs1]
+      CSRRWI -> List(OP1_IMZ, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_W   ), // CSRs[csr] <- uext(imm_z)
+      CSRRS  -> List(OP1_RS1, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_S   ), // CSRs[csr] <- CSRs[csr] | x[rs1]
+      CSRRSI -> List(OP1_IMZ, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_S   ), // CSRs[csr] <- CSRs[csr] | uext(imm_z)
+      CSRRC  -> List(OP1_RS1, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~x[rs1]
+      CSRRCI -> List(OP1_IMZ, OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
     ),
   )
 
