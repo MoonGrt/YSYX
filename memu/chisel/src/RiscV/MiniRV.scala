@@ -205,6 +205,7 @@ class MiniRV_ID extends Module {
 // EX 模块
 // ---------------------------
 class MiniRV_EX extends Module {
+  import MiniRV_Parameters._
   val io = IO(new Bundle {
     val pc    = Input(UInt(32.W))
     val rs1   = Input(UInt(32.W))
