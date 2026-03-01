@@ -170,7 +170,7 @@ class Riscv32E_ID extends Module {
     (op2sel === OP2_RS2) -> regfile(rs2),
     (op2sel === OP2_IMI) -> imm_i_sext,
     (op2sel === OP2_IMS) -> imm_s_sext,
-    (op2sel === OP2_IMJ) -> imm_j_sext,
+    // (op2sel === OP2_IMJ) -> imm_j_sext,
     (op2sel === OP2_IMU) -> imm_u_shifted,  // for LUI and AUIPC
   ))
 
