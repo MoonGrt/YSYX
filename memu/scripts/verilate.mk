@@ -11,6 +11,9 @@ VSRCS_DIR := $(MEMU_HOME)/vsrc
 RTL_DIR   := $(MEMU_HOME)/rtl
 VBUILD    := $(BUILD_DIR)/verilated
 
+SCALA_DIR  := $(MEMU_HOME)/src
+SCALA_SRCS := $(shell find $(SCALA_DIR) -name "*.scala")
+
 PRJ       := chisel
 TOP       := MiniRV
 VTOP      := $(TOP)TOP
@@ -27,6 +30,12 @@ INC_PATH += $(VBUILD)
 INC_PATH += $(VERILATOR_ROOT)/include
 INC_PATH += $(VERILATOR_ROOT)/include/vltstd
 endif
+
+$(RTL_DIR)/$(VTOP).sv: $(SCALA_SRCS)
+	$(call git_commit, "generate verilog")
+	@echo "+ CHISEL  (scala -> verilog)"
+	mkdir -p $(RTL_DIR)
+	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
 $(VBUILD)/V$(VTOP).mk: $(RTL_DIR)/$(VTOP).sv
 	@echo + VERILATE RTL
