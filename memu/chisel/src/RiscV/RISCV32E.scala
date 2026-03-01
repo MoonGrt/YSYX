@@ -252,15 +252,15 @@ class Riscv32E_ID extends Module {
   // CSR 地址映射
   // -------------------------
   val csr_addr = immi
-  val csr_id = MuxLookup(csr_addr(11,0), 7.U, Seq(
-    0x300.U -> 0.U,  // mstatus
-    0x341.U -> 1.U,  // mepc
-    0x342.U -> 2.U,  // mcause
-    0x305.U -> 3.U,  // mtvec
-    0xf11.U -> 4.U,  // mvendorid
-    0xf12.U -> 5.U,  // marchid
+  val csr_id = MuxLookup(csr_addr(11,0), 0.U)(Seq(
+    0x300.U -> 1.U,  // mstatus
+    0x341.U -> 2.U,  // mepc
+    0x342.U -> 3.U,  // mcause
+    0x305.U -> 4.U,  // mtvec
+    0xf11.U -> 5.U,  // mvendorid
+    0xf12.U -> 6.U,  // marchid
   ))
-  val csr_valid = csr_id =/= 7.U
+  val csr_valid = csr_id =/= 0.U
   val csr_old   = Mux(csr_valid, CSR(csr_id), 0.U)
 
   // -------- 立即数 --------
