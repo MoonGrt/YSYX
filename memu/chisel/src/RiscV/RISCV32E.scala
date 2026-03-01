@@ -115,7 +115,7 @@ class Riscv32E_ID extends Module {
 
   val List(op1sel, op2sel, exsel, jumpsel, wbsel, memsel) = ListLookup(
     io.inst,
-    List(OP1_RS1, OP2_IMN, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),
+    List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),
     Array(
       LW    -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RW),  // x[rs1] + sext(imm_i)
       LBU   -> List( OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RB),  // x[rs1] + sext(imm_i)
@@ -140,24 +140,24 @@ class Riscv32E_ID extends Module {
 
   // -------- 立即数 --------
   // sext 12bit value to 32bit value.
-  val imm_i = inst(31, 20) // imm for I-type
+  val imm_i = io.inst(31, 20) // imm for I-type
   val imm_i_sext = Cat(Fill(20, imm_i(11)), imm_i)
-  val imm_s = Cat(inst(31, 25), inst(11, 7)) // imm for S-type
+  val imm_s = Cat(io.inst(31, 25), io.inst(11, 7)) // imm for S-type
   val imm_s_sext = Cat(Fill(20, imm_s(11)), imm_s)
   // Decode imm of B-type instruction
-  val imm_b = Cat(inst(31), inst(7), inst(30, 25), inst(11, 8))
+  val imm_b = Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8))
   // imm[0] does not exist in B-type instruction. This is because the first bit of program counter
   // is always zero (p.126). Size of instruction is 32bit or 16bit, so instruction pointer (pc)
   // address always points an even address.
   val imm_b_sext = Cat(Fill(19, imm_b(11)), imm_b, 0.U(1.U))
   // Decode imm of J-type instruction
-  val imm_j = Cat(inst(31), inst(19, 12), inst(20), inst(30, 21))
+  val imm_j = Cat(io.inst(31), io.inst(19, 12), io.inst(20), io.inst(30, 21))
   val imm_j_sext = Cat(Fill(11, imm_j(19)), imm_j, 0.U(1.U)) // Set LSB to zero
   // Decode imm of U-type instruction
-  val imm_u = inst(31, 12)
+  val imm_u = io.inst(31, 12)
   val imm_u_shifted = Cat(imm_u, Fill(12, 0.U)) // for LUI and AUIPC
   // Decode imm of I-type instruction
-  val imm_z = inst(19, 15)
+  val imm_z = io.inst(19, 15)
   val imm_z_uext = Cat(Fill(27, 0.U), imm_z) // for CSR instructions
 
   // -------- EX操作数 --------
