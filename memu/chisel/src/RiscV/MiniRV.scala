@@ -296,7 +296,7 @@ class MiniRV extends Module {
   for (i <- 0 until 4) {
     difftest.io.csr(i) := 0.U(32.W)  // 未实现 CSR
   }
-} 
+}
 
 // ---------------------------
 // MiniRV TOP：自包含 CPU + ROM + RAM
