@@ -113,13 +113,13 @@ class Riscv32E_ID extends Module {
 
   val List(op1sel, op2sel, exsel, jumpsel, wbsel, memsel) = ListLookup(
     io.inst,
-    List(IMMN, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
+    List(OP1_RS1, OP2_IMN, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),
     Array(
       LW    -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RW),  // x[rs1] + sext(imm_i)
       LBU   -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_MEM,  MEM_RB),  // x[rs1] + sext(imm_i)
       SW    -> List(OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
       SB    -> List(OP1_RS1, OP2_IMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
-      ADD   -> List(OP1_RS1, OP2_IMN, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
+      ADD   -> List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
       ADDI  -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
       JALR  -> List(OP1_RS1, OP2_IMI, EX_ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
       LUI   -> List(OP1_RS1, OP2_RS2, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
