@@ -53,7 +53,6 @@ void difftest_skip_ref() {
 //   We expect that DUT will catch up with REF within `nr_dut` instructions.
 void difftest_skip_dut(int nr_ref, int nr_dut) {
   skip_dut_nr_inst += nr_dut;
-
   while (nr_ref -- > 0) {
     ref_difftest_exec(1);
   }

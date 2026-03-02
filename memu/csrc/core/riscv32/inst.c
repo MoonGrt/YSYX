@@ -21,10 +21,9 @@
 #include "../../core/riscv32/local-include/exec.h"
 #endif
 
+extern Decode rtlDecode;
 int isa_exec_once(Decode *s) {
-  s->snpc = cpu.pc + 4;
-  s->dnpc = cpu.npc;
-  s->isa.inst = cpu.inst;
+  *s = rtlDecode;
   IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
   rtl_step();
   return 0;

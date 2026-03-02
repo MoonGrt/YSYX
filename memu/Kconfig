@@ -25,7 +25,7 @@ endchoice
 if NPC
 choice
   prompt "Base Core"
-  default CORE_minirv
+  default CORE_riscv32e
 config CORE_minirv
   bool "minirv"
 config CORE_riscv32e
