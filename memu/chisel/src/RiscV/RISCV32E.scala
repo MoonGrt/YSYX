@@ -121,14 +121,16 @@ object Riscv32E_Parameters {
   val WB_MEM  = 3.U(WB_SEL_LEN.W)
   val WB_CSR  = 4.U(WB_SEL_LEN.W)
 
-  val MEM_SEL_LEN = 3
+  val MEM_SEL_LEN = 4
   val MEM_NONE = 0.U(MEM_SEL_LEN.W)
   val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // read word
   val MEM_RH   = 2.U(MEM_SEL_LEN.W)  // read half word
   val MEM_RB   = 3.U(MEM_SEL_LEN.W)  // read byte
-  val MEM_WW   = 5.U(MEM_SEL_LEN.W)
-  val MEM_WH   = 6.U(MEM_SEL_LEN.W)
-  val MEM_WB   = 7.U(MEM_SEL_LEN.W)
+  val MEM_RHU  = 4.U(MEM_SEL_LEN.W)  // read half word unsigned
+  val MEM_RBU  = 5.U(MEM_SEL_LEN.W)  // read byte unsigned
+  val MEM_WW   = 6.U(MEM_SEL_LEN.W)
+  val MEM_WH   = 7.U(MEM_SEL_LEN.W)
+  val MEM_WB   = 8.U(MEM_SEL_LEN.W)
 
   val CSR_SEL_LEN  = 3
   val CSR_NONE = 0.U(CSR_SEL_LEN.W)
@@ -201,8 +203,8 @@ class Riscv32E_ID extends Module {
       LW     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RW  , CSR_NONE),  // x[rs1] + sext(immi)
       LH     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RH  , CSR_NONE),  // x[rs1] + sext(immi)
       LB     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RB  , CSR_NONE),  // x[rs1] + sext(immi)
-      LHU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RH  , CSR_NONE),  // x[rs1] + sext(immi)
-      LBU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RB  , CSR_NONE),  // x[rs1] + sext(immi)
+      LHU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RHU , CSR_NONE),  // x[rs1] + sext(immi)
+      LBU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RBU , CSR_NONE),  // x[rs1] + sext(immi)
       SW     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WW  , CSR_NONE),  // x[rs1] + sext(imms)
       SH     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WH  , CSR_NONE),  // x[rs1] + sext(imms)
       SB     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WB  , CSR_NONE),  // x[rs1] + sext(imms)
@@ -445,9 +447,9 @@ class Riscv32E extends Module {
   io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
   io.mem_len   := MuxCase(0.U, Seq(
-    ((idStage.io.memsel === MEM_RW) || (idStage.io.memsel === MEM_WW)) -> 4.U,
-    ((idStage.io.memsel === MEM_RH) || (idStage.io.memsel === MEM_WH)) -> 2.U,
-    ((idStage.io.memsel === MEM_RB) || (idStage.io.memsel === MEM_WB)) -> 1.U,
+    ((idStage.io.memsel === MEM_WW) || (idStage.io.memsel === MEM_RW)) -> 4.U,
+    ((idStage.io.memsel === MEM_WH) || (idStage.io.memsel === MEM_RH) || (idStage.io.memsel === MEM_RHU)) -> 2.U,
+    ((idStage.io.memsel === MEM_WB) || (idStage.io.memsel === MEM_RB) || (idStage.io.memsel === MEM_RBU)) -> 1.U,
   ))
 
   // Write Back
