@@ -164,10 +164,11 @@ class Riscv32E_ID extends Module {
     val pc      = Input(UInt(WORD_LEN.W))
     val inst    = Input(UInt(WORD_LEN.W))
 
-    // 写回接口（来自 WB）
+    // 写回
     val wb_en   = Input(Bool())
     val wb_rd   = Input(UInt(5.W))
-    val wb_data = Input(UInt(WORD_LEN.W))
+    val memData = Input(UInt(WORD_LEN.W))
+    val exData  = Input(UInt(WORD_LEN.W))
 
     // 输出到 EX
     val exsel   = Output(UInt(EX_SEL_LEN.W))
@@ -185,8 +186,8 @@ class Riscv32E_ID extends Module {
     val regWen = Output(Bool())
 
     // Diff
-    val gprOut = Output(Vec(32, UInt(WORD_LEN.W)))
     val csrOut = Output(Vec(4, UInt(WORD_LEN.W)))
+    val gprOut = Output(Vec(32, UInt(WORD_LEN.W)))
   })
 
   val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(
@@ -312,10 +313,12 @@ class Riscv32E_ID extends Module {
   io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
   io.regWen  := wbsel =/= WB_NONE
   when (io.wb_en && io.wb_rd =/= 0.U) {
-    GPR(io.wb_rd) := MuxCase(io.wb_data, Seq(
-    (wbsel === WB_PC)  -> (io.pc + 4.U),
-    (wbsel === WB_CSR) -> csr_old
-  ))
+    GPR(io.wb_rd) := MuxCase(0.U, Seq(
+      (wbsel === WB_PC ) -> (io.pc + 4.U),
+      (wbsel === WB_EX ) -> io.exData,
+      (wbsel === WB_MEM) -> io.memData,
+      (wbsel === WB_CSR) -> csr_old,
+    ))
   }
 
   // -------- 异常处理 --------
@@ -344,9 +347,9 @@ class Riscv32E_ID extends Module {
   trap.io.code := exc_code
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
-  // 输出 GPR
-  io.gprOut := GPR
+  // 输出 CSR & GPR
   io.csrOut := CSR
+  io.gprOut := GPR
 }
 
 // ---------------------------
@@ -438,13 +441,10 @@ class Riscv32E extends Module {
   io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
 
   // Write Back
-  val wb_data  = Mux(
-    idStage.io.memRen, io.mem_rdata, exStage.io.aluout
-  )
-
   idStage.io.wb_en   := idStage.io.regWen
   idStage.io.wb_rd   := idStage.io.rd_addr
-  idStage.io.wb_data := wb_data
+  idStage.io.memData := io.mem_rdata
+  idStage.io.exData  := exStage.io.aluout
 
   // DiffTest
   val difftest = Module(new DiffTest)
@@ -452,11 +452,11 @@ class Riscv32E extends Module {
   difftest.io.pc   := ifStage.io.pc
   difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
-  for (i <- 0 until 32) {
-    difftest.io.gpr(i) := idStage.io.gprOut(i)
-  }
   for (i <- 0 until 4) {
     difftest.io.csr(i) := idStage.io.csrOut(i)
+  }
+  for (i <- 0 until 32) {
+    difftest.io.gpr(i) := idStage.io.gprOut(i)
   }
 }
 
