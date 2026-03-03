@@ -167,7 +167,8 @@ class Riscv32E_ID extends Module {
     // 写回接口（来自 WB）
     val wb_en   = Input(Bool())
     val wb_rd   = Input(UInt(5.W))
-    val wb_data = Input(UInt(WORD_LEN.W))
+    val memData = Input(UInt(WORD_LEN.W))
+    val exData  = Input(UInt(WORD_LEN.W))
 
     // 输出到 EX
     val exsel   = Output(UInt(EX_SEL_LEN.W))
@@ -323,7 +324,7 @@ class Riscv32E_ID extends Module {
     GPR(io.wb_rd) := MuxCase(0.U, Seq(
       (wbsel === WB_PC ) -> (io.pc + 4.U),
       (wbsel === WB_EX ) -> io.exData,
-      (wbsel === WB_MEM) -> memData,
+      (wbsel === WB_MEM) -> io.memData,
       (wbsel === WB_CSR) -> csr_old,
     ))
   }
