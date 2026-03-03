@@ -442,7 +442,8 @@ class Riscv32E extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
-  io.mem_re    := (idStage.io.memsel === MEM_RW) || (idStage.io.memsel === MEM_RH) || (idStage.io.memsel === MEM_RB)
+  io.mem_re    := (idStage.io.memsel === MEM_RW) || (idStage.io.memsel === MEM_RH) || (idStage.io.memsel === MEM_RB) ||
+                  (idStage.io.memsel === MEM_RHU) || (idStage.io.memsel === MEM_RBU)
   io.mem_we    := (idStage.io.memsel === MEM_WW) || (idStage.io.memsel === MEM_WH) || (idStage.io.memsel === MEM_WB)
   io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
