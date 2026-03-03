@@ -326,9 +326,6 @@ class Riscv32E_ID extends Module {
   }
   // GPR
   io.rd_addr := rd
-  io.memBen  := ~reset.asBool && ((memsel === MEM_RB) || (memsel === MEM_WB))
-  io.memRen  := ~reset.asBool && ((memsel === MEM_RW) || (memsel === MEM_RB) || (memsel === MEM_RBU))
-  io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
   io.regWen  := wbsel =/= WB_NONE
   val memData = MuxLookup(memsel, 0.U(WORD_LEN.W))(Seq(
     MEM_RW  -> io.memData,  // LW 直接写回
