@@ -293,17 +293,6 @@ class Riscv32E_ID extends Module {
   ))
 
   // -------- WB功能 --------
-  // GPR
-  io.rd_addr := rd
-  io.memBen  := ~reset.asBool && ((memsel === MEM_RB) || (memsel === MEM_WB))
-  io.memRen  := ~reset.asBool && ((memsel === MEM_RW) || (memsel === MEM_RB))
-  io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
-  io.regWen  := wbsel =/= WB_NONE
-  when (io.wb_en && io.wb_rd =/= 0.U) {
-    GPR(io.wb_rd) := Mux(
-      wbsel === WB_PC, io.pc + 4.U, io.wb_data
-    )
-  }
   // CSR
   val csr_addr = immi
   val csr_id = MuxLookup(csr_addr(11,0), 0.U)(Seq(
@@ -323,6 +312,20 @@ class Riscv32E_ID extends Module {
   ))
   when (~reset.asBool && csr_valid && csrsel =/= CSR_NONE) {
     CSR(csr_id) := csr_new
+  }
+  // GPR
+  io.rd_addr := rd
+  io.memBen  := ~reset.asBool && ((memsel === MEM_RB) || (memsel === MEM_WB))
+  io.memRen  := ~reset.asBool && ((memsel === MEM_RW) || (memsel === MEM_RB))
+  io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
+  io.regWen  := wbsel =/= WB_NONE
+  when (io.wb_en && io.wb_rd =/= 0.U) {
+    GPR(io.wb_rd) := MuxCase(0.U, Seq(
+      (wbsel === WB_PC ) -> (io.pc + 4.U),
+      (wbsel === WB_EX ) -> io.exData,
+      (wbsel === WB_MEM) -> memData,
+      (wbsel === WB_CSR) -> csr_old,
+    ))
   }
 
   // -------- 异常处理 --------
@@ -445,13 +448,10 @@ class Riscv32E extends Module {
   io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
 
   // Write Back
-  val wb_data  = Mux(
-    idStage.io.memRen, io.mem_rdata, exStage.io.aluout
-  )
-
   idStage.io.wb_en   := idStage.io.regWen
   idStage.io.wb_rd   := idStage.io.rd_addr
-  idStage.io.wb_data := wb_data
+  idStage.io.memData := io.mem_rdata
+  idStage.io.exData  := exStage.io.aluout
 
   // DiffTest
   val difftest = Module(new DiffTest)
