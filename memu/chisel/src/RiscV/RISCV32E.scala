@@ -9,8 +9,12 @@ import chisel3.util._
 object Riscv32E_Instructions {
   // Load/Store
   val LW     = BitPat("b?????????????????010?????0000011")
+  val LH     = BitPat("b?????????????????001?????0000011")
+  val LB     = BitPat("b?????????????????000?????0000011")
+  val LHU    = BitPat("b?????????????????101?????0000011")
   val LBU    = BitPat("b?????????????????100?????0000011")
   val SW     = BitPat("b?????????????????010?????0100011")
+  val SH     = BitPat("b?????????????????001?????0100011")
   val SB     = BitPat("b?????????????????000?????0100011")
   // Add/Sub
   val ADD    = BitPat("b0000000??????????000?????0110011")
@@ -64,7 +68,7 @@ object Riscv32E_Instructions {
 
   // Implemented instructions
   val IMPLED = Seq(
-    LW, LBU, SW, SB,
+    LW, LH, LB, LHU, LBU, SW, SH, SB,
     ADD, ADDI, SUB, AND, OR, XOR, ANDI, ORI, XORI,
     SLL, SRL, SRA, SLLI, SRLI, SRAI, SLT, SLTU, SLTI, SLTIU,
     BEQ, BNE, BLT, BGE, BLTU, BGEU,
@@ -117,12 +121,16 @@ object Riscv32E_Parameters {
   val WB_MEM  = 3.U(WB_SEL_LEN.W)
   val WB_CSR  = 4.U(WB_SEL_LEN.W)
 
-  val MEM_SEL_LEN = 3
+  val MEM_SEL_LEN = 4
   val MEM_NONE = 0.U(MEM_SEL_LEN.W)
-  val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // write word
-  val MEM_RB   = 2.U(MEM_SEL_LEN.W)  // write byte
-  val MEM_WW   = 3.U(MEM_SEL_LEN.W)
-  val MEM_WB   = 4.U(MEM_SEL_LEN.W)
+  val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // read word
+  val MEM_RH   = 2.U(MEM_SEL_LEN.W)  // read half word
+  val MEM_RB   = 3.U(MEM_SEL_LEN.W)  // read byte
+  val MEM_RHU  = 4.U(MEM_SEL_LEN.W)  // read half word unsigned
+  val MEM_RBU  = 5.U(MEM_SEL_LEN.W)  // read byte unsigned
+  val MEM_WW   = 6.U(MEM_SEL_LEN.W)
+  val MEM_WH   = 7.U(MEM_SEL_LEN.W)
+  val MEM_WB   = 8.U(MEM_SEL_LEN.W)
 
   val CSR_LEN  = 3
   val CSR_NONE = 0.U(CSR_LEN.W)
@@ -195,8 +203,12 @@ class Riscv32E_ID extends Module {
     List(OP1_RS1, OP2_RS2, EX_ADD, WB_EX, MEM_NONE, CSR_NONE),
     Array(
       LW     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RW  , CSR_NONE),  // x[rs1] + sext(immi)
-      LBU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RB  , CSR_NONE),  // x[rs1] + sext(immi)
+      LH     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RH  , CSR_NONE),  // x[rs1] + sext(immi)
+      LB     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RB  , CSR_NONE),  // x[rs1] + sext(immi)
+      LHU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RHU , CSR_NONE),  // x[rs1] + sext(immi)
+      LBU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RBU , CSR_NONE),  // x[rs1] + sext(immi)
       SW     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WW  , CSR_NONE),  // x[rs1] + sext(imms)
+      SH     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WH  , CSR_NONE),  // x[rs1] + sext(imms)
       SB     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WB  , CSR_NONE),  // x[rs1] + sext(imms)
 
       ADD    -> List(OP1_RS1 , OP2_RS2 , EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] + x[rs2]
