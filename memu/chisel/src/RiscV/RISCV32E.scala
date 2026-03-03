@@ -9,8 +9,10 @@ import chisel3.util._
 object Riscv32E_Instructions {
   // Load/Store
   val LW     = BitPat("b?????????????????010?????0000011")
+  val LHU    = BitPat("b?????????????????101?????0000011")
   val LBU    = BitPat("b?????????????????100?????0000011")
   val SW     = BitPat("b?????????????????010?????0100011")
+  val SH     = BitPat("b?????????????????001?????0100011")
   val SB     = BitPat("b?????????????????000?????0100011")
   // Add/Sub
   val ADD    = BitPat("b0000000??????????000?????0110011")
@@ -64,7 +66,7 @@ object Riscv32E_Instructions {
 
   // Implemented instructions
   val IMPLED = Seq(
-    LW, LBU, SW, SB,
+    LW, LBU, LHU, SW, SB,
     ADD, ADDI, SUB, AND, OR, XOR, ANDI, ORI, XORI,
     SLL, SRL, SRA, SLLI, SRLI, SRAI, SLT, SLTU, SLTI, SLTIU,
     BEQ, BNE, BLT, BGE, BLTU, BGEU,
@@ -119,10 +121,12 @@ object Riscv32E_Parameters {
 
   val MEM_SEL_LEN = 3
   val MEM_NONE = 0.U(MEM_SEL_LEN.W)
-  val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // write word
-  val MEM_RB   = 2.U(MEM_SEL_LEN.W)  // write byte
-  val MEM_WW   = 3.U(MEM_SEL_LEN.W)
-  val MEM_WB   = 4.U(MEM_SEL_LEN.W)
+  val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // read word
+  val MEM_RH   = 2.U(MEM_SEL_LEN.W)  // read half word
+  val MEM_RB   = 3.U(MEM_SEL_LEN.W)  // read byte
+  val MEM_WW   = 5.U(MEM_SEL_LEN.W)
+  val MEM_WH   = 6.U(MEM_SEL_LEN.W)
+  val MEM_WB   = 7.U(MEM_SEL_LEN.W)
 
   val CSR_SEL_LEN  = 3
   val CSR_NONE = 0.U(CSR_SEL_LEN.W)
@@ -180,9 +184,7 @@ class Riscv32E_ID extends Module {
 
     // Control signals
     val halt   = Output(Bool())
-    val memBen = Output(Bool())
-    val memRen = Output(Bool())
-    val memWen = Output(Bool())
+    val memsel = Output(UInt(MEM_SEL_LEN.W))
     val regWen = Output(Bool())
 
     // Diff
@@ -190,13 +192,15 @@ class Riscv32E_ID extends Module {
     val gprOut = Output(Vec(32, UInt(WORD_LEN.W)))
   })
 
-  val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(
+  val List(op1sel, op2sel, exsel, wbsel, io.memsel, csrsel) = ListLookup(
     io.inst,
     List(OP1_RS1, OP2_RS2, EX_ADD, WB_EX, MEM_NONE, CSR_NONE),
     Array(
       LW     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RW  , CSR_NONE),  // x[rs1] + sext(immi)
+      LHU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RH  , CSR_NONE),  // x[rs1] + sext(immi)
       LBU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RB  , CSR_NONE),  // x[rs1] + sext(immi)
       SW     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WW  , CSR_NONE),  // x[rs1] + sext(imms)
+      SH     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WH  , CSR_NONE),  // x[rs1] + sext(imms)
       SB     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WB  , CSR_NONE),  // x[rs1] + sext(imms)
 
       ADD    -> List(OP1_RS1 , OP2_RS2 , EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] + x[rs2]
@@ -308,9 +312,6 @@ class Riscv32E_ID extends Module {
   }
   // GPR
   io.rd_addr := rd
-  io.memBen  := ~reset.asBool && ((memsel === MEM_RB) || (memsel === MEM_WB))
-  io.memRen  := ~reset.asBool && ((memsel === MEM_RW) || (memsel === MEM_RB))
-  io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
   io.regWen  := wbsel =/= WB_NONE
   when (io.wb_en && io.wb_rd =/= 0.U) {
     GPR(io.wb_rd) := MuxCase(0.U, Seq(
@@ -438,7 +439,11 @@ class Riscv32E extends Module {
   io.mem_we    := idStage.io.memWen
   io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
-  io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
+  io.mem_len   := MuxCase(io.op1, Seq(
+    ((idStage.io.memsel === MEM_RW) || (idStage.io.memsel === MEM_WW)) -> 4.U,
+    ((idStage.io.memsel === MEM_RH) || (idStage.io.memsel === MEM_WH)) -> 2.U,
+    ((idStage.io.memsel === MEM_RB) || (idStage.io.memsel === MEM_WB)) -> 1.U,
+  ))
 
   // Write Back
   idStage.io.wb_en   := idStage.io.regWen
