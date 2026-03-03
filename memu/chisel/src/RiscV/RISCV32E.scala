@@ -318,7 +318,7 @@ class Riscv32E_ID extends Module {
   val csr_old = Mux(csr_valid, CSR(csr_id), 0.U)
   val csr_new = io.op1
   when (~reset.asBool && csr_valid && csrsel =/= CSR_NONE) {
-    CSR(csr_id) := csr_new
+    CSR(csr_id) := GPR(rs1)
   }
 
   // -------- 异常处理 --------
