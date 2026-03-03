@@ -1,4 +1,4 @@
-TOPNAME = MiniRVSOC
+TOPNAME = Riscv32ETOP
 RTL_DIR = rtl
 PRJ = chisel
 
