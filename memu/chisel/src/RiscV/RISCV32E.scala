@@ -311,17 +311,16 @@ class Riscv32E_ID extends Module {
     0x341.U -> 1.U,  // mepc
     0x342.U -> 2.U,  // mcause
     0x305.U -> 3.U,  // mtvec
-    // 0xf11.U -> 5.U,  // mvendorid
-    // 0xf12.U -> 6.U,  // marchid
+    // 0xf11.U -> 4.U,  // mvendorid
+    // 0xf12.U -> 5.U,  // marchid
   ))
   val csr_old = CSR(csr_id)
-  val csr_new = MuxCase(io.op1, Seq(
-    (csrsel === CSR_W) -> io.op1,
-    (csrsel === CSR_S) -> (csr_old | io.op1),
-    (csrsel === CSR_C) -> (csr_old & ~io.op1)
+  when (csrsel =/= CSR_NONE) {
+    CSR(csr_id) := MuxCase(io.op1, Seq(
+      (csrsel === CSR_W) -> io.op1,
+      (csrsel === CSR_S) -> (csr_old | io.op1),
+      (csrsel === CSR_C) -> (csr_old & ~io.op1)
   ))
-  when (~reset.asBool && csrsel =/= CSR_NONE) {
-    CSR(csr_id) := csr_new
   }
 
   // -------- 异常处理 --------
