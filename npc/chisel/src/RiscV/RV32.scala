@@ -1,4 +1,4 @@
-package riscv
+package rv32
 
 import chisel3._
 import chisel3.util._
@@ -271,10 +271,10 @@ class ID extends Module {
 
   // -------- WB功能 --------
   io.rd_addr := rd
-  io.memBen  := ~reset.asBool && (memsel === MEM_RB) || (memsel === MEM_WB)
-  io.memRen  := ~reset.asBool && (memsel === MEM_RW) || (memsel === MEM_RB)
-  io.memWen  := ~reset.asBool && (memsel === MEM_WW) || (memsel === MEM_WB)
-  io.regWen  := ~reset.asBool && (wbsel =/= WB_NONE)
+  io.memBen  := (memsel === MEM_RB) || (memsel === MEM_WB)
+  io.memRen := (memsel === MEM_RW) || (memsel === MEM_RB)
+  io.memWen := (memsel === MEM_WW) || (memsel === MEM_WB)
+  io.regWen := (wbsel =/= WB_NONE)
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := io.wb_data
   }
@@ -335,8 +335,6 @@ class MiniRV extends Module {
   import Parameters._
   val io = IO(new Bundle {
     val pc   = Output(UInt(32.W))
-    val snpc = Output(UInt(32.W))
-    val dnpc = Output(UInt(32.W))
     val inst = Input(UInt(32.W))
 
     val mem_we    = Output(Bool())
@@ -352,8 +350,6 @@ class MiniRV extends Module {
 
   // IF
   io.pc := ifStage.io.pc
-  io.snpc := ifStage.io.pcn
-  io.dnpc := exStage.io.exout
   ifStage.io.jumpen := idStage.io.jumpen
   ifStage.io.jump   := exStage.io.exout
   ifStage.io.halt   := idStage.io.halt
@@ -404,8 +400,6 @@ class MiniRV extends Module {
 class MiniRVSOC extends Module {
   val io = IO(new Bundle {
     val pc   = Output(UInt(32.W))
-    val snpc = Output(UInt(32.W))
-    val dnpc = Output(UInt(32.W))
     val inst = Output(UInt(32.W))
   })
 
@@ -426,7 +420,5 @@ class MiniRVSOC extends Module {
 
   // 输出
   io.pc   := cpu.io.pc
-  io.snpc := cpu.io.snpc
-  io.dnpc := cpu.io.dnpc
   io.inst := cpu.io.inst
 }

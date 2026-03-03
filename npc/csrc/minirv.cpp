@@ -1,6 +1,6 @@
 #include <verilated.h>
 #include <verilated_vcd_c.h>
-#include "VRiscv32ETOP.h"
+#include "VMiniRVSOC.h"
 #include <iostream>
 
 // #define DEBUG
@@ -141,7 +141,7 @@ void init(int argc, char *argv[]) {
 
 
 // 实例化顶层模块
-VRiscv32ETOP *top = new VRiscv32ETOP;
+VMiniRVSOC *top = new VMiniRVSOC;
 VerilatedVcdC *tfp = new VerilatedVcdC;
 
 typedef uint32_t word_t;
@@ -221,7 +221,7 @@ extern "C" {
 }
 
 static vluint64_t sim_time = 0;
-static void tick(VRiscv32ETOP* top, VerilatedVcdC* tfp){
+static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
   // ======== 上升沿 ========
   top->clock = 0;
   top->eval();
