@@ -469,7 +469,7 @@ class Riscv32E extends Module {
   io.mem_wdata := idStage.io.rs2
 
   val memBen = ~reset.asBool && ((idStage.io.memsel === MEM_RW) || (idStage.io.memsel === MEM_RB) || (idStage.io.memsel === MEM_RBU))
-  io.mem_len   := Mux(memBen, 1.U, 4.U)
+  io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
 
   // Write Back
   idStage.io.wb_en   := idStage.io.regWen
