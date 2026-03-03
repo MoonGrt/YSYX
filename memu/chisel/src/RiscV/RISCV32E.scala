@@ -314,14 +314,11 @@ class Riscv32E_ID extends Module {
     // 0xf11.U -> 4.U,  // mvendorid
     // 0xf12.U -> 5.U,  // marchid
   ))
-  val csr_old = CSR(csr_id)
-  when (csrsel =/= CSR_NONE) {
     CSR(csr_id) := MuxCase(io.op1, Seq(
       (csrsel === CSR_W) -> io.op1,
-      (csrsel === CSR_S) -> (csr_old | io.op1),
-      (csrsel === CSR_C) -> (csr_old & ~io.op1)
+      (csrsel === CSR_S) -> (CSR(csr_id) | io.op1),
+      (csrsel === CSR_C) -> (CSR(csr_id) & ~io.op1)
   ))
-  }
 
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
