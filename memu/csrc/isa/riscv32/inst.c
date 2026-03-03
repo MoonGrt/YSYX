@@ -19,16 +19,16 @@
 #include <cpu/decode.h>
 #include "../../utils/local-include/itrace.h"
 
-static vaddr_t *csr_register(word_t imm) {
-  switch (imm) {
-    case 0x341: return &(cpu.csr.mepc);
-    case 0x342: return &(cpu.csr.mcause);
-    case 0x300: return &(cpu.csr.mstatus);
-    case 0x305: return &(cpu.csr.mtvec);
-    default: panic("Unknown csr");
-  }
-}
-#define CSR(i) *csr_register(i)
+// static vaddr_t *csr_register(word_t imm) {
+//   switch (imm) {
+//     case 0x341: return &(cpu.csr.mepc);
+//     case 0x342: return &(cpu.csr.mcause);
+//     case 0x300: return &(cpu.csr.mstatus);
+//     case 0x305: return &(cpu.csr.mtvec);
+//     default: panic("Unknown csr");
+//   }
+// }
+// #define CSR(i) *csr_register(i)
 #define R(i) gpr(i)
 #define Mr vaddr_read
 #define Mw vaddr_write
@@ -150,7 +150,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000000 00000 00000 000 00000 1110011", ecall , N, IFDEF(CONFIG_ETRACE, etrace_exec(s->pc)); s->dnpc = isa_raise_intr(17, s->pc));
   INSTPAT("0011000 00010 00000 000 00000 1110011", mret  , N, s->dnpc = cpu.csr.mepc; cpu.csr.mstatus=0x80;);
   INSTPAT("??????? ????? ????? 001 ????? 1110011", csrrw , I, );
-  INSTPAT("??????? ????? ????? 010 ????? 1110011", csrrs , I, R(rd) = CSR(imm); CSR(imm) |= src1);
+  INSTPAT("??????? ????? ????? 010 ????? 1110011", csrrs , I, );
   INSTPAT("??????? ????? ????? ??? ????0 0001111", fence , N, /* no-op */ );
   INSTPAT("??????? ????? ????? ??? ????? ???????", inv   , N, INV(s->pc));
   INSTPAT_END();
