@@ -241,14 +241,7 @@ class Riscv32E_ID extends Module {
 
   // -------- 寄存器堆 --------
   val GPR = RegInit(VecInit(Seq.fill(32)(0.U(WORD_LEN.W))))
-  val CSR = RegInit(VecInit(Seq(  // 注意修改 csrOut 个数
-    0x00000000.U,  // mstatus
-    0x00000000.U,  // mepc
-    0x00000000.U,  // mcause
-    0x00000000.U,  // mtvec
-    // 0x00000000.U,  // mvendorid
-    // 0x00000000.U,  // marchid
-  )))
+  val CSR = RegInit(VecInit(Seq.fill(4)(0.U(WORD_LEN.W))))
 
   // -------- 指令字段 --------
   val rd  = io.inst(11,7)
