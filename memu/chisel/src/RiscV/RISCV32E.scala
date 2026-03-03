@@ -291,7 +291,7 @@ class Riscv32E_ID extends Module {
   io.op2 := MuxCase(0.U(32.W), Seq(
     (op2sel === OP2_RS2) -> GPR(rs2),
     (op2sel === OP2_IMI) -> immsi,
-    (op2sel === OP2_IMS) -> immss,
+    (op2sel === OP2_IMS) -> imms,
     (op2sel === OP2_IMJ) -> immsj,
     (op2sel === OP2_IMU) -> immu,  // for LUI and AUIPC
   ))
