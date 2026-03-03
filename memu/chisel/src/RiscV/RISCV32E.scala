@@ -315,7 +315,11 @@ class Riscv32E_ID extends Module {
     // 0xf12.U -> 6.U,  // marchid
   ))
   val csr_old = CSR(csr_id)
-  val csr_new = 0x300.U
+  val csr_new = MuxCase(io.op1, Seq(
+    (csrsel === CSR_W) -> io.op1,
+    (csrsel === CSR_S) -> (csr_old | io.op1),
+    (csrsel === CSR_C) -> (csr_old & ~io.op1)
+  ))
   when (~reset.asBool && csrsel =/= CSR_NONE) {
     CSR(csr_id) := csr_new
   }
