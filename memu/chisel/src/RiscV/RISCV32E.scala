@@ -300,9 +300,10 @@ class Riscv32E_ID extends Module {
   io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
   io.regWen  := wbsel =/= WB_NONE
   when (io.wb_en && io.wb_rd =/= 0.U) {
-    GPR(io.wb_rd) := Mux(
-      wbsel === WB_PC, io.pc + 4.U, io.wb_data
-    )
+    GPR(io.wb_rd) := MuxCase(io.wb_data, Seq(
+    (wbsel === WB_PC)  -> (io.pc + 4.U),
+    (wbsel === WB_CSR) -> csr_old
+  ))
   }
   // CSR
   val csr_addr = immi
@@ -314,11 +315,15 @@ class Riscv32E_ID extends Module {
     // 0xf11.U -> 4.U,  // mvendorid
     // 0xf12.U -> 5.U,  // marchid
   ))
-    CSR(csr_id) := MuxCase(io.op1, Seq(
-      (csrsel === CSR_W) -> io.op1,
-      (csrsel === CSR_S) -> (CSR(csr_id) | io.op1),
-      (csrsel === CSR_C) -> (CSR(csr_id) & ~io.op1)
-    ))
+  val csr_old = CSR(csr_id)
+  val csr_new = MuxCase(io.op1, Seq(
+    (csrsel === CSR_W) -> io.op1,
+    (csrsel === CSR_S) -> (csr_old | io.op1),
+    (csrsel === CSR_C) -> (csr_old & ~io.op1)
+  ))
+  when (~reset.asBool && csrsel =/= CSR_NONE) {
+    CSR(csr_id) := csr_new
+  }
 
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
