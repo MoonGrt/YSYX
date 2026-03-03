@@ -189,9 +189,6 @@ class Riscv32E_ID extends Module {
     // Control signals
     val halt   = Output(Bool())
     val memsel = Output(UInt(MEM_SEL_LEN.W))
-    val memBen = Output(Bool())
-    val memRen = Output(Bool())
-    val memWen = Output(Bool())
     val regWen = Output(Bool())
 
     // Diff
