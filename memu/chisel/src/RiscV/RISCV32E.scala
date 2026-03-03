@@ -467,8 +467,11 @@ class Riscv32E extends Module {
   io.mem_we    := (idStage.io.memsel === MEM_WW) || (idStage.io.memsel === MEM_WH) || (idStage.io.memsel === MEM_WB)
   io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
+  val memBen = Mux(idStage.io.memsel === MEM_WW, 0.U(3.W), Mux(idStage.io.memsel === MEM_WH, 1.U(3.W), 3.U(3.W)))
+  val memHen = Mux(idStage.io.memsel === MEM_WW, 0.U(1.W), Mux(idStage.io.memsel === MEM_WH, 1.U(1.W), 0.U(1.W)))
   io.mem_len   := MuxCase(4.U, Seq(
-    ((idStage.io.memsel === MEM_WB) || (idStage.io.memsel === MEM_RB) || (idStage.io.memsel === MEM_RBU)) -> 1.U,
+    (memHen) -> 2.U,
+    (memBen) -> 1.U,
   ))
 
   // Write Back
