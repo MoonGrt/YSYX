@@ -9,6 +9,8 @@ import chisel3.util._
 object Riscv32E_Instructions {
   // Load/Store
   val LW     = BitPat("b?????????????????010?????0000011")
+  val LH     = BitPat("b?????????????????001?????0000011")
+  val LB     = BitPat("b?????????????????000?????0000011")
   val LHU    = BitPat("b?????????????????101?????0000011")
   val LBU    = BitPat("b?????????????????100?????0000011")
   val SW     = BitPat("b?????????????????010?????0100011")
@@ -66,7 +68,7 @@ object Riscv32E_Instructions {
 
   // Implemented instructions
   val IMPLED = Seq(
-    LW, LHU, LBU, SW, SH, SB,
+    LW, LH, LB, LHU, LBU, SW, SH, SB,
     ADD, ADDI, SUB, AND, OR, XOR, ANDI, ORI, XORI,
     SLL, SRL, SRA, SLLI, SRLI, SRAI, SLT, SLTU, SLTI, SLTIU,
     BEQ, BNE, BLT, BGE, BLTU, BGEU,
@@ -197,6 +199,8 @@ class Riscv32E_ID extends Module {
     List(OP1_RS1, OP2_RS2, EX_ADD, WB_EX, MEM_NONE, CSR_NONE),
     Array(
       LW     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RW  , CSR_NONE),  // x[rs1] + sext(immi)
+      LH     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RH  , CSR_NONE),  // x[rs1] + sext(immi)
+      LB     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RB  , CSR_NONE),  // x[rs1] + sext(immi)
       LHU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RH  , CSR_NONE),  // x[rs1] + sext(immi)
       LBU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RB  , CSR_NONE),  // x[rs1] + sext(immi)
       SW     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WW  , CSR_NONE),  // x[rs1] + sext(imms)
