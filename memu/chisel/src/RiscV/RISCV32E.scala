@@ -124,13 +124,13 @@ object Riscv32E_Parameters {
   val MEM_WW   = 3.U(MEM_SEL_LEN.W)
   val MEM_WB   = 4.U(MEM_SEL_LEN.W)
 
-  val CSR_LEN  = 3
-  val CSR_NONE = 0.U(CSR_LEN.W)
-  val CSR_W    = 1.U(CSR_LEN.W)  // Write
-  val CSR_S    = 2.U(CSR_LEN.W)  // Set bits
-  val CSR_C    = 3.U(CSR_LEN.W)  // Clear bits
-  val CSR_E    = 4.U(CSR_LEN.W)  // Exception (ECALL)
-  val CSR_V    = 5.U(CSR_LEN.W)
+  val CSR_SEL_LEN  = 3
+  val CSR_NONE = 0.U(CSR_SEL_LEN.W)
+  val CSR_W    = 1.U(CSR_SEL_LEN.W)  // Write
+  val CSR_S    = 2.U(CSR_SEL_LEN.W)  // Set bits
+  val CSR_C    = 3.U(CSR_SEL_LEN.W)  // Clear bits
+  val CSR_E    = 4.U(CSR_SEL_LEN.W)  // Exception (ECALL)
+  val CSR_V    = 5.U(CSR_SEL_LEN.W)
 }
 
 // ---------------------------
@@ -242,7 +242,7 @@ class Riscv32E_ID extends Module {
   // -------- 寄存器堆 --------
   val GPR = RegInit(VecInit(Seq.fill(32)(0.U(WORD_LEN.W))))
   val CSR = RegInit(VecInit(Seq(  // 注意修改 csrOut 个数
-    0x00000000.U,  // mstatus
+    0x00001800.U,  // mstatus
     0x00000000.U,  // mepc
     0x00000000.U,  // mcause
     0x00000000.U,  // mtvec
@@ -315,7 +315,7 @@ class Riscv32E_ID extends Module {
     // 0xf12.U -> 6.U,  // marchid
   ))
   val csr_valid = csr_id =/= 0.U
-  val csr_old   = Mux(csr_valid, CSR(csr_id), 0.U)
+  val csr_old = Mux(csr_valid, CSR(csr_id), 0.U)
   val csr_new = MuxCase(csr_old, Seq(
     (csrsel === CSR_W) -> io.op1,
     (csrsel === CSR_S) -> (csr_old | io.op1),
