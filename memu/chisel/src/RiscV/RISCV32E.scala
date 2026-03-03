@@ -66,7 +66,7 @@ object Riscv32E_Instructions {
 
   // Implemented instructions
   val IMPLED = Seq(
-    LW, LBU, LHU, SW, SB,
+    LW, LHU, LBU, SW, SH, SB,
     ADD, ADDI, SUB, AND, OR, XOR, ANDI, ORI, XORI,
     SLL, SRL, SRA, SLLI, SRLI, SRAI, SLT, SLTU, SLTI, SLTIU,
     BEQ, BNE, BLT, BGE, BLTU, BGEU,
@@ -197,10 +197,8 @@ class Riscv32E_ID extends Module {
     List(OP1_RS1, OP2_RS2, EX_ADD, WB_EX, MEM_NONE, CSR_NONE),
     Array(
       LW     -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RW  , CSR_NONE),  // x[rs1] + sext(immi)
-      LHU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RH  , CSR_NONE),  // x[rs1] + sext(immi)
       LBU    -> List(OP1_RS1 , OP2_IMI , EX_ADD , WB_MEM , MEM_RB  , CSR_NONE),  // x[rs1] + sext(immi)
       SW     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WW  , CSR_NONE),  // x[rs1] + sext(imms)
-      SH     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WH  , CSR_NONE),  // x[rs1] + sext(imms)
       SB     -> List(OP1_RS1 , OP2_IMS , EX_ADD , WB_NONE, MEM_WB  , CSR_NONE),  // x[rs1] + sext(imms)
 
       ADD    -> List(OP1_RS1 , OP2_RS2 , EX_ADD , WB_EX  , MEM_NONE, CSR_NONE),  // x[rs1] + x[rs2]
