@@ -331,11 +331,18 @@ class Riscv32E_ID extends Module {
   io.memRen  := ~reset.asBool && ((memsel === MEM_RW) || (memsel === MEM_RB))
   io.memWen  := ~reset.asBool && ((memsel === MEM_WW) || (memsel === MEM_WB))
   io.regWen  := wbsel =/= WB_NONE
+  val memData = MuxLookup(io.memsel, 0.U(WORD_LEN.W))(Seq(
+    MEM_RW  -> io.memData,  // LW 直接写回
+    MEM_RB  -> Cat(Fill(24, io.memData(7)), io.memData(7,0)),  // LB 符号扩展
+    MEM_RH  -> Cat(Fill(16, io.memData(15)), io.memData(15,0)),  // LH 符号扩展
+    MEM_RBU -> Cat(0.U(24.W), io.memData(7,0)),  // LBU 零扩展
+    MEM_RHU -> Cat(0.U(16.W), io.memData(15,0)),  // LHU 零扩展
+  ))
   when (io.wb_en && io.wb_rd =/= 0.U) {
     GPR(io.wb_rd) := MuxCase(0.U, Seq(
       (wbsel === WB_PC ) -> (io.pc + 4.U),
       (wbsel === WB_EX ) -> io.exData,
-      (wbsel === WB_MEM) -> io.memData,
+      (wbsel === WB_MEM) -> memData,
       (wbsel === WB_CSR) -> csr_old,
     ))
   }
