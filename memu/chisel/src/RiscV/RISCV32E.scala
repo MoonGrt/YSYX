@@ -252,8 +252,8 @@ class Riscv32E_ID extends Module {
       CSRRC  -> List(OP1_RS1 , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~x[rs1]
       CSRRCI -> List(OP1_IMZ , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
 
-      ECALL  -> List(OP1_NONE, OP2_RS2 , EX_CSR , WB_NONE, MEN_NONE, CSR_E   ),
-      EBREAK -> List(OP1_NONE, OP2_NONE, EX_NONE, WB_NONE, MEN_NONE, CSR_B   ),
+      ECALL  -> List(OP1_NONE, OP2_RS2 , EX_CSR , WB_NONE, MEM_NONE, CSR_E   ),
+      EBREAK -> List(OP1_NONE, OP2_NONE, EX_NONE, WB_NONE, MEM_NONE, CSR_B   ),
     ),
   )
 
