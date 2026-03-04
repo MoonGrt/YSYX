@@ -30,6 +30,7 @@ extern "C" {
   #define OTHER_E_CODE   2
   #define UNIMPL_CODE    3
   void ebreak(uint8_t code) {
+    printf("[MEMU] EBREAK code: %d\n", code);
     if (code == EBREAK_CODE) MEMUTRAP(cpu.pc, code);
     else INV(cpu.pc);
     Verilated::gotFinish(true);

@@ -322,7 +322,7 @@ class Riscv32E_ID extends Module {
   val csr_new = MuxCase(io.op1, Seq(
     (csrsel === CSR_W) -> io.op1,
     (csrsel === CSR_S) -> (csr_old | io.op1),
-    (csrsel === CSR_C) -> (csr_old & ~io.op1)
+    (csrsel === CSR_C) -> (csr_old & ~io.op1),
   ))
   when (~reset.asBool && csrsel =/= CSR_NONE) {
     CSR(csr_id) := csr_new
@@ -332,7 +332,6 @@ class Riscv32E_ID extends Module {
     CSR(1.U) := io.pc
     // mcause = 11 (ECALL from M-mode)
     CSR(2.U) := 11.U
-    // mtvec = CSR(3)（已经存在）
   }
   // GPR
   io.rd_addr := rd
