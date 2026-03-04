@@ -185,13 +185,13 @@ static inline void host_write(void *addr, int len, word_t data) {
 word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
 #ifdef DEBUG
-  printf("paddr_read:  addr=0x%08x,  len=%d,   data=0x%08x\n", addr, len, ret);
+  log_write("paddr_read:  addr=0x%08x,  len=%d,   data=0x%08x\n", addr, len, ret);
 #endif
   return ret;
 }
 void pmem_write(paddr_t addr, int len, word_t data) {
 #ifdef DEBUG
-  printf("paddr_write: addr=0x%08x, len=%d, data=0x%08x\n", addr, len, data);
+  log_write("paddr_write: addr=0x%08x, len=%d, data=0x%08x\n", addr, len, data);
 #endif
   host_write(guest_to_host(addr), len, data);
 }
