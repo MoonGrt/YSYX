@@ -42,7 +42,7 @@ OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 WAVE_FILE = $(BUILD_DIR)/wave.vcd
 
-VSRCS := $(shell [ -d $(RTL_DIR) ] && find $(RTL_DIR) -name "MiniRVSOC.sv" || echo "")
+VSRCS := $(RTL_DIR)/$(TOPNAME).sv
 VSRCS += $(shell find ./vsrc -name "*.v")
 CSRCS := $(shell find ./csrc -name "minirv.cpp")
 INCFLAGS = $(addprefix -I, $(INC_PATH))
