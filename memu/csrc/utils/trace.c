@@ -98,7 +98,7 @@ static inline bool mtrace_addr_ok(paddr_t addr) {
 
 void display_pread(paddr_t addr, int len) {
   if (!mtrace_addr_ok(addr)) return;
-  log_write(" [MTRACE] R addr=" FMT_PADDR ", len=%d", addr, len);
+  log_write("[MTRACE] R addr=" FMT_PADDR ", len=%d", addr, len);
 }
 
 void display_pwrite(paddr_t addr, int len, word_t data) {
