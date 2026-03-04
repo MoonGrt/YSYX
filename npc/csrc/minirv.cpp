@@ -208,18 +208,18 @@ extern "C" {
       msg   = exc_info[code].msg;
     }
     // 统一打印
-    printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
-    printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
+    // printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
+    // printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
     // 停止仿真
     Verilated::gotFinish(true);
   }
   int dpi_paddr_read(int addr, char len){
     if (addr == 0) return 0;
-    if (likely(in_pmem(addr))) return pmem_read(addr, len);
+    if (in_pmem(addr)) return pmem_read(addr, len);
     return 0;
   }
   void dpi_paddr_write(int addr, char len, int data){
-    if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
+    if (in_pmem(addr)) { pmem_write(addr, len, data); return; }
   }
 }
 
@@ -257,11 +257,11 @@ int main(int argc, char **argv){
   top->reset = 0;
   // 主仿真
   std::cout << "[NPC] Simulation start" << std::endl;
-  log_write("0x%08x: %08x\n", top->io_pc, top->io_inst);
+  // log_write("0x%08x: %08x\n", top->io_pc, top->io_inst);
   // while (!Verilated::gotFinish()){
   for (int i = 0; i < 100000 && !Verilated::gotFinish(); i++) {
     tick(top, tfp);
-    log_write("0x%08x: 0x%08x\n", top->io_pc, top->io_inst);
+    // log_write("0x%08x: 0x%08x\n", top->io_pc, top->io_inst);
     if (is_ebreak) break;
   }
 
