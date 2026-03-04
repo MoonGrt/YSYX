@@ -38,7 +38,6 @@ void display_inst() {
     p = buf;
     p += sprintf(buf, "%s" FMT_WORD ": %08x ", (i+1)%MAX_IRINGBUF==end?" --> ":"     ", iringbuf[i].pc, iringbuf[i].inst);
     disassemble(p, buf+sizeof(buf)-p, iringbuf[i].pc, (uint8_t *)&iringbuf[i].inst, 4);
-
     if ((i+1)%MAX_IRINGBUF==end) printf(ANSI_FG_MAGENTA);
     puts(buf);
   } while ((i = (i+1)%MAX_IRINGBUF) != end);
