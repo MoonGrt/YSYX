@@ -452,7 +452,7 @@ void trace_func_ret(paddr_t pc) {
 }
 
 void trace_dread(paddr_t addr, int len, word_t data, IOMap *map) {
-  log_write("[DTRACE]  read %10s at " FMT_PADDR ",%d with " FMT_WORD "\n",
+  log_write("[DTRACE]  read %10s at " FMT_PADDR ",%d return " FMT_WORD "\n",
     map->name, addr, len, data);
 }
 
