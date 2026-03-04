@@ -8,7 +8,7 @@ module EBreak (
   always @(posedge clk) if (trap) ebreak(code);
 endmodule
 
-import "DPI-C" function void diff(
+import "DPI-C" function void dpi_diff(
   input int pc, input int npc, input int inst,
   input int gpr [0:31], input int csr [0:3]
 );

@@ -50,7 +50,7 @@ extern "C" {
     if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
     IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   }
-  void diff(int pc, int npc, int inst, int* gpr, int* csr) {
+  void dpi_diff(int pc, int npc, int inst, int* gpr, int* csr) {
     // Decode
     rtlDecode.pc = pc;
     rtlDecode.snpc = pc + 4;
