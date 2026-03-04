@@ -38,7 +38,6 @@ void display_inst() {
     p = buf;
     p += sprintf(buf, "%s" FMT_WORD ": %08x ", (i+1)%MAX_IRINGBUF==end?" --> ":"     ", iringbuf[i].pc, iringbuf[i].inst);
     disassemble(p, buf+sizeof(buf)-p, iringbuf[i].pc, (uint8_t *)&iringbuf[i].inst, 4);
-
     if ((i+1)%MAX_IRINGBUF==end) printf(ANSI_FG_MAGENTA);
     puts(buf);
   } while ((i = (i+1)%MAX_IRINGBUF) != end);
@@ -96,14 +95,14 @@ static inline bool mtrace_addr_ok(paddr_t addr) {
   return addr >= CONFIG_MTRACE_LO && addr < CONFIG_MTRACE_HI;
 }
 
-void display_pread(paddr_t addr, int len) {
+void display_pread(paddr_t addr, int len, word_t data) {
   if (!mtrace_addr_ok(addr)) return;
-  Log(" [MTRACE] R addr=" FMT_PADDR ", len=%d", addr, len);
+  log_write("[MTRACE] R addr=" FMT_PADDR ", len=%d, -read=" FMT_WORD "\n", addr, len, data);
 }
 
 void display_pwrite(paddr_t addr, int len, word_t data) {
   if (!mtrace_addr_ok(addr)) return;
-  Log("[MTRACE] W addr=" FMT_PADDR ", len=%d, data=" FMT_WORD, addr, len, data);
+  log_write("[MTRACE] W addr=" FMT_PADDR ", len=%d, write=" FMT_WORD "\n", addr, len, data);
 }
 
 #endif  // CONFIG_MTRACE
