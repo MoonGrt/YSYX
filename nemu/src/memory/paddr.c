@@ -17,7 +17,7 @@
 #include <memory/paddr.h>
 #include <device/mmio.h>
 #include <isa.h>
-#include "../../utils/local-include/itrace.h"
+#include "../../utils/local-include/trace.h"
 
 #if   defined(CONFIG_PMEM_MALLOC)
 static uint8_t *pmem = NULL;

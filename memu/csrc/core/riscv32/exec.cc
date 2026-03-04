@@ -5,7 +5,7 @@
 #include <memory/paddr.h>
 #include <memory/host.h>
 #include <device/mmio.h>
-#include "../../utils/local-include/itrace.h"
+#include "../../utils/local-include/trace.h"
 
 #include <verilated.h>
 #include <verilated_vcd_c.h>
