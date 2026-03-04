@@ -154,28 +154,32 @@ uint8_t* guest_to_host(paddr_t paddr){
   if (in_mem(paddr)) return mem + paddr - MEM_BASE;
   else return NULL;
 }
-word_t paddr_read(paddr_t addr, int len){
-  uint8_t *host = guest_to_host(addr);
-  if (!host) return 0;
-  word_t result = 0;
+static inline word_t host_read(void *addr, int len) {
   switch (len) {
-    case 1: result = *host; break;
-    case 2: result = *(uint16_t *)host; break;
-    case 4: result = *(uint32_t *)host; break;
-    default: return 0;
+    case 1: return *(uint8_t  *)addr;
+    case 2: return *(uint16_t *)addr;
+    case 4: return *(uint32_t *)addr;
   }
-#ifdef DEBUG
-  printf("paddr_read:  addr=0x%08x,  len=%d,   data=0x%08x\n", addr, len, result);
-#endif
-  return result;
 }
-void paddr_write(paddr_t addr, int mask, word_t data){
+static inline void host_write(void *addr, int len, word_t data) {
+  switch (len) {
+    case 1: *(uint8_t  *)addr = data; return;
+    case 2: *(uint16_t *)addr = data; return;
+    case 4: *(uint32_t *)addr = data; return;
+  }
+}
+word_t pmem_read(paddr_t addr, int len) {
+  word_t ret = host_read(guest_to_host(addr), len);
+#ifdef DEBUG
+  printf("paddr_read:  addr=0x%08x,  len=%d,   data=0x%08x\n", addr, len, ret);
+#endif
+  return ret;
+}
+void pmem_write(paddr_t addr, int len, word_t data) {
 #ifdef DEBUG
   printf("paddr_write: addr=0x%08x, mask=0x%x, data=0x%08x\n", addr, mask, data);
 #endif
-  if (addr < MEM_BASE || addr >= MEM_BASE + MEM_SIZE) return;
-  for(int i = 0; i < 4; i++)
-    if(mask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
+  host_write(guest_to_host(addr), len, data);
 }
 
 extern "C" {
@@ -209,14 +213,13 @@ extern "C" {
     // 停止仿真
     Verilated::gotFinish(true);
   }
-  int pmem_read(int raddr){
-    raddr = raddr & ~0x3u;
-    word_t data= paddr_read(raddr, 4);
-    return data;
+  int dpi_paddr_read(int addr, char len){
+    if (addr == 0) return 0;
+    if (likely(in_pmem(addr))) return pmem_read(addr, len);
+    return 0;
   }
-  void pmem_write(int waddr, char wmask, int wdata){
-    waddr = waddr & ~0x3u;
-    paddr_write(waddr, wmask, wdata);
+  void dpi_paddr_write(int addr, char len, int data){
+    if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   }
 }
 
