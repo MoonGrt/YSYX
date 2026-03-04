@@ -36,8 +36,11 @@ extern "C" {
   }
   int dpi_paddr_read(int addr, char len){
     if (addr == 0) return 0;
-    IFDEF(CONFIG_MTRACE, display_pread(addr, len));
-    if (likely(in_pmem(addr))) return pmem_read(addr, len);
+    if (likely(in_pmem(addr))) {
+      word_t data = pmem_read(addr, len);
+      IFDEF(CONFIG_MTRACE, display_pread(addr, len, data));
+      return data;
+    }
     IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
     return 0;
   }
