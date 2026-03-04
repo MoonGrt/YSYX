@@ -36,7 +36,7 @@ extern "C" {
     Verilated::gotFinish(true);
   }
   int dpi_paddr_read(int addr, char len){
-    if (addr == 0) return 0;
+    // if (addr == 0) return 0;
     if (likely(in_pmem(addr))) {
       word_t data = pmem_read(addr, len);
       IFDEF(CONFIG_MTRACE, display_pread(addr, len, data));
