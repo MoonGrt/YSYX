@@ -6,13 +6,13 @@
 // #define DEBUG
 
 typedef struct{
-  word_t mepc;
-  word_t mstatus;
-  word_t mcause;
-  word_t mtvec;
+  uint32_t mepc;
+  uint32_t mstatus;
+  uint32_t mcause;
+  uint32_t mtvec;
 } riscv32_CSR;
 typedef struct {
-  word_t gpr[32];
+  uint32_t gpr[32];
   vaddr_t pc, npc, inst;
   riscv32_CSR csr;
 } CPU_state;
