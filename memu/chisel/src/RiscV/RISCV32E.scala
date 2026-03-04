@@ -255,7 +255,7 @@ class Riscv32E_ID extends Module {
 
       EBREAK -> List(OP1_NONE, OP2_NONE, EX_NONE, WB_NONE, MEM_NONE, CSR_B   ),
       ECALL  -> List(OP1_NONE, OP2_CSR , EX_CSR , WB_NONE, MEM_NONE, CSR_E   ),
-      MRET   -> List(OP1_NONE, OP2_NONE, EX_NONE, WB_NONE, MEM_NONE, CSR_MRET),
+      MRET   -> List(OP1_NONE, OP2_CSR , EX_CSR , WB_NONE, MEM_NONE, CSR_MRET),
     ),
   )
 
@@ -297,9 +297,13 @@ class Riscv32E_ID extends Module {
     (op1sel === OP1_IMZ) -> immuz,
   ))
   // Determine 2nd operand data signal
+  val brcsr = MuxCase(0.U(32.W), Seq(
+    (csrsel === CSR_E   ) -> CSR(3),  // mtvec
+    (csrsel === CSR_MRET) -> CSR(1),  // mepc
+  ))
   io.op2 := MuxCase(0.U(32.W), Seq(
     (op2sel === OP2_RS2) -> GPR(rs2),
-    (op2sel === OP2_CSR) -> CSR(3),  // mtvec
+    (op2sel === OP2_CSR) -> brcsr,
     (op2sel === OP2_IMI) -> immsi,
     (op2sel === OP2_IMS) -> immss,
     (op2sel === OP2_IMJ) -> immsj,
