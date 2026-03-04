@@ -97,12 +97,12 @@ static inline bool mtrace_addr_ok(paddr_t addr) {
 
 void display_pread(paddr_t addr, int len, word_t data) {
   if (!mtrace_addr_ok(addr)) return;
-  log_write("[MTRACE] R addr=" FMT_PADDR ", len=%d,  \33[1;31mread=" FMT_WORD "\33[0m\n", addr, len, data);
+  log_write("[MTRACE] R addr=" FMT_PADDR ", len=%d, -read=" FMT_WORD "\n", addr, len, data);
 }
 
 void display_pwrite(paddr_t addr, int len, word_t data) {
   if (!mtrace_addr_ok(addr)) return;
-  log_write("[MTRACE] W addr=" FMT_PADDR ", len=%d, \33[1;31mwrite=" FMT_WORD "\33[0m\n", addr, len, data);
+  log_write("[MTRACE] W addr=" FMT_PADDR ", len=%d, write=" FMT_WORD "\n", addr, len, data);
 }
 
 #endif  // CONFIG_MTRACE
