@@ -283,11 +283,11 @@ int main(int argc, char **argv){
   top->reset = 0;
   // 主仿真
   std::cout << "[NPC] Simulation start" << std::endl;
-  log_write("0x%08x: %08x\n", cpu.pc, pc.inst);
+  log_write("0x%08x: %08x\n", cpu.pc, cpu.inst);
   // while (!Verilated::gotFinish()){
   for (int i = 0; i < 100000 && !Verilated::gotFinish(); i++) {
     tick(top, tfp);
-    log_write("0x%08x: 0x%08x\n", cpu.pc, pc.inst);
+    log_write("0x%08x: 0x%08x\n", cpu.pc, cpu.inst);
     if (is_ebreak) break;
   }
 
