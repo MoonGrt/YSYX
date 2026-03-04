@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <errno.h>
 
-void __am_uart_init() {
+void __am_uart_iit() {
   int ret = fcntl(STDIN_FILENO, F_GETFL);
   assert(ret != -1);
   int flag = ret | O_NONBLOCK;
