@@ -3,7 +3,7 @@
 #include "VRiscv32ETOP.h"
 #include <iostream>
 
-// #define DEBUG
+#define DEBUG
 
 typedef struct{
   uint32_t mepc;
