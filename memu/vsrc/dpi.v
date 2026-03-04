@@ -51,6 +51,9 @@ module ROM_DPI(
   input  wire [31:0] addr,
   output wire [31:0] data
 );
+  // TODO: When reading from a device using combinational logic, 
+  //       multiple reads may overwrite the results; 
+  //       instructions read are currently working without issue.
   assign data = dpi_paddr_read(addr, 4);
 endmodule
 module RAM_DPI(
