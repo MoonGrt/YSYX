@@ -1,9 +1,22 @@
 #include <verilated.h>
 #include <verilated_vcd_c.h>
-#include "VMiniRVSOC.h"
+#include "VRiscv32ETOP.h"
 #include <iostream>
 
-// #define DEBUG
+#define DEBUG
+
+typedef struct{
+  uint32_t mepc;
+  uint32_t mstatus;
+  uint32_t mcause;
+  uint32_t mtvec;
+} riscv32_CSR;
+typedef struct {
+  uint32_t gpr[32];
+  uint32_t pc, npc, inst;
+  riscv32_CSR csr;
+} CPU_state;
+CPU_state cpu = {};
 
 #include <getopt.h>
 #define no_argument       0
@@ -141,41 +154,46 @@ void init(int argc, char *argv[]) {
 
 
 // 实例化顶层模块
-VMiniRVSOC *top = new VMiniRVSOC;
+VRiscv32ETOP *top = new VRiscv32ETOP;
 VerilatedVcdC *tfp = new VerilatedVcdC;
 
 typedef uint32_t word_t;
 typedef uint32_t paddr_t;
 
-static inline bool in_mem(paddr_t addr){
+static inline bool in_pmem(paddr_t addr){
   return addr - MEM_BASE <= MEM_SIZE && addr >= MEM_BASE;
 }
 uint8_t* guest_to_host(paddr_t paddr){
-  if (in_mem(paddr)) return mem + paddr - MEM_BASE;
+  if (in_pmem(paddr)) return mem + paddr - MEM_BASE;
   else return NULL;
 }
-word_t paddr_read(paddr_t addr, int len){
-  uint8_t *host = guest_to_host(addr);
-  if (!host) return 0;
-  word_t result = 0;
+static inline word_t host_read(void *addr, int len) {
   switch (len) {
-    case 1: result = *host; break;
-    case 2: result = *(uint16_t *)host; break;
-    case 4: result = *(uint32_t *)host; break;
+    case 1: return *(uint8_t  *)addr;
+    case 2: return *(uint16_t *)addr;
+    case 4: return *(uint32_t *)addr;
     default: return 0;
   }
-#ifdef DEBUG
-  printf("paddr_read:  addr=0x%08x,  len=%d,   data=0x%08x\n", addr, len, result);
-#endif
-  return result;
 }
-void paddr_write(paddr_t addr, int mask, word_t data){
+static inline void host_write(void *addr, int len, word_t data) {
+  switch (len) {
+    case 1: *(uint8_t  *)addr = data; return;
+    case 2: *(uint16_t *)addr = data; return;
+    case 4: *(uint32_t *)addr = data; return;
+  }
+}
+word_t pmem_read(paddr_t addr, int len) {
+  word_t ret = host_read(guest_to_host(addr), len);
 #ifdef DEBUG
-  printf("paddr_write: addr=0x%08x, mask=0x%x, data=0x%08x\n", addr, mask, data);
+  log_write("paddr_read:  addr=0x%08x, len=%d, data=0x%08x\n", addr, len, ret);
 #endif
-  if (addr < MEM_BASE || addr >= MEM_BASE + MEM_SIZE) return;
-  for(int i = 0; i < 4; i++)
-    if(mask & (1 << i)) *guest_to_host(addr + i) = (data >> (i * 8)) & 0xff;
+  return ret;
+}
+void pmem_write(paddr_t addr, int len, word_t data) {
+#ifdef DEBUG
+  log_write("paddr_write: addr=0x%08x, len=%d, data=0x%08x\n", addr, len, data);
+#endif
+  host_write(guest_to_host(addr), len, data);
 }
 
 extern "C" {
@@ -204,24 +222,35 @@ extern "C" {
       msg   = exc_info[code].msg;
     }
     // 统一打印
-    printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, top->io_pc);
-    printf("\33[1;35mInstruction\33[0m = 0x%08x\n", top->io_inst);
+    printf("[NPC] %s%s\33[0m at pc = 0x%08x -> ", color, msg, cpu.pc);
+    printf("\33[1;35mInstruction\33[0m = 0x%08x\n", cpu.inst);
     // 停止仿真
     Verilated::gotFinish(true);
   }
-  int pmem_read(int raddr){
-    raddr = raddr & ~0x3u;
-    word_t data= paddr_read(raddr, 4);
-    return data;
+  int dpi_paddr_read(int addr, char len){
+    if (addr == 0) return 0;
+    if (in_pmem(addr)) return pmem_read(addr, len);
+    return 0;
   }
-  void pmem_write(int waddr, char wmask, int wdata){
-    waddr = waddr & ~0x3u;
-    paddr_write(waddr, wmask, wdata);
+  void dpi_paddr_write(int addr, char len, int data){
+    if (in_pmem(addr)) { pmem_write(addr, len, data); return; }
+  }
+  void diff(int pc, int npc, int inst, int* gpr, int* csr) {
+    // CPU_state
+    cpu.pc = pc;
+    cpu.npc = npc;
+    cpu.inst = inst;
+    cpu.csr.mstatus = csr[0];
+    cpu.csr.mepc = csr[1];
+    cpu.csr.mcause = csr[2];
+    cpu.csr.mtvec = csr[3];
+    for (int i = 0; i < 32; i++)
+      cpu.gpr[i] = gpr[i];
   }
 }
 
 static vluint64_t sim_time = 0;
-static void tick(VMiniRVSOC* top, VerilatedVcdC* tfp){
+static void tick(VRiscv32ETOP* top, VerilatedVcdC* tfp){
   // ======== 上升沿 ========
   top->clock = 0;
   top->eval();
@@ -254,11 +283,11 @@ int main(int argc, char **argv){
   top->reset = 0;
   // 主仿真
   std::cout << "[NPC] Simulation start" << std::endl;
-  log_write("0x%08x: %08x\n", top->io_pc, top->io_inst);
+  log_write("0x%08x: %08x\n", cpu.pc, cpu.inst);
   // while (!Verilated::gotFinish()){
   for (int i = 0; i < 100000 && !Verilated::gotFinish(); i++) {
     tick(top, tfp);
-    log_write("0x%08x: 0x%08x\n", top->io_pc, top->io_inst);
+    log_write("0x%08x: 0x%08x\n", cpu.pc, cpu.inst);
     if (is_ebreak) break;
   }
 
