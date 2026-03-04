@@ -54,6 +54,7 @@ module ROM_DPI(
   assign data = dpi_paddr_read(addr, 4);
 endmodule
 module RAM_DPI(
+  input  wire        clk,
   input  wire        re,
   input  wire        we,
   input  wire [ 7:0] len,
@@ -64,6 +65,8 @@ module RAM_DPI(
   always @(*) begin
     rdata = 0;
     if (re) rdata = dpi_paddr_read(addr, len);
+  end
+  always @(posedge clk) begin
     if (we) dpi_paddr_write(addr, len, wdata);
   end
 endmodule
