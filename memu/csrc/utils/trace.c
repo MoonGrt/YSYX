@@ -451,13 +451,13 @@ void trace_func_ret(paddr_t pc) {
   call_num--;
 }
 
-void trace_dread(paddr_t addr, int len, IOMap *map) {
-  log_write("dtrace: read %10s at " FMT_PADDR ",%d\n",
-    map->name, addr, len);
+void trace_dread(paddr_t addr, int len, word_t data, IOMap *map) {
+  log_write("[DTRACE]  read %10s at " FMT_PADDR ",%d with " FMT_WORD "\n",
+    map->name, addr, len, data);
 }
 
 void trace_dwrite(paddr_t addr, int len, word_t data, IOMap *map) {
-  log_write("dtrace: write %10s at " FMT_PADDR ",%d with " FMT_WORD "\n",
+  log_write("[DTRACE] write %10s at " FMT_PADDR ",%d with " FMT_WORD "\n",
     map->name, addr, len, data);
 }
 
