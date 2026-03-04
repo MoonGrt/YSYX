@@ -66,6 +66,7 @@ object Riscv32E_Instructions {
   val E      = BitPat("b?????????????????????????1110011")
   val EBREAK = BitPat("b00000000000100000000000001110011")
   val ECALL  = BitPat("b00000000000000000000000001110011")
+  val MRET   = BitPat("b00110000001000000000000001110011")
 
   // Implemented instructions
   val IMPLED = Seq(
@@ -75,7 +76,7 @@ object Riscv32E_Instructions {
     BEQ, BNE, BLT, BGE, BLTU, BGEU,
     JAL, JALR, LUI, AUIPC,
     CSRRW, CSRRWI, CSRRS, CSRRSI, CSRRC, CSRRCI,
-    E, EBREAK, ECALL,
+    E, EBREAK, ECALL, MRET,
   )
 }
 object Riscv32E_Parameters {
@@ -140,9 +141,9 @@ object Riscv32E_Parameters {
   val CSR_W    = 1.U(CSR_SEL_LEN.W)  // Write
   val CSR_S    = 2.U(CSR_SEL_LEN.W)  // Set bits
   val CSR_C    = 3.U(CSR_SEL_LEN.W)  // Clear bits
-  val CSR_E    = 4.U(CSR_SEL_LEN.W)  // Exception (ECALL)
-  val CSR_V    = 5.U(CSR_SEL_LEN.W)
-  val CSR_B    = 6.U(CSR_SEL_LEN.W)  // Break
+  val CSR_B    = 4.U(CSR_SEL_LEN.W)  // Break
+  val CSR_E    = 5.U(CSR_SEL_LEN.W)  // Exception (ECALL)
+  val CSR_MRET = 6.U(CSR_SEL_LEN.W)  // Return from exception
 }
 
 // ---------------------------
@@ -252,8 +253,9 @@ class Riscv32E_ID extends Module {
       CSRRC  -> List(OP1_RS1 , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~x[rs1]
       CSRRCI -> List(OP1_IMZ , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
 
-      ECALL  -> List(OP1_NONE, OP2_RS2 , EX_CSR , WB_NONE, MEM_NONE, CSR_E   ),
       EBREAK -> List(OP1_NONE, OP2_NONE, EX_NONE, WB_NONE, MEM_NONE, CSR_B   ),
+      ECALL  -> List(OP1_NONE, OP2_RS2 , EX_CSR , WB_NONE, MEM_NONE, CSR_E   ),
+      MRET   -> List(OP1_NONE, OP2_NONE, EX_NONE, WB_NONE, MEM_NONE, CSR_MRET),
     ),
   )
 
