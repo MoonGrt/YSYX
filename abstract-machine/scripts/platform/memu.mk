@@ -1,11 +1,12 @@
-AM_SRCS := platform/nemu/trm.c \
-           platform/nemu/ioe/ioe.c \
-           platform/nemu/ioe/timer.c \
-           platform/nemu/ioe/input.c \
-           platform/nemu/ioe/gpu.c \
-           platform/nemu/ioe/audio.c \
-           platform/nemu/ioe/disk.c \
-           platform/nemu/mpe.c
+AM_SRCS := riscv/npc/start.S \
+           riscv/npc/trm.c \
+           riscv/npc/ioe.c \
+           riscv/npc/timer.c \
+           riscv/npc/input.c \
+           riscv/npc/cte.c \
+           riscv/npc/trap.S \
+           platform/dummy/vme.c \
+           platform/dummy/mpe.c
 
 CFLAGS    += -fdata-sections -ffunction-sections
 CFLAGS    += -I$(AM_HOME)/am/src/platform/nemu/include
