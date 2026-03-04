@@ -191,7 +191,7 @@ word_t pmem_read(paddr_t addr, int len) {
 }
 void pmem_write(paddr_t addr, int len, word_t data) {
 #ifdef DEBUG
-  printf("paddr_write: addr=0x%08x, mask=0x%x, data=0x%08x\n", addr, mask, data);
+  printf("paddr_write: addr=0x%08x, len=0x%x, data=0x%08x\n", addr, len, data);
 #endif
   host_write(guest_to_host(addr), len, data);
 }
