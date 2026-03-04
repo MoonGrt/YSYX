@@ -15,7 +15,6 @@ static void drain_keys() {
       printf("Got (uart): %c (%d)\n", ch, ch & 0xff);
     }
   }
-
   if (has_kbd) {
     while (1) {
       AM_INPUT_KEYBRD_T ev = io_read(AM_INPUT_KEYBRD);
