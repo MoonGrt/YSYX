@@ -147,11 +147,11 @@ VerilatedVcdC *tfp = new VerilatedVcdC;
 typedef uint32_t word_t;
 typedef uint32_t paddr_t;
 
-static inline bool in_mem(paddr_t addr){
+static inline bool in_pmem(paddr_t addr){
   return addr - MEM_BASE <= MEM_SIZE && addr >= MEM_BASE;
 }
 uint8_t* guest_to_host(paddr_t paddr){
-  if (in_mem(paddr)) return mem + paddr - MEM_BASE;
+  if (in_pmem(paddr)) return mem + paddr - MEM_BASE;
   else return NULL;
 }
 static inline word_t host_read(void *addr, int len) {
