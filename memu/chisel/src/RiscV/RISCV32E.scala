@@ -65,6 +65,7 @@ object Riscv32E_Instructions {
   // Exception
   val E      = BitPat("b?????????????????????????1110011")
   val EBREAK = BitPat("b00000000000100000000000001110011")
+  val ECALL  = BitPat("b00000000000000000000000001110011")
 
   // Implemented instructions
   val IMPLED = Seq(
@@ -74,7 +75,7 @@ object Riscv32E_Instructions {
     BEQ, BNE, BLT, BGE, BLTU, BGEU,
     JAL, JALR, LUI, AUIPC,
     CSRRW, CSRRWI, CSRRS, CSRRSI, CSRRC, CSRRCI,
-    E, EBREAK,
+    E, EBREAK, ECALL,
   )
 }
 object Riscv32E_Parameters {
@@ -89,10 +90,11 @@ object Riscv32E_Parameters {
   val OP2_SEL_LEN = 3
   val OP2_NONE = 0.U(OP2_SEL_LEN.W)
   val OP2_RS2  = 1.U(OP2_SEL_LEN.W)
-  val OP2_IMI  = 2.U(OP2_SEL_LEN.W)
-  val OP2_IMS  = 3.U(OP2_SEL_LEN.W)
-  val OP2_IMJ  = 4.U(OP2_SEL_LEN.W)
-  val OP2_IMU  = 5.U(OP2_SEL_LEN.W)
+  val OP2_CSR  = 2.U(OP2_SEL_LEN.W)
+  val OP2_IMI  = 3.U(OP2_SEL_LEN.W)
+  val OP2_IMS  = 4.U(OP2_SEL_LEN.W)
+  val OP2_IMJ  = 5.U(OP2_SEL_LEN.W)
+  val OP2_IMU  = 6.U(OP2_SEL_LEN.W)
 
   val EX_SEL_LEN = 5
   val EX_NONE =  0.U(EX_SEL_LEN.W)
@@ -113,6 +115,7 @@ object Riscv32E_Parameters {
   val EX_BLTU = 15.U(EX_SEL_LEN.W)
   val EX_BGEU = 16.U(EX_SEL_LEN.W)
   val EX_JAL  = 17.U(EX_SEL_LEN.W)
+  val EX_CSR  = 18.U(EX_SEL_LEN.W)
 
   val WB_SEL_LEN = 3
   val WB_NONE = 0.U(WB_SEL_LEN.W)
@@ -139,6 +142,7 @@ object Riscv32E_Parameters {
   val CSR_C    = 3.U(CSR_SEL_LEN.W)  // Clear bits
   val CSR_E    = 4.U(CSR_SEL_LEN.W)  // Exception (ECALL)
   val CSR_V    = 5.U(CSR_SEL_LEN.W)
+  val CSR_B    = 6.U(CSR_SEL_LEN.W)  // Break
 }
 
 // ---------------------------
@@ -247,6 +251,9 @@ class Riscv32E_ID extends Module {
       CSRRSI -> List(OP1_IMZ , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_S   ), // CSRs[csr] <- CSRs[csr] | uext(imm_z)
       CSRRC  -> List(OP1_RS1 , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~x[rs1]
       CSRRCI -> List(OP1_IMZ , OP2_NONE, EX_ADD , WB_CSR , MEM_NONE, CSR_C   ), // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
+
+      ECALL  -> List(OP1_NONE, OP2_RS2 , EX_CSR , WB_NONE, MEN_NONE, CSR_E   ),
+      EBREAK -> List(OP1_NONE, OP2_NONE, EX_NONE, WB_NONE, MEN_NONE, CSR_B   ),
     ),
   )
 
@@ -284,12 +291,13 @@ class Riscv32E_ID extends Module {
   // Determine 1st operand data signal
   io.op1 := MuxCase(0.U(32.W), Seq(
     (op1sel === OP1_RS1) -> GPR(rs1),
-    (op1sel === OP1_PC)  -> io.pc,
+    (op1sel === OP1_PC ) -> io.pc,
     (op1sel === OP1_IMZ) -> immuz,
   ))
   // Determine 2nd operand data signal
   io.op2 := MuxCase(0.U(32.W), Seq(
     (op2sel === OP2_RS2) -> GPR(rs2),
+    (op2sel === OP2_CSR) -> CSR(3),  // mtvec
     (op2sel === OP2_IMI) -> immsi,
     (op2sel === OP2_IMS) -> immss,
     (op2sel === OP2_IMJ) -> immsj,
@@ -316,6 +324,13 @@ class Riscv32E_ID extends Module {
   ))
   when (~reset.asBool && csrsel =/= CSR_NONE) {
     CSR(csr_id) := csr_new
+  }
+  when (~reset.asBool && csrsel === CSR_E) {
+    // mepc = pc
+    CSR(1.U) := io.pc
+    // mcause = 11 (ECALL from M-mode)
+    CSR(2.U) := 11.U
+    // mtvec = CSR(3)（已经存在）
   }
   // GPR
   io.rd_addr := rd
@@ -345,15 +360,15 @@ class Riscv32E_ID extends Module {
   )
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
   val is_zero = (io.inst === 0.U)
-  val is_ebreak = (io.inst === EBREAK)
-  val is_otherE = (io.inst === E) && (io.inst =/= EBREAK)
+  val is_ebreak = (csrsel === EBREAK)
+  val is_otherE = (io.inst === E) && (io.inst =/= ECALL) && (io.inst =/= EBREAK)
   val exc_code = MuxCase(
     1.U(8.W),  // 默认全零指令
     Seq(
       is_ebreak -> 0.U,  // EBREAK
-      is_zero -> 1.U,  // 全零指令
+      is_zero   -> 1.U,  // 全零指令
       is_otherE -> 2.U,  // 其他E指令
-      is_unimpl -> 3.U  // 未实现指令
+      is_unimpl -> 3.U,  // 未实现指令
     )
   )
   // 输出到 EBreak 模块
@@ -384,29 +399,32 @@ class Riscv32E_EX extends Module {
   })
   // -------- ALU --------
   io.aluout := MuxCase(0.U(WORD_LEN.W), Seq(
-    (io.exsel === EX_ADD)  -> (io.op1 + io.op2),
-    (io.exsel === EX_SUB)  -> (io.op1 - io.op2),
-    (io.exsel === EX_AND)  -> (io.op1 & io.op2),
-    (io.exsel === EX_OR)   -> (io.op1 | io.op2),
-    (io.exsel === EX_XOR)  -> (io.op1 ^ io.op2),
-    (io.exsel === EX_SLL)  -> (io.op1 << io.op2(4,0)),
-    (io.exsel === EX_SRL)  -> (io.op1 >> io.op2(4,0)),
-    (io.exsel === EX_SRA)  -> (io.op1.asSInt >> io.op2(4,0)).asUInt,
-    (io.exsel === EX_SLT)  -> (io.op1.asSInt < io.op2.asSInt).asUInt,
+    (io.exsel === EX_ADD ) -> (io.op1 + io.op2),
+    (io.exsel === EX_SUB ) -> (io.op1 - io.op2),
+    (io.exsel === EX_AND ) -> (io.op1 & io.op2),
+    (io.exsel === EX_OR  ) -> (io.op1 | io.op2),
+    (io.exsel === EX_XOR ) -> (io.op1 ^ io.op2),
+    (io.exsel === EX_SLL ) -> (io.op1 << io.op2(4,0)),
+    (io.exsel === EX_SRL ) -> (io.op1 >> io.op2(4,0)),
+    (io.exsel === EX_SRA ) -> (io.op1.asSInt >> io.op2(4,0)).asUInt,
+    (io.exsel === EX_SLT ) -> (io.op1.asSInt < io.op2.asSInt).asUInt,
     (io.exsel === EX_SLTU) -> (io.op1 < io.op2),
   ))
   // -------- Branch --------
   io.bren := MuxCase(false.B, Seq(
-    (io.exsel === EX_JAL)  ->  1.U,
-    (io.exsel === EX_BEQ)  ->  (io.op1 === io.op2),
-    (io.exsel === EX_BNE)  -> !(io.op1 === io.op2),
-    (io.exsel === EX_BLT)  ->  (io.op1.asSInt < io.op2.asSInt),
-    (io.exsel === EX_BGE)  -> !(io.op1.asSInt < io.op2.asSInt),
+    (io.exsel === EX_JAL ) ->  1.U,
+    (io.exsel === EX_CSR ) ->  1.U,
+    (io.exsel === EX_BEQ ) ->  (io.op1 === io.op2),
+    (io.exsel === EX_BNE ) -> !(io.op1 === io.op2),
+    (io.exsel === EX_BLT ) ->  (io.op1.asSInt < io.op2.asSInt),
+    (io.exsel === EX_BGE ) -> !(io.op1.asSInt < io.op2.asSInt),
     (io.exsel === EX_BLTU) ->  (io.op1 < io.op2),
     (io.exsel === EX_BGEU) -> !(io.op1 < io.op2),
   ))
-  io.braddr := Mux(io.exsel === EX_JAL,
-    io.op1 + io.op2, io.pc + io.immsb)
+  io.braddr := MuxCase(io.pc + io.immsb, Seq(
+    (io.exsel === EX_JAL) -> io.op1 + io.op2
+    (io.exsel === EX_CSR) -> io.op1,
+  ))
 }
 
 // ---------------------------
