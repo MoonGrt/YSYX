@@ -425,7 +425,7 @@ class Riscv32E_EX extends Module {
   ))
   io.braddr := MuxCase(io.pc + io.immsb, Seq(
     (io.exsel === EX_JAL) -> io.op1 + io.op2
-    (io.exsel === EX_CSR) -> io.op1,
+    // (io.exsel === EX_CSR) -> io.op1,
   ))
 }
 
