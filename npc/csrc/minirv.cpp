@@ -5,6 +5,14 @@
 
 // #define DEBUG
 
+typedef struct {
+  word_t gpr[32];
+  vaddr_t pc, npc, inst;
+  riscv32_CSR csr;
+} CPU_state;
+
+CPU_state cpu = {};
+
 #include <getopt.h>
 #define no_argument       0
 #define required_argument 1
@@ -221,6 +229,18 @@ extern "C" {
   }
   void dpi_paddr_write(int addr, char len, int data){
     if (in_pmem(addr)) { pmem_write(addr, len, data); return; }
+  }
+  void diff(int pc, int npc, int inst, int* gpr, int* csr) {
+    // CPU_state
+    cpu.pc = pc;
+    cpu.npc = npc;
+    cpu.inst = inst;
+    cpu.csr.mstatus = csr[0];
+    cpu.csr.mepc = csr[1];
+    cpu.csr.mcause = csr[2];
+    cpu.csr.mtvec = csr[3];
+    for (int i = 0; i < 32; i++)
+      cpu.gpr[i] = gpr[i];
   }
 }
 
