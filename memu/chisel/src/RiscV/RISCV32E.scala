@@ -328,10 +328,12 @@ class Riscv32E_ID extends Module {
     CSR(csr_id) := csr_new
   }
   when (~reset.asBool && csrsel === CSR_E) {
+    // mstatus = 0x00001800
+    CSR(0.U) := 0x00001800.U
     // mepc = pc
     CSR(1.U) := io.pc
-    // mcause = 0x1800.U (ECALL from M-mode)
-    CSR(2.U) := 0x00001800.U
+    // mcause = 11 (ECALL from M-mode)
+    CSR(2.U) := 11.U
   }
   // GPR
   io.rd_addr := rd
