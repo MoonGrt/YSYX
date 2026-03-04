@@ -38,7 +38,7 @@ module DiffTest (
     gpr[24] = gpr_24; gpr[25] = gpr_25; gpr[26] = gpr_26; gpr[27] = gpr_27;
     gpr[28] = gpr_28; gpr[29] = gpr_29; gpr[30] = gpr_30; gpr[31] = gpr_31;
   end
-  always @(*) diff(pc, npc, inst, gpr, csr);
+  always @(*) dpi_diff(pc, npc, inst, gpr, csr);
 endmodule
 
 
