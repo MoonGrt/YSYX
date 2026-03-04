@@ -1,6 +1,6 @@
 #include <amtest.h>
 
-#define NAMEINIT(key)  [ AM_KEY_##key ] = #key,
+#define NAMEINIT(key) [ AM_KEY_##key ] = #key,
 static const char *names[] = {
   AM_KEYS(NAMEINIT)
 };
