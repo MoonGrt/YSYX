@@ -13,7 +13,7 @@ typedef struct{
 } riscv32_CSR;
 typedef struct {
   uint32_t gpr[32];
-  vaddr_t pc, npc, inst;
+  uint32_t pc, npc, inst;
   riscv32_CSR csr;
 } CPU_state;
 CPU_state cpu = {};
