@@ -18,6 +18,7 @@ class ROM_DPI extends BlackBox{
 // ---------------------------
 class RAM_DPI extends BlackBox {
   val io = IO(new Bundle {
+    val clk   = Input(Clock())
     val re    = Input(Bool())
     val we    = Input(Bool())
     val len   = Input(UInt(8.W))

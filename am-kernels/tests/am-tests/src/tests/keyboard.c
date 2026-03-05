@@ -1,6 +1,6 @@
 #include <amtest.h>
 
-#define NAMEINIT(key)  [ AM_KEY_##key ] = #key,
+#define NAMEINIT(key) [ AM_KEY_##key ] = #key,
 static const char *names[] = {
   AM_KEYS(NAMEINIT)
 };
@@ -15,7 +15,6 @@ static void drain_keys() {
       printf("Got (uart): %c (%d)\n", ch, ch & 0xff);
     }
   }
-
   if (has_kbd) {
     while (1) {
       AM_INPUT_KEYBRD_T ev = io_read(AM_INPUT_KEYBRD);

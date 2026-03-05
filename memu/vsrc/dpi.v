@@ -8,7 +8,7 @@ module EBreak (
   always @(posedge clk) if (trap) ebreak(code);
 endmodule
 
-import "DPI-C" function void diff(
+import "DPI-C" function void dpi_diff(
   input int pc, input int npc, input int inst,
   input int gpr [0:31], input int csr [0:3]
 );
@@ -38,7 +38,7 @@ module DiffTest (
     gpr[24] = gpr_24; gpr[25] = gpr_25; gpr[26] = gpr_26; gpr[27] = gpr_27;
     gpr[28] = gpr_28; gpr[29] = gpr_29; gpr[30] = gpr_30; gpr[31] = gpr_31;
   end
-  always @(*) diff(pc, npc, inst, gpr, csr);
+  always @(*) dpi_diff(pc, npc, inst, gpr, csr);
 endmodule
 
 
@@ -51,9 +51,13 @@ module ROM_DPI(
   input  wire [31:0] addr,
   output wire [31:0] data
 );
+  // TODO: When reading from a device using combinational logic, 
+  //       multiple reads may overwrite the results; 
+  //       instructions read are currently working without issue.
   assign data = dpi_paddr_read(addr, 4);
 endmodule
 module RAM_DPI(
+  input  wire        clk,
   input  wire        re,
   input  wire        we,
   input  wire [ 7:0] len,
@@ -64,6 +68,8 @@ module RAM_DPI(
   always @(*) begin
     rdata = 0;
     if (re) rdata = dpi_paddr_read(addr, len);
+  end
+  always @(posedge clk) begin
     if (we) dpi_paddr_write(addr, len, wdata);
   end
 endmodule
