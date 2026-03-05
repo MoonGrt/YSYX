@@ -15,7 +15,7 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
-#include "../../utils/local-include/itrace.h"
+#include "../../utils/local-include/trace.h"
 
 void init_rand();
 void init_log(const char *log_file);

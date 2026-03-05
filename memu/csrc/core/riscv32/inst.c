@@ -14,7 +14,7 @@
 ***************************************************************************************/
 
 #include <cpu/decode.h>
-#include "../../utils/local-include/itrace.h"
+#include "../../utils/local-include/trace.h"
 #if defined(CONFIG_NEMU)
 
 #elif defined(CONFIG_NPC)
