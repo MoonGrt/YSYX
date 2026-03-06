@@ -28,9 +28,9 @@ LD := $(CXX)
 
 INCLUDES = $(addprefix -I, $(INC_PATH))
 ifeq ($(CONFIG_NEMU),y)
-CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
+CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS) -E
 else
-CFLAGS  := -O2 -MMD -Werror $(INCLUDES) $(CFLAGS)
+CFLAGS  := -O2 -MMD -Werror $(INCLUDES) $(CFLAGS) -E
 endif
 LDFLAGS := -O2 $(LDFLAGS)
 
