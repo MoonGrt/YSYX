@@ -34,7 +34,8 @@ CFLAGS  := -O2 -MMD -Werror $(INCLUDES) $(CFLAGS)
 endif
 LDFLAGS := -O2 $(LDFLAGS)
 
-OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
+OBJS  = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
+PREPS = $(SRCS:%.c=$(OBJ_DIR)/%.i) $(CXXSRC:%.cc=$(OBJ_DIR)/%.i)
 
 # Compilation patterns
 $(OBJ_DIR)/%.o: %.c
@@ -49,12 +50,22 @@ $(OBJ_DIR)/%.o: %.cc
 	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
 
+$(OBJ_DIR)/%.i: %.c
+	@echo + CPP $<
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) -E -dD $< -o $@
+
+$(OBJ_DIR)/%.i: %.cc
+	@echo + CPP $<
+	@mkdir -p $(dir $@)
+	@$(CXX) $(CFLAGS) $(CXXFLAGS) -E -dD $< -o $@
+
 # Depencies
 -include $(OBJS:.o=.d)
 
 # Some convenient rules
 
-.PHONY: app clean
+.PHONY: app preprocess clean
 
 app: $(BINARY)
 
@@ -67,6 +78,8 @@ $(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES)
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB)
 endif
+
+preprocess: $(PREPS)
 
 clean:
 	-rm -rf $(BUILD_DIR)
