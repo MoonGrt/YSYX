@@ -61,11 +61,11 @@ app: $(BINARY)
 ifeq ($(CONFIG_NEMU),y)
 $(BINARY):: $(OBJS) $(ARCHIVES)
 	@echo + LD $@
-	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
+	@$(LD) -o $@ -E $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 else
 $(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES)
 	@echo + LD $@
-	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB)
+	@$(LD) -o $@ -E $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB)
 endif
 
 clean:
