@@ -34,7 +34,7 @@ static void serial_io_handler(uint32_t offset, int len, bool is_write) {
     case CH_OFFSET:
       if (is_write) {
         serial_putc(serial_base[0]);
-        printf("Hello World!\n");
+        // printf("Hello World!\n");
       }
       else panic("do not support read");
       break;
