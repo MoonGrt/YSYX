@@ -283,8 +283,7 @@ int vsscanf(const char *buf, const char *fmt, va_list ap) {
           int *ip = va_arg(ap, int*);
           int val = 0, sign = 1;
           if (*p == '-') { sign = -1; p++; }
-          while (*p >= '0' && *p <= '9')
-          {
+          while (*p >= '0' && *p <= '9') {
             val = val * 10 + (*p - '0'); p++;
           }
           *ip = val * sign;
