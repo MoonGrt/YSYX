@@ -27,16 +27,17 @@ static void serial_putc(char ch) {
   MUXDEF(CONFIG_TARGET_AM, putch(ch), putc(ch, stderr));
 }
 
+static int serial_getc() {
+  return MUXDEF(CONFIG_TARGET_AM, getch(), getc(stdin));
+}
+
 static void serial_io_handler(uint32_t offset, int len, bool is_write) {
   assert(len == 1);
   switch (offset) {
     /* We bind the serial port with the host stderr in MEMU. */
     case CH_OFFSET:
-      if (is_write) {
-        serial_putc(serial_base[0]);
-        // printf("Hello World!\n");
-      }
-      else panic("do not support read");
+      if (is_write) serial_putc(serial_base[0]);
+      else serial_base[0] = (uint8_t)serial_getc();
       break;
     default: panic("do not support offset = %d", offset);
   }
