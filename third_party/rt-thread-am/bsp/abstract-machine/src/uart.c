@@ -39,6 +39,11 @@ static int _uart_putc(struct rt_serial_device *serial, char c) {
 
 static bool has_uart, has_kbd;
 static int _uart_getc(struct rt_serial_device *serial) {
+  /* 0 先执行自动脚本 */
+  static const char *p =
+    "help\ndate\nversion\nfree\nps\npwd\nls\nmemtrace\nmemcheck\nutest_list\n";
+  if (*p != '\0') return *(p++);
+
   /* 1 先读 UART */
   if (has_uart) {
     AM_UART_RX_T rx = io_read(AM_UART_RX);
