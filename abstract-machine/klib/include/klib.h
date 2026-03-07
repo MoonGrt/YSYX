@@ -37,6 +37,9 @@ int    sprintf   (char *str, const char *format, ...);
 int    snprintf  (char *str, size_t size, const char *format, ...);
 int    vsprintf  (char *str, const char *format, va_list ap);
 int    vsnprintf (char *str, size_t size, const char *format, va_list ap);
+int    scanf     (const char *fmt, ...);
+int    sscanf    (const char *buf, const char *fmt, ...);
+int    vsscanf   (const char *buf, const char *fmt, va_list ap);
 
 // assert.h
 #ifdef NDEBUG

@@ -11,9 +11,12 @@ void putch(char ch) {
   outb(SERIAL_PORT, ch);
 }
 
+int getch(void) {
+  return inb(SERIAL_PORT);
+}
+
 void halt(int code) {
   nemu_trap(code);
-  // should not reach here
   while (1);
 }
 
