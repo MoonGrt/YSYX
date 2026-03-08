@@ -70,6 +70,12 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
 
+  uint64_t cycle =
+      ((uint64_t)cpu.csr.mcycleh << 32) | cpu.csr.mcycle;
+  cycle++;
+  cpu.csr.mcycle  = (uint32_t)cycle;
+  cpu.csr.mcycleh = (uint32_t)(cycle >> 32);
+
 #define INSTPAT_INST(s) ((s)->isa.inst)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
   int rd = 0; \
