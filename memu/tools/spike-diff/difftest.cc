@@ -70,8 +70,6 @@ void sim_t::diff_get_regs(void* diff_context) {
   struct diff_context_t* ctx = (struct diff_context_t*)diff_context;
   for (int i = 0; i < NR_GPR; i++)
     ctx->gpr[i] = state->XPR[i];
-  state->mvendorid->write(0x79737978);
-  state->marchid->write(0x018CE26E);
   ctx->pc = state->pc;
   ctx->csr.mepc = state->mepc->read();
   ctx->csr.mstatus = state->mstatus->read();
