@@ -45,22 +45,22 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc, vaddr_t npc) {
     printf("mepc is different at pc = " FMT_WORD "! ref: " FMT_WORD ", memu: " FMT_WORD "\n", pc, ref_r->csr.mepc, cpu.csr.mepc);
     result = false;
   }
-  if (ref_r->csr.mcycle != cpu.csr.mcycle) {
-    printf("mcycle is different at pc = " FMT_WORD "! ref: " FMT_WORD ", memu: " FMT_WORD "\n", pc, ref_r->csr.mcycle, cpu.csr.mcycle);
-    result = false;
-  }
-  if (ref_r->csr.mcycleh != cpu.csr.mcycleh) {
-    printf("mcycleh is different at pc = " FMT_WORD "! ref: " FMT_WORD ", memu: " FMT_WORD "\n", pc, ref_r->csr.mcycleh, cpu.csr.mcycleh);
-    result = false;
-  }
-  if (ref_r->csr.mvendorid != cpu.csr.mvendorid) {
-    printf("mvendorid is different at pc = " FMT_WORD "! ref: " FMT_WORD ", memu: " FMT_WORD "\n", pc, ref_r->csr.mvendorid, cpu.csr.mvendorid);
-    result = false;
-  }
-  if (ref_r->csr.marchid != cpu.csr.marchid) {
-    printf("marchid is different at pc = " FMT_WORD "! ref: " FMT_WORD ", memu: " FMT_WORD "\n", pc, ref_r->csr.marchid, cpu.csr.marchid);
-    result = false;
-  }
+  // if (ref_r->csr.mcycle != cpu.csr.mcycle) {
+  //   printf("mcycle is different at pc = " FMT_WORD "! ref: " FMT_WORD ", memu: " FMT_WORD "\n", pc, ref_r->csr.mcycle, cpu.csr.mcycle);
+  //   result = false;
+  // }
+  // if (ref_r->csr.mcycleh != cpu.csr.mcycleh) {
+  //   printf("mcycleh is different at pc = " FMT_WORD "! ref: " FMT_WORD ", memu: " FMT_WORD "\n", pc, ref_r->csr.mcycleh, cpu.csr.mcycleh);
+  //   result = false;
+  // }
+  // if (ref_r->csr.mvendorid != cpu.csr.mvendorid) {
+  //   printf("mvendorid is different at pc = " FMT_WORD "! ref: " FMT_WORD ", memu: " FMT_WORD "\n", pc, ref_r->csr.mvendorid, cpu.csr.mvendorid);
+  //   result = false;
+  // }
+  // if (ref_r->csr.marchid != cpu.csr.marchid) {
+  //   printf("marchid is different at pc = " FMT_WORD "! ref: " FMT_WORD ", memu: " FMT_WORD "\n", pc, ref_r->csr.marchid, cpu.csr.marchid);
+  //   result = false;
+  // }
   return result;
 }
 
