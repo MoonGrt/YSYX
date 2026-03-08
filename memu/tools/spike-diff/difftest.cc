@@ -87,9 +87,7 @@ void sim_t::diff_set_regs(void* diff_context) {
     state->XPR.write(i, (sword_t)ctx->gpr[i]);
   }
   state->pc = ctx->pc;
-  auto csr = state->csrmap.at(0xF11); // 获取 mvendorid 对象
-  csr->read();                 // 读值
-  csr->write(0x79737978);      // 写值
+  state->csrmap.at(0xF11)->write(0x79737978);
 }
 
 void sim_t::diff_memcpy(reg_t dest, void* src, size_t n) {
