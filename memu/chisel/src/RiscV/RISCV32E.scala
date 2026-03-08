@@ -260,7 +260,7 @@ class Riscv32E_ID extends Module {
   )
 
   // -------- 寄存器堆 --------
-  val CSR = RegInit(VecInit(Seq.fill(4)(0.U(WORD_LEN.W))))
+  val CSR = RegInit(VecInit(Seq.fill(8)(0.U(WORD_LEN.W))))
   val GPR = RegInit(VecInit(Seq.fill(32)(0.U(WORD_LEN.W))))
 
   // -------- 指令字段 --------
