@@ -330,6 +330,10 @@ class Riscv32E_ID extends Module {
     (csrsel === CSR_S) -> (csr_old | io.op1),
     (csrsel === CSR_C) -> (csr_old & ~io.op1),
   ))
+  when (reset.asBool) {
+    CSR(6.U) := 0x79737978.U  // ysyx
+    CSR(7.U) := 0x018CE26E.U  // moongrt - 26010030
+  }
   when (~reset.asBool && csrsel =/= CSR_NONE) {
     CSR(csr_id) := csr_new
   }
