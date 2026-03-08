@@ -42,17 +42,8 @@ static void restart() {
   /* The zero register is always 0. */
   cpu.gpr[0] = 0;
   /* CSR init */
-  cpu.csr.mepc = 0xffffffff;
-  cpu.csr.mstatus = 0xffffffff;
-  cpu.csr.mcause = 0xffffffff;
-  cpu.csr.mtvec = 0xffffffff;
-  cpu.csr.mcycle = 0xffffffff;
-  cpu.csr.mcycleh = 0xffffffff;
-  cpu.csr.mvendorid = 0xffffffff;
-  cpu.csr.marchid = 0xffffffff;
-
-  // cpu.csr.mvendorid = 0x79737978;  // ysyx
-  // cpu.csr.marchid = 0x018CE26E;  // moongrt - 26010030
+  cpu.csr.mvendorid = 0x79737978;  // ysyx
+  cpu.csr.marchid = 0x018CE26E;  // moongrt - 26010030
 }
 
 void init_isa() {
