@@ -90,6 +90,10 @@ void sim_t::diff_set_regs(void* diff_context) {
     state->XPR.write(i, (sword_t)ctx->gpr[i]);
   }
   state->pc = ctx->pc;
+  state->mtvec->write(ctx->mtvec);
+  state->mepc->write(ctx->mepc);
+  state->mstatus->write(ctx->mstatus);
+  state->mcause->write(ctx->mcause);
   // state->csrmap.at(0xF11)->write(0x79737978);
   // state->mvendorid->write(0x79737978);
   // state->marchid->write(0x018CE26E);
