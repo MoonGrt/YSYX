@@ -17,8 +17,8 @@
 #include <cpu/difftest.h>
 #include "../local-include/reg.h"
 
-#define CHECKDIFF(p) if (ref_r->p != cpu.p) { \
-  printf("difftest fail at " #p ", expect " FMT_WORD " got " FMT_WORD "\n", ref_r->p, cpu.p); \
+#define CHECKDIFF_PC if (ref_r->pc != npc) { \
+  printf("difftest fail at pc, expect " FMT_WORD " got " FMT_WORD "\n", ref_r->pc, npc); \
   return false; \
 }
 #define CHECKDIFF_FMT(p, fmt, ...) if (ref_r->p != cpu.p) { \
@@ -31,13 +31,13 @@
 }
 
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc, vaddr_t npc) {
-  // CHECKDIFF(npc);
+  CHECKDIFF_PC
   for (int i = 0; i < 32; i++)
     CHECKDIFF_FMT(gpr[i], "gpr[%d]", i);
-  CHECKDIFF_CSR(mstatus);
-  CHECKDIFF_CSR(mcause);
-  CHECKDIFF_CSR(mepc);
-  CHECKDIFF_CSR(mtvec);
+  CHECKDIFF_CSR(mstatus)
+  CHECKDIFF_CSR(mcause)
+  CHECKDIFF_CSR(mepc)
+  CHECKDIFF_CSR(mtvec)
   return true;
 }
 
