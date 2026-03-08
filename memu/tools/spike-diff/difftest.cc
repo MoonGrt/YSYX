@@ -70,8 +70,8 @@ void sim_t::diff_get_regs(void* diff_context) {
   struct diff_context_t* ctx = (struct diff_context_t*)diff_context;
   for (int i = 0; i < NR_GPR; i++)
     ctx->gpr[i] = state->XPR[i];
-  state->mvendorid->unlogged_write(0x79737978);
-  state->marchid->unlogged_write(0x018CE26E);
+  state->mvendorid->write(0x79737978);
+  state->marchid->write(0x018CE26E);
   ctx->pc = state->pc;
   ctx->csr.mepc = state->mepc->read();
   ctx->csr.mstatus = state->mstatus->read();
@@ -89,6 +89,9 @@ void sim_t::diff_set_regs(void* diff_context) {
     state->XPR.write(i, (sword_t)ctx->gpr[i]);
   }
   state->pc = ctx->pc;
+  auto csr = csrmap.at(0xF11); // 获取 mvendorid 对象
+  csr->read();                 // 读值
+  csr->write(0x79737978);      // 写值
 }
 
 void sim_t::diff_memcpy(reg_t dest, void* src, size_t n) {
