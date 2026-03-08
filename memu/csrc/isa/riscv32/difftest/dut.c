@@ -17,24 +17,33 @@
 #include <cpu/difftest.h>
 #include "../local-include/reg.h"
 
-#define CHECKDIFF(p) if (ref_r->p != cpu.p) { \
-  printf("difftest fail at " #p ", expect " FMT_WORD " got " FMT_WORD "\n", ref_r->p, cpu.p); \
-  return false; \
-}
-#define CHECKDIFF_FMT(p, fmt, ...) if (ref_r->p != cpu.p) { \
-  printf("difftest fail at " fmt ", expect " FMT_WORD " got " FMT_WORD "\n", ## __VA_ARGS__, ref_r->p, cpu.p); \
-  return false; \
-}
+#define CHECKDIFF(p) \
+  if (ref_r->p != cpu.p) { \
+    printf("difftest fail at " #p ", expect " FMT_WORD " got " FMT_WORD "\n", ref_r->p, cpu.p); \
+    ok = false; \
+  }
+
+#define CHECKDIFF_FMT(p, fmt, ...) \
+  if (ref_r->p != cpu.p) { \
+    printf("difftest fail at " fmt ", expect " FMT_WORD " got " FMT_WORD "\n", ## __VA_ARGS__, ref_r->p, cpu.p); \
+    ok = false; \
+  }
 
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc, vaddr_t npc) {
+  bool ok = true;
+
   CHECKDIFF(pc);
-  for (int i = 0; i < 32; i++)
+
+  for (int i = 0; i < 32; i++) {
     CHECKDIFF_FMT(gpr[i], "gpr[%d]", i);
-  CHECKDIFF(csr.mstatus)
-  CHECKDIFF(csr.mcause)
-  CHECKDIFF(csr.mepc)
-  CHECKDIFF(csr.mtvec)
-  return true;
+  }
+
+  CHECKDIFF(csr.mstatus);
+  CHECKDIFF(csr.mcause);
+  CHECKDIFF(csr.mepc);
+  CHECKDIFF(csr.mtvec);
+
+  return ok;
 }
 
 void isa_difftest_attach() {
