@@ -22,7 +22,12 @@ void halt(int code) {
 }
 
 void _trm_init() {
-  printf("cycle1 =\n");
+  uint32_t vendor, arch;
+  asm volatile("csrr %0, mvendorid" : "=r"(vendor));
+  asm volatile("csrr %0, marchid"   : "=r"(arch));
+  printf("mvendorid = 0x%x\n", vendor);
+  printf("marchid   = %u\n", arch);
+
   int ret = main(mainargs);
   halt(ret);
 }
