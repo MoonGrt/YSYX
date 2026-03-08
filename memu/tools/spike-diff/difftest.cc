@@ -84,8 +84,8 @@ void sim_t::diff_set_regs(void* diff_context) {
     state->XPR.write(i, (sword_t)ctx->gpr[i]);
   }
   state->pc = ctx->pc;
-  // state->mvendorid->write(0x79737978);
-  state->marchid->write(0x018CE26E);
+  state->mvendorid->write(ctx->csr->mvendorid);
+  state->marchid->write(ctx->csr->marchid);
 }
 
 void sim_t::diff_memcpy(reg_t dest, void* src, size_t n) {
