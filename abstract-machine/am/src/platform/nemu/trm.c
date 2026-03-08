@@ -21,7 +21,11 @@ void halt(int code) {
   while (1);
 }
 
-void _csr_info() {
+static inline void write_csr(uint32_t csr, uint32_t value) {
+  asm volatile ("csrw %0, %1" :: "i"(csr), "r"(value));
+}
+
+static inline void _csr_info() {
   int vendor, arch;
   asm volatile("csrr %0, mvendorid" : "=r"(vendor));
   asm volatile("csrr %0, marchid"   : "=r"(arch));
@@ -35,6 +39,8 @@ void _csr_info() {
 }
 
 void _trm_init() {
+  write_csr(0xF11, 0x79737978);
+  write_csr(0xF12, 0x018CE26E);
   // _csr_info();
   int ret = main(mainargs);
   halt(ret);
