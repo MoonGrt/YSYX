@@ -60,6 +60,7 @@ static state_t *state = NULL;
 void sim_t::diff_init(int port) {
   p = get_core("0");
   state = p->get_state();
+  p -> put_csr(0xf11, 0x00001800);
 }
 
 void sim_t::diff_step(uint64_t n) {
@@ -92,8 +93,8 @@ void sim_t::diff_set_regs(void* diff_context) {
   // state->csrmap.at(0xF11)->write(0x79737978);
   // state->mvendorid->write(0x79737978);
   // state->marchid->write(0x018CE26E);
-  // state->mvendorid->write(ctx->csr.mvendorid);
-  // state->marchid->write(ctx->csr.marchid);
+  state->mvendorid->write(ctx->csr.mvendorid);
+  state->marchid->write(ctx->csr.marchid);
 }
 
 void sim_t::diff_memcpy(reg_t dest, void* src, size_t n) {
