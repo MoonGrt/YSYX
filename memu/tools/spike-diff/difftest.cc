@@ -90,7 +90,7 @@ void sim_t::diff_set_regs(void* diff_context) {
   }
   state->pc = ctx->pc;
   // state->csrmap.at(0xF11)->write(0x79737978);
-  state->mvendorid->write(0xFFFFFFFF);
+  state->mvendorid->write(0x0000FFFF);
   state->marchid->write(0xFFFFFFFF);
 }
 
