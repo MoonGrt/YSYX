@@ -499,7 +499,7 @@ class Riscv32E extends Module {
   difftest.io.pc   := ifStage.io.pc
   difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
-  for (i <- 0 until 4) {
+  for (i <- 0 until 8) {
     difftest.io.csr(i) := idStage.io.csrOut(i)
   }
   for (i <- 0 until 32) {
