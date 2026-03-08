@@ -322,7 +322,7 @@ class Riscv32E_ID extends Module {
     0xB00.U -> 4.U,  // mcycle
     0xB80.U -> 5.U,  // mcycleh
     0xF11.U -> 6.U,  // mvendorid
-    0xF12.U -> 7.U   // marchid
+    0xF12.U -> 7.U,  // marchid
   ))
   val csr_old = CSR(csr_id)
   val csr_new = MuxCase(io.op1, Seq(
