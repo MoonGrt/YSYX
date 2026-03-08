@@ -197,7 +197,7 @@ class Riscv32E_ID extends Module {
     val regWen = Output(Bool())
 
     // Diff
-    val csrOut = Output(Vec(4, UInt(WORD_LEN.W)))
+    val csrOut = Output(Vec(8, UInt(WORD_LEN.W)))
     val gprOut = Output(Vec(32, UInt(WORD_LEN.W)))
   })
 
@@ -319,8 +319,10 @@ class Riscv32E_ID extends Module {
     0x341.U -> 1.U,  // mepc
     0x342.U -> 2.U,  // mcause
     0x305.U -> 3.U,  // mtvec
-    // 0xf11.U -> 4.U,  // mvendorid
-    // 0xf12.U -> 5.U,  // marchid
+    0xB00.U -> 4.U,  // mcycle
+    0xB80.U -> 5.U,  // mcycleh
+    0xF11.U -> 6.U,  // mvendorid
+    0xF12.U -> 7.U   // marchid
   ))
   val csr_old = CSR(csr_id)
   val csr_new = MuxCase(io.op1, Seq(

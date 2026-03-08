@@ -1,6 +1,7 @@
 #include "trap.h"
 
 int main() {
+	// 使用 scanf 测试输入
 	char str[100];
 	int a, b;
 	char c;
