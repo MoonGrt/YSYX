@@ -1,5 +1,6 @@
 #include <am.h>
 #include <nemu.h>
+#include <stdio.h>
 
 extern char _heap_start;
 int main(const char *args);
@@ -21,6 +22,7 @@ void halt(int code) {
 }
 
 void _trm_init() {
+  printf("cycle1 =\n");
   int ret = main(mainargs);
   halt(ret);
 }
