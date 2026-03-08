@@ -81,6 +81,8 @@ object Riscv32E_Instructions {
 }
 object Riscv32E_Parameters {
   val WORD_LEN = 32
+  val CSR_NUM  = 8
+  val GPR_NUM  = 32
 
   val OP1_SEL_LEN = 2
   val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
@@ -197,8 +199,8 @@ class Riscv32E_ID extends Module {
     val regWen = Output(Bool())
 
     // Diff
-    val csrOut = Output(Vec(8, UInt(WORD_LEN.W)))
-    val gprOut = Output(Vec(32, UInt(WORD_LEN.W)))
+    val csrOut = Output(Vec(CSR_NUM, UInt(WORD_LEN.W)))
+    val gprOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
   val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(
@@ -260,8 +262,8 @@ class Riscv32E_ID extends Module {
   )
 
   // -------- 寄存器堆 --------
-  val CSR = RegInit(VecInit(Seq.fill(8)(0.U(WORD_LEN.W))))
-  val GPR = RegInit(VecInit(Seq.fill(32)(0.U(WORD_LEN.W))))
+  val CSR = RegInit(VecInit(Seq.fill(CSR_NUM)(0.U(WORD_LEN.W))))
+  val GPR = RegInit(VecInit(Seq.fill(GPR_NUM)(0.U(WORD_LEN.W))))
 
   // -------- 指令字段 --------
   val rd  = io.inst(11,7)
@@ -517,10 +519,10 @@ class Riscv32E extends Module {
   difftest.io.pc   := ifStage.io.pc
   difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
-  for (i <- 0 until 8) {
+  for (i <- 0 until CSR_NUM) {
     difftest.io.csr(i) := idStage.io.csrOut(i)
   }
-  for (i <- 0 until 32) {
+  for (i <- 0 until GPR_NUM) {
     difftest.io.gpr(i) := idStage.io.gprOut(i)
   }
 }
