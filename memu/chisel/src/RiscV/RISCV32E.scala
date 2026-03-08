@@ -343,7 +343,11 @@ class Riscv32E_ID extends Module {
   val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
   CSR(CSR_MCYCLE)  := cycle64(31,0)
   CSR(CSR_MCYCLEH) := cycle64(63,32)
-  when (~reset.asBool && csrsel =/= CSR_NONE) {
+  val csr_wen = csrsel === CSR_W || csrsel === CSR_S || csrsel === CSR_C
+  val csr_writable =
+    csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
+    csr_id === CSR_MTVEC || csr_id === CSR_MCYCLE || csr_id === CSR_MCYCLEH
+  when (~reset.asBool && csr_wen && csr_writable) {
     CSR(csr_id) := csr_new
   }
   when (~reset.asBool && csrsel === CSR_E) {
