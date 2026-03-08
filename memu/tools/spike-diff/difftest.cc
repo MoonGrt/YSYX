@@ -78,8 +78,10 @@ void sim_t::diff_get_regs(void* diff_context) {
   ctx->csr.mtvec = state->mtvec->read();
   ctx->csr.mcycle = state->mcycle->read();
   ctx->csr.mcycleh = state->mcycle->read() >> 32;
-  ctx->csr.mvendorid = state->mvendorid->read();
-  ctx->csr.marchid = state->marchid->read();
+  // ctx->csr.mvendorid = state->mvendorid->read();
+  // ctx->csr.marchid = state->marchid->read();
+  ctx->mvendorid = 0x79737978;  // ysyx
+  ctx->marchid = 0x018CE26E;  // moongrt - 26010030
 }
 
 void sim_t::diff_set_regs(void* diff_context) {
