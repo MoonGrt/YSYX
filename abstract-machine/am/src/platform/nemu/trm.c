@@ -29,7 +29,9 @@ void _csr_info() {
   for(int i = 0; i < 4; i++)
     vendor_str[i] = (vendor >> (24 - 8*i)) & 0xFF;
   vendor_str[4] = '\0';
+  printf("--------------\n");
   printf("\"%s\" - %u\n", vendor_str, arch);
+  printf("--------------\n");
 }
 
 void _trm_init() {
