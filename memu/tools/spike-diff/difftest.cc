@@ -77,10 +77,10 @@ void sim_t::diff_get_regs(void* diff_context) {
   ctx->csr.mtvec = state->mtvec->read();
   ctx->csr.mcycle = state->mcycle->read();
   ctx->csr.mcycleh = state->mcycle->read() >> 32;
-  ctx->csr.mvendorid = state->mvendorid->read();
-  ctx->csr.marchid = state->marchid->read();
-  // ctx->csr.mvendorid = 0x79737978;  // ysyx
-  // ctx->csr.marchid = 0x018CE26E;  // moongrt - 26010030
+  // ctx->csr.mvendorid = state->mvendorid->read();
+  // ctx->csr.marchid = state->marchid->read();
+  ctx->csr.mvendorid = 0x79737978;  // ysyx
+  ctx->csr.marchid = 0x018CE26E;  // moongrt - 26010030
 }
 
 void sim_t::diff_set_regs(void* diff_context) {
@@ -92,8 +92,8 @@ void sim_t::diff_set_regs(void* diff_context) {
   // state->csrmap.at(0xF11)->write(0x79737978);
   // state->mvendorid->write(0x79737978);
   // state->marchid->write(0x018CE26E);
-  state->mvendorid->write(ctx->csr.mvendorid);
-  state->marchid->write(ctx->csr.marchid);
+  // state->mvendorid->write(ctx->csr.mvendorid);
+  // state->marchid->write(ctx->csr.marchid);
 }
 
 void sim_t::diff_memcpy(reg_t dest, void* src, size_t n) {
