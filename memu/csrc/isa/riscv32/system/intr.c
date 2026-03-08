@@ -19,8 +19,6 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   cpu.csr.mcause = 11; // ecall from M-mode
   cpu.csr.mepc = epc;
   cpu.csr.mstatus = 0x1800;
-  cpu.csr.mvendorid = 0x79737978;  // ysyx
-  cpu.csr.marchid = 0x018CE26E;  // moongrt - 26010030
   return cpu.csr.mtvec;
 }
 
