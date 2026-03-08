@@ -25,7 +25,11 @@ void _csr_info() {
   int vendor, arch;
   asm volatile("csrr %0, mvendorid" : "=r"(vendor));
   asm volatile("csrr %0, marchid"   : "=r"(arch));
-  printf("mvendorid = 0x%x\n", vendor);
+  char vendor_str[5];
+  for(int i = 0; i < 4; i++)
+      vendor_str[i] = (vendor >> (24 - 8*i)) & 0xFF;
+  vendor_str[4] = '\0';
+  printf("mvendorid = \"%s\"\n", vendor_str);
   printf("marchid   = %u\n", arch);
 }
 
