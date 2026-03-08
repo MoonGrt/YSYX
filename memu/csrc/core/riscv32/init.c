@@ -48,8 +48,8 @@ static void restart() {
   cpu.csr.mtvec = 0xffffffff;
   cpu.csr.mcycle = 0xffffffff;
   cpu.csr.mcycleh = 0xffffffff;
-  cpu.csr.mvendorid = 0xffffffff;
-  cpu.csr.marchid = 0xffffffff;
+  // cpu.csr.mvendorid = 0xffffffff;
+  // cpu.csr.marchid = 0xffffffff;
 
   // cpu.csr.mvendorid = 0x79737978;  // ysyx
   // cpu.csr.marchid = 0x018CE26E;  // moongrt - 26010030
