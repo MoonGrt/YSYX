@@ -17,10 +17,6 @@
 #include <cpu/difftest.h>
 #include "../local-include/reg.h"
 
-#define CHECKDIFF_PC if (ref_r->pc != npc) { \
-  printf("difftest fail at pc, expect " FMT_WORD " got " FMT_WORD "\n", ref_r->pc, npc); \
-  return false; \
-}
 #define CHECKDIFF(p) if (ref_r->p != cpu.p) { \
   printf("difftest fail at " #p ", expect " FMT_WORD " got " FMT_WORD "\n", ref_r->p, cpu.p); \
   return false; \
