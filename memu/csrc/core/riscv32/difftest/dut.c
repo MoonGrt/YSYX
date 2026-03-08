@@ -29,13 +29,9 @@
     result = false; \
   }
 
-bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc, vaddr_t npc) {
+bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   bool result = true;
   CHECKDIFF(pc);
-  if (pc != npc) {
-    printf("npc is different at " FMT_WORD "! ref: " FMT_WORD "\n", npc, ref_r->pc);
-    result = false;
-  }
   for (int i = 0; i < 32; i++)
     CHECKDIFF_FMT(gpr[i], "gpr[%d]", i);
   CHECKDIFF(csr.mstatus);

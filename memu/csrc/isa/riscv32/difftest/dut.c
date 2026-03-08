@@ -29,7 +29,7 @@
     result = false; \
   }
 
-bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc, vaddr_t npc) {
+bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   bool result = true;
   CHECKDIFF(pc);
   for (int i = 0; i < 32; i++)
