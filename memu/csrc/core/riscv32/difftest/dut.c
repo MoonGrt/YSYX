@@ -25,10 +25,10 @@
 
 #define CHECKDIFF_FMT(p, fmt, ...) \
   if (ref_r->p != cpu.p) { \
-    if (((cpu.p == 0x79737978) || (cpu.p == 0x018ce26e))) \
+    if ((cpu.p == 0x79737978) || (cpu.p == 0x018ce26e)) \
       result = true; \
-    printf("difftest fail at " fmt ", expect " FMT_WORD " got " FMT_WORD "\n", ## __VA_ARGS__, ref_r->p, cpu.p); \
-    result = false; \
+    else { printf("difftest fail at " fmt ", expect " FMT_WORD " got " FMT_WORD "\n", ## __VA_ARGS__, ref_r->p, cpu.p); \
+    result = false; }\
   }
 
 #define CSR_LIST(_) \
