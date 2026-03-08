@@ -43,6 +43,10 @@ struct diff_context_t {
   word_t mstatus;
   word_t mcause;
   word_t mtvec;
+  word_t mcycle;
+  word_t mcycleh;
+  word_t mvendorid;
+  word_t marchid;
 };
 
 static sim_t* s = NULL;
@@ -68,6 +72,10 @@ void sim_t::diff_get_regs(void* diff_context) {
   ctx->mstatus = state->mstatus->read();
   ctx->mcause = state->mcause->read();
   ctx->mtvec = state->mtvec->read();
+  ctx->mcycle = state->mcycle->read();
+  ctx->mcycleh = state->mcycleh->read();
+  ctx->mvendorid = state->mvendorid->read();
+  ctx->marchid = state->marchid->read();
 }
 
 void sim_t::diff_set_regs(void* diff_context) {
