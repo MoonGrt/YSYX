@@ -68,9 +68,8 @@ void sim_t::diff_step(uint64_t n) {
 
 void sim_t::diff_get_regs(void* diff_context) {
   struct diff_context_t* ctx = (struct diff_context_t*)diff_context;
-  for (int i = 0; i < NR_GPR; i++) {
+  for (int i = 0; i < NR_GPR; i++)
     ctx->gpr[i] = state->XPR[i];
-  }
   ctx->pc = state->pc;
   ctx->csr.mepc = state->mepc->read();
   ctx->csr.mstatus = state->mstatus->read();
@@ -88,8 +87,8 @@ void sim_t::diff_set_regs(void* diff_context) {
     state->XPR.write(i, (sword_t)ctx->gpr[i]);
   }
   state->pc = ctx->pc;
-  // state->csr->mvendorid->write(0x7973);
-  // state->csr->marchid->write(0x018CE26E);
+  // state->mvendorid->write(0x7973);
+  // state->marchid->write(0x018CE26E);
 }
 
 void sim_t::diff_memcpy(reg_t dest, void* src, size_t n) {
