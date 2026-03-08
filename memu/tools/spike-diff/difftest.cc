@@ -94,8 +94,8 @@ void sim_t::diff_set_regs(void* diff_context) {
   state->mepc->write(ctx->csr.mepc);
   state->mstatus->write(ctx->csr.mstatus);
   state->mcause->write(ctx->csr.mcause);
-  // state->mvendorid->write(ctx->csr.mvendorid);
-  // state->marchid->write(ctx->csr.marchid);
+  state->mvendorid->write(ctx->csr.mvendorid);
+  state->marchid->write(ctx->csr.marchid);
 }
 
 void sim_t::diff_memcpy(reg_t dest, void* src, size_t n) {
