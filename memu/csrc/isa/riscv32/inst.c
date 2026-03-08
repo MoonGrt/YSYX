@@ -164,13 +164,15 @@ static int decode_exec(Decode *s) {
 }
 
 int isa_exec_once(Decode *s) {
-  s->isa.inst = inst_fetch(&s->snpc, 4);
-
   uint64_t cycle =
       ((uint64_t)cpu.csr.mcycleh << 32) | cpu.csr.mcycle;
   cycle++;
   cpu.csr.mcycle  = (uint32_t)cycle;
   cpu.csr.mcycleh = (uint32_t)(cycle >> 32);
+
+  s->isa.inst = inst_fetch(&s->snpc, 4);
+
+
 
   IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
   return decode_exec(s);
