@@ -25,6 +25,10 @@ static vaddr_t *csr_register(word_t imm) {
     case 0x342: return &(cpu.csr.mcause);
     case 0x300: return &(cpu.csr.mstatus);
     case 0x305: return &(cpu.csr.mtvec);
+    case 0xB00: return &(cpu.csr.mcycle);
+    case 0xB80: return &(cpu.csr.mcycleh);
+    case 0xF11: return &(cpu.csr.mvendorid);
+    case 0xF12: return &(cpu.csr.marchid);
     default: panic("Unknown csr");
   }
 }
