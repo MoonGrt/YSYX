@@ -75,7 +75,6 @@ void sim_t::diff_get_regs(void* diff_context) {
   ctx->mcycle = state->mcycle->read();
   ctx->mcycleh = state->mcycle->read() >> 32;
   ctx->mvendorid = state->mvendorid->read();
-  printf("%x\n", state->mvendorid->read());
   ctx->marchid = state->marchid->read();
 }
 
