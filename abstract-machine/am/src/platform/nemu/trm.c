@@ -21,13 +21,15 @@ void halt(int code) {
   while (1);
 }
 
-void _trm_init() {
+void _csr_info() {
   uint32_t vendor, arch;
   asm volatile("csrr %0, mvendorid" : "=r"(vendor));
   asm volatile("csrr %0, marchid"   : "=r"(arch));
   printf("mvendorid = 0x%x\n", vendor);
   printf("marchid   = %u\n", arch);
+}
 
+void _trm_init() {
   int ret = main(mainargs);
   halt(ret);
 }
