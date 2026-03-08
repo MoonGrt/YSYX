@@ -20,6 +20,7 @@
 #include "../../utils/local-include/trace.h"
 
 static vaddr_t *csr_register(word_t imm) {
+  printf("%d, %x", imm, imm);
   switch (imm) {
     case 0x341: return &(cpu.csr.mepc);
     case 0x342: return &(cpu.csr.mcause);
