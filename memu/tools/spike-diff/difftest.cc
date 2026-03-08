@@ -70,8 +70,6 @@ void sim_t::diff_get_regs(void* diff_context) {
   struct diff_context_t* ctx = (struct diff_context_t*)diff_context;
   for (int i = 0; i < NR_GPR; i++)
     ctx->gpr[i] = state->XPR[i];
-  // state->mvendorid->write(0x79737978);
-  // state->marchid->write(0x018CE26E);
   state->csrmap.at(0xF11)->write(0x79737978);
   ctx->pc = state->pc;
   ctx->csr.mepc = state->mepc->read();
@@ -90,6 +88,8 @@ void sim_t::diff_set_regs(void* diff_context) {
     state->XPR.write(i, (sword_t)ctx->gpr[i]);
   }
   state->pc = ctx->pc;
+  // state->mvendorid->write(0x79737978);
+  // state->marchid->write(0x018CE26E);
 }
 
 void sim_t::diff_memcpy(reg_t dest, void* src, size_t n) {
