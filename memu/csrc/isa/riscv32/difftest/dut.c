@@ -34,8 +34,6 @@
   _(mstatus)        \
   _(mcause)         \
   _(mtvec)          \
-  _(mcycle)         \
-  _(mcycleh)        \
   _(mvendorid)      \
   _(marchid)        \
 
