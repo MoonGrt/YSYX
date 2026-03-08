@@ -313,6 +313,14 @@ class Riscv32E_ID extends Module {
   // -------- WB功能 --------
   io.memsel := memsel
   // CSR
+  val CSR_MSTATUS = 0.U
+  val CSR_MEPC    = 1.U
+  val CSR_MCAUSE  = 2.U
+  val CSR_MTVEC   = 3.U
+  val CSR_MCYCLE  = 4.U
+  val CSR_MCYCLEH = 5.U
+  val CSR_MVENDOR = 6.U
+  val CSR_MARCHID = 7.U
   val csr_addr = immi
   val csr_id = MuxLookup(csr_addr(11,0), 0.U)(Seq(
     0x300.U -> 0.U,  // mstatus
@@ -332,6 +340,9 @@ class Riscv32E_ID extends Module {
   ))
   CSR(6.U) := 0x79737978.U  // ysyx
   CSR(7.U) := 0x018CE26E.U  // moongrt - 26010030
+  val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
+  CSR(CSR_MCYCLE)  := cycle64(31,0)
+  CSR(CSR_MCYCLEH) := cycle64(63,32)
   when (~reset.asBool && csrsel =/= CSR_NONE) {
     CSR(csr_id) := csr_new
   }
