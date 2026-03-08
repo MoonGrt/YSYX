@@ -74,6 +74,7 @@ void sim_t::diff_get_regs(void* diff_context) {
   ctx->mtvec = state->mtvec->read();
   ctx->mcycle = state->mcycle->read();
   ctx->mcycleh = state->mcycle->read() >> 32;
+  printf("%x\n", state->mcycle->read());
   ctx->mvendorid = state->mvendorid->read();
   ctx->marchid = state->marchid->read();
 }
@@ -84,8 +85,6 @@ void sim_t::diff_set_regs(void* diff_context) {
     state->XPR.write(i, (sword_t)ctx->gpr[i]);
   }
   state->pc = ctx->pc;
-  // state->mvendorid->write(ctx->mvendorid);
-  // state->marchid->write(ctx->marchid);
   state->mvendorid->write(0x79737978);
   state->marchid->write(0x018CE26E);
 }
