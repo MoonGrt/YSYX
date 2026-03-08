@@ -73,7 +73,7 @@ void sim_t::diff_get_regs(void* diff_context) {
   ctx->mcause = state->mcause->read();
   ctx->mtvec = state->mtvec->read();
   ctx->mcycle = state->mcycle->read();
-  ctx->mcycleh = state->mcycle->read();
+  ctx->mcycleh = state->mcycle->read() >> 32;
   ctx->mvendorid = 0x79737978;  // ysyx
   ctx->marchid = 0x018CE26E;  // moongrt - 26010030
 }
