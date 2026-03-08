@@ -36,9 +36,7 @@ static debug_module_config_t difftest_dm_config = {
   .support_impebreak = true
 };
 
-struct diff_context_t {
-  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
-  word_t pc;
+typedef struct{
   word_t mepc;
   word_t mstatus;
   word_t mcause;
@@ -47,6 +45,12 @@ struct diff_context_t {
   word_t mcycleh;
   word_t mvendorid;
   word_t marchid;
+} riscv32_CSR;
+
+struct diff_context_t {
+  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
+  word_t pc;
+  riscv32_CSR csr;
 };
 
 static sim_t* s = NULL;
@@ -68,14 +72,14 @@ void sim_t::diff_get_regs(void* diff_context) {
     ctx->gpr[i] = state->XPR[i];
   }
   ctx->pc = state->pc;
-  ctx->mepc = state->mepc->read();
-  ctx->mstatus = state->mstatus->read();
-  ctx->mcause = state->mcause->read();
-  ctx->mtvec = state->mtvec->read();
-  ctx->mcycle = state->mcycle->read();
-  ctx->mcycleh = state->mcycle->read() >> 32;
-  ctx->mvendorid = state->mvendorid->read();
-  ctx->marchid = state->marchid->read();
+  ctx->csr->mepc = state->mepc->read();
+  ctx->csr->mstatus = state->mstatus->read();
+  ctx->csr->mcause = state->mcause->read();
+  ctx->csr->mtvec = state->mtvec->read();
+  ctx->csr->mcycle = state->mcycle->read();
+  ctx->csr->mcycleh = state->mcycle->read() >> 32;
+  ctx->csr->mvendorid = state->mvendorid->read();
+  ctx->csr->marchid = state->marchid->read();
 }
 
 void sim_t::diff_set_regs(void* diff_context) {
@@ -84,8 +88,8 @@ void sim_t::diff_set_regs(void* diff_context) {
     state->XPR.write(i, (sword_t)ctx->gpr[i]);
   }
   state->pc = ctx->pc;
-  state->mvendorid->write(0x79);
-  state->marchid->write(0x018CE26E);
+  // state->csr->mvendorid->write(0x7973);
+  // state->csr->marchid->write(0x018CE26E);
 }
 
 void sim_t::diff_memcpy(reg_t dest, void* src, size_t n) {
