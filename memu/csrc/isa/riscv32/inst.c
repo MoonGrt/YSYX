@@ -20,7 +20,6 @@
 #include "../../utils/local-include/trace.h"
 
 static vaddr_t *csr_register(word_t imm) {
-  printf("%d, %x", imm, imm);
   switch (imm) {
     case 0x341: return &(cpu.csr.mepc);
     case 0x342: return &(cpu.csr.mcause);
@@ -30,7 +29,7 @@ static vaddr_t *csr_register(word_t imm) {
     case 0xB80: return &(cpu.csr.mcycleh);
     case 0xF11: return &(cpu.csr.mvendorid);
     case 0xF12: return &(cpu.csr.marchid);
-    default: panic("Unknown csr");
+    default: panic("Unknown csr -> %x", imm);
   }
 }
 #define CSR(i) *csr_register(i)
