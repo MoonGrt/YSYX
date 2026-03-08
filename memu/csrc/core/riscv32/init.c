@@ -43,7 +43,7 @@ static void restart() {
   cpu.gpr[0] = 0;
   /* CSR init */
   cpu.csr.mepc = 0xffffffff;
-  // cpu.csr.mstatus = 0xffffffff;
+  cpu.csr.mstatus = 0xffffffff;
   cpu.csr.mcause = 0xffffffff;
   cpu.csr.mtvec = 0xffffffff;
   cpu.csr.mcycle = 0xffffffff;
