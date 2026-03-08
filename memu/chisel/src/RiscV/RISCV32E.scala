@@ -338,11 +338,13 @@ class Riscv32E_ID extends Module {
     (csrsel === CSR_S) -> (csr_old | io.op1),
     (csrsel === CSR_C) -> (csr_old & ~io.op1),
   ))
-  CSR(6.U) := 0x79737978.U  // ysyx
-  CSR(7.U) := 0x018CE26E.U  // moongrt - 26010030
+
   val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
   CSR(CSR_MCYCLE)  := cycle64(31,0)
   CSR(CSR_MCYCLEH) := cycle64(63,32)
+  CSR(6.U) := 0x79737978.U  // ysyx
+  CSR(7.U) := 0x018CE26E.U  // moongrt - 26010030
+
   val csr_wen = csrsel === CSR_W || csrsel === CSR_S || csrsel === CSR_C
   val csr_writable =
     csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
