@@ -22,7 +22,7 @@ void halt(int code) {
 }
 
 void _csr_info() {
-  uint32_t vendor, arch;
+  int vendor, arch;
   asm volatile("csrr %0, mvendorid" : "=r"(vendor));
   asm volatile("csrr %0, marchid"   : "=r"(arch));
   printf("mvendorid = 0x%x\n", vendor);
@@ -30,6 +30,7 @@ void _csr_info() {
 }
 
 void _trm_init() {
+  _csr_info();
   int ret = main(mainargs);
   halt(ret);
 }
