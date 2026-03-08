@@ -81,8 +81,8 @@ object Riscv32E_Instructions {
 }
 object Riscv32E_Parameters {
   val WORD_LEN = 32
-  val CSR_NUM  = 8.U
-  val GPR_NUM  = 32.U
+  val CSR_NUM  = 8
+  val GPR_NUM  = 32
 
   val OP1_SEL_LEN = 2
   val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
