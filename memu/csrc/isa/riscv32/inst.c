@@ -20,12 +20,17 @@
 #include "../../utils/local-include/trace.h"
 
 static vaddr_t *csr_register(word_t imm) {
-  switch (imm) {
+  word_t csr = imm & 0xfff;
+  switch (csr) {
     case 0x341: return &(cpu.csr.mepc);
     case 0x342: return &(cpu.csr.mcause);
     case 0x300: return &(cpu.csr.mstatus);
     case 0x305: return &(cpu.csr.mtvec);
-    default: panic("Unknown csr");
+    case 0xB00: return &(cpu.csr.mcycle);
+    case 0xB80: return &(cpu.csr.mcycleh);
+    case 0xF11: return &(cpu.csr.mvendorid);
+    case 0xF12: return &(cpu.csr.marchid);
+    default: panic("Unknown csr -> %x", csr);
   }
 }
 #define CSR(i) *csr_register(i)
@@ -159,7 +164,16 @@ static int decode_exec(Decode *s) {
   return 0;
 }
 
+static inline void csr_cycle_inc() {
+  uint64_t cycle =
+      ((uint64_t)cpu.csr.mcycleh << 32) | cpu.csr.mcycle;
+  cycle++;
+  cpu.csr.mcycle  = (uint32_t)cycle;
+  cpu.csr.mcycleh = (uint32_t)(cycle >> 32);
+}
+
 int isa_exec_once(Decode *s) {
+  csr_cycle_inc();
   s->isa.inst = inst_fetch(&s->snpc, 4);
   IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
   return decode_exec(s);
