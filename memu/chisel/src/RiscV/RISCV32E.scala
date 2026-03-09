@@ -81,6 +81,8 @@ object Riscv32E_Instructions {
 }
 object Riscv32E_Parameters {
   val WORD_LEN = 32
+  val CSR_NUM  = 8
+  val GPR_NUM  = 32
 
   val OP1_SEL_LEN = 2
   val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
@@ -197,8 +199,8 @@ class Riscv32E_ID extends Module {
     val regWen = Output(Bool())
 
     // Diff
-    val csrOut = Output(Vec(4, UInt(WORD_LEN.W)))
-    val gprOut = Output(Vec(32, UInt(WORD_LEN.W)))
+    val csrOut = Output(Vec(CSR_NUM, UInt(WORD_LEN.W)))
+    val gprOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
   val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(
@@ -260,8 +262,8 @@ class Riscv32E_ID extends Module {
   )
 
   // -------- 寄存器堆 --------
-  val CSR = RegInit(VecInit(Seq.fill(4)(0.U(WORD_LEN.W))))
-  val GPR = RegInit(VecInit(Seq.fill(32)(0.U(WORD_LEN.W))))
+  val CSR = RegInit(VecInit(Seq.fill(CSR_NUM)(0.U(WORD_LEN.W))))
+  val GPR = RegInit(VecInit(Seq.fill(GPR_NUM)(0.U(WORD_LEN.W))))
 
   // -------- 指令字段 --------
   val rd  = io.inst(11,7)
@@ -313,35 +315,55 @@ class Riscv32E_ID extends Module {
   // -------- WB功能 --------
   io.memsel := memsel
   // CSR
+  val CSR_MSTATUS = 0.U
+  val CSR_MEPC    = 1.U
+  val CSR_MCAUSE  = 2.U
+  val CSR_MTVEC   = 3.U
+  val CSR_MCYCLE  = 4.U
+  val CSR_MCYCLEH = 5.U
+  val CSR_MVENDOR = 6.U
+  val CSR_MARCHID = 7.U
   val csr_addr = immi
   val csr_id = MuxLookup(csr_addr(11,0), 0.U)(Seq(
     0x300.U -> 0.U,  // mstatus
     0x341.U -> 1.U,  // mepc
     0x342.U -> 2.U,  // mcause
     0x305.U -> 3.U,  // mtvec
-    // 0xf11.U -> 4.U,  // mvendorid
-    // 0xf12.U -> 5.U,  // marchid
+    0xB00.U -> 4.U,  // mcycle
+    0xB80.U -> 5.U,  // mcycleh
+    0xF11.U -> 6.U,  // mvendorid
+    0xF12.U -> 7.U,  // marchid
   ))
+  val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
+  CSR(CSR_MCYCLE)  := cycle64(31,0)
+  CSR(CSR_MCYCLEH) := cycle64(63,32)
+  CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
+  CSR(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
+
   val csr_old = CSR(csr_id)
   val csr_new = MuxCase(io.op1, Seq(
     (csrsel === CSR_W) -> io.op1,
     (csrsel === CSR_S) -> (csr_old | io.op1),
     (csrsel === CSR_C) -> (csr_old & ~io.op1),
   ))
-  when (~reset.asBool && csrsel =/= CSR_NONE) {
+  val csr_wen = csrsel === CSR_W || csrsel === CSR_S || csrsel === CSR_C
+  val csr_writable =
+    csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
+    csr_id === CSR_MTVEC || csr_id === CSR_MCYCLE || csr_id === CSR_MCYCLEH
+  when (~reset.asBool && csr_wen && csr_writable) {
     CSR(csr_id) := csr_new
   }
   when (~reset.asBool && csrsel === CSR_E) {
     // mstatus = 0x00001800
-    CSR(0.U) := 0x00001800.U
+    CSR(CSR_MSTATUS) := 0x00001800.U
     // mepc = pc
-    CSR(1.U) := io.pc
+    CSR(CSR_MEPC)    := io.pc
     // mcause = 11 (ECALL from M-mode)
-    CSR(2.U) := 11.U
+    CSR(CSR_MCAUSE)  := 11.U
   }
   when (~reset.asBool && csrsel === CSR_MRET) {
     // mstatus = 0x00000080
-    CSR(0.U) := 0x00000080.U
+    CSR(CSR_MSTATUS) := 0x00000080.U
   }
   // GPR
   io.rd_addr := rd
@@ -497,10 +519,10 @@ class Riscv32E extends Module {
   difftest.io.pc   := ifStage.io.pc
   difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
-  for (i <- 0 until 4) {
+  for (i <- 0 until CSR_NUM) {
     difftest.io.csr(i) := idStage.io.csrOut(i)
   }
-  for (i <- 0 until 32) {
+  for (i <- 0 until GPR_NUM) {
     difftest.io.gpr(i) := idStage.io.gprOut(i)
   }
 }

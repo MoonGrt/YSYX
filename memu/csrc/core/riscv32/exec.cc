@@ -62,6 +62,10 @@ extern "C" {
     cpu.csr.mepc = csr[1];
     cpu.csr.mcause = csr[2];
     cpu.csr.mtvec = csr[3];
+    cpu.csr.mcycle = csr[4];
+    cpu.csr.mcycleh = csr[5];
+    cpu.csr.mvendorid = csr[6];
+    cpu.csr.marchid = csr[7];
     for (int i = 0; i < 32; i++)
       cpu.gpr[i] = gpr[i];
   }

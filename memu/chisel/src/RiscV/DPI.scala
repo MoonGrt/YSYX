@@ -49,6 +49,6 @@ class DiffTest extends BlackBox {
     val npc  = Input(UInt(32.W))
     val inst = Input(UInt(32.W))
     val gpr  = Input(Vec(32, UInt(32.W)))
-    val csr  = Input(Vec(4, UInt(32.W)))
+    val csr  = Input(Vec(8, UInt(32.W)))
   })
 }

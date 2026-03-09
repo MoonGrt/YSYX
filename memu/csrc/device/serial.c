@@ -27,7 +27,7 @@ static void serial_putc(char ch) {
   MUXDEF(CONFIG_TARGET_AM, putch(ch), putc(ch, stderr));
 }
 
-static int serial_getc() {
+static int serial_getc(void) {
   return MUXDEF(CONFIG_TARGET_AM, getch(), getc(stdin));
 }
 
