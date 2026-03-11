@@ -176,11 +176,14 @@ inst_fetch() 定义在头文件中，因此会被多个 .c 文件包含。如果
 
 3.5 编译与链接
 ```nm build/riscv32-nemu-interpreter | grep dummy | wc -l```
-1. common.h 中添加 `volatile static int dummy;`
-> 36
-2. debug.h 中添加 `volatile static int dummy;`
-> 36
-3. 
+1. 添加 `volatile static int dummy;`
+> common.h 36
+> debug.h 36
+3. 添加 `volatile static int dummy = 0;`
+> common.h 36
+> debug.h 36
+
+NEMU 中有多少个 dummy 实体： 等于包含 common.h/debug.h 的 .c 文件数量。
 
 ---
 
