@@ -163,16 +163,24 @@ init(ioe,gpu) → while(1) 主循环
 3.4 编译与链接 (ifetch.h)
 定义在头文件中的函数实现，而不是声明，所以编译行为会比较特殊。
 1. 去掉 static 保留 inline
-编译正确
+> 编译正确
 2. 去掉 inline 保留 static
-编译正确
+> 编译正确
 3. 去掉 static & inline
-multiple definition of `inst_fetch'
+> multiple definition of `inst_fetch'
 
 inst_fetch() 定义在头文件中，因此会被多个 .c 文件包含。如果既不使用 static 也不使用 inline，每个编译单元都会生成一个全局符号 inst_fetch，在链接阶段产生 multiple definition 错误。
 如果只保留 static，函数具有 internal linkage，每个目标文件拥有独立的 inst_fetch，因此不会发生符号冲突。
 如果只保留 inline，根据 C99 标准需要在某个源文件中提供一个外部定义，否则可能产生 undefined reference。但在 GCC 默认的 gnu89/gnu11 模式下，inline 函数通常会生成 weak symbol，因此多个目标文件中的定义不会冲突，所以仍然能够成功链接。
 使用 static inline 是头文件函数的常见写法，可以同时获得内联优化并避免符号冲突。
+
+3.5 编译与链接
+```nm build/riscv32-nemu-interpreter | grep dummy```
+1. common.h 中添加 `volatile static int dummy;`
+> 34
+2. debug.h 中添加 `volatile static int dummy;`
+> 
+3. 
 
 ---
 
