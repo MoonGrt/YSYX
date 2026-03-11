@@ -175,7 +175,7 @@ inst_fetch() 定义在头文件中，因此会被多个 .c 文件包含。如果
 使用 static inline 是头文件函数的常见写法，可以同时获得内联优化并避免符号冲突。
 
 3.5 编译与链接
-```nm build/riscv32-nemu-interpreter | grep dummy```
+```nm build/riscv32-nemu-interpreter | grep dummy | wc -l```
 1. common.h 中添加 `volatile static int dummy;`
 > 34
 2. debug.h 中添加 `volatile static int dummy;`
