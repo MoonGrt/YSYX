@@ -163,9 +163,9 @@ init(ioe,gpu) → while(1) 主循环
 3.4 编译与链接 (ifetch.h)
 定义在头文件中的函数实现，而不是声明，所以编译行为会比较特殊。
 1. 去掉 static 保留 inline
-
 2. 去掉 inline 保留 static
 3. 去掉 static & inline
+multiple definition of `inst_fetch'
 
 ---
 
