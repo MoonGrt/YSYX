@@ -13,6 +13,10 @@ void putch(char ch) {
   putchar(ch);
 }
 
+int getch() {
+  return getchar();
+}
+
 void halt(int code) {
   const char *fmt = "Exit code = 40h\n";
   for (const char *p = fmt; *p; p++) {

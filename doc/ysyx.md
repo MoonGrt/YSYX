@@ -36,10 +36,10 @@ preprocess: $(PREPS)
   |    |     |  // 与变量相关的三个内存区域: 静态数据区(data), 堆区(heap), 栈区(stack)
   |    v     |  // 静态 = 不动态增长和变化, 编译时确定
   |          |  // 四种需要分配的C变量
-  |    ^     |  // 全局变量 -> data区
-  |    |     |  // 静态局部变量 -> data区
-  +----------+  // 非静态局部变量 -> stack区
-  |   heap   |  // 动态变量 -> heap区
+  |    ^     |  // 全局变量 → data区
+  |    |     |  // 静态局部变量 → data区
+  +----------+  // 非静态局部变量 → stack区
+  |   heap   |  // 动态变量 → heap区
   +----------+
   |   data   |
   +----------+
@@ -145,6 +145,55 @@ while(1)
 2. 优化LiteNES
 TODO:
 
+3. 实验报告
+3.1 程序是个状态机 理解YEMU的执行过程
+exec_once → IF → ID → EX → PC+1 
+→ whether halt: yes → return
+                 no → exec_once
+3.2 RTFSC 请整理一条指令在NEMU中的执行过程
+isa_exec_once → inst_fetch → decode_exec → INSTPAT_MATCH → exce
+3.3 程序如何运行 理解打字小游戏如何运行
+init(ioe,gpu) → while(1) 主循环
+→ 计时 (AM_TIMER_UPTIME)
+→ game_logic_update() 更新字符状态
+→ 读取键盘 (AM_INPUT_KEYBRD)
+→ check_hit() 判断是否击中
+→ render() 绘制屏幕
+→ 循环执行，形成 30 FPS 的打字下落游戏。
+3.4 编译与链接 (ifetch.h)
+定义在头文件中的函数实现，而不是声明，所以编译行为会比较特殊。
+1. 去掉 static 保留 inline
+> 编译正确
+2. 去掉 inline 保留 static
+> 编译正确
+3. 去掉 static & inline
+> multiple definition of `inst_fetch'
+
+inst_fetch() 定义在头文件中，因此会被多个 .c 文件包含。如果既不使用 static 也不使用 inline，每个编译单元都会生成一个全局符号 inst_fetch，在链接阶段产生 multiple definition 错误。
+如果只保留 static，函数具有 internal linkage，每个目标文件拥有独立的 inst_fetch，因此不会发生符号冲突。
+如果只保留 inline，根据 C99 标准需要在某个源文件中提供一个外部定义，否则可能产生 undefined reference。但在 GCC 默认的 gnu89/gnu11 模式下，inline 函数通常会生成 weak symbol，因此多个目标文件中的定义不会冲突，所以仍然能够成功链接。
+使用 static inline 是头文件函数的常见写法，可以同时获得内联优化并避免符号冲突。
+
+3.5 编译与链接
+```nm build/riscv32-nemu-interpreter | grep dummy | wc -l```
+1. 添加 `volatile static int dummy;`
+> common.h -> 36
+> debug.h -> redefinition of ‘volatile int dummy’
+3. 添加 `volatile static int dummy = 0;`
+> common.h -> 36
+> debug.h -> redefinition of ‘volatile int dummy’
+
+NEMU 中有多少个 dummy 实体： 等于包含 common.h/debug.h 的 .c 文件数量。
+
+3.6 了解Makefile
+`am-kernels/kernels/hello`敲入`make ARCH=$ISA-nemu`后:
+1. 设置项目名称，编译文件添加当前项目中的"hello.c"，调用`$(AM_HOME)/Makefile`
+2. $(AM_HOME)/Makefile:
+  Basic Setup and Checks
+  根据架构和平台，引入相关makefile，同时引入相关需要编译的文件
+  编译项目
+  使用"insert-arg.py"脚本将mainarg嵌入程序中
+
 ---
 
 ## D阶段
@@ -172,9 +221,6 @@ TODO:
 | 局部变量          | 编译后变为栈偏移 |
 | 临时变量          | 编译器优化    |
 | 常量表达式         | 编译期计算    |
-
-
-
 
 ### C2 支持RV32E的单周期NPC
 ### C3 调试技巧
