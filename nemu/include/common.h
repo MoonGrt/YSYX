@@ -12,7 +12,7 @@
 *
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
-
+volatile static int dummy;
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
@@ -45,5 +45,4 @@ typedef MUXDEF(PMEM64, uint64_t, uint32_t) paddr_t;
 typedef uint16_t ioaddr_t;
 
 #include <debug.h>
-volatile static int dummy;
 #endif
