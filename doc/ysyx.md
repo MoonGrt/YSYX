@@ -36,10 +36,10 @@ preprocess: $(PREPS)
   |    |     |  // 与变量相关的三个内存区域: 静态数据区(data), 堆区(heap), 栈区(stack)
   |    v     |  // 静态 = 不动态增长和变化, 编译时确定
   |          |  // 四种需要分配的C变量
-  |    ^     |  // 全局变量 -> data区
-  |    |     |  // 静态局部变量 -> data区
-  +----------+  // 非静态局部变量 -> stack区
-  |   heap   |  // 动态变量 -> heap区
+  |    ^     |  // 全局变量 → data区
+  |    |     |  // 静态局部变量 → data区
+  +----------+  // 非静态局部变量 → stack区
+  |   heap   |  // 动态变量 → heap区
   +----------+
   |   data   |
   +----------+
@@ -145,6 +145,27 @@ while(1)
 2. 优化LiteNES
 TODO:
 
+3. 实验报告
+3.1 程序是个状态机 理解YEMU的执行过程
+exec_once → IF → ID → EX → PC+1 
+→ whether halt: yes → return
+                 no → exec_once
+3.2 RTFSC 请整理一条指令在NEMU中的执行过程
+isa_exec_once → inst_fetch → decode_exec → INSTPAT_MATCH → exce
+3.3 程序如何运行 理解打字小游戏如何运行
+init(ioe,gpu) → while(1) 主循环
+→ 计时 (AM_TIMER_UPTIME)
+→ game_logic_update() 更新字符状态
+→ 读取键盘 (AM_INPUT_KEYBRD)
+→ check_hit() 判断是否击中
+→ render() 绘制屏幕
+→ 循环执行，形成 30 FPS 的打字下落游戏。
+3.4 编译与链接 (ifetch.h)
+定义在头文件中的函数实现，而不是声明，所以编译行为会比较特殊。
+1. 去掉 static
+2. 去掉 inline
+3. 去掉 static & inline
+
 ---
 
 ## D阶段
@@ -172,9 +193,6 @@ TODO:
 | 局部变量          | 编译后变为栈偏移 |
 | 临时变量          | 编译器优化    |
 | 常量表达式         | 编译期计算    |
-
-
-
 
 ### C2 支持RV32E的单周期NPC
 ### C3 调试技巧

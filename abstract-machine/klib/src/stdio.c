@@ -252,6 +252,81 @@ int snprintf(char *out, size_t n, const char *fmt, ...) {
   return result;
 }
 
+#define EOF (-1)
 
+int gets(char *buf) {
+  char *p = buf;
+  int c;
+  while ((c = getch()) != '\n' && c != '\r' && c != EOF)
+    *p++ = (char)c;
+  *p = '\0';
+  return (c == EOF && p == buf) ? EOF : 0;
+}
+
+int fgets(char *buf, size_t n) {
+  char *p = buf;
+  int c;
+  while (--n > 0 && (c = getch()) != '\n' && c != EOF)
+    *p++ = (char)c;
+  *p = '\0';
+  return (p == buf && c == EOF) ? EOF : 0;
+}
+
+int vsscanf(const char *buf, const char *fmt, va_list ap) {
+  const char *p = buf;
+  int count = 0;
+  while (*fmt) {
+    if (*fmt == '%') {
+      fmt++;
+      switch (*fmt) {
+        case 'd': {
+          int *ip = va_arg(ap, int*);
+          int val = 0, sign = 1;
+          if (*p == '-') { sign = -1; p++; }
+          while (*p >= '0' && *p <= '9') {
+            val = val * 10 + (*p - '0'); p++;
+          }
+          *ip = val * sign;
+          count++;
+          break;
+        }
+        case 'c': {
+          char *cp = va_arg(ap, char*);
+          *cp = *p++;
+          count++;
+          break;
+        }
+        case 's': {
+          char *sp = va_arg(ap, char*);
+          while (*p && *p != ' ') *sp++ = *p++;
+          *sp = '\0';
+          count++;
+          break;
+        }
+        default: p++; break;
+      }
+    } else if (*p == *fmt) p++;
+    fmt++;
+  }
+  return count;
+}
+
+int sscanf(const char *buf, const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  int n = vsscanf(buf, fmt, ap);
+  va_end(ap);
+  return n;
+}
+
+int scanf(const char *fmt, ...) {
+  char buf[256];
+  if (gets(buf) == EOF) return EOF;
+  va_list ap;
+  va_start(ap, fmt);
+  int n = vsscanf(buf, fmt, ap);
+  va_end(ap);
+  return n;
+}
 
 #endif
