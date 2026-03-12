@@ -20,7 +20,7 @@ object Constants {
       val ADD, JALR = Value
     }
     object JUMP extends ConstEnum {
-      val NONE, JAL = Value
+      val NONE, JALR = Value
     }
     object WB extends ConstEnum {
       val NONE, EX, MEM = Value
