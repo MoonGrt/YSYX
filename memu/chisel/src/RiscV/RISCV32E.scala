@@ -89,14 +89,14 @@ class Riscv32E_ID extends Module {
       SLTI   -> List(OP1.RS1 , OP2.IMI , EX.SLT , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] <s immsi
       SLTIU  -> List(OP1.RS1 , OP2.IMI , EX.SLTU, WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] <u immsi
 
-      BEQ    -> List(OP1.RS1 , OP2.RS2 , EX.BEQ , WB.NONE, MEM_NONE, CSRS.NONE),  // x[rs1] === x[rs2] then PC+sext(imm_b)
-      BNE    -> List(OP1.RS1 , OP2.RS2 , EX.BNE , WB.NONE, MEM_NONE, CSRS.NONE),  // x[rs1] =/= x[rs2] then PC+sext(imm_b)
-      BGE    -> List(OP1.RS1 , OP2.RS2 , EX.BGE , WB.NONE, MEM_NONE, CSRS.NONE),  // x[rs1] >=s x[rs2] then PC+sext(imm_b)
-      BGEU   -> List(OP1.RS1 , OP2.RS2 , EX.BGEU, WB.NONE, MEM_NONE, CSRS.NONE),  // x[rs1] >=u x[rs2] then PC+sext(imm_b)
-      BLT    -> List(OP1.RS1 , OP2.RS2 , EX.BLT , WB.NONE, MEM_NONE, CSRS.NONE),  // x[rs1] <s x[rs2]  then PC+sext(imm_b)
-      BLTU   -> List(OP1.RS1 , OP2.RS2 , EX.BLTU, WB.NONE, MEM_NONE, CSRS.NONE),  // x[rs1] <u x[rs2]  then PC+sext(imm_b)
-      JAL    -> List(OP1.PC  , OP2.IMJ , EX.JAL , WB.PC  , MEM_NONE, CSRS.NONE),  // x[rd] <- PC+4 and PC+sext(imm_j)
-      JALR   -> List(OP1.RS1 , OP2.IMI , EX.JAL , WB.PC  , MEM_NONE, CSRS.NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+      BEQ    -> List(OP1.RS1 , OP2.RS2 , EX.BEQ , WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] === x[rs2] then PC+sext(imm_b)
+      BNE    -> List(OP1.RS1 , OP2.RS2 , EX.BNE , WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] =/= x[rs2] then PC+sext(imm_b)
+      BGE    -> List(OP1.RS1 , OP2.RS2 , EX.BGE , WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] >=s x[rs2] then PC+sext(imm_b)
+      BGEU   -> List(OP1.RS1 , OP2.RS2 , EX.BGEU, WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] >=u x[rs2] then PC+sext(imm_b)
+      BLT    -> List(OP1.RS1 , OP2.RS2 , EX.BLT , WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] <s x[rs2]  then PC+sext(imm_b)
+      BLTU   -> List(OP1.RS1 , OP2.RS2 , EX.BLTU, WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] <u x[rs2]  then PC+sext(imm_b)
+      JAL    -> List(OP1.PC  , OP2.IMJ , EX.JAL , WB.PC  , MEM.NONE, CSRS.NONE),  // x[rd] <- PC+4 and PC+sext(imm_j)
+      JALR   -> List(OP1.RS1 , OP2.IMI , EX.JAL , WB.PC  , MEM.NONE, CSRS.NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
 
       LUI    -> List(OP1.NONE, OP2.IMU , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // sext(immu[31:12] << 12)
       AUIPC  -> List(OP1.PC  , OP2.IMU , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // PC + sext(immu[31:12] << 12)
