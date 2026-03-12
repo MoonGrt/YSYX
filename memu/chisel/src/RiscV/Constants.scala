@@ -46,5 +46,21 @@ object Constants {
     object CSRS extends ChiselEnum {
       val NONE, W, S, C, B, E, MRET = Value
     }
+    object CSRMap extends ChiselEnum {
+      val NONE      = Value(0x000.U)
+      val MSTATUS   = Value(0x300.U)
+      val MTVEC     = Value(0x305.U)
+      val MEPC      = Value(0x341.U)
+      val MCAUSE    = Value(0x342.U)
+      val MCYCLE    = Value(0xB00.U)
+      val MCYCLEH   = Value(0xB80.U)
+      val MVENDORID = Value(0xF11.U)
+      val MARCHID   = Value(0xF12.U)
+    }
+    def decodeCSR(addr: UInt): CSR.Type = {
+      MuxLookup(addr, CSRMap.NONE)(
+        CSR.all.map(c => c.asUInt -> c)
+      )
+    }
   }
 }

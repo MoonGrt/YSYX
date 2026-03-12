@@ -177,7 +177,7 @@ class Riscv32E_ID extends Module {
   val CSR_MVENDOR = 6.U
   val CSR_MARCHID = 7.U
   val csr_addr = immi
-  val csr_id = MuxLookup(csr_addr(11,0), 0.U)(Seq(
+  val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
     0x300.U -> 0.U,  // mstatus
     0x341.U -> 1.U,  // mepc
     0x342.U -> 2.U,  // mcause
@@ -237,6 +237,10 @@ class Riscv32E_ID extends Module {
     ))
   }
 
+  // 输出 CSRS & GPR
+  io.csrOut := CSR
+  io.gprOut := GPR
+
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
   // 定义异常编码规则
@@ -261,9 +265,6 @@ class Riscv32E_ID extends Module {
   trap.io.code := exc_code
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
-  // 输出 CSRS & GPR
-  io.csrOut := CSR
-  io.gprOut := GPR
 }
 
 // ---------------------------
