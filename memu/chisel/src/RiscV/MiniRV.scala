@@ -80,7 +80,7 @@ class MiniRV_ID extends Module {
       LUI  -> List(IMM.U, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
     ),
   )
-  val immsel  = decoded(0)
+  val immsel  = decoded(0).asUInt
   val exsel   = decoded(1)
   val jumpsel = decoded(2)
   val wbsel   = decoded(3)
