@@ -225,8 +225,7 @@ class MiniRV extends Module {
   val byte_data = (io.mem_rdata >> byte_shift)(7,0)  // 取目标字节
   val mem_data = io.mem_rdata
   val wb_data = MuxCase(
-    exStage.io.exout,  // 默认EX输出
-    Seq(
+    exStage.io.exout, Seq(  // 默认EX输出
       idStage.io.memRen -> mem_data,  // Memory read
       idStage.io.jumpen -> ifStage.io.npc  // Jump
     )

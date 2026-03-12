@@ -347,15 +347,18 @@ class Riscv32E extends Module {
   exStage.io.immsb := idStage.io.immsb
   exStage.io.exsel := idStage.io.exsel
 
-  // Memory
-  io.mem_re    := (idStage.io.memsel === MEM.RW) || (idStage.io.memsel === MEM.RH) || (idStage.io.memsel === MEM.RB) ||
-                  (idStage.io.memsel === MEM.RHU) || (idStage.io.memsel === MEM.RBU)
-  io.mem_we    := (idStage.io.memsel === MEM.WW) || (idStage.io.memsel === MEM.WH) || (idStage.io.memsel === MEM.WB)
+  // Memory control
+  val isLoad  = Seq(MEM.RW, MEM.RH, MEM.RB, MEM.RHU, MEM.RBU).map(idStage.io.memsel === _).reduce(_||_)
+  val isStore = Seq(MEM.WW, MEM.WH, MEM.WB).map(idStage.io.memsel === _).reduce(_||_)
+  val isByte  = Seq(MEM.WB, MEM.RB, MEM.RBU).map(idStage.io.memsel === _).reduce(_||_)
+  val isHalf  = Seq(MEM.WH, MEM.RH, MEM.RHU).map(idStage.io.memsel === _).reduce(_||_)
+  io.mem_re    := isLoad
+  io.mem_we    := isStore
   io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
-  val memBen    = ~reset.asBool && ((idStage.io.memsel === MEM.WB) || (idStage.io.memsel === MEM.RB) || (idStage.io.memsel === MEM.RBU))
-  val memHen    = ~reset.asBool && ((idStage.io.memsel === MEM.WH) || (idStage.io.memsel === MEM.RH) || (idStage.io.memsel === MEM.RHU))
-  io.mem_len   := Mux(memBen, 1.U, Mux(memHen, 2.U, 4.U))
+  val memBen = !reset.asBool && isByte
+  val memHen = !reset.asBool && isHalf
+  io.mem_len := Mux(memBen, 1.U, Mux(memHen, 2.U, 4.U))
 
   // Write Back
   idStage.io.wb_en   := idStage.io.regWen
