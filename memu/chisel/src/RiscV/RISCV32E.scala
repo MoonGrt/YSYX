@@ -349,15 +349,13 @@ class Riscv32E extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
-  val isLoad  = Seq(MEM.RW, MEM.RH, MEM.RB, MEM.RHU, MEM.RBU).map(idStage.io.memsel === _).reduce(_||_) && !reset.asBool
-  val isStore = Seq(MEM.WW, MEM.WH, MEM.WB).map(idStage.io.memsel === _).reduce(_||_) && !reset.asBool
-  val isByte  = Seq(MEM.WB, MEM.RB, MEM.RBU).map(idStage.io.memsel === _).reduce(_||_) && !reset.asBool
-  val isHalf  = Seq(MEM.WH, MEM.RH, MEM.RHU).map(idStage.io.memsel === _).reduce(_||_) && !reset.asBool
-  io.mem_re    := isLoad
-  io.mem_we    := isStore
+  val memType = idStage.io.memsel
+  io.mem_re    := !reset.asBool && memType.isOneOf(MEM.RW, MEM.RH, MEM.RB, MEM.RHU, MEM.RBU)
+  io.mem_we    := !reset.asBool && memType.isOneOf(MEM.WW, MEM.WH, MEM.WB)
   io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
-  io.mem_len   := Mux(isByte, 1.U, Mux(isHalf, 2.U, 4.U))
+  io.mem_len := Mux(memType.isOneOf(MEM.WB, MEM.RB, MEM.RBU), 1.U,
+                Mux(memType.isOneOf(MEM.WH, MEM.RH, MEM.RHU), 2.U, 4.U))
 
   // Write Back
   idStage.io.wb_en   := idStage.io.regWen
