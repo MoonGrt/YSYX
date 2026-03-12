@@ -177,16 +177,17 @@ class Riscv32E_ID extends Module {
   val CSR_MVENDOR = 6.U
   val CSR_MARCHID = 7.U
   val csr_addr = immi
-  val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
-    0x300.U -> 0.U,  // mstatus
-    0x341.U -> 1.U,  // mepc
-    0x342.U -> 2.U,  // mcause
-    0x305.U -> 3.U,  // mtvec
-    0xB00.U -> 4.U,  // mcycle
-    0xB80.U -> 5.U,  // mcycleh
-    0xF11.U -> 6.U,  // mvendorid
-    0xF12.U -> 7.U,  // marchid
-  ))
+  // val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
+  //   0x300.U -> 0.U,  // mstatus
+  //   0x341.U -> 1.U,  // mepc
+  //   0x342.U -> 2.U,  // mcause
+  //   0x305.U -> 3.U,  // mtvec
+  //   0xB00.U -> 4.U,  // mcycle
+  //   0xB80.U -> 5.U,  // mcycleh
+  //   0xF11.U -> 6.U,  // mvendorid
+  //   0xF12.U -> 7.U,  // marchid
+  // ))
+val csr_id = decodeCSR(csr_addr)
   val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
   CSR(CSR_MCYCLE)  := cycle64(31,0)
   CSR(CSR_MCYCLEH) := cycle64(63,32)
