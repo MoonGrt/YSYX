@@ -43,8 +43,8 @@ object Constants {
     object MEM extends ChiselEnum {
       val NONE, RW, RB, WW, WB = Value
     }
-    object CSR extends ChiselEnum {
-      val  W, S, C, B, E, MRET, NONE = Value
+    object CSRS extends ChiselEnum {
+      val NONE, W, S, C, B, E, MRET = Value
     }
 
     val MEM_SEL_LEN = 4
