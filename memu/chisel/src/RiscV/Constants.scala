@@ -3,13 +3,15 @@ package riscv
 import chisel3._
 import chisel3.util._
 
-object Constants {
+trait Constants {
   val WORD_LEN = 32
   val CSR_NUM  = 8
   val GPR_NUM  = 32
 }
 
 object Riscv32E_Constants {
+  export Constants.*
+
   val OP1_SEL_LEN = 2
   val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
   val OP1_PC   = 1.U(OP1_SEL_LEN.W)
