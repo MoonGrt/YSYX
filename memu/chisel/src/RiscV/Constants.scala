@@ -41,21 +41,10 @@ object Constants {
       val PC, EX, MEM, CSR, NONE = Value
     }
     object MEM extends ChiselEnum {
-      val NONE, RW, RB, WW, WB = Value
+      val NONE, RW, RH, RB, RHU, RBU, WW, WH, WB = Value
     }
     object CSRS extends ChiselEnum {
       val NONE, W, S, C, B, E, MRET = Value
     }
-
-    val MEM_SEL_LEN = 4
-    val MEM_NONE = 0.U(MEM_SEL_LEN.W)
-    val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // read word
-    val MEM_RH   = 2.U(MEM_SEL_LEN.W)  // read half word
-    val MEM_RB   = 3.U(MEM_SEL_LEN.W)  // read byte
-    val MEM_RHU  = 4.U(MEM_SEL_LEN.W)  // read half word unsigned
-    val MEM_RBU  = 5.U(MEM_SEL_LEN.W)  // read byte unsigned
-    val MEM_WW   = 6.U(MEM_SEL_LEN.W)
-    val MEM_WH   = 7.U(MEM_SEL_LEN.W)
-    val MEM_WB   = 8.U(MEM_SEL_LEN.W)
   }
 }

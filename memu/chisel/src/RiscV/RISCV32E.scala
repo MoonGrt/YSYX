@@ -50,7 +50,7 @@ class Riscv32E_ID extends Module {
 
     // Control signals
     val halt   = Output(Bool())
-    val memsel = Output(UInt(MEM_SEL_LEN.W))
+    val memsel = Output(MEM())
     val regWen = Output(Bool())
 
     // Diff
@@ -59,35 +59,35 @@ class Riscv32E_ID extends Module {
   })
 
   val decoded = ListLookup(io.inst,
-    List(OP1.RS1, OP2.RS2, EX.ADD, WB.EX, MEM_NONE, CSRS.NONE), Array(
-      LW     -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM_RW  , CSRS.NONE),  // x[rs1] + sext(immi)
-      LH     -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM_RH  , CSRS.NONE),  // x[rs1] + sext(immi)
-      LB     -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM_RB  , CSRS.NONE),  // x[rs1] + sext(immi)
-      LHU    -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM_RHU , CSRS.NONE),  // x[rs1] + sext(immi)
-      LBU    -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM_RBU , CSRS.NONE),  // x[rs1] + sext(immi)
-      SW     -> List(OP1.RS1 , OP2.IMS , EX.ADD , WB.NONE, MEM_WW  , CSRS.NONE),  // x[rs1] + sext(imms)
-      SH     -> List(OP1.RS1 , OP2.IMS , EX.ADD , WB.NONE, MEM_WH  , CSRS.NONE),  // x[rs1] + sext(imms)
-      SB     -> List(OP1.RS1 , OP2.IMS , EX.ADD , WB.NONE, MEM_WB  , CSRS.NONE),  // x[rs1] + sext(imms)
+    List(OP1.RS1, OP2.RS2, EX.ADD, WB.EX, MEM.NONE, CSRS.NONE), Array(
+      LW     -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RW  , CSRS.NONE),  // x[rs1] + sext(immi)
+      LH     -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RH  , CSRS.NONE),  // x[rs1] + sext(immi)
+      LB     -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RB  , CSRS.NONE),  // x[rs1] + sext(immi)
+      LHU    -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RHU , CSRS.NONE),  // x[rs1] + sext(immi)
+      LBU    -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RBU , CSRS.NONE),  // x[rs1] + sext(immi)
+      SW     -> List(OP1.RS1 , OP2.IMS , EX.ADD , WB.NONE, MEM.WW  , CSRS.NONE),  // x[rs1] + sext(imms)
+      SH     -> List(OP1.RS1 , OP2.IMS , EX.ADD , WB.NONE, MEM.WH  , CSRS.NONE),  // x[rs1] + sext(imms)
+      SB     -> List(OP1.RS1 , OP2.IMS , EX.ADD , WB.NONE, MEM.WB  , CSRS.NONE),  // x[rs1] + sext(imms)
 
-      ADD    -> List(OP1.RS1 , OP2.RS2 , EX.ADD , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] + x[rs2]
-      ADDI   -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] + sext(immi)
-      SUB    -> List(OP1.RS1 , OP2.RS2 , EX.SUB , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] - x[rs2]
-      AND    -> List(OP1.RS1 , OP2.RS2 , EX.AND , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] & x[rs2]
-      OR     -> List(OP1.RS1 , OP2.RS2 , EX.OR  , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] | x[rs2]
-      XOR    -> List(OP1.RS1 , OP2.RS2 , EX.XOR , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] ^ x[rs2]
-      ANDI   -> List(OP1.RS1 , OP2.IMI , EX.AND , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] & sext(immi)
-      ORI    -> List(OP1.RS1 , OP2.IMI , EX.OR  , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] | sext(immi)
-      XORI   -> List(OP1.RS1 , OP2.IMI , EX.XOR , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] ^ sext(immi)
-      SLL    -> List(OP1.RS1 , OP2.RS2 , EX.SLL , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] << x[rs2](4,0)
-      SRL    -> List(OP1.RS1 , OP2.RS2 , EX.SRL , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] >>u x[rs2](4,0)
-      SRA    -> List(OP1.RS1 , OP2.RS2 , EX.SRA , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] >>s x[rs2](4,0)
-      SLLI   -> List(OP1.RS1 , OP2.IMI , EX.SLL , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] << immsi(4,0)
-      SRLI   -> List(OP1.RS1 , OP2.IMI , EX.SRL , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] >>u immsi(4,0)
-      SRAI   -> List(OP1.RS1 , OP2.IMI , EX.SRA , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] >>s immsi(4,0)
-      SLT    -> List(OP1.RS1 , OP2.RS2 , EX.SLT , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] <s x[rs2]
-      SLTU   -> List(OP1.RS1 , OP2.RS2 , EX.SLTU, WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] <u x[rs2]
-      SLTI   -> List(OP1.RS1 , OP2.IMI , EX.SLT , WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] <s immsi
-      SLTIU  -> List(OP1.RS1 , OP2.IMI , EX.SLTU, WB.EX  , MEM_NONE, CSRS.NONE),  // x[rs1] <u immsi
+      ADD    -> List(OP1.RS1 , OP2.RS2 , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] + x[rs2]
+      ADDI   -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] + sext(immi)
+      SUB    -> List(OP1.RS1 , OP2.RS2 , EX.SUB , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] - x[rs2]
+      AND    -> List(OP1.RS1 , OP2.RS2 , EX.AND , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] & x[rs2]
+      OR     -> List(OP1.RS1 , OP2.RS2 , EX.OR  , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] | x[rs2]
+      XOR    -> List(OP1.RS1 , OP2.RS2 , EX.XOR , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] ^ x[rs2]
+      ANDI   -> List(OP1.RS1 , OP2.IMI , EX.AND , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] & sext(immi)
+      ORI    -> List(OP1.RS1 , OP2.IMI , EX.OR  , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] | sext(immi)
+      XORI   -> List(OP1.RS1 , OP2.IMI , EX.XOR , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] ^ sext(immi)
+      SLL    -> List(OP1.RS1 , OP2.RS2 , EX.SLL , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] << x[rs2](4,0)
+      SRL    -> List(OP1.RS1 , OP2.RS2 , EX.SRL , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] >>u x[rs2](4,0)
+      SRA    -> List(OP1.RS1 , OP2.RS2 , EX.SRA , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] >>s x[rs2](4,0)
+      SLLI   -> List(OP1.RS1 , OP2.IMI , EX.SLL , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] << immsi(4,0)
+      SRLI   -> List(OP1.RS1 , OP2.IMI , EX.SRL , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] >>u immsi(4,0)
+      SRAI   -> List(OP1.RS1 , OP2.IMI , EX.SRA , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] >>s immsi(4,0)
+      SLT    -> List(OP1.RS1 , OP2.RS2 , EX.SLT , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] <s x[rs2]
+      SLTU   -> List(OP1.RS1 , OP2.RS2 , EX.SLTU, WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] <u x[rs2]
+      SLTI   -> List(OP1.RS1 , OP2.IMI , EX.SLT , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] <s immsi
+      SLTIU  -> List(OP1.RS1 , OP2.IMI , EX.SLTU, WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] <u immsi
 
       BEQ    -> List(OP1.RS1 , OP2.RS2 , EX.BEQ , WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] === x[rs2] then PC+sext(imm_b)
       BNE    -> List(OP1.RS1 , OP2.RS2 , EX.BNE , WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] =/= x[rs2] then PC+sext(imm_b)
@@ -228,11 +228,11 @@ class Riscv32E_ID extends Module {
   io.rd_addr := rd
   io.regWen  := wbsel =/= WB.NONE
   val memData = MuxLookup(io.memsel, 0.U(WORD_LEN.W))(Seq(
-    MEM_RW  -> io.memData,  // LW 直接写回
-    MEM_RB  -> Cat(Fill(24, io.memData(7)), io.memData(7,0)),  // LB 符号扩展
-    MEM_RH  -> Cat(Fill(16, io.memData(15)), io.memData(15,0)),  // LH 符号扩展
-    MEM_RBU -> Cat(0.U(24.W), io.memData(7,0)),  // LBU 零扩展
-    MEM_RHU -> Cat(0.U(16.W), io.memData(15,0)),  // LHU 零扩展
+    MEM.RW  -> io.memData,  // LW 直接写回
+    MEM.RB  -> Cat(Fill(24, io.memData(7)), io.memData(7,0)),  // LB 符号扩展
+    MEM.RH  -> Cat(Fill(16, io.memData(15)), io.memData(15,0)),  // LH 符号扩展
+    MEM.RBU -> Cat(0.U(24.W), io.memData(7,0)),  // LBU 零扩展
+    MEM.RHU -> Cat(0.U(16.W), io.memData(15,0)),  // LHU 零扩展
   ))
   when (io.wb_en && io.wb_rd =/= 0.U) {
     GPR(io.wb_rd) := MuxCase(0.U, Seq(
@@ -354,13 +354,13 @@ class Riscv32E extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
-  io.mem_re    := (idStage.io.memsel === MEM_RW) || (idStage.io.memsel === MEM_RH) || (idStage.io.memsel === MEM_RB) ||
-                  (idStage.io.memsel === MEM_RHU) || (idStage.io.memsel === MEM_RBU)
-  io.mem_we    := (idStage.io.memsel === MEM_WW) || (idStage.io.memsel === MEM_WH) || (idStage.io.memsel === MEM_WB)
+  io.mem_re    := (idStage.io.memsel === MEM.RW) || (idStage.io.memsel === MEM.RH) || (idStage.io.memsel === MEM.RB) ||
+                  (idStage.io.memsel === MEM.RHU) || (idStage.io.memsel === MEM.RBU)
+  io.mem_we    := (idStage.io.memsel === MEM.WW) || (idStage.io.memsel === MEM.WH) || (idStage.io.memsel === MEM.WB)
   io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
-  val memBen    = ~reset.asBool && ((idStage.io.memsel === MEM_WB) || (idStage.io.memsel === MEM_RB) || (idStage.io.memsel === MEM_RBU))
-  val memHen    = ~reset.asBool && ((idStage.io.memsel === MEM_WH) || (idStage.io.memsel === MEM_RH) || (idStage.io.memsel === MEM_RHU))
+  val memBen    = ~reset.asBool && ((idStage.io.memsel === MEM.WB) || (idStage.io.memsel === MEM.RB) || (idStage.io.memsel === MEM_RBU))
+  val memHen    = ~reset.asBool && ((idStage.io.memsel === MEM.WH) || (idStage.io.memsel === MEM.RH) || (idStage.io.memsel === MEM_RHU))
   io.mem_len   := Mux(memBen, 1.U, Mux(memHen, 2.U, 4.U))
 
   // Write Back
