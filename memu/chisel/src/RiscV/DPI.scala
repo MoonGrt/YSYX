@@ -2,14 +2,15 @@ package riscv
 
 import chisel3._
 import chisel3.util._
+import Constants._
 
 // ---------------------------
 // ROM BlackBox (只读指令存储器)
 // ---------------------------
 class ROM_DPI extends BlackBox{
   val io = IO(new Bundle {
-    val addr = Input(UInt(32.W))
-    val data = Output(UInt(32.W))
+    val addr = Input(UInt(WORD_LEN.W))
+    val data = Output(UInt(WORD_LEN.W))
   })
 }
 
@@ -22,9 +23,9 @@ class RAM_DPI extends BlackBox {
     val re    = Input(Bool())
     val we    = Input(Bool())
     val len   = Input(UInt(8.W))
-    val addr  = Input(UInt(32.W))
-    val wdata = Input(UInt(32.W))
-    val rdata = Output(UInt(32.W))
+    val addr  = Input(UInt(WORD_LEN.W))
+    val wdata = Input(UInt(WORD_LEN.W))
+    val rdata = Output(UInt(WORD_LEN.W))
   })
 }
 
@@ -45,10 +46,10 @@ class EBreak extends BlackBox {
 class DiffTest extends BlackBox {
   val io = IO(new Bundle {
     val clk  = Input(Clock())
-    val pc   = Input(UInt(32.W))
-    val npc  = Input(UInt(32.W))
-    val inst = Input(UInt(32.W))
-    val gpr  = Input(Vec(32, UInt(32.W)))
-    val csr  = Input(Vec(8, UInt(32.W)))
+    val pc   = Input(UInt(WORD_LEN.W))
+    val npc  = Input(UInt(WORD_LEN.W))
+    val inst = Input(UInt(WORD_LEN.W))
+    val csr  = Input(Vec(CSR_NUM, UInt(WORD_LEN.W)))
+    val gpr  = Input(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 }
