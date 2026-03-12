@@ -49,10 +49,14 @@ object Constants {
     val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
     val JUMP_JALR = 1.U(JUMP_SEL_LEN.W)
 
-    val WB_SEL_LEN = 2
-    val WB_NONE = 0.U(WB_SEL_LEN.W)
-    val WB_EX   = 1.U(WB_SEL_LEN.W)
-    val WB_MEM  = 2.U(WB_SEL_LEN.W)
+    // val WB_SEL_LEN = 2
+    // val WB_NONE = 0.U(WB_SEL_LEN.W)
+    // val WB_EX   = 1.U(WB_SEL_LEN.W)
+    // val WB_MEM  = 2.U(WB_SEL_LEN.W)
+  val wbVals = Seq("NONE","PC","EX","MEM","CSR")
+  val wbEnum = Enum(wbVals.length)
+  val WB_NONE :: WB_PC :: WB_EX :: WB_MEM :: WB_CSR :: Nil = wbEnum
+
 
     val MEM_SEL_LEN = 3
     val MEM_NONE = 0.U(MEM_SEL_LEN.W)
