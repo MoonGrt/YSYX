@@ -80,11 +80,11 @@ class MiniRV_ID extends Module {
       LUI  -> List(IMM.U, EX.ADD, JUMP.NONE, WB.EX, MEM.NONE),  // sext(imm_u[31:12] << 12)
     ),
   )
-  val immsel  = decoded(0).asTypeOf(IMM())
-  val exsel   = decoded(1).asTypeOf(EX())
-  val jumpsel = decoded(2).asTypeOf(JUMP())
-  val wbsel   = decoded(3).asTypeOf(WB())
-  val memsel  = decoded(4).asTypeOf(MEM())
+  val immsel  = decoded(0).asTypeOf(IMM.safe())
+  val exsel   = decoded(1).asTypeOf(EX.safe())
+  val jumpsel = decoded(2).asTypeOf(JUMP.safe())
+  val wbsel   = decoded(3).asTypeOf(WB.safe())
+  val memsel  = decoded(4).asTypeOf(MEM.safe())
 
   // -------- 寄存器堆 --------
   val regfile = RegInit(VecInit(Seq.fill(WORD_LEN)(0.U(WORD_LEN.W))))
