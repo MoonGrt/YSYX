@@ -294,6 +294,7 @@ class MiniRVTOP extends Module {
   cpu.io.inst := rom.io.data
 
   // 数据访存
+  ram.io.clk   := clock
   ram.io.re    := cpu.io.mem_re
   ram.io.we    := cpu.io.mem_we
   ram.io.len   := cpu.io.mem_len
