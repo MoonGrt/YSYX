@@ -108,7 +108,7 @@ class MiniRV_ID extends Module {
     IMM.S -> imm_s,
     IMM.U -> imm_u,
   ))
-  io.immen := (immsel =/= IMMN)
+  io.immen := (immsel =/= IMM.N)
 
   // -------- JUMP功能 --------
   io.jumpen := (jumpsel === JUMP_JALR)
