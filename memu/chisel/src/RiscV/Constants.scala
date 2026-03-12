@@ -48,7 +48,7 @@ object Constants {
     }
     object CSRI extends ChiselEnum {
       val MSTATUS, MTVEC, MEPC, MCAUSE,
-          MCYCLE, MCYCLEH, MVENDORID, MARCHID = Value
+          MCYCLE, MCYCLEH, MVENDORID, MARCHID, NONE = Value
     }
     val CSRADDR = Seq(
       0x300.U,  // mstatus
