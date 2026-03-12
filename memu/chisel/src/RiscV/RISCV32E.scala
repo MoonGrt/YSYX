@@ -113,7 +113,7 @@ class Riscv32E_ID extends Module {
       MRET   -> List(OP1.NONE, OP2.CSR , EX.CSR , WB.NONE, MEM.NONE, CSRS.MRET),
     ),
   )
-  val op1sel = decoded(0).asTypeOf(OP1())
+  val op1sel = decoded(0)
   val op2sel = decoded(1)
   val exsel  = decoded(2)
   val wbsel  = decoded(3).asTypeOf(WB())
