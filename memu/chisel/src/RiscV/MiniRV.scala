@@ -103,7 +103,7 @@ class MiniRV_ID extends Module {
   // -------- EX操作数 --------
   io.rs1 := Mux(io.inst === LUI, 0.U, regfile(rs1))
   io.rs2 := regfile(rs2)
-  io.imm := MuxLookup(immsel, 0.U)(Seq(
+  io.imm := MuxLookup(immsel, IMM.I)(Seq(
     IMM.I -> imm_i,
     IMM.S -> imm_s,
     IMM.U -> imm_u,
