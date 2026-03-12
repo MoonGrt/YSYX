@@ -187,7 +187,7 @@ class Riscv32E_ID extends Module {
   //   0xF11.U -> 6.U,  // mvendorid
   //   0xF12.U -> 7.U,  // marchid
   // ))
-val csr_id = decodeCSR(csr_addr)
+val csr_id = decodeCSR(csr_addr).asUInt
   val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
   CSR(CSR_MCYCLE)  := cycle64(31,0)
   CSR(CSR_MCYCLEH) := cycle64(63,32)
