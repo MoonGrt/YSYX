@@ -101,7 +101,6 @@ class Riscv32E_IF extends Module {
 // ID 模块：Instruction Decode + GPR
 // ---------------------------
 class Riscv32E_ID extends Module {
-  import Instructions._
   import Riscv32E_Parameters._
   val io = IO(new Bundle {
     val pc      = Input(UInt(WORD_LEN.W))
@@ -390,7 +389,6 @@ class Riscv32E_EX extends Module {
 // Riscv32E CPU（单周期）
 // ---------------------------
 class Riscv32E extends Module {
-  import Instructions._
   import Riscv32E_Parameters._
   val io = IO(new Bundle {
     val pc   = Output(UInt(WORD_LEN.W))
