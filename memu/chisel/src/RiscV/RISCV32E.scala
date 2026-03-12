@@ -116,7 +116,7 @@ class Riscv32E_ID extends Module {
   val op1sel = decoded(0).asTypeOf(OP1())
   val op2sel = decoded(1)
   val exsel  = decoded(2)
-  val wbsel  = decoded(3)
+  val wbsel  = decoded(3).asTypeOf(WB())
   val memsel = decoded(4)
   val csrsel = decoded(5)
 
