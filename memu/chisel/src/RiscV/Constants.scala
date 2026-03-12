@@ -3,6 +3,12 @@ package riscv
 import chisel3._
 import chisel3.util._
 
+trait CoreConstants {
+  val WORD_LEN = 32
+  val CSR_NUM  = 8
+  val GPR_NUM  = 32
+}
+
 object Constants {
   object Base {
     val WORD_LEN = 32
@@ -10,9 +16,7 @@ object Constants {
     val GPR_NUM  = 32
   }
 
-  object MiniRV {
-    import Base._
-
+  object MiniRV extends CoreConstants {
     val IMM_SEL_LEN = 2
     val IMMN = 0.U(IMM_SEL_LEN.W)
     val IMMI = 1.U(IMM_SEL_LEN.W)
@@ -40,9 +44,7 @@ object Constants {
     val MEM_WB   = 4.U(MEM_SEL_LEN.W)
   }
 
-  object Riscv32E {
-    import Base._
-
+  object Riscv32E extends CoreConstants{
     val OP1_SEL_LEN = 2
     val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
     val OP1_PC   = 1.U(OP1_SEL_LEN.W)
