@@ -7,6 +7,24 @@ abstract class ConstEnum extends ChiselEnum {
   def len: Int = log2Ceil(this.getWidth)
 }
 
+object CtrlEnum {
+
+  /**  
+   * 自动生成 Enum 和常量
+   * @param namePrefix 前缀，比如 "OP1", "EX"
+   * @param options   选项列表，顺序决定 UInt 值
+   * @return (宽度, list of UInt constants)
+   */
+  def define(namePrefix: String, options: Seq[String]): (Int, Seq[UInt]) = {
+    val width = log2Ceil(options.length max 2) // 最小宽度 1 bit
+    val enum1 = Enum(options.length)
+    val constants = enum1.toSeq
+    // 打印方便调试
+    println(s"$namePrefix width = $width, constants = ${options.zip(constants)}")
+    (width, constants)
+  }
+}
+
 object Constants {
   val WORD_LEN = 32
   val CSR_NUM  = 8
@@ -35,12 +53,9 @@ object Constants {
     // val WB_NONE = 0.U(WB_SEL_LEN.W)
     // val WB_EX   = 1.U(WB_SEL_LEN.W)
     // val WB_MEM  = 2.U(WB_SEL_LEN.W)
+  val (WB_SEL_LEN, Seq(WB_EX, WB_MEM, WB_NONE)) =
+    CtrlEnum.define("WB", Seq("EX","MEM","NONE"))
 
-    // WB
-    val wbVals = Seq("NONE","PC","EX","MEM","CSR")
-    val wbEnum = Enum(wbVals.length)
-    val WB_NONE :: WB_PC :: WB_EX :: WB_MEM :: WB_CSR :: Nil = wbEnum
-    
     val MEM_SEL_LEN = 3
     val MEM_NONE = 0.U(MEM_SEL_LEN.W)
     val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // write word
