@@ -116,7 +116,7 @@ class Riscv32E_ID extends Module {
   val op1sel = decoded(0).asTypeOf(OP1())
   val op2sel = decoded(1).asTypeOf(OP2())
   val exsel  = decoded(2)
-  val wbsel  = decoded(3)
+  val wbsel  = decoded(3).asTypeOf(WB())
   val memsel = decoded(4)
   val csrsel = decoded(5)
 
@@ -236,10 +236,10 @@ class Riscv32E_ID extends Module {
   ))
   when (io.wb_en && io.wb_rd =/= 0.U) {
     GPR(io.wb_rd) := MuxCase(0.U, Seq(
-      (wbsel === WB_PC ) -> (io.pc + 4.U),
-      (wbsel === WB_EX ) -> io.exData,
-      (wbsel === WB_MEM) -> memData,
-      (wbsel === WB_CSR) -> csr_old,
+      (wbsel === WB.PC ) -> (io.pc + 4.U),
+      (wbsel === WB.EX ) -> io.exData,
+      (wbsel === WB.MEM) -> memData,
+      (wbsel === WB.CSR) -> csr_old,
     ))
   }
 
