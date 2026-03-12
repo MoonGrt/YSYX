@@ -164,7 +164,7 @@ class Riscv32E_ID extends Module {
   ))
   io.op2 := MuxCase(0.U(32.W), Seq(
     (op2sel === OP2.RS2) -> GPR(rs2),
-    (op2sel === OP2.CSRS) -> brcsr,
+    (op2sel === OP2.CSR) -> brcsr,
     (op2sel === OP2.IMI) -> immsi,
     (op2sel === OP2.IMS) -> immss,
     (op2sel === OP2.IMJ) -> immsj,
@@ -173,7 +173,7 @@ class Riscv32E_ID extends Module {
 
   // -------- WB功能 --------
   io.memsel := memsel
-  // CSRS
+  // CSR
   val CSR_MSTATUS = 0.U
   val CSR_MEPC    = 1.U
   val CSR_MCAUSE  = 2.U
@@ -194,12 +194,12 @@ class Riscv32E_ID extends Module {
     0xF12.U -> 7.U,  // marchid
   ))
   val cycle64 = Cat(CSRS(CSR_MCYCLEH), CSRS(CSR_MCYCLE)) + 1.U
-  CSRS(CSR_MCYCLE)  := cycle64(31,0)
-  CSRS(CSR_MCYCLEH) := cycle64(63,32)
-  CSRS(CSR_MVENDOR) := 0x79737978.U  // ysyx
-  CSRS(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
+  CSR(CSR_MCYCLE)  := cycle64(31,0)
+  CSR(CSR_MCYCLEH) := cycle64(63,32)
+  CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
+  CSR(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
 
-  val csr_old = CSRS(csr_id)
+  val csr_old = CSR(csr_id)
   val csr_new = MuxCase(io.op1, Seq(
     (csrsel === CSRS.W) -> io.op1,
     (csrsel === CSRS.S) -> (csr_old | io.op1),
@@ -210,19 +210,19 @@ class Riscv32E_ID extends Module {
     csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
     csr_id === CSR_MTVEC || csr_id === CSR_MCYCLE || csr_id === CSR_MCYCLEH
   when (~reset.asBool && csr_wen && csr_writable) {
-    CSRS(csr_id) := csr_new
+    CSR(csr_id) := csr_new
   }
   when (~reset.asBool && csrsel === CSRS.E) {
     // mstatus = 0x00001800
-    CSRS(CSR_MSTATUS) := 0x00001800.U
+    CSR(CSR_MSTATUS) := 0x00001800.U
     // mepc = pc
-    CSRS(CSR_MEPC)    := io.pc
+    CSR(CSR_MEPC)    := io.pc
     // mcause = 11 (ECALL from M-mode)
-    CSRS(CSR_MCAUSE)  := 11.U
+    CSR(CSR_MCAUSE)  := 11.U
   }
   when (~reset.asBool && csrsel === CSRS.MRET) {
     // mstatus = 0x00000080
-    CSRS(CSR_MSTATUS) := 0x00000080.U
+    CSR(CSR_MSTATUS) := 0x00000080.U
   }
   // GPR
   io.rd_addr := rd
@@ -239,7 +239,7 @@ class Riscv32E_ID extends Module {
       (wbsel === WB.PC ) -> (io.pc + 4.U),
       (wbsel === WB.EX ) -> io.exData,
       (wbsel === WB.MEM) -> memData,
-      (wbsel === WB.CSRS) -> csr_old,
+      (wbsel === WB.CSR) -> csr_old,
     ))
   }
 
@@ -268,7 +268,7 @@ class Riscv32E_ID extends Module {
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
   // 输出 CSRS & GPR
-  io.csrOut := CSRS
+  io.csrOut := CSR
   io.gprOut := GPR
 }
 
