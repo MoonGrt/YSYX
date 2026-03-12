@@ -62,7 +62,7 @@ class MiniRV_ID extends Module {
     val regfileOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
-  val List(immsel, exsel, jumpsel, wbsel, memsel) = ListLookup(
+  val decoded = ListLookup(
     io.inst,
     List(IMM.N, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
     Array(
@@ -80,6 +80,11 @@ class MiniRV_ID extends Module {
       LUI  -> List(IMM.U, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
     ),
   )
+  val immsel  = decoded(0).asTypeOf(IMM())
+  val exsel   = decoded(1)
+  val jumpsel = decoded(2)
+  val wbsel   = decoded(3)
+  val memsel  = decoded(4)
 
   // -------- 寄存器堆 --------
   val regfile = RegInit(VecInit(Seq.fill(WORD_LEN)(0.U(WORD_LEN.W))))
@@ -99,9 +104,9 @@ class MiniRV_ID extends Module {
   io.rs1 := Mux(io.inst === LUI, 0.U, regfile(rs1))
   io.rs2 := regfile(rs2)
   io.imm := MuxLookup(immsel, 0.U)(Seq(
-    IMMI -> imm_i,
-    IMMS -> imm_s,
-    IMMU -> imm_u,
+    IMM.I -> imm_i,
+    IMM.S -> imm_s,
+    IMM.U -> imm_u,
   ))
   io.immen := (immsel =/= IMMN)
 
