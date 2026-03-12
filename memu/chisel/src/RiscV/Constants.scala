@@ -46,20 +46,23 @@ object Constants {
     object CSRS extends ChiselEnum {
       val NONE, W, S, C, B, E, MRET = Value
     }
-    object CSRID extends ChiselEnum {
-      val MSTATUS   = Value(0x300.U)
-      val MTVEC     = Value(0x305.U)
-      val MEPC      = Value(0x341.U)
-      val MCAUSE    = Value(0x342.U)
-      val MCYCLE    = Value(0xB00.U)
-      val MCYCLEH   = Value(0xB80.U)
-      val MVENDORID = Value(0xF11.U)
-      val MARCHID   = Value(0xF12.U)
-      val NONE      = Value(0x000.U)
+    object CSRI extends ChiselEnum {
+      val MSTATUS, MTVEC, MEPC, MCAUSE,
+          MCYCLE, MCYCLEH, MVENDORID, MARCHID
     }
+    val CSRADDR = Seq(
+      0x300.U,  // mstatus
+      0x305.U,  // mepc
+      0x341.U,  // mcause
+      0x342.U,  // mtvec
+      0xB00.U,  // mcycle
+      0xB80.U,  // mcycleh
+      0xF11.U,  // mvendorid
+      0xF12.U,  // marchid
+    )
     def decodeCSR(addr: UInt): UInt = {
       MuxLookup(addr, CSRID.NONE.asUInt)(
-        CSRID.all.map(c => c.asUInt -> c.asUInt)
+        csrAddrTable.zipWithIndex.map { case (a, i) => a -> i.U }
       )
     }
   }
