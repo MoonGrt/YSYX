@@ -356,7 +356,7 @@ class Riscv32E extends Module {
   io.mem_we    := isStore
   io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
-  io.mem_len   := Mux(memBen, 1.U, Mux(memHen, 2.U, 4.U))
+  io.mem_len   := Mux(isByte, 1.U, Mux(isHalf, 2.U, 4.U))
 
   // Write Back
   idStage.io.wb_en   := idStage.io.regWen
