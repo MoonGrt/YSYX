@@ -352,11 +352,13 @@ class Riscv32E extends Module {
   val isStore = Seq(MEM.WW, MEM.WH, MEM.WB).map(idStage.io.memsel === _).reduce(_||_)
   val isByte  = Seq(MEM.WB, MEM.RB, MEM.RBU).map(idStage.io.memsel === _).reduce(_||_)
   val isHalf  = Seq(MEM.WH, MEM.RH, MEM.RHU).map(idStage.io.memsel === _).reduce(_||_)
+  val memBen  = !reset.asBool && isByte
+  val memHen  = !reset.asBool && isHalf
   io.mem_re    := isLoad
   io.mem_we    := isStore
   io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
-  io.mem_len   := Mux(~reset.asBool && isByte, 1.U, Mux(~reset.asBool && isHalf, 2.U, 4.U))
+  io.mem_len   := Mux(memBen, 1.U, Mux(memHen, 2.U, 4.U))
 
   // Write Back
   idStage.io.wb_en   := idStage.io.regWen
