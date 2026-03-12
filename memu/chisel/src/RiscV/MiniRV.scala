@@ -6,6 +6,37 @@ import Instructions._
 import Constants._
 
 // ---------------------------
+// Configuration constants
+// ---------------------------
+object MiniRV_Constants {
+  val IMM_SEL_LEN = 2
+  val IMMN = 0.U(IMM_SEL_LEN.W)
+  val IMMI = 1.U(IMM_SEL_LEN.W)
+  val IMMS = 2.U(IMM_SEL_LEN.W)
+  val IMMU = 3.U(IMM_SEL_LEN.W)
+
+  val EX_SEL_LEN = 1
+  val EX_ADD  = 0.U(EX_SEL_LEN.W)
+  val EX_JALR = 1.U(EX_SEL_LEN.W)
+
+  val JUMP_SEL_LEN = 1
+  val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
+  val JUMP_JALR = 1.U(JUMP_SEL_LEN.W)
+
+  val WB_SEL_LEN = 2
+  val WB_NONE = 0.U(WB_SEL_LEN.W)
+  val WB_EX   = 1.U(WB_SEL_LEN.W)
+  val WB_MEM  = 2.U(WB_SEL_LEN.W)
+
+  val MEM_SEL_LEN = 3
+  val MEM_NONE = 0.U(MEM_SEL_LEN.W)
+  val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // write word
+  val MEM_RB   = 2.U(MEM_SEL_LEN.W)  // write byte
+  val MEM_WW   = 3.U(MEM_SEL_LEN.W)
+  val MEM_WB   = 4.U(MEM_SEL_LEN.W)
+}
+
+// ---------------------------
 // IF 模块：Instruction Fetch
 // ---------------------------
 class MiniRV_IF extends Module {
@@ -33,36 +64,8 @@ class MiniRV_IF extends Module {
 // ---------------------------
 // ID 模块：Instruction Decode + GPR
 // ---------------------------
-object MiniRV_Parameters {
-  val IMM_SEL_LEN = 2
-  val IMMN = 0.U(IMM_SEL_LEN.W)
-  val IMMI = 1.U(IMM_SEL_LEN.W)
-  val IMMS = 2.U(IMM_SEL_LEN.W)
-  val IMMU = 3.U(IMM_SEL_LEN.W)
-
-  val EX_SEL_LEN = 1
-  val EX_ADD  = 0.U(EX_SEL_LEN.W)
-  val EX_JALR = 1.U(EX_SEL_LEN.W)
-
-  val JUMP_SEL_LEN = 1
-  val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
-  val JUMP_JALR = 1.U(JUMP_SEL_LEN.W)
-
-  val WB_SEL_LEN = 2
-  val WB_NONE = 0.U(WB_SEL_LEN.W)
-  val WB_EX   = 1.U(WB_SEL_LEN.W)
-  val WB_MEM  = 2.U(WB_SEL_LEN.W)
-
-  val MEM_SEL_LEN = 3
-  val MEM_NONE = 0.U(MEM_SEL_LEN.W)
-  val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // write word
-  val MEM_RB   = 2.U(MEM_SEL_LEN.W)  // write byte
-  val MEM_WW   = 3.U(MEM_SEL_LEN.W)
-  val MEM_WB   = 4.U(MEM_SEL_LEN.W)
-}
 class MiniRV_ID extends Module {
-  import Instructions._
-  import MiniRV_Parameters._
+  import MiniRV_Constants._
   val io = IO(new Bundle {
     val inst    = Input(UInt(WORD_LEN.W))
 
