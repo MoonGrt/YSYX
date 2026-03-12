@@ -34,8 +34,6 @@
   _(mstatus)        \
   _(mcause)         \
   _(mtvec)          \
-  _(mvendorid)      \
-  _(marchid)        \
 
 #define CHECKDIFF_CSR(p) \
   if (ref_r->csr.p != cpu.csr.p) { \

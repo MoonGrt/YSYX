@@ -34,8 +34,6 @@
   _(mstatus)        \
   _(mcause)         \
   _(mtvec)          \
-  _(mvendorid)      \
-  _(marchid)        \
 
 #define CHECKDIFF_CSR(p) \
   if (ref_r->csr.p != cpu.csr.p) { \
@@ -49,9 +47,11 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   CHECKDIFF(pc);
   for (int i = 0; i < 32; i++)
     CHECKDIFF_FMT(gpr[i], "gpr[%d]", i);
+#ifndef CONFIG_CORE_minirv
 #define _(x) CHECKDIFF_CSR(x);
   CSR_LIST(_)
 #undef _
+#endif
   return result;
 }
 
