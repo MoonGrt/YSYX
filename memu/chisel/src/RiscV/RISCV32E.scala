@@ -168,13 +168,30 @@ class Riscv32E_ID extends Module {
   // -------- WB功能 --------
   io.memsel := memsel
   // CSR
+  val CSR_MSTATUS = 0.U
+  val CSR_MEPC    = 1.U
+  val CSR_MCAUSE  = 2.U
+  val CSR_MTVEC   = 3.U
+  val CSR_MCYCLE  = 4.U
+  val CSR_MCYCLEH = 5.U
+  val CSR_MVENDOR = 6.U
+  val CSR_MARCHID = 7.U
   val csr_addr = immi
-  val csr_id = decodeCSR(csr_addr)
-  val cycle64 = Cat(CSR(CSRI.MCYCLEH), CSR(CSRI.MCYCLE)) + 1.U
-  CSR(CSRI.MCYCLE)  := cycle64(31,0)
-  CSR(CSRI.MCYCLEH) := cycle64(63,32)
-  CSR(CSRI.MVENDOR) := 0x79737978.U  // ysyx
-  CSR(CSRI.MARCHID) := 0x018CE26E.U  // moongrt - 26010030
+  val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
+    0x300.U -> 0.U,  // mstatus
+    0x341.U -> 1.U,  // mepc
+    0x342.U -> 2.U,  // mcause
+    0x305.U -> 3.U,  // mtvec
+    0xB00.U -> 4.U,  // mcycle
+    0xB80.U -> 5.U,  // mcycleh
+    0xF11.U -> 6.U,  // mvendorid
+    0xF12.U -> 7.U,  // marchid
+  ))
+  val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
+  CSR(CSR_MCYCLE)  := cycle64(31,0)
+  CSR(CSR_MCYCLEH) := cycle64(63,32)
+  CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
+  CSR(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
 
   val csr_old = CSR(csr_id)
   val csr_new = MuxCase(io.op1, Seq(
@@ -184,22 +201,22 @@ class Riscv32E_ID extends Module {
   ))
   val csr_wen = csrsel.isOneOf(CSRS.W, CSRS.S, CSRS.C)
   val csr_writable =
-    csr_id === CSRI.MSTATUS || csr_id === CSRI.MEPC || csr_id === CSRI.MCAUSE ||
-    csr_id === CSRI.MTVEC || csr_id === CSRI.MCYCLE || csr_id === CSRI.MCYCLEH
+    csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
+    csr_id === CSR_MTVEC || csr_id === CSR_MCYCLE || csr_id === CSR_MCYCLEH
   when (~reset.asBool && csr_wen && csr_writable) {
     CSR(csr_id) := csr_new
   }
   when (~reset.asBool && csrsel === CSRS.E) {
     // mstatus = 0x00001800
-    CSR(CSRI.MSTATUS) := 0x00001800.U
+    CSR(CSR_MSTATUS) := 0x00001800.U
     // mepc = pc
-    CSR(CSRI.MEPC)    := io.pc
+    CSR(CSR_MEPC)    := io.pc
     // mcause = 11 (ECALL from M-mode)
-    CSR(CSRI.MCAUSE)  := 11.U
+    CSR(CSR_MCAUSE)  := 11.U
   }
   when (~reset.asBool && csrsel === CSRS.MRET) {
     // mstatus = 0x00000080
-    CSR(CSRI.MSTATUS) := 0x00000080.U
+    CSR(CSR_MSTATUS) := 0x00000080.U
   }
   // GPR
   io.rd_addr := rd
