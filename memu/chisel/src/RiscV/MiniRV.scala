@@ -64,7 +64,7 @@ class MiniRV_ID extends Module {
 
   val decoded = ListLookup(
     io.inst,
-    List(IMMN, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
+    List(IMMSel.N, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
     Array(
       // Load/Store
       LW   -> List(IMMSel.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
