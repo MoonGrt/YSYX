@@ -31,7 +31,7 @@ object Constants {
   val GPR_NUM  = 32
 
   object MiniRV {
-    object ImmSel extends ChiselEnum {
+    object ImmSel extends Enumeration {
       val N, I, S, U = Value
     }
 
