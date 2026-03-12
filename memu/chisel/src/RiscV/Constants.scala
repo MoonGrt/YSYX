@@ -10,7 +10,7 @@ trait Constants {
 }
 
 object Riscv32E_Constants {
-  export Constants.*
+  import Constants._
 
   val OP1_SEL_LEN = 2
   val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
