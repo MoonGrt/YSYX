@@ -101,16 +101,16 @@ class Riscv32E_ID extends Module {
       LUI    -> List(OP1.NONE, OP2.IMU , EX.ADD , WB.EX  , MEM_NONE, CSRS.NONE),  // sext(immu[31:12] << 12)
       AUIPC  -> List(OP1.PC  , OP2.IMU , EX.ADD , WB.EX  , MEM_NONE, CSRS.NONE),  // PC + sext(immu[31:12] << 12)
 
-      CSRRW  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSRS , MEM_NONE, CSRS.W   ), // CSRs[csr] <- x[rs1]
-      CSRRWI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSRS , MEM_NONE, CSRS.W   ), // CSRs[csr] <- uext(imm_z)
-      CSRRS  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSRS , MEM_NONE, CSRS.S   ), // CSRs[csr] <- CSRs[csr] | x[rs1]
-      CSRRSI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSRS , MEM_NONE, CSRS.S   ), // CSRs[csr] <- CSRs[csr] | uext(imm_z)
-      CSRRC  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSRS , MEM_NONE, CSRS.C   ), // CSRs[csr] <- CSRs[csr]&~x[rs1]
-      CSRRCI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSRS , MEM_NONE, CSRS.C   ), // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
+      CSRRW  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM_NONE, CSRS.W   ), // CSRs[csr] <- x[rs1]
+      CSRRWI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM_NONE, CSRS.W   ), // CSRs[csr] <- uext(imm_z)
+      CSRRS  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM_NONE, CSRS.S   ), // CSRs[csr] <- CSRs[csr] | x[rs1]
+      CSRRSI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM_NONE, CSRS.S   ), // CSRs[csr] <- CSRs[csr] | uext(imm_z)
+      CSRRC  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM_NONE, CSRS.C   ), // CSRs[csr] <- CSRs[csr]&~x[rs1]
+      CSRRCI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM_NONE, CSRS.C   ), // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
 
       EBREAK -> List(OP1.NONE, OP2.NONE, EX.NONE, WB.NONE, MEM_NONE, CSRS.B   ),
-      ECALL  -> List(OP1.NONE, OP2.CSRS , EX.CSRS , WB.NONE, MEM_NONE, CSRS.E   ),
-      MRET   -> List(OP1.NONE, OP2.CSRS , EX.CSRS , WB.NONE, MEM_NONE, CSRS.MRET),
+      ECALL  -> List(OP1.NONE, OP2.CSR , EX.CSR , WB.NONE, MEM_NONE, CSRS.E   ),
+      MRET   -> List(OP1.NONE, OP2.CSR , EX.CSR , WB.NONE, MEM_NONE, CSRS.MRET),
     ),
   )
   val op1sel = decoded(0).asTypeOf(OP1())
