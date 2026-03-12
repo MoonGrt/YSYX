@@ -3,7 +3,7 @@ package riscv
 import chisel3._
 import chisel3.util._
 
-trait Constants {
+object Constants {
   val WORD_LEN = 32
   val CSR_NUM  = 8
   val GPR_NUM  = 32
