@@ -7,52 +7,42 @@ abstract class ConstEnum extends ChiselEnum {
   def len: Int = log2Ceil(this.getWidth)
 }
 
-object CtrlEnum {
-
-  /**  
-   * 自动生成 Enum 和常量
-   * @param namePrefix 前缀，比如 "OP1", "EX"
-   * @param options   选项列表，顺序决定 UInt 值
-   * @return (宽度, list of UInt constants)
-   */
-  def define(namePrefix: String, options: Seq[String]): (Int, Seq[UInt]) = {
-    val width = log2Ceil(options.length max 2) // 最小宽度 1 bit
-    val enum1 = Enum(options.length)
-    val constants = enum1.toSeq
-    // 打印方便调试
-    println(s"$namePrefix width = $width, constants = ${options.zip(constants)}")
-    (width, constants)
-  }
-}
-
 object Constants {
   val WORD_LEN = 32
   val CSR_NUM  = 8
   val GPR_NUM  = 32
 
-import chisel3._
-import chisel3.util._
+  object MiniRV {
+    object IMM extends ConstEnum {
+      val N, I, S, U = Value
+    }
 
-object MiniRV {
+    val IMM_SEL_LEN = 2
+    val IMMN = 0.U(IMM_SEL_LEN.W)
+    val IMMI = 1.U(IMM_SEL_LEN.W)
+    val IMMS = 2.U(IMM_SEL_LEN.W)
+    val IMMU = 3.U(IMM_SEL_LEN.W)
 
-  // 工厂函数：给名字列表，生成宽度和 Map
-  def makeConsts(names: String*): (Int, Map[String, UInt]) = {
-    val width = log2Ceil(names.size)
-    val consts = names.zipWithIndex.map { case (n, i) => n -> i.U(width.W) }.toMap
-    (width, consts)
+    val EX_SEL_LEN = 1
+    val EX_ADD  = 0.U(EX_SEL_LEN.W)
+    val EX_JALR = 1.U(EX_SEL_LEN.W)
+
+    val JUMP_SEL_LEN = 1
+    val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
+    val JUMP_JALR = 1.U(JUMP_SEL_LEN.W)
+
+    val WB_SEL_LEN = 2
+    val WB_NONE = 0.U(WB_SEL_LEN.W)
+    val WB_EX   = 1.U(WB_SEL_LEN.W)
+    val WB_MEM  = 2.U(WB_SEL_LEN.W)
+
+    val MEM_SEL_LEN = 3
+    val MEM_NONE = 0.U(MEM_SEL_LEN.W)
+    val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // write word
+    val MEM_RB   = 2.U(MEM_SEL_LEN.W)  // write byte
+    val MEM_WW   = 3.U(MEM_SEL_LEN.W)
+    val MEM_WB   = 4.U(MEM_SEL_LEN.W)
   }
-
-  // IMM 常量
-  val (IMM_SEL_LEN, IMM) = makeConsts("IMMN", "IMMI", "IMMS", "IMMU")
-  // EX 常量
-  val (EX_SEL_LEN, EX) = makeConsts("EX_ADD", "EX_JALR")
-  // JUMP 常量
-  val (JUMP_SEL_LEN, JUMP) = makeConsts("JUMP_NONE", "JUMP_JALR")
-  // WB 常量
-  val (WB_SEL_LEN, WB) = makeConsts("WB_NONE", "WB_EX", "WB_MEM")
-  // MEM 常量
-  val (MEM_SEL_LEN, MEM) = makeConsts("MEM_NONE", "MEM_RW", "MEM_RB", "MEM_WW", "MEM_WB")
-}
 
   object Riscv32E {
     val OP1_SEL_LEN = 2
