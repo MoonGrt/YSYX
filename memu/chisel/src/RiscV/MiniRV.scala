@@ -64,7 +64,7 @@ class MiniRV_ID extends Module {
 
 val List(immsel, exsel, jumpsel, wbsel, memsel) = ListLookup(
   io.inst,
-  List(ImmSel.N EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
+  List(ImmSel.N, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
     Array(
       // Load/Store
       LW   -> List(ImmSel.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
