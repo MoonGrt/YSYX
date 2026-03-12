@@ -67,17 +67,17 @@ class MiniRV_ID extends Module {
     List(IMMN, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
     Array(
       // Load/Store
-      LW   -> List(IMMI, EX_ADD, JUMP_NONE, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
-      LBU  -> List(IMMI, EX_ADD, JUMP_NONE, WB_MEM, MEM_RB),  // x[rs1] + sext(imm_i)
-      SW   -> List(IMMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
-      SB   -> List(IMMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
+      LW   -> List(IMMSel.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
+      LBU  -> List(IMMSel.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RB),  // x[rs1] + sext(imm_i)
+      SW   -> List(IMMSel.S, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
+      SB   -> List(IMMSel.S, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
       // Add
-      ADD  -> List(IMMN, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
-      ADDI -> List(IMMI, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
+      ADD  -> List(IMMSel.N, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
+      ADDI -> List(IMMSel.I, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
       // Jump
-      JALR -> List(IMMI, EX_ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+      JALR -> List(IMMSel.I, EX_ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
       // Load immediate
-      LUI  -> List(IMMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
+      LUI  -> List(IMMSel.U, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
     ),
   )
   val immsel  = decoded(0)
