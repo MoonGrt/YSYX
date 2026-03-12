@@ -34,7 +34,6 @@ class MiniRV_IF extends Module {
 // ID 模块：Instruction Decode + GPR
 // ---------------------------
 class MiniRV_ID extends Module {
-  import MiniRV_Constants._
   val io = IO(new Bundle {
     val inst    = Input(UInt(WORD_LEN.W))
 
@@ -160,7 +159,6 @@ class MiniRV_ID extends Module {
 // EX 模块
 // ---------------------------
 class MiniRV_EX extends Module {
-  import MiniRV_Parameters._
   val io = IO(new Bundle {
     val pc    = Input(UInt(WORD_LEN.W))
     val rs1   = Input(UInt(WORD_LEN.W))
@@ -181,8 +179,6 @@ class MiniRV_EX extends Module {
 // MiniRV CPU（单周期）
 // ---------------------------
 class MiniRV extends Module {
-  import Instructions._
-  import MiniRV_Parameters._
   val io = IO(new Bundle {
     val pc   = Output(UInt(WORD_LEN.W))
     val inst = Input(UInt(WORD_LEN.W))
