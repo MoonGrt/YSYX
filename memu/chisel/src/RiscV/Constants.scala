@@ -53,13 +53,8 @@ object Constants {
     // val WB_NONE = 0.U(WB_SEL_LEN.W)
     // val WB_EX   = 1.U(WB_SEL_LEN.W)
     // val WB_MEM  = 2.U(WB_SEL_LEN.W)
-val Seq(wb_none, wb_pc, wb_ex, wb_mem, wb_csr) = Enum(5)
+val Seq(WB_NONE, WB_PC, WB_EX, WB_MEM, WB_CSR) = Enum(5)
 
-val WB_NONE = wb_none
-val WB_PC   = wb_pc
-val WB_EX   = wb_ex
-val WB_MEM  = wb_mem
-val WB_CSR  = wb_csr
 
     val MEM_SEL_LEN = 3
     val MEM_NONE = 0.U(MEM_SEL_LEN.W)
