@@ -27,6 +27,26 @@ object Constants {
   }
 
   object Riscv32E {
+    object OP1 extends ChiselEnum {
+      val RS1, PC, IMM, NONE = Value
+    }
+    object OP2 extends ChiselEnum {
+      val RS2, CSR, IMMI, IMMS, IMMJ, IMMU, NONE = Value
+    }
+    object EX extends ChiselEnum {
+      val ADD, SUB, AND, OR, XOR, SLL, SRL, SRA, SLT, SLTU, 
+          BEQ, BNE, BLT, BGE, BLTU, BGEU, JAL, CSR = Value
+    }
+    object WB extends ChiselEnum {
+      val PC, EX, MEM, CSR = Value
+    }
+    object MEM extends ChiselEnum {
+      val NONE, RW, RB, WW, WB = Value
+    }
+    object CSR extends ChiselEnum {
+      val W, S, C, B, E, MRET = Value
+    }
+
     val OP1_SEL_LEN = 2
     val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
     val OP1_PC   = 1.U(OP1_SEL_LEN.W)
