@@ -356,9 +356,7 @@ class Riscv32E extends Module {
   io.mem_we    := isStore
   io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
-  val memBen = !reset.asBool && isByte
-  val memHen = !reset.asBool && isHalf
-  io.mem_len := Mux(memBen, 1.U, Mux(memHen, 2.U, 4.U))
+  io.mem_len := Mux(isByte, 1.U, Mux(isHalf, 2.U, 4.U))
 
   // Write Back
   idStage.io.wb_en   := idStage.io.regWen
@@ -387,11 +385,9 @@ class Riscv32ETOP extends Module {
   val cpu = Module(new Riscv32E)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)
-
   // 指令取值
   rom.io.addr := cpu.io.pc
   cpu.io.inst := rom.io.data
-
   // 数据访存
   ram.io.clk   := clock
   ram.io.re    := cpu.io.mem_re
