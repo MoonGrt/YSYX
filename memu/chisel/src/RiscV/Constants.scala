@@ -31,10 +31,9 @@ object Constants {
   val GPR_NUM  = 32
 
   object MiniRV {
-    object IMM extends ConstEnum {
-      val N, I, S, U = Value
-    }
-
+  object ImmSel extends ChiselEnum {
+    val N, I, S, U = Value
+  }
     val IMM_SEL_LEN = 2
     val IMMN = 0.U(IMM_SEL_LEN.W)
     val IMMI = 1.U(IMM_SEL_LEN.W)
@@ -49,12 +48,10 @@ object Constants {
     val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
     val JUMP_JALR = 1.U(JUMP_SEL_LEN.W)
 
-    // val WB_SEL_LEN = 2
-    // val WB_NONE = 0.U(WB_SEL_LEN.W)
-    // val WB_EX   = 1.U(WB_SEL_LEN.W)
-    // val WB_MEM  = 2.U(WB_SEL_LEN.W)
-val Seq(WB_NONE, WB_PC, WB_EX, WB_MEM, WB_CSR) = Enum(5)
-
+    val WB_SEL_LEN = 2
+    val WB_NONE = 0.U(WB_SEL_LEN.W)
+    val WB_EX   = 1.U(WB_SEL_LEN.W)
+    val WB_MEM  = 2.U(WB_SEL_LEN.W)
 
     val MEM_SEL_LEN = 3
     val MEM_NONE = 0.U(MEM_SEL_LEN.W)
