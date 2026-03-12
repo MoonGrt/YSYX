@@ -348,12 +348,10 @@ class Riscv32E extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
-  val isLoad  = Seq(MEM.RW, MEM.RH, MEM.RB, MEM.RHU, MEM.RBU).map(idStage.io.memsel === _).reduce(_||_)
-  val isStore = Seq(MEM.WW, MEM.WH, MEM.WB).map(idStage.io.memsel === _).reduce(_||_)
-  val isByte  = Seq(MEM.WB, MEM.RB, MEM.RBU).map(idStage.io.memsel === _).reduce(_||_)
-  val isHalf  = Seq(MEM.WH, MEM.RH, MEM.RHU).map(idStage.io.memsel === _).reduce(_||_)
-  val memBen  = !reset.asBool && isByte
-  val memHen  = !reset.asBool && isHalf
+  val isLoad  = Seq(MEM.RW, MEM.RH, MEM.RB, MEM.RHU, MEM.RBU).map(idStage.io.memsel === _).reduce(_||_) && !reset.asBool
+  val isStore = Seq(MEM.WW, MEM.WH, MEM.WB).map(idStage.io.memsel === _).reduce(_||_) && !reset.asBool
+  val isByte  = Seq(MEM.WB, MEM.RB, MEM.RBU).map(idStage.io.memsel === _).reduce(_||_) && !reset.asBool
+  val isHalf  = Seq(MEM.WH, MEM.RH, MEM.RHU).map(idStage.io.memsel === _).reduce(_||_) && !reset.asBool
   io.mem_re    := isLoad
   io.mem_we    := isStore
   io.mem_addr  := exStage.io.aluout
