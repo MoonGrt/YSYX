@@ -47,21 +47,6 @@ object Constants {
       val W, S, C, B, E, MRET = Value
     }
 
-    val OP1_SEL_LEN = 2
-    val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
-    val OP1_PC   = 1.U(OP1_SEL_LEN.W)
-    val OP1_IMZ  = 2.U(OP1_SEL_LEN.W)
-    val OP1_NONE = 3.U(OP1_SEL_LEN.W)
-
-    val OP2_SEL_LEN = 3
-    val OP2_NONE = 0.U(OP2_SEL_LEN.W)
-    val OP2_RS2  = 1.U(OP2_SEL_LEN.W)
-    val OP2_CSR  = 2.U(OP2_SEL_LEN.W)
-    val OP2_IMI  = 3.U(OP2_SEL_LEN.W)
-    val OP2_IMS  = 4.U(OP2_SEL_LEN.W)
-    val OP2_IMJ  = 5.U(OP2_SEL_LEN.W)
-    val OP2_IMU  = 6.U(OP2_SEL_LEN.W)
-
     val EX_SEL_LEN = 5
     val EX_NONE =  0.U(EX_SEL_LEN.W)
     val EX_ADD  =  1.U(EX_SEL_LEN.W)
@@ -82,13 +67,6 @@ object Constants {
     val EX_BGEU = 16.U(EX_SEL_LEN.W)
     val EX_JAL  = 17.U(EX_SEL_LEN.W)
     val EX_CSR  = 18.U(EX_SEL_LEN.W)
-
-    val WB_SEL_LEN = 3
-    val WB_NONE = 0.U(WB_SEL_LEN.W)
-    val WB_PC   = 1.U(WB_SEL_LEN.W)
-    val WB_EX   = 2.U(WB_SEL_LEN.W)
-    val WB_MEM  = 3.U(WB_SEL_LEN.W)
-    val WB_CSR  = 4.U(WB_SEL_LEN.W)
 
     val MEM_SEL_LEN = 4
     val MEM_NONE = 0.U(MEM_SEL_LEN.W)
