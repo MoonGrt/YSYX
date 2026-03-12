@@ -177,17 +177,16 @@ class Riscv32E_ID extends Module {
   val CSR_MVENDOR = 6.U
   val CSR_MARCHID = 7.U
   val csr_addr = immi
-  // val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
-  //   0x300.U -> 0.U,  // mstatus
-  //   0x341.U -> 1.U,  // mepc
-  //   0x342.U -> 2.U,  // mcause
-  //   0x305.U -> 3.U,  // mtvec
-  //   0xB00.U -> 4.U,  // mcycle
-  //   0xB80.U -> 5.U,  // mcycleh
-  //   0xF11.U -> 6.U,  // mvendorid
-  //   0xF12.U -> 7.U,  // marchid
-  // ))
-val csr_id = decodeCSR(csr_addr).asUInt
+  val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
+    0x300.U -> 0.U,  // mstatus
+    0x341.U -> 1.U,  // mepc
+    0x342.U -> 2.U,  // mcause
+    0x305.U -> 3.U,  // mtvec
+    0xB00.U -> 4.U,  // mcycle
+    0xB80.U -> 5.U,  // mcycleh
+    0xF11.U -> 6.U,  // mvendorid
+    0xF12.U -> 7.U,  // marchid
+  ))
   val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
   CSR(CSR_MCYCLE)  := cycle64(31,0)
   CSR(CSR_MCYCLEH) := cycle64(63,32)
@@ -200,10 +199,11 @@ val csr_id = decodeCSR(csr_addr).asUInt
     (csrsel === CSRS.S) -> (csr_old | io.op1),
     (csrsel === CSRS.C) -> (csr_old & ~io.op1),
   ))
-  val csr_wen = csrsel === CSRS.W || csrsel === CSRS.S || csrsel === CSRS.C
-  val csr_writable =
-    csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
-    csr_id === CSR_MTVEC || csr_id === CSR_MCYCLE || csr_id === CSR_MCYCLEH
+  val csr_wen = csrsel.isOneOf(CSRS.W, CSRS.S, CSRS.C)
+  val csr_writable = csr_id.isOneOf(
+    CSR_MSTATUS, CSR_MEPC, CSR_MCAUSE,
+    CSR_MTVEC, CSR_MCYCLE, CSR_MCYCLEH
+  )
   when (~reset.asBool && csr_wen && csr_writable) {
     CSR(csr_id) := csr_new
   }

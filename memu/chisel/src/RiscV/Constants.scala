@@ -59,7 +59,7 @@ object Constants {
     }
     def decodeCSR(addr: UInt): CSRID.Type = {
       MuxLookup(addr, CSRID.NONE)(
-        CSRID.all.map(c => c.asUInt -> c)
+        CSRID.all.map(c => c.asUInt -> c.asUInt)
       )
     }
   }
