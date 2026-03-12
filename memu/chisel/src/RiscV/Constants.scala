@@ -30,37 +30,30 @@ object Constants {
   val CSR_NUM  = 8
   val GPR_NUM  = 32
 
-  object MiniRV {
-    val IMM_SEL_LEN = 2
-    val IMMN = 0.U(IMM_SEL_LEN.W)
-    val IMMI = 1.U(IMM_SEL_LEN.W)
-    val IMMS = 2.U(IMM_SEL_LEN.W)
-    val IMMU = 3.U(IMM_SEL_LEN.W)
-
-    val EX_SEL_LEN = 1
-    val EX_ADD  = 0.U(EX_SEL_LEN.W)
-    val EX_JALR = 1.U(EX_SEL_LEN.W)
-
-    val JUMP_SEL_LEN = 1
-    val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
-    val JUMP_JALR = 1.U(JUMP_SEL_LEN.W)
-
-    val WB_SEL_LEN = 2
-    val WB_NONE = 0.U(WB_SEL_LEN.W)
-    val WB_EX   = 1.U(WB_SEL_LEN.W)
-    val WB_MEM  = 2.U(WB_SEL_LEN.W)
-
-  val wbVals = Seq("NONE","PC","EX","MEM","CSR")
-  val wbEnum = Enum(wbVals.length)
-  val WB_NONE :: WB_PC :: WB_EX :: WB_MEM :: WB_CSR :: Nil = wbEnum
-
-    val MEM_SEL_LEN = 3
-    val MEM_NONE = 0.U(MEM_SEL_LEN.W)
-    val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // write word
-    val MEM_RB   = 2.U(MEM_SEL_LEN.W)  // write byte
-    val MEM_WW   = 3.U(MEM_SEL_LEN.W)
-    val MEM_WB   = 4.U(MEM_SEL_LEN.W)
+object MiniRV {
+  // 通用方法：给定一组名字，返回 UInt 常量和宽度
+  def makeConsts(names: Seq[String]): (Seq[UInt], Int) = {
+    val width = log2Ceil(names.size)
+    val consts = names.zipWithIndex.map { case (_, i) => i.U(width.W) }
+    (consts, width)
   }
+
+  // IMM
+  val (Seq(IMMN, IMMI, IMMS, IMMU), IMM_SEL_LEN) = makeConsts(Seq("IMMN", "IMMI", "IMMS", "IMMU"))
+
+  // EX
+  val (Seq(EX_ADD, EX_JALR), EX_SEL_LEN) = makeConsts(Seq("EX_ADD", "EX_JALR"))
+
+  // JUMP
+  val (Seq(JUMP_NONE, JUMP_JALR), JUMP_SEL_LEN) = makeConsts(Seq("JUMP_NONE", "JUMP_JALR"))
+
+  // WB
+  val (Seq(WB_NONE, WB_EX, WB_MEM), WB_SEL_LEN) = makeConsts(Seq("WB_NONE", "WB_EX", "WB_MEM"))
+
+  // MEM
+  val (Seq(MEM_NONE, MEM_RW, MEM_RB, MEM_WW, MEM_WB), MEM_SEL_LEN) =
+    makeConsts(Seq("MEM_NONE", "MEM_RW", "MEM_RB", "MEM_WW", "MEM_WB"))
+}
 
   object Riscv32E {
     val OP1_SEL_LEN = 2
