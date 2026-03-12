@@ -13,7 +13,7 @@ object Constants {
   val GPR_NUM  = 32
 
   object MiniRV {
-    object IMMSel extends ConstEnum {
+    object IMM extends ConstEnum {
       val N, I, S, NONE = Value
     }
 

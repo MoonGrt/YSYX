@@ -106,7 +106,7 @@ class MiniRV_ID extends Module {
   io.imm := MuxLookup(immsel, 0.U)(Seq(
     IMMI -> imm_i,
     IMMS -> imm_s,
-    IMMU -> imm_u
+    IMMU -> imm_u,
   ))
   io.immen := (immsel =/= IMMN)
 
