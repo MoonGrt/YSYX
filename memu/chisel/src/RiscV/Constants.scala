@@ -3,29 +3,25 @@ package riscv
 import chisel3._
 import chisel3.util._
 
-abstract class ConstEnum extends ChiselEnum {
-  def WIDTH: Int = log2Ceil(this.getWidth)
-}
-
 object Constants {
   val WORD_LEN = 32
   val CSR_NUM  = 8
   val GPR_NUM  = 32
 
   object MiniRV {
-    object IMM extends ConstEnum {
+    object IMM extends ChiselEnum {
       val N, I, S, U = Value
     }
-    object EX extends ConstEnum {
+    object EX extends ChiselEnum {
       val ADD, JALR = Value
     }
-    object JUMP extends ConstEnum {
+    object JUMP extends ChiselEnum {
       val NONE, JALR = Value
     }
-    object WB extends ConstEnum {
+    object WB extends ChiselEnum {
       val NONE, EX, MEM = Value
     }
-    object MEM extends ConstEnum {
+    object MEM extends ChiselEnum {
       val NONE, RW, RB, WW, WB = Value
     }
   }
