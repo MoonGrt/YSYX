@@ -31,7 +31,7 @@ object Constants {
       val RS1, PC, IMM, NONE = Value
     }
     object OP2 extends ChiselEnum {
-      val RS2, CSR, IMMI, IMMS, IMMJ, IMMU, NONE = Value
+      val RS2, CSR, IMI, IMS, IMJ, IMU, NONE = Value
     }
     object EX extends ChiselEnum {
       val ADD, SUB, AND, OR, XOR, SLL, SRL, SRA, SLT, SLTU, 
