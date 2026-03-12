@@ -159,8 +159,8 @@ class Riscv32E_ID extends Module {
   ))
   // Determine 2nd operand data signal
   val brcsr = MuxCase(0.U(32.W), Seq(
-    (csrsel === CSRS.E   ) -> CSRS(3),  // mtvec
-    (csrsel === CSRS.MRET) -> CSRS(1),  // mepc
+    (csrsel === CSRS.E   ) -> CSR(3),  // mtvec
+    (csrsel === CSRS.MRET) -> CSR(1),  // mepc
   ))
   io.op2 := MuxCase(0.U(32.W), Seq(
     (op2sel === OP2.RS2) -> GPR(rs2),
@@ -193,7 +193,7 @@ class Riscv32E_ID extends Module {
     0xF11.U -> 6.U,  // mvendorid
     0xF12.U -> 7.U,  // marchid
   ))
-  val cycle64 = Cat(CSRS(CSR_MCYCLEH), CSRS(CSR_MCYCLE)) + 1.U
+  val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
   CSR(CSR_MCYCLE)  := cycle64(31,0)
   CSR(CSR_MCYCLEH) := cycle64(63,32)
   CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
@@ -302,7 +302,7 @@ class Riscv32E_EX extends Module {
   // -------- Branch --------
   io.bren := MuxCase(false.B, Seq(
     (io.exsel === EX.JAL ) ->  true.B,
-    (io.exsel === EX.CSRS ) ->  true.B,
+    (io.exsel === EX.CSR ) ->  true.B,
     (io.exsel === EX.BEQ ) ->  (io.op1 === io.op2),
     (io.exsel === EX.BNE ) -> !(io.op1 === io.op2),
     (io.exsel === EX.BLT ) ->  (io.op1.asSInt < io.op2.asSInt),
@@ -312,7 +312,7 @@ class Riscv32E_EX extends Module {
   ))
   io.braddr := MuxCase(io.pc + io.immsb, Seq(
     (io.exsel === EX.JAL) -> (io.op1 + io.op2),
-    (io.exsel === EX.CSRS) -> (io.op2),  // mtvec
+    (io.exsel === EX.CSR) -> (io.op2),  // mtvec
   ))
 }
 
