@@ -65,6 +65,7 @@ object Instructions {
   val MRET   = BitPat("b00110000001000000000000001110011")
 
   // Implemented instructions
+  val MiniRV_IMPLED = Seq(LW, LBU, SW, SB, ADD, ADDI, JALR, LUI, E, EBREAK)
   val Riscv32E_IMPLED = Seq(
     LW, LH, LB, LHU, LBU, SW, SH, SB,
     ADD, ADDI, SUB, AND, OR, XOR, ANDI, ORI, XORI,
