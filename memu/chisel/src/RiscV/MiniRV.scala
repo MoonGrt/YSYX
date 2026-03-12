@@ -44,7 +44,7 @@ class MiniRV_ID extends Module {
     val wb_data = Input(UInt(WORD_LEN.W))
 
     // 输出到 EX
-    val exsel   = Output(UInt(EX.WIDTH.W))
+    val exsel   = Output(EX())
     val rs1     = Output(UInt(WORD_LEN.W))
     val rs2     = Output(UInt(WORD_LEN.W))
     val imm     = Output(UInt(WORD_LEN.W))
@@ -114,7 +114,7 @@ class MiniRV_ID extends Module {
   io.jumpen := (jumpsel === JUMP.JALR)
 
   // -------- EX功能 --------
-  io.exsel := 0.U
+  io.exsel := exsel
 
   // -------- WB功能 --------
   io.rd_addr := rd
@@ -166,7 +166,7 @@ class MiniRV_EX extends Module {
     val rs2   = Input(UInt(WORD_LEN.W))
     val imm   = Input(UInt(WORD_LEN.W))
     val immen = Input(Bool())
-    val exsel = Input(UInt(EX.WIDTH.W))
+    val exsel = Input(EX())
     val exout = Output(UInt(WORD_LEN.W))
   })
   // -------- ALU --------
