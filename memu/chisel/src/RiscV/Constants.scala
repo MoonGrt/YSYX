@@ -15,7 +15,6 @@ object Constants {
   object MiniRV {
     object IMM extends ConstEnum {
       val N, I, S, U = Value
-      type Type = Value
     }
 
     val IMM_SEL_LEN = 2
