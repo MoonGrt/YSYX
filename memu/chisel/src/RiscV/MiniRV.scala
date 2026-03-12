@@ -98,13 +98,13 @@ val List(immsel, exsel, jumpsel, wbsel, memsel) = ListLookup(
   // -------- EX操作数 --------
   io.rs1 := Mux(io.inst === LUI, 0.U, regfile(rs1))
   io.rs2 := regfile(rs2)
-io.imm := MuxCase(0.U, Array(
-  (immsel === ImmSel.I) -> imm_i,
-  (immsel === ImmSel.S) -> imm_s,
-  (immsel === ImmSel.U) -> imm_u
+val imm = MuxLookup(immsel, 0.U, Seq(
+  ImmSel.I.id.U -> imm_i,
+  ImmSel.S.id.U -> imm_s,
+  ImmSel.U.id.U -> imm_u
 ))
 
-io.immen := (immsel =/= ImmSel.N)
+val immen = (immsel =/= ImmSel.N.id.U)
 
   // -------- JUMP功能 --------
   io.jumpen := (jumpsel === JUMP_JALR)
