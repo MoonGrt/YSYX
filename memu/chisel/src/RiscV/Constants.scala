@@ -30,8 +30,13 @@ object Constants {
   val CSR_NUM  = 8
   val GPR_NUM  = 32
 
+import chisel3._
+import chisel3.util._
+
 object MiniRV {
-  def makeConsts(names: Seq[String]): (Seq[UInt], Int) = {
+
+  // 自动生成常量和宽度
+  private def makeConsts(names: Seq[String]): (Seq[UInt], Int) = {
     val width = log2Ceil(names.size)
     val consts = names.indices.map(i => i.U(width.W))
     (consts, width)
@@ -40,27 +45,38 @@ object MiniRV {
   // IMM
   private val (immSeq, immWidth) = makeConsts(Seq("IMMN", "IMMI", "IMMS", "IMMU"))
   val IMM_SEL_LEN = immWidth
-  val IMMN :: IMMI :: IMMS :: IMMU :: Nil = immSeq.toList
+  val IMMN = immSeq(0)
+  val IMMI = immSeq(1)
+  val IMMS = immSeq(2)
+  val IMMU = immSeq(3)
 
   // EX
   private val (exSeq, exWidth) = makeConsts(Seq("EX_ADD", "EX_JALR"))
   val EX_SEL_LEN = exWidth
-  val EX_ADD :: EX_JALR :: Nil = exSeq.toList
+  val EX_ADD = exSeq(0)
+  val EX_JALR = exSeq(1)
 
   // JUMP
   private val (jumpSeq, jumpWidth) = makeConsts(Seq("JUMP_NONE", "JUMP_JALR"))
   val JUMP_SEL_LEN = jumpWidth
-  val JUMP_NONE :: JUMP_JALR :: Nil = jumpSeq.toList
+  val JUMP_NONE = jumpSeq(0)
+  val JUMP_JALR = jumpSeq(1)
 
   // WB
   private val (wbSeq, wbWidth) = makeConsts(Seq("WB_NONE", "WB_EX", "WB_MEM"))
   val WB_SEL_LEN = wbWidth
-  val WB_NONE :: WB_EX :: WB_MEM :: Nil = wbSeq.toList
+  val WB_NONE = wbSeq(0)
+  val WB_EX   = wbSeq(1)
+  val WB_MEM  = wbSeq(2)
 
   // MEM
   private val (memSeq, memWidth) = makeConsts(Seq("MEM_NONE", "MEM_RW", "MEM_RB", "MEM_WW", "MEM_WB"))
   val MEM_SEL_LEN = memWidth
-  val MEM_NONE :: MEM_RW :: MEM_RB :: MEM_WW :: MEM_WB :: Nil = memSeq.toList
+  val MEM_NONE = memSeq(0)
+  val MEM_RW   = memSeq(1)
+  val MEM_RB   = memSeq(2)
+  val MEM_WW   = memSeq(3)
+  val MEM_WB   = memSeq(4)
 }
 
   object Riscv32E {
