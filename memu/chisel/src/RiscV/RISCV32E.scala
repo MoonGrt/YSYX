@@ -212,7 +212,7 @@ class Riscv32E_ID extends Module {
   when (~reset.asBool && csr_wen && csr_writable) {
     CSR(csr_id) := csr_new
   }
-  when (~reset.asBool && csrsel === CSR_E) {
+  when (~reset.asBool && csrsel === CSR1.E) {
     // mstatus = 0x00001800
     CSR(CSR_MSTATUS) := 0x00001800.U
     // mepc = pc
@@ -220,7 +220,7 @@ class Riscv32E_ID extends Module {
     // mcause = 11 (ECALL from M-mode)
     CSR(CSR_MCAUSE)  := 11.U
   }
-  when (~reset.asBool && csrsel === CSR_MRET) {
+  when (~reset.asBool && csrsel === CSR1.MRET) {
     // mstatus = 0x00000080
     CSR(CSR_MSTATUS) := 0x00000080.U
   }
