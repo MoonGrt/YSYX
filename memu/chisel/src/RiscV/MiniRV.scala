@@ -44,7 +44,7 @@ class MiniRV_ID extends Module {
     val wb_data = Input(UInt(WORD_LEN.W))
 
     // 输出到 EX
-    val exsel   = Output(UInt(EX_SEL_LEN.W))
+    val exsel   = Output(UInt(EX.len.W))
     val rs1     = Output(UInt(WORD_LEN.W))
     val rs2     = Output(UInt(WORD_LEN.W))
     val imm     = Output(UInt(WORD_LEN.W))
