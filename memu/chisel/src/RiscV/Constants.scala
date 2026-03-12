@@ -4,11 +4,15 @@ import chisel3._
 import chisel3.util._
 
 object Constants {
-  val WORD_LEN = 32
-  val CSR_NUM  = 8
-  val GPR_NUM  = 32
+  object Base {
+    val WORD_LEN = 32
+    val CSR_NUM  = 8
+    val GPR_NUM  = 32
+  }
 
-  object MiniRV_Constants {
+  object MiniRV {
+    import Base._
+
     val IMM_SEL_LEN = 2
     val IMMN = 0.U(IMM_SEL_LEN.W)
     val IMMI = 1.U(IMM_SEL_LEN.W)
@@ -36,7 +40,9 @@ object Constants {
     val MEM_WB   = 4.U(MEM_SEL_LEN.W)
   }
 
-  object Riscv32E_Constants {
+  object Riscv32E {
+    import Base._
+
     val OP1_SEL_LEN = 2
     val OP1_RS1  = 0.U(OP1_SEL_LEN.W)
     val OP1_PC   = 1.U(OP1_SEL_LEN.W)
