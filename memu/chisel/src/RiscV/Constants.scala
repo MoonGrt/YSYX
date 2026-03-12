@@ -5,7 +5,7 @@ import chisel3.util._
 
 abstract class ConstEnum extends ChiselEnum {
   def len: Int = log2Ceil(this.getWidth)
-  type Type = this.Value
+  type Type = Value
 }
 
 object Constants {
