@@ -19,22 +19,15 @@ object Constants {
     object EX extends ConstEnum {
       val ADD, JALR = Value
     }
-
-    val JUMP_SEL_LEN = 1
-    val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)
-    val JUMP_JALR = 1.U(JUMP_SEL_LEN.W)
-
-    val WB_SEL_LEN = 2
-    val WB_NONE = 0.U(WB_SEL_LEN.W)
-    val WB_EX   = 1.U(WB_SEL_LEN.W)
-    val WB_MEM  = 2.U(WB_SEL_LEN.W)
-
-    val MEM_SEL_LEN = 3
-    val MEM_NONE = 0.U(MEM_SEL_LEN.W)
-    val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // write word
-    val MEM_RB   = 2.U(MEM_SEL_LEN.W)  // write byte
-    val MEM_WW   = 3.U(MEM_SEL_LEN.W)
-    val MEM_WB   = 4.U(MEM_SEL_LEN.W)
+    object JUMP extends ConstEnum {
+      val NONE, JAL = Value
+    }
+    object WB extends ConstEnum {
+      val NONE, EX, MEM = Value
+    }
+    object MEM extends ConstEnum {
+      val NONE, RW, RB, WW, WB = Value
+    }
   }
 
   object Riscv32E {
