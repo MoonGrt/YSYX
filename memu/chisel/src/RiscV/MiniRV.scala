@@ -83,8 +83,8 @@ class MiniRV_ID extends Module {
   val immsel  = decoded(0).asTypeOf(IMM())
   val exsel   = decoded(1).asTypeOf(EX())
   val jumpsel = decoded(2).asTypeOf(JUMP())
-  val wbsel   = decoded(3).asTypeOf(WB())
-  val memsel  = decoded(4).asTypeOf(MEM())
+  val wbsel   = WB.safe(decoded(3))
+  val memsel  = MEM.safe(decoded(4))
 
   // -------- 寄存器堆 --------
   val regfile = RegInit(VecInit(Seq.fill(WORD_LEN)(0.U(WORD_LEN.W))))
