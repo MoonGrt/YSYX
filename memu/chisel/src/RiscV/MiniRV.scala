@@ -111,17 +111,17 @@ class MiniRV_ID extends Module {
   io.immen := (immsel =/= IMM.N)
 
   // -------- JUMP功能 --------
-  io.jumpen := (jumpsel === JUMP_JALR)
+  io.jumpen := (jumpsel === JUMP.JALR)
 
   // -------- EX功能 --------
   io.exsel := exsel
 
   // -------- WB功能 --------
   io.rd_addr := rd
-  io.memBen  := ~reset.asBool && (memsel === MEM_RB) || (memsel === MEM_WB)
-  io.memRen  := ~reset.asBool && (memsel === MEM_RW) || (memsel === MEM_RB)
-  io.memWen  := ~reset.asBool && (memsel === MEM_WW) || (memsel === MEM_WB)
-  io.regWen  := ~reset.asBool && (wbsel =/= WB_NONE)
+  io.memBen  := ~reset.asBool && (memsel === MEM.RB) || (memsel === MEM.WB)
+  io.memRen  := ~reset.asBool && (memsel === MEM.RW) || (memsel === MEM.RB)
+  io.memWen  := ~reset.asBool && (memsel === MEM.WW) || (memsel === MEM.WB)
+  io.regWen  := ~reset.asBool && (wbsel =/= WB.NONE)
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := io.wb_data
   }
