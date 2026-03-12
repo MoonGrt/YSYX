@@ -12,11 +12,11 @@ class MiniRV_IF extends Module {
   val io = IO(new Bundle {
     val halt   = Input(Bool())  // halt 信号
     val jumpen = Input(Bool())  // 跳转使能
-    val jump   = Input(UInt(32.W))  // 跳转地址
-    val npc    = Output(UInt(32.W))  // 下一个 PC
-    val pc     = Output(UInt(32.W))  // 当前 PC 输出
+    val jump   = Input(UInt(WORD_LEN.W))  // 跳转地址
+    val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
+    val pc     = Output(UInt(WORD_LEN.W))  // 当前 PC 输出
   })
-  val pc = RegInit("h80000000".U(32.W))
+  val pc = RegInit("h80000000".U(WORD_LEN.W))
   when (io.halt) {
     pc := pc
   }.otherwise {
@@ -27,7 +27,7 @@ class MiniRV_IF extends Module {
     }
   }
   io.pc  := pc
-  io.npc := pc + 4.U(32.W)
+  io.npc := pc + 4.U
 }
 
 // ---------------------------
@@ -64,18 +64,18 @@ class MiniRV_ID extends Module {
   import Instructions._
   import MiniRV_Parameters._
   val io = IO(new Bundle {
-    val inst    = Input(UInt(32.W))
+    val inst    = Input(UInt(WORD_LEN.W))
 
     // 写回接口（来自 WB）
     val wb_en   = Input(Bool())
     val wb_rd   = Input(UInt(5.W))
-    val wb_data = Input(UInt(32.W))
+    val wb_data = Input(UInt(WORD_LEN.W))
 
     // 输出到 EX
     val exsel   = Output(UInt(EX_SEL_LEN.W))
-    val rs1     = Output(UInt(32.W))
-    val rs2     = Output(UInt(32.W))
-    val imm     = Output(UInt(32.W))
+    val rs1     = Output(UInt(WORD_LEN.W))
+    val rs2     = Output(UInt(WORD_LEN.W))
+    val imm     = Output(UInt(WORD_LEN.W))
     val immen   = Output(Bool())
     val rd_addr = Output(UInt(5.W))
 
@@ -87,7 +87,7 @@ class MiniRV_ID extends Module {
     val memWen = Output(Bool())
     val regWen = Output(Bool())
 
-    val regfileOut = Output(Vec(32, UInt(32.W)))
+    val regfileOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
   val decoded = ListLookup(
@@ -115,7 +115,7 @@ class MiniRV_ID extends Module {
   val memsel  = decoded(4)
 
   // -------- 寄存器堆 --------
-  val regfile = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
+  val regfile = RegInit(VecInit(Seq.fill(WORD_LEN)(0.U(WORD_LEN.W))))
 
   // -------- 指令字段 --------
   val opcode = io.inst(6,0)
@@ -129,7 +129,7 @@ class MiniRV_ID extends Module {
   val imm_u = io.inst(31,12) << 12
 
   // -------- EX操作数 --------
-  io.rs1 := Mux(io.inst === LUI, 0.U(32.W), regfile(rs1))
+  io.rs1 := Mux(io.inst === LUI, 0.U(WORD_LEN.W), regfile(rs1))
   io.rs2 := regfile(rs2)
   io.imm := MuxLookup(immsel, 0.U)(Seq(
     IMMI -> imm_i,
@@ -190,13 +190,13 @@ class MiniRV_ID extends Module {
 class MiniRV_EX extends Module {
   import MiniRV_Parameters._
   val io = IO(new Bundle {
-    val pc    = Input(UInt(32.W))
-    val rs1   = Input(UInt(32.W))
-    val rs2   = Input(UInt(32.W))
-    val imm   = Input(UInt(32.W))
+    val pc    = Input(UInt(WORD_LEN.W))
+    val rs1   = Input(UInt(WORD_LEN.W))
+    val rs2   = Input(UInt(WORD_LEN.W))
+    val imm   = Input(UInt(WORD_LEN.W))
     val immen = Input(Bool())
     val exsel = Input(UInt(EX_SEL_LEN.W))
-    val exout = Output(UInt(32.W))
+    val exout = Output(UInt(WORD_LEN.W))
   })
   // -------- ALU --------
   io.exout := Mux(
@@ -212,15 +212,15 @@ class MiniRV extends Module {
   import Instructions._
   import MiniRV_Parameters._
   val io = IO(new Bundle {
-    val pc   = Output(UInt(32.W))
-    val inst = Input(UInt(32.W))
+    val pc   = Output(UInt(WORD_LEN.W))
+    val inst = Input(UInt(WORD_LEN.W))
 
     val mem_re    = Output(Bool())
     val mem_we    = Output(Bool())
     val mem_len   = Output(UInt(4.W))
-    val mem_addr  = Output(UInt(32.W))
-    val mem_wdata = Output(UInt(32.W))
-    val mem_rdata = Input(UInt(32.W))
+    val mem_addr  = Output(UInt(WORD_LEN.W))
+    val mem_wdata = Output(UInt(WORD_LEN.W))
+    val mem_rdata = Input(UInt(WORD_LEN.W))
   })
 
   val ifStage = Module(new MiniRV_IF)
@@ -273,11 +273,11 @@ class MiniRV extends Module {
   difftest.io.pc   := ifStage.io.pc
   difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.exout, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
-  for (i <- 0 until 32) {
-    difftest.io.gpr(i) := idStage.io.regfileOut(i)
+  for (i <- 0 until CSR_NUM) {
+    difftest.io.csr(i) := 0.U(WORD_LEN.W)  // 未实现 CSR
   }
-  for (i <- 0 until 4) {
-    difftest.io.csr(i) := 0.U(32.W)  // 未实现 CSR
+  for (i <- 0 until GPR_NUM) {
+    difftest.io.gpr(i) := idStage.io.regfileOut(i)
   }
 }
 
