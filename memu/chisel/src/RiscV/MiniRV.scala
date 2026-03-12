@@ -3,12 +3,7 @@ package riscv
 import chisel3._
 import chisel3.util._
 import Instructions._
-import MiniRV_Constants._
-
-// ---------------------------
-// Configuration constants
-// ---------------------------
-
+import Constants.MiniRV_Constants._
 
 // ---------------------------
 // IF 模块：Instruction Fetch
