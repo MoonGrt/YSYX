@@ -2,7 +2,7 @@ package riscv
 
 import chisel3._
 import chisel3.util._
-import CoreConstants._
+import Constants._
 
 // ---------------------------
 // ROM BlackBox (只读指令存储器)
