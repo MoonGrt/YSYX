@@ -5,7 +5,6 @@ import chisel3.util._
 
 abstract class ConstEnum extends ChiselEnum {
   def len: Int = log2Ceil(this.getWidth)
-  type Type = Value
 }
 
 object Constants {
@@ -16,6 +15,7 @@ object Constants {
   object MiniRV {
     object IMM extends ConstEnum {
       val N, I, S, U = Value
+      type Type = Value
     }
 
     val IMM_SEL_LEN = 2
