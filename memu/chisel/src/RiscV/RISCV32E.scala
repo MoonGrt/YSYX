@@ -118,7 +118,7 @@ class Riscv32E_ID extends Module {
   val exsel  = decoded(2)
   val wbsel  = decoded(3).asTypeOf(WB())
   val memsel = decoded(4)
-  val csrsel = decoded(5).asTypeOf(CSR())
+  val csrsel = decoded(5).asTypeOf(CSR1())
 
   // -------- 寄存器堆 --------
   val CSR = RegInit(VecInit(Seq.fill(CSR_NUM)(0.U(WORD_LEN.W))))
