@@ -80,7 +80,7 @@ class MiniRV_ID extends Module {
       LUI  -> List(IMM.U, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
     ),
   )
-  val immsel  = decoded(0).asUInt
+  val immsel  = decoded(0)
   val exsel   = decoded(1)
   val jumpsel = decoded(2)
   val wbsel   = decoded(3)
@@ -104,9 +104,9 @@ class MiniRV_ID extends Module {
   io.rs1 := Mux(io.inst === LUI, 0.U(WORD_LEN.W), regfile(rs1))
   io.rs2 := regfile(rs2)
   io.imm := MuxLookup(immsel, 0.U)(Seq(
-    IMM.I -> imm_i,
-    IMM.S -> imm_s,
-    IMM.U -> imm_u
+    IMM.I.asUInt -> imm_i,
+    IMM.S.asUInt -> imm_s,
+    IMM.U.asUInt -> imm_u
   ))
   io.immen := (immsel =/= IMM.N)
 
