@@ -4,10 +4,7 @@ import chisel3._
 import chisel3.util._
 
 abstract class ConstEnum extends ChiselEnum {
-  def len: Int = this.getWidth match {
-    case n if n <= 1 => 1
-    case n           => log2Ceil(n)
-  }
+  def len: Int = log2Ceil(this.getWidth)
 }
 
 object Constants {
