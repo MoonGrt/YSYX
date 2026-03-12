@@ -16,10 +16,9 @@ object Constants {
     object IMM extends ConstEnum {
       val N, I, S, U = Value
     }
-
-    val EX_SEL_LEN = 1
-    val EX_ADD  = 0.U(EX_SEL_LEN.W)
-    val EX_JALR = 1.U(EX_SEL_LEN.W)
+    object EX extends ConstEnum {
+      val ADD, JALR = Value
+    }
 
     val JUMP_SEL_LEN = 1
     val JUMP_NONE = 0.U(JUMP_SEL_LEN.W)

@@ -64,24 +64,24 @@ class MiniRV_ID extends Module {
 
   val decoded = ListLookup(
     io.inst,
-    List(IMM.N, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
+    List(IMM.N, EX.ADD, JUMP_NONE, WB_EX, MEM_WW),
     Array(
       // Load/Store
-      LW   -> List(IMM.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
-      LBU  -> List(IMM.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RB),  // x[rs1] + sext(imm_i)
-      SW   -> List(IMM.S, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
-      SB   -> List(IMM.S, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
+      LW   -> List(IMM.I, EX.ADD, JUMP_NONE, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
+      LBU  -> List(IMM.I, EX.ADD, JUMP_NONE, WB_MEM, MEM_RB),  // x[rs1] + sext(imm_i)
+      SW   -> List(IMM.S, EX.ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
+      SB   -> List(IMM.S, EX.ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
       // Add
-      ADD  -> List(IMM.N, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
-      ADDI -> List(IMM.I, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
+      ADD  -> List(IMM.N, EX.ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
+      ADDI -> List(IMM.I, EX.ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
       // Jump
-      JALR -> List(IMM.I, EX_ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+      JALR -> List(IMM.I, EX.ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
       // Load immediate
-      LUI  -> List(IMM.U, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
+      LUI  -> List(IMM.U, EX.ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
     ),
   )
   val immsel  = decoded(0).asTypeOf(IMM())
-  val exsel   = decoded(1)
+  val exsel   = decoded(1).asTypeOf(EX())
   val jumpsel = decoded(2)
   val wbsel   = decoded(3)
   val memsel  = decoded(4)
