@@ -3,7 +3,7 @@ package riscv
 import chisel3._
 import chisel3.util._
 import Instructions._
-import Constants.Riscv32E_Constants._
+import Riscv32E_Constants._
 
 // ---------------------------
 // IF 模块：Instruction Fetch

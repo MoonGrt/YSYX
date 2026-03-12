@@ -3,7 +3,7 @@ package riscv
 import chisel3._
 import chisel3.util._
 import Instructions._
-import Constants.MiniRV_Constants._
+import MiniRV_Constants._
 
 // ---------------------------
 // Configuration constants
