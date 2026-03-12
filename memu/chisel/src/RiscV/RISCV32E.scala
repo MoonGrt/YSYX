@@ -170,11 +170,11 @@ class Riscv32E_ID extends Module {
   // CSR
   val csr_addr = immi
   val csr_id = decodeCSR(csr_addr)
-  val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
-  CSR(CSR_MCYCLE)  := cycle64(31,0)
-  CSR(CSR_MCYCLEH) := cycle64(63,32)
-  CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
-  CSR(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
+  val cycle64 = Cat(CSR(CSRI.MCYCLEH), CSR(CSRI.MCYCLE)) + 1.U
+  CSR(CSRI.MCYCLE)  := cycle64(31,0)
+  CSR(CSRI.MCYCLEH) := cycle64(63,32)
+  CSR(CSRI.MVENDOR) := 0x79737978.U  // ysyx
+  CSR(CSRI.MARCHID) := 0x018CE26E.U  // moongrt - 26010030
 
   val csr_old = CSR(csr_id)
   val csr_new = MuxCase(io.op1, Seq(
@@ -184,22 +184,22 @@ class Riscv32E_ID extends Module {
   ))
   val csr_wen = csrsel.isOneOf(CSRS.W, CSRS.S, CSRS.C)
   val csr_writable =
-    csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
-    csr_id === CSR_MTVEC || csr_id === CSR_MCYCLE || csr_id === CSR_MCYCLEH
+    csr_id === CSRI.MSTATUS || csr_id === CSRI.MEPC || csr_id === CSRI.MCAUSE ||
+    csr_id === CSRI.MTVEC || csr_id === CSRI.MCYCLE || csr_id === CSRI.MCYCLEH
   when (~reset.asBool && csr_wen && csr_writable) {
     CSR(csr_id) := csr_new
   }
   when (~reset.asBool && csrsel === CSRS.E) {
     // mstatus = 0x00001800
-    CSR(CSR_MSTATUS) := 0x00001800.U
+    CSR(CSRI.MSTATUS) := 0x00001800.U
     // mepc = pc
-    CSR(CSR_MEPC)    := io.pc
+    CSR(CSRI.MEPC)    := io.pc
     // mcause = 11 (ECALL from M-mode)
-    CSR(CSR_MCAUSE)  := 11.U
+    CSR(CSRI.MCAUSE)  := 11.U
   }
   when (~reset.asBool && csrsel === CSRS.MRET) {
     // mstatus = 0x00000080
-    CSR(CSR_MSTATUS) := 0x00000080.U
+    CSR(CSRI.MSTATUS) := 0x00000080.U
   }
   // GPR
   io.rd_addr := rd
