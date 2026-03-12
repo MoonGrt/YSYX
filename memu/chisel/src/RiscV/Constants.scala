@@ -28,7 +28,7 @@ object Constants {
 
   object Riscv32E {
     object OP1 extends ChiselEnum {
-      val RS1, PC, IMM, NONE = Value
+      val RS1, PC, IMZ, NONE = Value
     }
     object OP2 extends ChiselEnum {
       val RS2, CSR, IMI, IMS, IMJ, IMU, NONE = Value
