@@ -13,15 +13,9 @@ object Constants {
   val GPR_NUM  = 32
 
   object MiniRV {
-    object OP1Sel extends ConstEnum {
-      val RS1, PC, IMZ, NONE = Value
+    object IMMSel extends ConstEnum {
+      val N, I, S, U = Value
     }
-
-    val IMM_SEL_LEN = 2
-    val IMMN = 0.U(IMM_SEL_LEN.W)
-    val IMMI = 1.U(IMM_SEL_LEN.W)
-    val IMMS = 2.U(IMM_SEL_LEN.W)
-    val IMMU = 3.U(IMM_SEL_LEN.W)
 
     val EX_SEL_LEN = 1
     val EX_ADD  = 0.U(EX_SEL_LEN.W)
