@@ -121,7 +121,7 @@ class MiniRV_ID extends Module {
   io.memBen  := ~reset.asBool && (memsel === MEM_RB) || (memsel === MEM_WB)
   io.memRen  := ~reset.asBool && (memsel === MEM_RW) || (memsel === MEM_RB)
   io.memWen  := ~reset.asBool && (memsel === MEM_WW) || (memsel === MEM_WB)
-  io.regWen  := ~reset.asBool && (wbsel =/= WB_NONE)
+  io.regWen  := ~reset.asBool && (wbsel === WB_NONE)
   when (io.wb_en && io.wb_rd =/= 0.U) {
     regfile(io.wb_rd) := io.wb_data
   }
