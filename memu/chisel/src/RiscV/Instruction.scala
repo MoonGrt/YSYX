@@ -65,7 +65,7 @@ object Instructions {
   val MRET   = BitPat("b00110000001000000000000001110011")
 
   // Implemented instructions
-  val IMPLED = Seq(
+  val Riscv32E_IMPLED = Seq(
     LW, LH, LB, LHU, LBU, SW, SH, SB,
     ADD, ADDI, SUB, AND, OR, XOR, ANDI, ORI, XORI,
     SLL, SRL, SRA, SLLI, SRLI, SRAI, SLT, SLTU, SLTI, SLTIU,

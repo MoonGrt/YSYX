@@ -315,7 +315,7 @@ class Riscv32E_ID extends Module {
   val trap = Module(new EBreak)
   // 定义异常编码规则
   // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
-  val impl_inst = IMPLED.filterNot(inst =>
+  val impl_inst = Riscv32E_IMPLED.filterNot(inst =>
     inst == E || inst == EBREAK
   )
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
