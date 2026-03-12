@@ -31,28 +31,36 @@ object Constants {
   val GPR_NUM  = 32
 
 object MiniRV {
-  // 通用方法：给定一组名字，返回 UInt 常量和宽度
   def makeConsts(names: Seq[String]): (Seq[UInt], Int) = {
     val width = log2Ceil(names.size)
-    val consts = names.zipWithIndex.map { case (_, i) => i.U(width.W) }
+    val consts = names.indices.map(i => i.U(width.W))
     (consts, width)
   }
 
   // IMM
-  val (Seq(IMMN, IMMI, IMMS, IMMU), IMM_SEL_LEN) = makeConsts(Seq("IMMN", "IMMI", "IMMS", "IMMU"))
+  private val (immSeq, immWidth) = makeConsts(Seq("IMMN", "IMMI", "IMMS", "IMMU"))
+  val IMM_SEL_LEN = immWidth
+  val IMMN :: IMMI :: IMMS :: IMMU :: Nil = immSeq.toList
 
   // EX
-  val (Seq(EX_ADD, EX_JALR), EX_SEL_LEN) = makeConsts(Seq("EX_ADD", "EX_JALR"))
+  private val (exSeq, exWidth) = makeConsts(Seq("EX_ADD", "EX_JALR"))
+  val EX_SEL_LEN = exWidth
+  val EX_ADD :: EX_JALR :: Nil = exSeq.toList
 
   // JUMP
-  val (Seq(JUMP_NONE, JUMP_JALR), JUMP_SEL_LEN) = makeConsts(Seq("JUMP_NONE", "JUMP_JALR"))
+  private val (jumpSeq, jumpWidth) = makeConsts(Seq("JUMP_NONE", "JUMP_JALR"))
+  val JUMP_SEL_LEN = jumpWidth
+  val JUMP_NONE :: JUMP_JALR :: Nil = jumpSeq.toList
 
   // WB
-  val (Seq(WB_NONE, WB_EX, WB_MEM), WB_SEL_LEN) = makeConsts(Seq("WB_NONE", "WB_EX", "WB_MEM"))
+  private val (wbSeq, wbWidth) = makeConsts(Seq("WB_NONE", "WB_EX", "WB_MEM"))
+  val WB_SEL_LEN = wbWidth
+  val WB_NONE :: WB_EX :: WB_MEM :: Nil = wbSeq.toList
 
   // MEM
-  val (Seq(MEM_NONE, MEM_RW, MEM_RB, MEM_WW, MEM_WB), MEM_SEL_LEN) =
-    makeConsts(Seq("MEM_NONE", "MEM_RW", "MEM_RB", "MEM_WW", "MEM_WB"))
+  private val (memSeq, memWidth) = makeConsts(Seq("MEM_NONE", "MEM_RW", "MEM_RB", "MEM_WW", "MEM_WB"))
+  val MEM_SEL_LEN = memWidth
+  val MEM_NONE :: MEM_RW :: MEM_RB :: MEM_WW :: MEM_WB :: Nil = memSeq.toList
 }
 
   object Riscv32E {
