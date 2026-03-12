@@ -62,22 +62,22 @@ class MiniRV_ID extends Module {
     val regfileOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
-val List(immsel, exsel, jumpsel, wbsel, memsel) = ListLookup(
-  io.inst,
-  List(ImmSel.N, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
+  val List(immsel, exsel, jumpsel, wbsel, memsel) = ListLookup(
+    io.inst,
+    List(IMMN, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
     Array(
       // Load/Store
-      LW   -> List(ImmSel.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
-      LBU  -> List(ImmSel.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RB),  // x[rs1] + sext(imm_i)
-      SW   -> List(ImmSel.S, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
-      SB   -> List(ImmSel.S, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
+      LW   -> List(IMMI, EX_ADD, JUMP_NONE, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
+      LBU  -> List(IMMI, EX_ADD, JUMP_NONE, WB_MEM, MEM_RB),  // x[rs1] + sext(imm_i)
+      SW   -> List(IMMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
+      SB   -> List(IMMS, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
       // Add
-      ADD  -> List(ImmSel.N, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
-      ADDI -> List(ImmSel.I, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
+      ADD  -> List(IMMN, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
+      ADDI -> List(IMMI, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
       // Jump
-      JALR -> List(ImmSel.I, EX_ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+      JALR -> List(IMMI, EX_ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
       // Load immediate
-      LUI  -> List(ImmSel.U, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
+      LUI  -> List(IMMU, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
     ),
   )
 
@@ -98,13 +98,12 @@ val List(immsel, exsel, jumpsel, wbsel, memsel) = ListLookup(
   // -------- EX操作数 --------
   io.rs1 := Mux(io.inst === LUI, 0.U, regfile(rs1))
   io.rs2 := regfile(rs2)
-val imm = MuxLookup(immsel, 0.U, Seq(
-  ImmSel.I.id.U -> imm_i,
-  ImmSel.S.id.U -> imm_s,
-  ImmSel.U.id.U -> imm_u
-))
-
-val immen = (immsel =/= ImmSel.N.id.U)
+  io.imm := MuxLookup(immsel, 0.U)(Seq(
+    IMMI -> imm_i,
+    IMMS -> imm_s,
+    IMMU -> imm_u,
+  ))
+  io.immen := (immsel =/= IMMN)
 
   // -------- JUMP功能 --------
   io.jumpen := (jumpsel === JUMP_JALR)
