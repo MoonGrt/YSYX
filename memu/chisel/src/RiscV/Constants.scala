@@ -3,10 +3,11 @@ package riscv
 import chisel3._
 import chisel3.util._
 
-trait CoreConstants {
-  val WORD_LEN = 32
-  val CSR_NUM  = 8
-  val GPR_NUM  = 32
+abstract class ConstEnum extends ChiselEnum {
+  def width: Int = this.getAll.length match {
+    case n if n <= 1 => 1
+    case n           => log2Ceil(n)
+  }
 }
 
 object Constants {
@@ -15,6 +16,10 @@ object Constants {
   val GPR_NUM  = 32
 
   object MiniRV {
+    object OP1Sel extends ConstEnum {
+      val RS1, PC, IMZ, NONE = Value
+    }
+
     val IMM_SEL_LEN = 2
     val IMMN = 0.U(IMM_SEL_LEN.W)
     val IMMI = 1.U(IMM_SEL_LEN.W)
