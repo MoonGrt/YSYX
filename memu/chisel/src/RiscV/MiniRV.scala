@@ -64,20 +64,20 @@ class MiniRV_ID extends Module {
 
   val decoded = ListLookup(
     io.inst,
-    List(IMMSel.N, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
+    List(IMM.N, EX_ADD, JUMP_NONE, WB_EX, MEM_WW),
     Array(
       // Load/Store
-      LW   -> List(IMMSel.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
-      LBU  -> List(IMMSel.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RB),  // x[rs1] + sext(imm_i)
-      SW   -> List(IMMSel.S, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
-      SB   -> List(IMMSel.S, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
+      LW   -> List(IMM.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RW),  // x[rs1] + sext(imm_i)
+      LBU  -> List(IMM.I, EX_ADD, JUMP_NONE, WB_MEM, MEM_RB),  // x[rs1] + sext(imm_i)
+      SW   -> List(IMM.S, EX_ADD, JUMP_NONE, WB_NONE, MEM_WW),  // x[rs1] + sext(imm_s)
+      SB   -> List(IMM.S, EX_ADD, JUMP_NONE, WB_NONE, MEM_WB),  // x[rs1] + sext(imm_s)
       // Add
-      ADD  -> List(IMMSel.N, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
-      ADDI -> List(IMMSel.I, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
+      ADD  -> List(IMM.N, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + x[rs2]
+      ADDI -> List(IMM.I, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // x[rs1] + sext(imm_i)
       // Jump
-      JALR -> List(IMMSel.I, EX_ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+      JALR -> List(IMM.I, EX_ADD, JUMP_JALR, WB_EX, MEM_NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
       // Load immediate
-      LUI  -> List(IMMSel.U, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
+      LUI  -> List(IMM.U, EX_ADD, JUMP_NONE, WB_EX, MEM_NONE),  // sext(imm_u[31:12] << 12)
     ),
   )
   val immsel  = decoded(0)
@@ -104,11 +104,11 @@ class MiniRV_ID extends Module {
   io.rs1 := Mux(io.inst === LUI, 0.U(WORD_LEN.W), regfile(rs1))
   io.rs2 := regfile(rs2)
   io.imm := MuxLookup(immsel, 0.U)(Seq(
-    IMMSel.I -> imm_i,
-    IMMSel.S -> imm_s,
-    IMMSel.U -> imm_u
+    IMM.I -> imm_i,
+    IMM.S -> imm_s,
+    IMM.U -> imm_u
   ))
-  io.immen := (immsel =/= IMMN)
+  io.immen := (immsel =/= IMM.N)
 
   // -------- JUMP功能 --------
   io.jumpen := (jumpsel === JUMP_JALR)
