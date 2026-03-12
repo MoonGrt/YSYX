@@ -57,7 +57,7 @@ object Constants {
       val MVENDORID = Value(0xF11.U)
       val MARCHID   = Value(0xF12.U)
     }
-    def decodeCSR(addr: UInt): CSRID.Type = {
+    def decodeCSR(addr: UInt): UInt = {
       MuxLookup(addr, CSRID.NONE)(
         CSRID.all.map(c => c.asUInt -> c.asUInt)
       )
