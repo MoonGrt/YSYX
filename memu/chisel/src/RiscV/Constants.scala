@@ -1,5 +1,8 @@
 package riscv
 
+import chisel3._
+import chisel3.util._
+
 object Constants {
   val WORD_LEN = 32
   val CSR_NUM  = 8
