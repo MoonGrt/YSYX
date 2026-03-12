@@ -177,13 +177,22 @@ inst_fetch() 定义在头文件中，因此会被多个 .c 文件包含。如果
 3.5 编译与链接
 ```nm build/riscv32-nemu-interpreter | grep dummy | wc -l```
 1. 添加 `volatile static int dummy;`
-> common.h 36
-> debug.h 36
+> common.h -> 36
+> debug.h -> redefinition of ‘volatile int dummy’
 3. 添加 `volatile static int dummy = 0;`
-> common.h 36
-> debug.h 36
+> common.h -> 36
+> debug.h -> redefinition of ‘volatile int dummy’
 
 NEMU 中有多少个 dummy 实体： 等于包含 common.h/debug.h 的 .c 文件数量。
+
+3.6 了解Makefile
+`am-kernels/kernels/hello`敲入`make ARCH=$ISA-nemu`后:
+1. 设置项目名称，编译文件添加当前项目中的"hello.c"，调用`$(AM_HOME)/Makefile`
+2. $(AM_HOME)/Makefile:
+  Basic Setup and Checks
+  根据架构和平台，引入相关makefile，同时引入相关需要编译的文件
+  编译项目
+  使用"insert-arg.py"脚本将mainarg嵌入程序中
 
 ---
 
