@@ -67,10 +67,10 @@ class MiniRV_ID extends Module {
     List(IMM.N, EX.ADD, JUMP.NONE, WB.EX, MEM.WW),
     Array(
       // Load/Store
-      LW   -> List(IMM.I, EX.ADD, JUMP.NONE, WB.MEM , MEM_.RW),  // x[rs1] + sext(imm_i)
-      LBU  -> List(IMM.I, EX.ADD, JUMP.NONE, WB.MEM , MEM_.RB),  // x[rs1] + sext(imm_i)
-      SW   -> List(IMM.S, EX.ADD, JUMP.NONE, WB.NONE, MEM_.WW),  // x[rs1] + sext(imm_s)
-      SB   -> List(IMM.S, EX.ADD, JUMP.NONE, WB.NONE, MEM_.WB),  // x[rs1] + sext(imm_s)
+      LW   -> List(IMM.I, EX.ADD, JUMP.NONE, WB.MEM , MEM.RW),  // x[rs1] + sext(imm_i)
+      LBU  -> List(IMM.I, EX.ADD, JUMP.NONE, WB.MEM , MEM.RB),  // x[rs1] + sext(imm_i)
+      SW   -> List(IMM.S, EX.ADD, JUMP.NONE, WB.NONE, MEM.WW),  // x[rs1] + sext(imm_s)
+      SB   -> List(IMM.S, EX.ADD, JUMP.NONE, WB.NONE, MEM.WB),  // x[rs1] + sext(imm_s)
       // Add
       ADD  -> List(IMM.N, EX.ADD, JUMP.NONE, WB.EX, MEM.NONE),  // x[rs1] + x[rs2]
       ADDI -> List(IMM.I, EX.ADD, JUMP.NONE, WB.EX, MEM.NONE),  // x[rs1] + sext(imm_i)
