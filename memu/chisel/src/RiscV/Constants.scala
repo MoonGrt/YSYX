@@ -47,27 +47,6 @@ object Constants {
       val W, S, C, B, E, MRET = Value
     }
 
-    val EX_SEL_LEN = 5
-    val EX_NONE =  0.U(EX_SEL_LEN.W)
-    val EX_ADD  =  1.U(EX_SEL_LEN.W)
-    val EX_SUB  =  2.U(EX_SEL_LEN.W)
-    val EX_AND  =  3.U(EX_SEL_LEN.W)
-    val EX_OR   =  4.U(EX_SEL_LEN.W)
-    val EX_XOR  =  5.U(EX_SEL_LEN.W)
-    val EX_SLL  =  6.U(EX_SEL_LEN.W)
-    val EX_SRL  =  7.U(EX_SEL_LEN.W)
-    val EX_SRA  =  8.U(EX_SEL_LEN.W)
-    val EX_SLT  =  9.U(EX_SEL_LEN.W)
-    val EX_SLTU = 10.U(EX_SEL_LEN.W)
-    val EX_BEQ  = 11.U(EX_SEL_LEN.W)
-    val EX_BNE  = 12.U(EX_SEL_LEN.W)
-    val EX_BLT  = 13.U(EX_SEL_LEN.W)
-    val EX_BGE  = 14.U(EX_SEL_LEN.W)
-    val EX_BLTU = 15.U(EX_SEL_LEN.W)
-    val EX_BGEU = 16.U(EX_SEL_LEN.W)
-    val EX_JAL  = 17.U(EX_SEL_LEN.W)
-    val EX_CSR  = 18.U(EX_SEL_LEN.W)
-
     val MEM_SEL_LEN = 4
     val MEM_NONE = 0.U(MEM_SEL_LEN.W)
     val MEM_RW   = 1.U(MEM_SEL_LEN.W)  // read word
