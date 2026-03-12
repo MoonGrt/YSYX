@@ -58,7 +58,7 @@ class Riscv32E_ID extends Module {
     val gprOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
-  val decoded = ListLookup(io.inst,
+  val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(io.inst,
     List(OP1.RS1, OP2.RS2, EX.ADD, WB.EX, MEM.NONE, CSRS.NONE), Array(
       LW     -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RW  , CSRS.NONE),  // x[rs1] + sext(immi)
       LH     -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RH  , CSRS.NONE),  // x[rs1] + sext(immi)
@@ -113,12 +113,6 @@ class Riscv32E_ID extends Module {
       MRET   -> List(OP1.NONE, OP2.CSR , EX.CSR , WB.NONE, MEM.NONE, CSRS.MRET),
     ),
   )
-  val op1sel = decoded(0)
-  val op2sel = decoded(1)
-  val exsel  = decoded(2)
-  val wbsel  = decoded(3)
-  val memsel = decoded(4)
-  val csrsel = decoded(5)
 
   // -------- 寄存器堆 --------
   val CSR = RegInit(VecInit(Seq.fill(CSR_NUM)(0.U(WORD_LEN.W))))
