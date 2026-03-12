@@ -59,6 +59,7 @@ object Constants {
       0xB80.U,  // mcycleh
       0xF11.U,  // mvendorid
       0xF12.U,  // marchid
+      0xFFF.U,  // none
     )
     def decodeCSR(addr: UInt): UInt = {
       MuxLookup(addr, CSRID.NONE.asUInt)(
