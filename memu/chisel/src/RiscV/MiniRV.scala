@@ -172,14 +172,14 @@ class MiniRV_EX extends Module {
     val braddr = Output(UInt(WORD_LEN.W))
   })
   // -------- ALU --------
-  io.aluout := MuxCase(0.U(WORD_LEN.W), Seq(
+  io.aluout := MuxCase(0.U, Seq(
     (io.exsel === EX.ADD ) -> (io.op1 + io.op2),
   ))
   // -------- Branch --------
   io.bren := MuxCase(false.B, Seq(
-    (io.exsel === EX.JAL ) ->  true.B,
+    (io.exsel === EX.JAL ) -> true.B,
   ))
-  io.braddr := MuxCase(io.pc + io.immsb, Seq(
+  io.braddr := MuxCase(0.U, Seq(
     (io.exsel === EX.JAL) -> (io.op1 + io.op2),
   ))
 }
