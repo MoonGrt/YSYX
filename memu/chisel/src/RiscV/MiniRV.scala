@@ -130,8 +130,8 @@ class MiniRV_ID extends Module {
     ))
   }
 
-  // 输出 CSRS & GPR
-  io.csrOut := CSR
+  // 输出 GPR
+  io.gprOut := GPR
 
   // -------- 异常处理 --------
   val trap = Module(new EBreak)

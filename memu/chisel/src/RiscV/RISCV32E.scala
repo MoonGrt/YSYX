@@ -237,7 +237,7 @@ class Riscv32E_ID extends Module {
     ))
   }
 
-  // 输出 CSRS & GPR
+  // 输出 CSR & GPR
   io.csrOut := CSR
   io.gprOut := GPR
 
