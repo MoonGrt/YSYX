@@ -22,7 +22,7 @@ object Constants {
       val NONE, EX, MEM = Value
     }
     object MEM extends ChiselEnum {
-      val NONE, RW, RB, WW, WB = Value
+      val NONE, RW, RBU, WW, WB = Value
     }
   }
 
@@ -41,7 +41,7 @@ object Constants {
       val PC, EX, MEM, CSR, NONE = Value
     }
     object MEM extends ChiselEnum {
-      val NONE, RW, RBU, WW, WB = Value
+      val NONE, RW, RH, RB, RHU, RBU, WW, WH, WB = Value
     }
     object CSRS extends ChiselEnum {
       val NONE, W, S, C, B, E, MRET = Value
