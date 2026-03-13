@@ -9,8 +9,8 @@ object Constants {
   val GPR_NUM  = 32
 
   object MiniRV {
-    object IMM extends ChiselEnum {
-      val N, I, S, U = Value
+    object OP2 extends ChiselEnum {
+      val RS2, IMI, IMS, IMJ, IMU, NONE = Value
     }
     object EX extends ChiselEnum {
       val ADD, JALR = Value
@@ -41,7 +41,7 @@ object Constants {
       val PC, EX, MEM, CSR, NONE = Value
     }
     object MEM extends ChiselEnum {
-      val NONE, RW, RH, RB, RHU, RBU, WW, WH, WB = Value
+      val NONE, RW, RBU, WW, WB = Value
     }
     object CSRS extends ChiselEnum {
       val NONE, W, S, C, B, E, MRET = Value
