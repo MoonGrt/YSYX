@@ -54,7 +54,6 @@ class MiniRV_ID extends Module {
     val regWen = Output(Bool())
 
     // Diff
-    val csrOut = Output(Vec(CSR_NUM, UInt(WORD_LEN.W)))
     val gprOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
