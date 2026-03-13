@@ -10,7 +10,7 @@ object Constants {
 
   object MiniRV {
     object OP2 extends ChiselEnum {
-      val NONE, RS2, IMI, IMS, IMJ, IMU = Value
+      val NONE, RS2, IMI, IMS, IMU = Value
     }
     object EX extends ChiselEnum {
       val NONE, ADD, JAL = Value

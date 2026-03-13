@@ -109,7 +109,6 @@ class MiniRV_ID extends Module {
     (op2sel === OP2.RS2) -> GPR(rs2),
     (op2sel === OP2.IMI) -> immsi,
     (op2sel === OP2.IMS) -> immss,
-    (op2sel === OP2.IMJ) -> immsj,
     (op2sel === OP2.IMU) -> immu,  // for LUI and AUIPC
   ))
 
@@ -255,7 +254,7 @@ class MiniRV extends Module {
 // MiniRV TOP：自包含 CPU + ROM + RAM
 // ---------------------------
 class MiniRVTOP extends Module {
-  val cpu = Module(new Riscv32E)
+  val cpu = Module(new MiniRV)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)
   // 指令取值
