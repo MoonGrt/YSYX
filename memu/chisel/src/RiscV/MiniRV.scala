@@ -85,19 +85,19 @@ class MiniRV_ID extends Module {
   val imms = Cat(io.inst(31,25), io.inst(11,7))  // imm for S-type
   val immss = Cat(Fill(20, imms(11)), imms)
   // Decode imm of U-type instruction
-  val immu = Cat(io.inst(31,12), Fill(12, 0.U))  // for LUI and AUIPC
+  val immu = Cat(io.inst(31,12), Fill(12, 0.U))  // for LUI
 
   // -------- EX功能 --------
   io.exsel := exsel
   io.rs2 := GPR(rs2)
   // Determine 1st operand data signal
-  io.op1 := GPR(rs1)
+  io.op1 := Mux(io.inst === LUI, 0.U, GPR(rs1))
   // Determine 2nd operand data signal
   io.op2 := MuxCase(0.U(32.W), Seq(
     (op2sel === OP2.RS2) -> GPR(rs2),
     (op2sel === OP2.IMI) -> immsi,
     (op2sel === OP2.IMS) -> immss,
-    (op2sel === OP2.IMU) -> immu,  // for LUI and AUIPC
+    (op2sel === OP2.IMU) -> immu,  // for LUI
   ))
 
   // -------- WB功能 --------
