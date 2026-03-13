@@ -12,21 +12,16 @@ import Constants.MiniRV._
 class MiniRV_IF extends Module {
   val io = IO(new Bundle {
     val halt   = Input(Bool())  // halt 信号
-    val jumpen = Input(Bool())  // 跳转使能
-    val jump   = Input(UInt(WORD_LEN.W))  // 跳转地址
+    val bren   = Input(Bool())  // 跳转使能
+    val braddr = Input(UInt(WORD_LEN.W))  // 跳转地址
     val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
     val pc     = Output(UInt(WORD_LEN.W))  // 当前 PC 输出
   })
   val pc = RegInit("h80000000".U(WORD_LEN.W))
-  when (io.halt) {
-    pc := pc
-  }.otherwise {
-    when (io.jumpen) {
-      pc := io.jump
-    }.otherwise {
-      pc := io.npc
-    }
-  }
+  pc := MuxCase(io.npc, Seq(
+    io.halt -> pc,
+    io.bren -> io.braddr,
+  ))
   io.pc  := pc
   io.npc := pc + 4.U
 }
@@ -36,114 +31,232 @@ class MiniRV_IF extends Module {
 // ---------------------------
 class MiniRV_ID extends Module {
   val io = IO(new Bundle {
+    val pc      = Input(UInt(WORD_LEN.W))
     val inst    = Input(UInt(WORD_LEN.W))
 
-    // 写回接口（来自 WB）
+    // 写回
     val wb_en   = Input(Bool())
     val wb_rd   = Input(UInt(5.W))
-    val wb_data = Input(UInt(WORD_LEN.W))
+    val memData = Input(UInt(WORD_LEN.W))
+    val exData  = Input(UInt(WORD_LEN.W))
 
     // 输出到 EX
     val exsel   = Output(EX())
-    val rs1     = Output(UInt(WORD_LEN.W))
+    val op1     = Output(UInt(WORD_LEN.W))
+    val op2     = Output(UInt(WORD_LEN.W))
+    val immsb   = Output(UInt(WORD_LEN.W))
     val rs2     = Output(UInt(WORD_LEN.W))
-    val imm     = Output(UInt(WORD_LEN.W))
-    val immen   = Output(Bool())
     val rd_addr = Output(UInt(5.W))
 
     // Control signals
     val halt   = Output(Bool())
-    val jumpen = Output(Bool())
-    val memBen = Output(Bool())
-    val memRen = Output(Bool())
-    val memWen = Output(Bool())
+    val memsel = Output(MEM())
     val regWen = Output(Bool())
 
-    val regfileOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
+    // Diff
+    val csrOut = Output(Vec(CSR_NUM, UInt(WORD_LEN.W)))
+    val gprOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
-  val decoded = ListLookup(
-    io.inst,
-    List(IMM.N, EX.ADD, JUMP.NONE, WB.EX, MEM.WW),
-    Array(
-      // Load/Store
-      LW   -> List(IMM.I, EX.ADD, JUMP.NONE, WB.MEM , MEM.RW),  // x[rs1] + sext(imm_i)
-      LBU  -> List(IMM.I, EX.ADD, JUMP.NONE, WB.MEM , MEM.RB),  // x[rs1] + sext(imm_i)
-      SW   -> List(IMM.S, EX.ADD, JUMP.NONE, WB.NONE, MEM.WW),  // x[rs1] + sext(imm_s)
-      SB   -> List(IMM.S, EX.ADD, JUMP.NONE, WB.NONE, MEM.WB),  // x[rs1] + sext(imm_s)
-      // Add
-      ADD  -> List(IMM.N, EX.ADD, JUMP.NONE, WB.EX, MEM.NONE),  // x[rs1] + x[rs2]
-      ADDI -> List(IMM.I, EX.ADD, JUMP.NONE, WB.EX, MEM.NONE),  // x[rs1] + sext(imm_i)
-      // Jump
-      JALR -> List(IMM.I, EX.ADD, JUMP.JALR, WB.EX, MEM.NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
-      // Load immediate
-      LUI  -> List(IMM.U, EX.ADD, JUMP.NONE, WB.EX, MEM.NONE),  // sext(imm_u[31:12] << 12)
+  val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(io.inst,
+    List(OP1.RS1, OP2.RS2, EX.ADD, WB.EX, MEM.NONE, CSRS.NONE), Array(
+      LW     -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RW  , CSRS.NONE),  // x[rs1] + sext(immi)
+      LH     -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RH  , CSRS.NONE),  // x[rs1] + sext(immi)
+      LB     -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RB  , CSRS.NONE),  // x[rs1] + sext(immi)
+      LHU    -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RHU , CSRS.NONE),  // x[rs1] + sext(immi)
+      LBU    -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.MEM , MEM.RBU , CSRS.NONE),  // x[rs1] + sext(immi)
+      SW     -> List(OP1.RS1 , OP2.IMS , EX.ADD , WB.NONE, MEM.WW  , CSRS.NONE),  // x[rs1] + sext(imms)
+      SH     -> List(OP1.RS1 , OP2.IMS , EX.ADD , WB.NONE, MEM.WH  , CSRS.NONE),  // x[rs1] + sext(imms)
+      SB     -> List(OP1.RS1 , OP2.IMS , EX.ADD , WB.NONE, MEM.WB  , CSRS.NONE),  // x[rs1] + sext(imms)
+
+      ADD    -> List(OP1.RS1 , OP2.RS2 , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] + x[rs2]
+      ADDI   -> List(OP1.RS1 , OP2.IMI , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] + sext(immi)
+      SUB    -> List(OP1.RS1 , OP2.RS2 , EX.SUB , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] - x[rs2]
+      AND    -> List(OP1.RS1 , OP2.RS2 , EX.AND , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] & x[rs2]
+      OR     -> List(OP1.RS1 , OP2.RS2 , EX.OR  , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] | x[rs2]
+      XOR    -> List(OP1.RS1 , OP2.RS2 , EX.XOR , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] ^ x[rs2]
+      ANDI   -> List(OP1.RS1 , OP2.IMI , EX.AND , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] & sext(immi)
+      ORI    -> List(OP1.RS1 , OP2.IMI , EX.OR  , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] | sext(immi)
+      XORI   -> List(OP1.RS1 , OP2.IMI , EX.XOR , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] ^ sext(immi)
+      SLL    -> List(OP1.RS1 , OP2.RS2 , EX.SLL , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] << x[rs2](4,0)
+      SRL    -> List(OP1.RS1 , OP2.RS2 , EX.SRL , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] >>u x[rs2](4,0)
+      SRA    -> List(OP1.RS1 , OP2.RS2 , EX.SRA , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] >>s x[rs2](4,0)
+      SLLI   -> List(OP1.RS1 , OP2.IMI , EX.SLL , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] << immsi(4,0)
+      SRLI   -> List(OP1.RS1 , OP2.IMI , EX.SRL , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] >>u immsi(4,0)
+      SRAI   -> List(OP1.RS1 , OP2.IMI , EX.SRA , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] >>s immsi(4,0)
+      SLT    -> List(OP1.RS1 , OP2.RS2 , EX.SLT , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] <s x[rs2]
+      SLTU   -> List(OP1.RS1 , OP2.RS2 , EX.SLTU, WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] <u x[rs2]
+      SLTI   -> List(OP1.RS1 , OP2.IMI , EX.SLT , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] <s immsi
+      SLTIU  -> List(OP1.RS1 , OP2.IMI , EX.SLTU, WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] <u immsi
+
+      BEQ    -> List(OP1.RS1 , OP2.RS2 , EX.BEQ , WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] === x[rs2] then PC+sext(imm_b)
+      BNE    -> List(OP1.RS1 , OP2.RS2 , EX.BNE , WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] =/= x[rs2] then PC+sext(imm_b)
+      BGE    -> List(OP1.RS1 , OP2.RS2 , EX.BGE , WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] >=s x[rs2] then PC+sext(imm_b)
+      BGEU   -> List(OP1.RS1 , OP2.RS2 , EX.BGEU, WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] >=u x[rs2] then PC+sext(imm_b)
+      BLT    -> List(OP1.RS1 , OP2.RS2 , EX.BLT , WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] <s x[rs2]  then PC+sext(imm_b)
+      BLTU   -> List(OP1.RS1 , OP2.RS2 , EX.BLTU, WB.NONE, MEM.NONE, CSRS.NONE),  // x[rs1] <u x[rs2]  then PC+sext(imm_b)
+      JAL    -> List(OP1.PC  , OP2.IMJ , EX.JAL , WB.PC  , MEM.NONE, CSRS.NONE),  // x[rd] <- PC+4 and PC+sext(imm_j)
+      JALR   -> List(OP1.RS1 , OP2.IMI , EX.JAL , WB.PC  , MEM.NONE, CSRS.NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+
+      LUI    -> List(OP1.NONE, OP2.IMU , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // sext(immu[31:12] << 12)
+      AUIPC  -> List(OP1.PC  , OP2.IMU , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // PC + sext(immu[31:12] << 12)
+
+      CSRRW  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.W   ), // CSRs[csr] <- x[rs1]
+      CSRRWI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.W   ), // CSRs[csr] <- uext(imm_z)
+      CSRRS  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.S   ), // CSRs[csr] <- CSRs[csr] | x[rs1]
+      CSRRSI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.S   ), // CSRs[csr] <- CSRs[csr] | uext(imm_z)
+      CSRRC  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.C   ), // CSRs[csr] <- CSRs[csr]&~x[rs1]
+      CSRRCI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.C   ), // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
+
+      EBREAK -> List(OP1.NONE, OP2.NONE, EX.NONE, WB.NONE, MEM.NONE, CSRS.B   ),
+      ECALL  -> List(OP1.NONE, OP2.CSR , EX.CSR , WB.NONE, MEM.NONE, CSRS.E   ),
+      MRET   -> List(OP1.NONE, OP2.CSR , EX.CSR , WB.NONE, MEM.NONE, CSRS.MRET),
     ),
   )
-  val immsel  = decoded(0).asTypeOf(IMM())
-  val exsel   = decoded(1).asTypeOf(EX())
-  val jumpsel = decoded(2).asTypeOf(JUMP())
-  val wbsel   = decoded(3)
-  val memsel  = decoded(4)
 
   // -------- 寄存器堆 --------
-  val regfile = RegInit(VecInit(Seq.fill(WORD_LEN)(0.U(WORD_LEN.W))))
+  val CSR = RegInit(VecInit(Seq.fill(CSR_NUM)(0.U(WORD_LEN.W))))
+  val GPR = RegInit(VecInit(Seq.fill(GPR_NUM)(0.U(WORD_LEN.W))))
 
   // -------- 指令字段 --------
-  val opcode = io.inst(6,0)
-  val rd     = io.inst(11,7)
-  val rs1    = io.inst(19,15)
-  val rs2    = io.inst(24,20)
+  val rd  = io.inst(11,7)
+  val rs1 = io.inst(19,15)
+  val rs2 = io.inst(24,20)
 
   // -------- 立即数 --------
-  val imm_i = Sext(io.inst(31,20), 12)
-  val imm_s = Sext(Cat(io.inst(31,25), io.inst(11,7)), 12)
-  val imm_u = io.inst(31,12) << 12
-
-  // -------- EX操作数 --------
-  io.rs1 := Mux(io.inst === LUI, 0.U, regfile(rs1))
-  io.rs2 := regfile(rs2)
-  io.imm := MuxLookup(immsel, 0.U)(Seq(
-    IMM.I -> imm_i,
-    IMM.S -> imm_s,
-    IMM.U -> imm_u,
-  ))
-  io.immen := (immsel =/= IMM.N)
-
-  // -------- JUMP功能 --------
-  io.jumpen := (jumpsel === JUMP.JALR)
+  // sext 12bit value to 32bit value.
+  val immi = io.inst(31,20)  // imm for I-type
+  val immsi = Cat(Fill(20, immi(11)), immi)
+  val imms = Cat(io.inst(31,25), io.inst(11,7))  // imm for S-type
+  val immss = Cat(Fill(20, imms(11)), imms)
+  // Decode imm of B-type instruction
+  val immb = Cat(io.inst(31), io.inst(7), io.inst(30,25), io.inst(11,8))
+  val immsb = Cat(Fill(19, immb(11)), immb, 0.U(1.W))
+  // Decode imm of J-type instruction
+  val immj = Cat(io.inst(31), io.inst(19,12), io.inst(20), io.inst(30,21))
+  val immsj = Cat(Fill(11, immj(19)), immj, 0.U(1.W))  // Set LSB to zero
+  // Decode imm of U-type instruction
+  val immu = Cat(io.inst(31,12), Fill(12, 0.U))  // for LUI and AUIPC
+  // Decode imm of I-type instruction
+  val immz = io.inst(19, 15)
+  val immuz = Cat(Fill(27, 0.U), immz)  // for CSRS instructions
 
   // -------- EX功能 --------
   io.exsel := exsel
+  io.immsb := immsb
+  io.rs2 := GPR(rs2)
+  // Determine 1st operand data signal
+  io.op1 := MuxCase(0.U(32.W), Seq(
+    (op1sel === OP1.RS1) -> GPR(rs1),
+    (op1sel === OP1.PC ) -> io.pc,
+    (op1sel === OP1.IMZ) -> immuz,
+  ))
+  // Determine 2nd operand data signal
+  val brcsr = MuxCase(0.U(32.W), Seq(
+    (csrsel === CSRS.E   ) -> CSR(3),  // mtvec
+    (csrsel === CSRS.MRET) -> CSR(1),  // mepc
+  ))
+  io.op2 := MuxCase(0.U(32.W), Seq(
+    (op2sel === OP2.RS2) -> GPR(rs2),
+    (op2sel === OP2.CSR) -> brcsr,
+    (op2sel === OP2.IMI) -> immsi,
+    (op2sel === OP2.IMS) -> immss,
+    (op2sel === OP2.IMJ) -> immsj,
+    (op2sel === OP2.IMU) -> immu,  // for LUI and AUIPC
+  ))
 
   // -------- WB功能 --------
-  io.rd_addr := rd
-  io.memBen  := ~reset.asBool && (memsel === MEM.RB) || (memsel === MEM.WB)
-  io.memRen  := ~reset.asBool && (memsel === MEM.RW) || (memsel === MEM.RB)
-  io.memWen  := ~reset.asBool && (memsel === MEM.WW) || (memsel === MEM.WB)
-  io.regWen  := ~reset.asBool && (wbsel =/= WB.NONE)
-  when (io.wb_en && io.wb_rd =/= 0.U) {
-    regfile(io.wb_rd) := io.wb_data
+  io.memsel := memsel
+  // CSR
+  val CSR_MSTATUS = 0.U
+  val CSR_MEPC    = 1.U
+  val CSR_MCAUSE  = 2.U
+  val CSR_MTVEC   = 3.U
+  val CSR_MCYCLE  = 4.U
+  val CSR_MCYCLEH = 5.U
+  val CSR_MVENDOR = 6.U
+  val CSR_MARCHID = 7.U
+  val csr_addr = immi
+  val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
+    0x300.U -> 0.U,  // mstatus
+    0x341.U -> 1.U,  // mepc
+    0x342.U -> 2.U,  // mcause
+    0x305.U -> 3.U,  // mtvec
+    0xB00.U -> 4.U,  // mcycle
+    0xB80.U -> 5.U,  // mcycleh
+    0xF11.U -> 6.U,  // mvendorid
+    0xF12.U -> 7.U,  // marchid
+  ))
+  val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
+  CSR(CSR_MCYCLE)  := cycle64(31,0)
+  CSR(CSR_MCYCLEH) := cycle64(63,32)
+  CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
+  CSR(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
+
+  val csr_old = CSR(csr_id)
+  val csr_new = MuxCase(io.op1, Seq(
+    (csrsel === CSRS.W) -> io.op1,
+    (csrsel === CSRS.S) -> (csr_old | io.op1),
+    (csrsel === CSRS.C) -> (csr_old & ~io.op1),
+  ))
+  val csr_wen = csrsel.isOneOf(CSRS.W, CSRS.S, CSRS.C)
+  val csr_writable =
+    csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
+    csr_id === CSR_MTVEC || csr_id === CSR_MCYCLE || csr_id === CSR_MCYCLEH
+  when (~reset.asBool && csr_wen && csr_writable) {
+    CSR(csr_id) := csr_new
   }
+  when (~reset.asBool && csrsel === CSRS.E) {
+    // mstatus = 0x00001800
+    CSR(CSR_MSTATUS) := 0x00001800.U
+    // mepc = pc
+    CSR(CSR_MEPC)    := io.pc
+    // mcause = 11 (ECALL from M-mode)
+    CSR(CSR_MCAUSE)  := 11.U
+  }
+  when (~reset.asBool && csrsel === CSRS.MRET) {
+    // mstatus = 0x00000080
+    CSR(CSR_MSTATUS) := 0x00000080.U
+  }
+  // GPR
+  io.rd_addr := rd
+  io.regWen  := wbsel =/= WB.NONE
+  val memData = MuxLookup(io.memsel, 0.U(WORD_LEN.W))(Seq(
+    MEM.RW  -> io.memData,  // LW 直接写回
+    MEM.RB  -> Cat(Fill(24, io.memData(7)), io.memData(7,0)),  // LB 符号扩展
+    MEM.RH  -> Cat(Fill(16, io.memData(15)), io.memData(15,0)),  // LH 符号扩展
+    MEM.RBU -> Cat(0.U(24.W), io.memData(7,0)),  // LBU 零扩展
+    MEM.RHU -> Cat(0.U(16.W), io.memData(15,0)),  // LHU 零扩展
+  ))
+  when (io.wb_en && io.wb_rd =/= 0.U) {
+    GPR(io.wb_rd) := MuxCase(0.U, Seq(
+      (wbsel === WB.PC ) -> (io.pc + 4.U),
+      (wbsel === WB.EX ) -> io.exData,
+      (wbsel === WB.MEM) -> memData,
+      (wbsel === WB.CSR) -> csr_old,
+    ))
+  }
+
+  // 输出 CSRS & GPR
+  io.csrOut := CSR
+  io.gprOut := GPR
 
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
   // 定义异常编码规则
   // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
-  val impl_inst = MiniRV_IMPLED.filterNot(inst =>
+  val impl_inst = Riscv32E_IMPLED.filterNot(inst =>
     inst == E || inst == EBREAK
   )
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
   val is_zero = (io.inst === 0.U)
   val is_ebreak = (io.inst === EBREAK)
-  val is_otherE = (io.inst === E) && (io.inst =/= EBREAK)
-  val exc_code = MuxCase(
-    1.U(8.W),  // 默认全零指令
-    Seq(
+  val is_otherE = (io.inst === E) && (io.inst =/= ECALL) && (io.inst =/= EBREAK)
+  val exc_code = MuxCase(1.U(8.W), Seq(  // 默认全零指令
       is_ebreak -> 0.U,  // EBREAK
-      is_zero -> 1.U,  // 全零指令
+      is_zero   -> 1.U,  // 全零指令
       is_otherE -> 2.U,  // 其他E指令
-      is_unimpl -> 3.U  // 未实现指令
+      is_unimpl -> 3.U,  // 未实现指令
     )
   )
   // 输出到 EBreak 模块
@@ -152,8 +265,6 @@ class MiniRV_ID extends Module {
   trap.io.code := exc_code
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
-  // 输出 regfile
-  io.regfileOut := regfile
 }
 
 // ---------------------------
@@ -161,19 +272,43 @@ class MiniRV_ID extends Module {
 // ---------------------------
 class MiniRV_EX extends Module {
   val io = IO(new Bundle {
-    val pc    = Input(UInt(WORD_LEN.W))
-    val rs1   = Input(UInt(WORD_LEN.W))
-    val rs2   = Input(UInt(WORD_LEN.W))
-    val imm   = Input(UInt(WORD_LEN.W))
-    val immen = Input(Bool())
-    val exsel = Input(EX())
-    val exout = Output(UInt(WORD_LEN.W))
+    val pc     = Input(UInt(WORD_LEN.W))
+    val op1    = Input(UInt(WORD_LEN.W))
+    val op2    = Input(UInt(WORD_LEN.W))
+    val immsb  = Input(UInt(WORD_LEN.W))
+    val exsel  = Input(EX())
+    val aluout = Output(UInt(WORD_LEN.W))
+    val bren   = Output(Bool())
+    val braddr = Output(UInt(WORD_LEN.W))
   })
   // -------- ALU --------
-  io.exout := Mux(
-    io.immen,
-    io.rs1 + io.imm, io.rs1 + io.rs2
-  )
+  io.aluout := MuxCase(0.U(WORD_LEN.W), Seq(
+    (io.exsel === EX.ADD ) -> (io.op1 + io.op2),
+    (io.exsel === EX.SUB ) -> (io.op1 - io.op2),
+    (io.exsel === EX.AND ) -> (io.op1 & io.op2),
+    (io.exsel === EX.OR  ) -> (io.op1 | io.op2),
+    (io.exsel === EX.XOR ) -> (io.op1 ^ io.op2),
+    (io.exsel === EX.SLL ) -> (io.op1 << io.op2(4,0)),
+    (io.exsel === EX.SRL ) -> (io.op1 >> io.op2(4,0)),
+    (io.exsel === EX.SRA ) -> (io.op1.asSInt >> io.op2(4,0)).asUInt,
+    (io.exsel === EX.SLT ) -> (io.op1.asSInt < io.op2.asSInt).asUInt,
+    (io.exsel === EX.SLTU) -> (io.op1 < io.op2),
+  ))
+  // -------- Branch --------
+  io.bren := MuxCase(false.B, Seq(
+    (io.exsel === EX.JAL ) ->  true.B,
+    (io.exsel === EX.CSR ) ->  true.B,
+    (io.exsel === EX.BEQ ) ->  (io.op1 === io.op2),
+    (io.exsel === EX.BNE ) -> !(io.op1 === io.op2),
+    (io.exsel === EX.BLT ) ->  (io.op1.asSInt < io.op2.asSInt),
+    (io.exsel === EX.BGE ) -> !(io.op1.asSInt < io.op2.asSInt),
+    (io.exsel === EX.BLTU) ->  (io.op1 < io.op2),
+    (io.exsel === EX.BGEU) -> !(io.op1 < io.op2),
+  ))
+  io.braddr := MuxCase(io.pc + io.immsb, Seq(
+    (io.exsel === EX.JAL) -> (io.op1 + io.op2),
+    (io.exsel === EX.CSR) -> (io.op2),  // mtvec
+  ))
 }
 
 // ---------------------------
@@ -192,60 +327,53 @@ class MiniRV extends Module {
     val mem_rdata = Input(UInt(WORD_LEN.W))
   })
 
-  val ifStage = Module(new MiniRV_IF)
-  val idStage = Module(new MiniRV_ID)
-  val exStage = Module(new MiniRV_EX)
+  val ifStage = Module(new Riscv32E_IF)
+  val idStage = Module(new Riscv32E_ID)
+  val exStage = Module(new Riscv32E_EX)
 
   // IF
   io.pc := ifStage.io.pc
-  ifStage.io.jumpen := idStage.io.jumpen
-  ifStage.io.jump   := exStage.io.exout
+  ifStage.io.bren   := exStage.io.bren
+  ifStage.io.braddr := exStage.io.braddr
   ifStage.io.halt   := idStage.io.halt
 
   // ID
+  idStage.io.pc   := ifStage.io.pc
   idStage.io.inst := io.inst
 
   // EX
-  exStage.io.pc    := ifStage.io.pc
-  exStage.io.rs1   := idStage.io.rs1
-  exStage.io.rs2   := idStage.io.rs2
-  exStage.io.imm   := idStage.io.imm
-  exStage.io.immen := idStage.io.immen
+  exStage.io.pc    := idStage.io.pc
+  exStage.io.op1   := idStage.io.op1
+  exStage.io.op2   := idStage.io.op2
+  exStage.io.immsb := idStage.io.immsb
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
-  io.mem_re    := idStage.io.memRen
-  io.mem_we    := idStage.io.memWen
-  io.mem_addr  := exStage.io.exout
+  val memType = idStage.io.memsel
+  io.mem_re    := !reset.asBool && memType.isOneOf(MEM.RW, MEM.RH, MEM.RB, MEM.RHU, MEM.RBU)
+  io.mem_we    := !reset.asBool && memType.isOneOf(MEM.WW, MEM.WH, MEM.WB)
+  io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
-  io.mem_len   := Mux(idStage.io.memBen, 1.U, 4.U)
+  io.mem_len   := Mux(memType.isOneOf(MEM.WB, MEM.RB, MEM.RBU), 1.U,
+                  Mux(memType.isOneOf(MEM.WH, MEM.RH, MEM.RHU), 2.U, 4.U))
 
   // Write Back
-  val byte_shift = (exStage.io.exout(1,0) << 3)  // 位移量
-  val byte_data = (io.mem_rdata >> byte_shift)(7,0)  // 取目标字节
-  val mem_data = io.mem_rdata
-  val wb_data = MuxCase(
-    exStage.io.exout, Seq(  // 默认EX输出
-      idStage.io.memRen -> mem_data,  // Memory read
-      idStage.io.jumpen -> ifStage.io.npc  // Jump
-    )
-  )
-
   idStage.io.wb_en   := idStage.io.regWen
   idStage.io.wb_rd   := idStage.io.rd_addr
-  idStage.io.wb_data := wb_data
+  idStage.io.memData := io.mem_rdata
+  idStage.io.exData  := exStage.io.aluout
 
   // DiffTest
   val difftest = Module(new DiffTest)
   difftest.io.clk  := clock
   difftest.io.pc   := ifStage.io.pc
-  difftest.io.npc  := Mux(idStage.io.jumpen, exStage.io.exout, ifStage.io.npc)
+  difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
   for (i <- 0 until CSR_NUM) {
-    difftest.io.csr(i) := 0.U(WORD_LEN.W)  // 未实现 CSR
+    difftest.io.csr(i) := idStage.io.csrOut(i)
   }
   for (i <- 0 until GPR_NUM) {
-    difftest.io.gpr(i) := idStage.io.regfileOut(i)
+    difftest.io.gpr(i) := idStage.io.gprOut(i)
   }
 }
 
@@ -253,14 +381,12 @@ class MiniRV extends Module {
 // MiniRV TOP：自包含 CPU + ROM + RAM
 // ---------------------------
 class MiniRVTOP extends Module {
-  val cpu = Module(new MiniRV)
+  val cpu = Module(new Riscv32E)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)
-
   // 指令取值
   rom.io.addr := cpu.io.pc
   cpu.io.inst := rom.io.data
-
   // 数据访存
   ram.io.clk   := clock
   ram.io.re    := cpu.io.mem_re
