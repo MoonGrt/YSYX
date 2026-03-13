@@ -101,12 +101,12 @@ class Riscv32E_ID extends Module {
       LUI    -> List(OP1.NONE, OP2.IMU , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // sext(immu[31:12] << 12)
       AUIPC  -> List(OP1.PC  , OP2.IMU , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // PC + sext(immu[31:12] << 12)
 
-      CSRRW  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.W   ), // CSRs[csr] <- x[rs1]
-      CSRRWI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.W   ), // CSRs[csr] <- uext(imm_z)
-      CSRRS  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.S   ), // CSRs[csr] <- CSRs[csr] | x[rs1]
-      CSRRSI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.S   ), // CSRs[csr] <- CSRs[csr] | uext(imm_z)
-      CSRRC  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.C   ), // CSRs[csr] <- CSRs[csr]&~x[rs1]
-      CSRRCI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.C   ), // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
+      CSRRW  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.W   ),  // CSRs[csr] <- x[rs1]
+      CSRRWI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.W   ),  // CSRs[csr] <- uext(imm_z)
+      CSRRS  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.S   ),  // CSRs[csr] <- CSRs[csr] | x[rs1]
+      CSRRSI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.S   ),  // CSRs[csr] <- CSRs[csr] | uext(imm_z)
+      CSRRC  -> List(OP1.RS1 , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.C   ),  // CSRs[csr] <- CSRs[csr]&~x[rs1]
+      CSRRCI -> List(OP1.IMZ , OP2.NONE, EX.ADD , WB.CSR , MEM.NONE, CSRS.C   ),  // CSRs[csr] <- CSRs[csr]&~uext(imm_z)
 
       EBREAK -> List(OP1.NONE, OP2.NONE, EX.NONE, WB.NONE, MEM.NONE, CSRS.B   ),
       ECALL  -> List(OP1.NONE, OP2.CSR , EX.CSR , WB.NONE, MEM.NONE, CSRS.E   ),
@@ -177,7 +177,7 @@ class Riscv32E_ID extends Module {
   val CSR_MVENDOR = 6.U
   val CSR_MARCHID = 7.U
   val csr_addr = immi
-  val csr_id = MuxLookup(csr_addr(11,0), 0.U)(Seq(
+  val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
     0x300.U -> 0.U,  // mstatus
     0x341.U -> 1.U,  // mepc
     0x342.U -> 2.U,  // mcause
@@ -199,7 +199,7 @@ class Riscv32E_ID extends Module {
     (csrsel === CSRS.S) -> (csr_old | io.op1),
     (csrsel === CSRS.C) -> (csr_old & ~io.op1),
   ))
-  val csr_wen = csrsel === CSRS.W || csrsel === CSRS.S || csrsel === CSRS.C
+  val csr_wen = csrsel.isOneOf(CSRS.W, CSRS.S, CSRS.C)
   val csr_writable =
     csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
     csr_id === CSR_MTVEC || csr_id === CSR_MCYCLE || csr_id === CSR_MCYCLEH
@@ -237,6 +237,10 @@ class Riscv32E_ID extends Module {
     ))
   }
 
+  // 输出 CSR & GPR
+  io.csrOut := CSR
+  io.gprOut := GPR
+
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
   // 定义异常编码规则
@@ -261,9 +265,6 @@ class Riscv32E_ID extends Module {
   trap.io.code := exc_code
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
-  // 输出 CSRS & GPR
-  io.csrOut := CSR
-  io.gprOut := GPR
 }
 
 // ---------------------------
@@ -348,14 +349,13 @@ class Riscv32E extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
-  io.mem_re    := (idStage.io.memsel === MEM.RW) || (idStage.io.memsel === MEM.RH) || (idStage.io.memsel === MEM.RB) ||
-                  (idStage.io.memsel === MEM.RHU) || (idStage.io.memsel === MEM.RBU)
-  io.mem_we    := (idStage.io.memsel === MEM.WW) || (idStage.io.memsel === MEM.WH) || (idStage.io.memsel === MEM.WB)
+  val memType = idStage.io.memsel
+  io.mem_re    := !reset.asBool && memType.isOneOf(MEM.RW, MEM.RH, MEM.RB, MEM.RHU, MEM.RBU)
+  io.mem_we    := !reset.asBool && memType.isOneOf(MEM.WW, MEM.WH, MEM.WB)
   io.mem_addr  := exStage.io.aluout
   io.mem_wdata := idStage.io.rs2
-  val memBen    = ~reset.asBool && ((idStage.io.memsel === MEM.WB) || (idStage.io.memsel === MEM.RB) || (idStage.io.memsel === MEM.RBU))
-  val memHen    = ~reset.asBool && ((idStage.io.memsel === MEM.WH) || (idStage.io.memsel === MEM.RH) || (idStage.io.memsel === MEM.RHU))
-  io.mem_len   := Mux(memBen, 1.U, Mux(memHen, 2.U, 4.U))
+  io.mem_len   := Mux(memType.isOneOf(MEM.WB, MEM.RB, MEM.RBU), 1.U,
+                  Mux(memType.isOneOf(MEM.WH, MEM.RH, MEM.RHU), 2.U, 4.U))
 
   // Write Back
   idStage.io.wb_en   := idStage.io.regWen
@@ -384,11 +384,9 @@ class Riscv32ETOP extends Module {
   val cpu = Module(new Riscv32E)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)
-
   // 指令取值
   rom.io.addr := cpu.io.pc
   cpu.io.inst := rom.io.data
-
   // 数据访存
   ram.io.clk   := clock
   ram.io.re    := cpu.io.mem_re
