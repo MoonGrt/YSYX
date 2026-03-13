@@ -4,24 +4,38 @@ import chisel3._
 import chisel3.util._
 
 object Constants {
-  val WORD_LEN = 32
-  val CSR_NUM  = 8
-  val GPR_NUM  = 32
-
   object MiniRV {
-    object OP2 extends ChiselEnum {
-      val NONE, RS2, IMI, IMS, IMU = Value
+    object IMM extends ChiselEnum {
+      val N, I, S, U = Value
     }
     object EX extends ChiselEnum {
-      val NONE, ADD, JAL = Value
+      val ADD, JALR = Value
+    }
+    object JUMP extends ChiselEnum {
+      val NONE, JALR = Value
     }
     object WB extends ChiselEnum {
-      val NONE, PC, EX, MEM = Value
+      val NONE, EX, MEM = Value
     }
     object MEM extends ChiselEnum {
-      val NONE, RW, RBU, WW, WB = Value
+      val NONE, RW, RB, WW, WB = Value
     }
   }
+
+  // object MiniRV {
+  //   object OP2 extends ChiselEnum {
+  //     val NONE, RS2, IMI, IMS, IMU = Value
+  //   }
+  //   object EX extends ChiselEnum {
+  //     val NONE, ADD, JAL = Value
+  //   }
+  //   object WB extends ChiselEnum {
+  //     val NONE, PC, EX, MEM = Value
+  //   }
+  //   object MEM extends ChiselEnum {
+  //     val NONE, RW, RBU, WW, WB = Value
+  //   }
+  // }
 
   object Riscv32E {
     object OP1 extends ChiselEnum {
