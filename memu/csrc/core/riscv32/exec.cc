@@ -30,7 +30,6 @@ extern "C" {
   #define OTHER_E_CODE   2
   #define UNIMPL_CODE    3
   void ebreak(uint8_t code) {
-    // printf("[MEMU] EBREAK code: %d\n", code);
     if (code == EBREAK_CODE) MEMUTRAP(cpu.pc, code);
     else INV(cpu.pc);
     Verilated::gotFinish(true);
@@ -46,6 +45,7 @@ extern "C" {
     return 0;
   }
   void dpi_paddr_write(int addr, char len, int data){
+    if (addr == 0) return;
     IFDEF(CONFIG_MTRACE, display_pwrite(addr, len, data));
     if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
     IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
