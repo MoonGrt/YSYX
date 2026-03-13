@@ -44,7 +44,6 @@ class MiniRV_ID extends Module {
     val exsel   = Output(EX())
     val op1     = Output(UInt(WORD_LEN.W))
     val op2     = Output(UInt(WORD_LEN.W))
-    val immsb   = Output(UInt(WORD_LEN.W))
     val rs2     = Output(UInt(WORD_LEN.W))
     val rd_addr = Output(UInt(5.W))
 
@@ -85,21 +84,11 @@ class MiniRV_ID extends Module {
   val immsi = Cat(Fill(20, immi(11)), immi)
   val imms = Cat(io.inst(31,25), io.inst(11,7))  // imm for S-type
   val immss = Cat(Fill(20, imms(11)), imms)
-  // Decode imm of B-type instruction
-  val immb = Cat(io.inst(31), io.inst(7), io.inst(30,25), io.inst(11,8))
-  val immsb = Cat(Fill(19, immb(11)), immb, 0.U(1.W))
-  // Decode imm of J-type instruction
-  val immj = Cat(io.inst(31), io.inst(19,12), io.inst(20), io.inst(30,21))
-  val immsj = Cat(Fill(11, immj(19)), immj, 0.U(1.W))  // Set LSB to zero
   // Decode imm of U-type instruction
   val immu = Cat(io.inst(31,12), Fill(12, 0.U))  // for LUI and AUIPC
-  // Decode imm of I-type instruction
-  val immz = io.inst(19, 15)
-  val immuz = Cat(Fill(27, 0.U), immz)  // for CSRS instructions
 
   // -------- EX功能 --------
   io.exsel := exsel
-  io.immsb := immsb
   io.rs2 := GPR(rs2)
   // Determine 1st operand data signal
   io.op1 := GPR(rs1)
