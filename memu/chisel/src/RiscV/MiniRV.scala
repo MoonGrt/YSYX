@@ -58,17 +58,17 @@ class MiniRV_ID extends Module {
     val gprOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
-  val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(io.inst,
-    List(OP1.RS1, OP2.RS2, EX.ADD, WB.EX, MEM.NONE, CSRS.NONE), Array(
-      LW     -> List(OP2.IMI , EX.ADD , WB.MEM , MEM.RW  , CSRS.NONE),  // x[rs1] + sext(immi)
-      LBU    -> List(OP2.IMI , EX.ADD , WB.MEM , MEM.RBU , CSRS.NONE),  // x[rs1] + sext(immi)
-      SW     -> List(OP2.IMS , EX.ADD , WB.NONE, MEM.WW  , CSRS.NONE),  // x[rs1] + sext(imms)
-      SB     -> List(OP2.IMS , EX.ADD , WB.NONE, MEM.WB  , CSRS.NONE),  // x[rs1] + sext(imms)
-      ADD    -> List(OP2.RS2 , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] + x[rs2]
-      ADDI   -> List(OP2.IMI , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // x[rs1] + sext(immi)
-      JALR   -> List(OP2.IMI , EX.JAL , WB.PC  , MEM.NONE, CSRS.NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
-      LUI    -> List(OP2.IMU , EX.ADD , WB.EX  , MEM.NONE, CSRS.NONE),  // sext(immu[31:12] << 12)
-      EBREAK -> List(OP2.NONE, EX.NONE, WB.NONE, MEM.NONE, CSRS.B   ),
+  val List(op2sel, exsel, wbsel, memsel) = ListLookup(io.inst,
+    List(OP2.RS2, EX.ADD, WB.EX, MEM.NONE), Array(
+      LW     -> List(OP2.IMI , EX.ADD , WB.MEM , MEM.RW  ),  // x[rs1] + sext(immi)
+      LBU    -> List(OP2.IMI , EX.ADD , WB.MEM , MEM.RBU ),  // x[rs1] + sext(immi)
+      SW     -> List(OP2.IMS , EX.ADD , WB.NONE, MEM.WW  ),  // x[rs1] + sext(imms)
+      SB     -> List(OP2.IMS , EX.ADD , WB.NONE, MEM.WB  ),  // x[rs1] + sext(imms)
+      ADD    -> List(OP2.RS2 , EX.ADD , WB.EX  , MEM.NONE),  // x[rs1] + x[rs2]
+      ADDI   -> List(OP2.IMI , EX.ADD , WB.EX  , MEM.NONE),  // x[rs1] + sext(immi)
+      JALR   -> List(OP2.IMI , EX.JAL , WB.PC  , MEM.NONE),  // x[rd] <- PC+4 and (x[rs1]+sext(imm_i))&~1
+      LUI    -> List(OP2.IMU , EX.ADD , WB.EX  , MEM.NONE),  // sext(immu[31:12] << 12)
+      EBREAK -> List(OP2.NONE, EX.NONE, WB.NONE, MEM.NONE),
     ),
   )
 
