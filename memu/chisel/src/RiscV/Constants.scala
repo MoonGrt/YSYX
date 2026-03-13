@@ -26,21 +26,6 @@ object Constants {
     }
   }
 
-  // object MiniRV {
-  //   object OP2 extends ChiselEnum {
-  //     val NONE, RS2, IMI, IMS, IMU = Value
-  //   }
-  //   object EX extends ChiselEnum {
-  //     val NONE, ADD, JAL = Value
-  //   }
-  //   object WB extends ChiselEnum {
-  //     val NONE, PC, EX, MEM = Value
-  //   }
-  //   object MEM extends ChiselEnum {
-  //     val NONE, RW, RBU, WW, WB = Value
-  //   }
-  // }
-
   object Riscv32E {
     object OP1 extends ChiselEnum {
       val NONE, RS1, PC, IMZ = Value
