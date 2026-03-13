@@ -165,7 +165,6 @@ class MiniRV_EX extends Module {
     val pc     = Input(UInt(WORD_LEN.W))
     val op1    = Input(UInt(WORD_LEN.W))
     val op2    = Input(UInt(WORD_LEN.W))
-    val immsb  = Input(UInt(WORD_LEN.W))
     val exsel  = Input(EX())
     val aluout = Output(UInt(WORD_LEN.W))
     val bren   = Output(Bool())
@@ -218,7 +217,6 @@ class MiniRV extends Module {
   exStage.io.pc    := idStage.io.pc
   exStage.io.op1   := idStage.io.op1
   exStage.io.op2   := idStage.io.op2
-  exStage.io.immsb := idStage.io.immsb
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
