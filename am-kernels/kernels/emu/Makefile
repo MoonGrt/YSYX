@@ -1,8 +1,12 @@
 # make ARCH=$ISA-nemu mainargs=/home/moon/ysyx/ysyx/am-kernels/kernels/hello/build/hello-$ISA-nemu.bin
 # make ARCH=riscv32e-memu mainargs=/home/moon/ysyx/ysyx/am-kernels/kernels/typing-game/build/typing-game-riscv32e-memu.bin
 ARCH_SPLIT = $(subst -, ,$(ARCH))
-ISA        = $(word 1,$(ARCH_SPLIT))
+RAW_ISA    = $(word 1,$(ARCH_SPLIT))
 PLATFORM   = $(word 2,$(ARCH_SPLIT))
+
+ifneq ($(filter riscv32 riscv32e,$(RAW_ISA)),)
+ISA = riscv32
+endif
 
 # support nemu and memu
 ifneq ($(filter $(PLATFORM),nemu memu),$(PLATFORM))
