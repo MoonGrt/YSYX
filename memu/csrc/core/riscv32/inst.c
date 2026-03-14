@@ -14,9 +14,10 @@
 ***************************************************************************************/
 
 #include <cpu/decode.h>
-#include "../../core/riscv32/local-include/exec.h"
 
+void rtl_step(void);
 extern Decode rtlDecode;
+
 int isa_exec_once(Decode *s) {
   *s = rtlDecode;
   rtl_step();
