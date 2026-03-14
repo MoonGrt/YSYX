@@ -6,10 +6,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdarg.h>
-#define MAX_IRINGBUF 16
-#define FOUTPUT_FILE "ftrace.txt"
 
 #ifdef CONFIG_ITRACE
+
+#define MAX_IRINGBUF 16
 
 typedef struct {
   word_t pc;
@@ -66,13 +66,15 @@ void display_pwrite(paddr_t addr, int len, word_t data) {
 
 #ifdef CONFIG_FTRACE
 
+#define FOUTPUT_FILE "ftrace.txt"
+
 typedef struct {
-  char name[32]; // func name, 32 should be enough
+  char name[32];  // func name, 32 should be enough
   paddr_t addr;
   unsigned char info;
   Elf32_Xword size;
 } SymEntry;
-SymEntry *symbol_tbl = NULL; // dynamic allocated
+SymEntry *symbol_tbl = NULL;  // dynamic allocated
 int symbol_tbl_size = 0;
 int call_depth = 0;
 typedef struct tail_rec_node {
@@ -80,7 +82,7 @@ typedef struct tail_rec_node {
   paddr_t depend;
   struct tail_rec_node *next;
 } TailRecNode;
-TailRecNode *tail_rec_head = NULL; // linklist with head, dynamic allocated
+TailRecNode *tail_rec_head = NULL;  // linklist with head, dynamic allocated
 
 static void read_elf_header(int fd, Elf32_Ehdr *eh) {
   assert(lseek(fd, 0, SEEK_SET) == 0);
@@ -120,7 +122,6 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     default:
       ftrace_write("INVALID CLASS\n"); break;
   }
-
   /* Data Format */
   ftrace_write("Data format\t= ");
   switch(eh.e_ident[EI_DATA]) {
@@ -131,7 +132,6 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     default:
       ftrace_write("INVALID Format\n"); break;
   }
-
   /* OS ABI */
   ftrace_write("OS ABI\t\t= ");
   switch(eh.e_ident[EI_OSABI]) {
@@ -166,7 +166,6 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     default:
       ftrace_write("Unknown (0x%x)\n", eh.e_ident[EI_OSABI]); break;
   }
-
   /* ELF filetype */
   ftrace_write("Filetype \t= ");
   switch(eh.e_type) {
@@ -181,7 +180,6 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     default:
       ftrace_write("Unknown (0x%x)\n", eh.e_type); break;
   }
-
   /* ELF Machine-id */
   ftrace_write("Machine\t\t= ");
   switch(eh.e_machine) {
@@ -196,25 +194,21 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     default:
       ftrace_write(" 0x%x\n", eh.e_machine); break;
   }
-
   /* Entry point */
   ftrace_write("Entry point\t= 0x%08lx\n", eh.e_entry);
   /* ELF header size in bytes */
   ftrace_write("ELF header size\t= 0x%08x\n", eh.e_ehsize);
-
   /* Program Header */
   ftrace_write("Program Header\t= ");
   ftrace_write("0x%08lx\n", eh.e_phoff);		/* start */
   ftrace_write("\t\t  %d entries\n", eh.e_phnum);	/* num entry */
   ftrace_write("\t\t  %d bytes\n", eh.e_phentsize);	/* size/entry */
-
   /* Section header starts at */
   ftrace_write("Section Header\t= ");
   ftrace_write("0x%08lx\n", eh.e_shoff);		/* start */
   ftrace_write("\t\t  %d entries\n", eh.e_shnum);	/* num entry */
   ftrace_write("\t\t  %d bytes\n", eh.e_shentsize);	/* size/entry */
   ftrace_write("\t\t  0x%08x (string table offset)\n", eh.e_shstrndx);
-
   /* File flags (Machine specific)*/
   ftrace_write("File flags \t= 0x%08x\n", eh.e_flags);
 
@@ -265,16 +259,14 @@ static void read_section(int fd, Elf32_Shdr sh, void *dst) {
 
 static void read_section_headers(int fd, Elf32_Ehdr eh, Elf32_Shdr *sh_tbl) {
   assert(lseek(fd, eh.e_shoff, SEEK_SET) == eh.e_shoff);
-  for(int i = 0; i < eh.e_shnum; i++) {
+  for(int i = 0; i < eh.e_shnum; i++)
     assert(read(fd, (void *)&sh_tbl[i], eh.e_shentsize) == eh.e_shentsize);
-  }
 }
 
 static void display_section_headers(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[]) {
   // warn: C99
   char sh_str[sh_tbl[eh.e_shstrndx].sh_size];
   read_section(fd, sh_tbl[eh.e_shstrndx], sh_str);
-
   /* Read section-header string-table */
   ftrace_write("========================================");
   ftrace_write("========================================\n");
@@ -370,15 +362,12 @@ void parse_elf(const char *elf_file) {
 
 static int find_symbol_func(paddr_t target, bool is_call) {
   int i;
-  for (i = 0; i < symbol_tbl_size; i++) {
-    if (ELF32_ST_TYPE(symbol_tbl[i].info) == STT_FUNC) {
-      if (is_call) {
+  for (i = 0; i < symbol_tbl_size; i++)
+    if (ELF32_ST_TYPE(symbol_tbl[i].info) == STT_FUNC)
+      if (is_call)
         if (symbol_tbl[i].addr == target) break;
-      } else {
+      else
         if (symbol_tbl[i].addr <= target && target < symbol_tbl[i].addr + symbol_tbl[i].size) break;
-      }
-    }
-  }
   return i<symbol_tbl_size?i:-1;
 }
 
@@ -404,19 +393,16 @@ void trace_func_call(paddr_t pc, paddr_t target, bool is_tail) {
   if (call_depth <= 2) return; // ignore _trm_init & main
   int i = find_symbol_func(target, true);
   int time = call_num;
-
   while(time>0){
     ftrace_write("  ");
     time--;
   }
-
   ftrace_write(FMT_PADDR ": %*scall [%s@" FMT_PADDR "]\n",
     pc,
     (call_depth-3)*2, "",
     i>=0?symbol_tbl[i].name:"???",
     target
   );
-
   if (is_tail) insert_tail_rec(pc, target);
   call_num++;
 }
@@ -424,23 +410,18 @@ void trace_func_call(paddr_t pc, paddr_t target, bool is_tail) {
 void trace_func_ret(paddr_t pc) {
   if (symbol_tbl == NULL) return;
   if (call_depth <= 2) return; // ignore _trm_init & main
-
   int i = find_symbol_func(pc, false);
   int time = call_num;
-
   while(time>0){
     ftrace_write("  ");
     time--;
   }
-
   ftrace_write(FMT_PADDR ": %*sret [%s]\n",
     pc,
     (call_depth-3)*2, "",
     i>=0?symbol_tbl[i].name:"???"
   );
-
   --call_depth;
-
   TailRecNode *node = tail_rec_head->next;
   if (node != NULL) {
     int depend_i = find_symbol_func(node->depend, true);
