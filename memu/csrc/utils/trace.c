@@ -5,9 +5,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdarg.h>
-
 #include <common.h>
-#include "../../../include/device/map.h"
+#include "map.h"
 
 #ifdef CONFIG_ITRACE
 
