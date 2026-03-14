@@ -14,7 +14,6 @@
 ***************************************************************************************/
 
 #include <cpu/decode.h>
-#include "../../utils/local-include/trace.h"
 #if defined(CONFIG_NEMU)
 
 #elif defined(CONFIG_NPC)
@@ -24,7 +23,6 @@
 extern Decode rtlDecode;
 int isa_exec_once(Decode *s) {
   *s = rtlDecode;
-  IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
   rtl_step();
   return 0;
 }

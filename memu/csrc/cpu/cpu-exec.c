@@ -68,12 +68,14 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
 }
 
+void trace_inst(word_t pc, uint32_t inst);
 static void exec_once(Decode *s, vaddr_t pc) {
   s->pc = pc;
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
 #ifdef CONFIG_ITRACE
+  IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), "[ITRACE] " FMT_WORD ": ", s->pc);
   int ilen = s->snpc - s->pc;
