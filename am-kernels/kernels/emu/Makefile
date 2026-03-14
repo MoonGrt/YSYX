@@ -34,8 +34,7 @@ save_config:
 
 build_am:
 	$(MAKE) -C $(EMU_HOME) $(ISA)-am_defconfig
-	$(MAKE) -C $(EMU_HOME) ARCH=$(ARCH) mainargs=$(mainargs) || \
-		($(MAKE) restore_config; false)
+	$(MAKE) -C $(EMU_HOME) ARCH=$(ARCH) mainargs=$(mainargs) || ($(MAKE) restore_config; false)
 
 restore_config:
 	$(MAKE) -C $(EMU_HOME) ARCH=$(ARCH) $(TMPDEFCONFIG)
