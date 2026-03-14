@@ -23,16 +23,10 @@ VerilatedVcdC *tfp = new VerilatedVcdC;
 
 Decode rtlDecode;
 
-#ifdef __cplusplus
 extern "C" {
-#endif
-void display_pread(paddr_t addr, int len, word_t data);
-void display_pwrite(paddr_t addr, int len, word_t data);
-#ifdef __cplusplus
-}
-#endif
+  void display_pread(paddr_t addr, int len, word_t data);
+  void display_pwrite(paddr_t addr, int len, word_t data);
 
-extern "C" {
   #define EBREAK_CODE    0
   #define ZERO_INST_CODE 1
   #define OTHER_E_CODE   2
