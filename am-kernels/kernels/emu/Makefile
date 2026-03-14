@@ -42,6 +42,6 @@ build_am:
 
 restore_config:
 	$(MAKE) -C $(EMU_HOME) ARCH=$(ARCH) $(TMPDEFCONFIG)
-	# rm $(TMPDEFCONFIG_FILE)
+	rm $(TMPDEFCONFIG_FILE)
 
 .PHONY: all save_config build_am restore_config
