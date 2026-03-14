@@ -18,11 +18,6 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 #include "../monitor/sdb/sdb.h"
-#if defined(CONFIG_NEMU)
-
-#elif defined(CONFIG_NPC)
-  #include "../../core/riscv32/local-include/exec.h"
-#endif
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -127,6 +122,7 @@ void assert_fail_msg() {
 }
 
 /* Simulate how the CPU works. */
+void rtl_exit(void);
 void cpu_exec(uint64_t n) {
   g_print_step = (n < MAX_INST_TO_PRINT);
   switch (nemu_state.state) {
