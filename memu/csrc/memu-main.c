@@ -25,7 +25,7 @@ void am_init_monitor();
 void engine_start();
 int is_exit_status_bad();
 
-#define PRINTARG
+// #define PRINTARG
 int main(int argc, char *argv[]) {
 #ifdef PRINTARG
   printf("[MEMU] ARGC = %d\n", argc);

@@ -46,6 +46,26 @@ void display_inst() {
 
 #endif // ITRACE
 
+#ifdef CONFIG_MTRACE
+
+static inline bool mtrace_addr_ok(paddr_t addr) {
+  return addr >= CONFIG_MTRACE_LO && addr < CONFIG_MTRACE_HI;
+}
+
+void display_pread(paddr_t addr, int len, word_t data) {
+  if (!mtrace_addr_ok(addr)) return;
+  log_write("[MTRACE] R addr=" FMT_PADDR ", len=%d, -read=" FMT_WORD "\n", addr, len, data);
+}
+
+void display_pwrite(paddr_t addr, int len, word_t data) {
+  if (!mtrace_addr_ok(addr)) return;
+  log_write("[MTRACE] W addr=" FMT_PADDR ", len=%d, write=" FMT_WORD "\n", addr, len, data);
+}
+
+#endif  // CONFIG_MTRACE
+
+#ifdef CONFIG_FTRACE
+
 typedef struct {
   char name[32]; // func name, 32 should be enough
   paddr_t addr;
@@ -88,24 +108,6 @@ void ftrace_write(const char *format, ...) {
   } else
     printf("Error opening file %s\n", FOUTPUT_FILE);
 }
-
-#ifdef CONFIG_MTRACE
-
-static inline bool mtrace_addr_ok(paddr_t addr) {
-  return addr >= CONFIG_MTRACE_LO && addr < CONFIG_MTRACE_HI;
-}
-
-void display_pread(paddr_t addr, int len, word_t data) {
-  if (!mtrace_addr_ok(addr)) return;
-  log_write("[MTRACE] R addr=" FMT_PADDR ", len=%d, -read=" FMT_WORD "\n", addr, len, data);
-}
-
-void display_pwrite(paddr_t addr, int len, word_t data) {
-  if (!mtrace_addr_ok(addr)) return;
-  log_write("[MTRACE] W addr=" FMT_PADDR ", len=%d, write=" FMT_WORD "\n", addr, len, data);
-}
-
-#endif  // CONFIG_MTRACE
 
 static void display_elf_hedaer(Elf32_Ehdr eh) {
   /* Storage capacity class */
@@ -450,6 +452,8 @@ void trace_func_ret(paddr_t pc) {
   }
   call_num--;
 }
+
+#endif  // CONFIG_FTRACE
 
 void trace_dread(paddr_t addr, int len, word_t data, IOMap *map) {
   log_write("[DTRACE]  read %10s at " FMT_PADDR ",%d return " FMT_WORD "\n",
