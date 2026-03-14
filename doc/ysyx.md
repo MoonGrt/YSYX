@@ -146,17 +146,34 @@ while(1)
 TODO:
 
 3. 在NEMU上运行NEMU
+进行如下的工作:
+  1. 保存NEMU当前的配置选项
+  2. 加载一个新的配置文件, 将NEMU编译到AM上, 并把mainargs指示bin文件作为这个NEMU的镜像文件
+  3. 恢复第1步中保存的配置选项
+  4. 重新编译NEMU, 并把第2步中的NEMU作为镜像文件来运行
 
+> 把NEMU编译到AM时, 配置系统会定义宏CONFIG_TARGET_AM, 此时NEMU的行为和之前相比有所变化:
+> sdb, DiffTest等调试功能不再开启, 因为AM无法提供它所需要的库函数(如文件读写, 动态链接, 正则表达式等)
+> 通过AM IOE来实现NEMU的设备
+
+把这一层层“套娃”理顺，其实就是一条 **IO 请求逐层向外传递** 的路径。系统看起来像三层机器：
+1. **最外层：主机上的 NEMU（Outer NEMU）**
+2. **中间层：运行在 AM 上的 NEMU（Inner NEMU）**
+3. **最内层：打字游戏程序**
+关键点：**真正的键盘和屏幕只有最外层主机有**。里面所有程序看到的设备，都是逐层模拟出来的。
+
+把完整链条画出来会非常清楚：
+打字游戏 (AM IOE) → 内层NEMU里的设备 (MMIO) → 内层NEMU CPU模拟 → 外层NEMU设备模拟 → SDL / 主机硬件 → 真实键盘 / 屏幕
 
 
 4. 实验报告
-3.1 程序是个状态机 理解YEMU的执行过程
+4.1 程序是个状态机 理解YEMU的执行过程
 exec_once → IF → ID → EX → PC+1 
 → whether halt: yes → return
                  no → exec_once
-3.2 RTFSC 请整理一条指令在NEMU中的执行过程
+4.2 RTFSC 请整理一条指令在NEMU中的执行过程
 isa_exec_once → inst_fetch → decode_exec → INSTPAT_MATCH → exce
-3.3 程序如何运行 理解打字小游戏如何运行
+4.3 程序如何运行 理解打字小游戏如何运行
 init(ioe,gpu) → while(1) 主循环
 → 计时 (AM_TIMER_UPTIME)
 → game_logic_update() 更新字符状态
@@ -164,7 +181,7 @@ init(ioe,gpu) → while(1) 主循环
 → check_hit() 判断是否击中
 → render() 绘制屏幕
 → 循环执行，形成 30 FPS 的打字下落游戏。
-3.4 编译与链接 (ifetch.h)
+4.4 编译与链接 (ifetch.h)
 定义在头文件中的函数实现，而不是声明，所以编译行为会比较特殊。
 1. 去掉 static 保留 inline
 > 编译正确
@@ -178,7 +195,7 @@ inst_fetch() 定义在头文件中，因此会被多个 .c 文件包含。如果
 如果只保留 inline，根据 C99 标准需要在某个源文件中提供一个外部定义，否则可能产生 undefined reference。但在 GCC 默认的 gnu89/gnu11 模式下，inline 函数通常会生成 weak symbol，因此多个目标文件中的定义不会冲突，所以仍然能够成功链接。
 使用 static inline 是头文件函数的常见写法，可以同时获得内联优化并避免符号冲突。
 
-3.5 编译与链接
+4.5 编译与链接
 ```nm build/riscv32-nemu-interpreter | grep dummy | wc -l```
 1. 添加 `volatile static int dummy;`
 > common.h -> 36
@@ -189,7 +206,7 @@ inst_fetch() 定义在头文件中，因此会被多个 .c 文件包含。如果
 
 NEMU 中有多少个 dummy 实体： 等于包含 common.h/debug.h 的 .c 文件数量。
 
-3.6 了解Makefile
+4.6 了解Makefile
 `am-kernels/kernels/hello`敲入`make ARCH=$ISA-nemu`后:
 1. 设置项目名称，编译文件添加当前项目中的"hello.c"，调用`$(AM_HOME)/Makefile`
 2. $(AM_HOME)/Makefile:
