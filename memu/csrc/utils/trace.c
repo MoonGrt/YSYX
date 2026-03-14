@@ -75,13 +75,14 @@ typedef struct {
   Elf32_Xword size;
 } SymEntry;
 SymEntry *symbol_tbl = NULL;  // dynamic allocated
-int symbol_tbl_size = 0;
-int call_depth = 0;
 typedef struct tail_rec_node {
   paddr_t pc;
   paddr_t depend;
   struct tail_rec_node *next;
 } TailRecNode;
+
+int symbol_tbl_size = 0;
+int call_depth = 0;
 TailRecNode *tail_rec_head = NULL;  // linklist with head, dynamic allocated
 
 static void read_elf_header(int fd, Elf32_Ehdr *eh) {
@@ -91,12 +92,11 @@ static void read_elf_header(int fd, Elf32_Ehdr *eh) {
       eh->e_ident[EI_MAG1] != ELFMAG1 ||
       eh->e_ident[EI_MAG2] != ELFMAG2 ||
       eh->e_ident[EI_MAG3] != ELFMAG3) {
-     printf("Not an ELF file\n");
+    printf("Not an ELF file\n");
   }
   // check if is elf using fixed format of Magic: 7f 45 4c 46 ...
-  if(strncmp((char*)eh->e_ident, "\177ELF", 4)) {
+  if(strncmp((char*)eh->e_ident, "\177ELF", 4))
     panic("malformed ELF file");
-  }
 }
 
 void ftrace_write(const char *format, ...) {
@@ -219,7 +219,6 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
    */
   int32_t ef = eh.e_flags;
   ftrace_write("\t\t  ");
-
   if(ef & EF_ARM_RELEXEC)
     ftrace_write(",RELEXEC ");
   if(ef & EF_ARM_HASENTRY)
@@ -245,7 +244,6 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
   if(ef & EF_ARM_MAVERICK_FLOAT)
     ftrace_write(",MAVERICK_FLOAT ");
   ftrace_write("\n");
-
   /* MSB of flags conatins ARM EABI version */
   ftrace_write("ARM EABI\t= Version %d\n", (ef & EF_ARM_EABIMASK)>>24);
   ftrace_write("\n");	/* End of ELF header */
@@ -293,11 +291,9 @@ static void display_section_headers(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[]) 
 static void read_symbol_table(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[], int sym_idx) {
   Elf32_Sym sym_tbl[sh_tbl[sym_idx].sh_size];
   read_section(fd, sh_tbl[sym_idx], sym_tbl);
-
   int str_idx = sh_tbl[sym_idx].sh_link;
   char str_tbl[sh_tbl[str_idx].sh_size];
   read_section(fd, sh_tbl[str_idx], str_tbl);
-
   int sym_count = (sh_tbl[sym_idx].sh_size / sizeof(Elf32_Sym));
   // log
   ftrace_write("Symbol count: %d\n", sym_count);
@@ -305,8 +301,7 @@ static void read_symbol_table(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[], int sy
   ftrace_write(" num    value            type size       name\n");
   ftrace_write("====================================================\n");
   for (int i = 0; i < sym_count; i++) {
-    ftrace_write(" %-3d    %016lx %-4d %-10ld %s\n",
-      i,
+    ftrace_write(" %-3d    %016lx %-4d %-10ld %s\n", i,
       sym_tbl[i].st_value,
       ELF32_ST_TYPE(sym_tbl[i].st_info),
       sym_tbl[i].st_size,
