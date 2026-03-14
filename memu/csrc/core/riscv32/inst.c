@@ -14,11 +14,7 @@
 ***************************************************************************************/
 
 #include <cpu/decode.h>
-#if defined(CONFIG_NEMU)
-
-#elif defined(CONFIG_NPC)
 #include "../../core/riscv32/local-include/exec.h"
-#endif
 
 extern Decode rtlDecode;
 int isa_exec_once(Decode *s) {
