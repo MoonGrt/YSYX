@@ -15,11 +15,6 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
-#if defined(CONFIG_NEMU)
-
-#elif defined(CONFIG_NPC)
-#include "../../core/riscv32/local-include/exec.h"
-#endif
 
 // this is not consistent with uint8_t
 static const uint32_t img [] = {
