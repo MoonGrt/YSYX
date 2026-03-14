@@ -128,7 +128,7 @@ void init_monitor(int argc, char *argv[]) {
   /* Initialize the simple debugger. */
   init_sdb();
   /* Parse ELF file for ftrace. */
-  IFDEF(CONFIG_FEVICE, parse_elf(elf_file));
+  IFDEF(CONFIG_FTRACE, parse_elf(elf_file));
   /* Initialize disassembler. */
   IFDEF(CONFIG_ITRACE, init_disasm());
   /* Display welcome message. */
