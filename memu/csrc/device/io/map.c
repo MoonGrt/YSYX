@@ -17,7 +17,9 @@
 #include <memory/host.h>
 #include <memory/vaddr.h>
 #include <device/map.h>
-#include "../../utils/local-include/trace.h"
+
+void trace_dread(paddr_t addr, int len, word_t data, IOMap *map);
+void trace_dwrite(paddr_t addr, int len, word_t data, IOMap *map);
 
 #define IO_SPACE_MAX (32 * 1024 * 1024)
 

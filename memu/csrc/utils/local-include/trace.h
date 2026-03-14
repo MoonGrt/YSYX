@@ -12,8 +12,7 @@
 
 void trace_func_ret(paddr_t pc);
 void trace_func_call(paddr_t pc, paddr_t target, bool is_tail);
-void trace_dread(paddr_t addr, int len, word_t data, IOMap *map);
-void trace_dwrite(paddr_t addr, int len, word_t data, IOMap *map);
+
 void etrace_exec(uint32_t pc);
 
 #endif
