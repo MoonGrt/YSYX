@@ -145,7 +145,11 @@ while(1)
 2. 优化LiteNES
 TODO:
 
-3. 实验报告
+3. 在NEMU上运行NEMU
+
+
+
+4. 实验报告
 3.1 程序是个状态机 理解YEMU的执行过程
 exec_once → IF → ID → EX → PC+1 
 → whether halt: yes → return
