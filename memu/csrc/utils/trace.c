@@ -1,4 +1,3 @@
-#include "local-include/trace.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,6 +5,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdarg.h>
+
+#include <common.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <elf.h>
+#include "../../../include/device/map.h"
 
 #ifdef CONFIG_ITRACE
 

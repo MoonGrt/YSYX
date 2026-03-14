@@ -2,11 +2,7 @@
 #ifndef __ITRACE_H__
 #define __ITRACE_H__
 
-#include <common.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <elf.h>
-#include "../../../include/device/map.h"
+
 
 
 
