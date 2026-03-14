@@ -1,4 +1,4 @@
-# make ARCH=$ISA-nemu mainargs=/home/moon/ysyx/ysyx/am-kernels/kernels/hello/build/hello-$ISA-nemu.bin
+# make ARCH=riscv32-nemu mainargs=/home/moon/ysyx/ysyx/am-kernels/kernels/typing-game/build/typing-game-riscv32-nemu.bin
 # make ARCH=riscv32e-memu mainargs=/home/moon/ysyx/ysyx/am-kernels/kernels/typing-game/build/typing-game-riscv32e-memu.bin
 ARCH_SPLIT = $(subst -, ,$(ARCH))
 RAW_ISA    = $(word 1,$(ARCH_SPLIT))
