@@ -30,7 +30,7 @@ ifeq ($(CONFIG_NEMU),y)
 else
   GUEST_ISA ?= $(call remove_quote,$(CONFIG_CORE))
 endif
-NAME = $(GUEST_ISA)-memu-$(ENGINE)
+NAME = $(GUEST_ISA)e-memu-$(ENGINE)
 ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))
 
 # Include all filelist.mk to merge file lists
