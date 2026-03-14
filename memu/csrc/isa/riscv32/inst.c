@@ -17,7 +17,6 @@
 #include <cpu/cpu.h>
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
-#include "../../utils/local-include/trace.h"
 
 static vaddr_t *csr_register(word_t imm) {
   word_t csr = imm & 0xfff;
