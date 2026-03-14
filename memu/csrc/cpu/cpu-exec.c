@@ -18,7 +18,6 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 #include "../monitor/sdb/sdb.h"
-#include "../utils/local-include/trace.h"
 #if defined(CONFIG_NEMU)
 
 #elif defined(CONFIG_NPC)
@@ -120,6 +119,7 @@ static void statistic() {
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }
 
+void display_inst();
 void assert_fail_msg() {
   IFDEF(CONFIG_ITRACE, display_inst());
   isa_reg_display();
