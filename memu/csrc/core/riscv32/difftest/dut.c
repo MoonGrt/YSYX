@@ -15,7 +15,7 @@
 
 #include <isa.h>
 #include <cpu/difftest.h>
-#include "../local-include/reg.h"
+#include "../include/reg.h"
 
 #define CHECKDIFF(p) \
   if (ref_r->p != cpu.p) { \
