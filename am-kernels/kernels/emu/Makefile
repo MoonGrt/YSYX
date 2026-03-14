@@ -1,5 +1,5 @@
 # make ARCH=riscv32-nemu mainargs=/home/moon/ysyx/ysyx/am-kernels/kernels/typing-game/build/typing-game-riscv32-nemu.bin
-# make ARCH=riscv32e-memu mainargs=/home/moon/ysyx/ysyx/am-kernels/kernels/typing-game/build/typing-game-riscv32e-memu.bin
+# make ARCH=riscv32e-memu mainargs=/home/moon/ysyx/ysyx/am-kernels/tests/cpu-tests/build/hello-riscv32e-memu.bin
 ARCH_SPLIT = $(subst -, ,$(ARCH))
 RAW_ISA    = $(word 1,$(ARCH_SPLIT))
 PLATFORM   = $(word 2,$(ARCH_SPLIT))
