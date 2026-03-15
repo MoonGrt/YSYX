@@ -174,9 +174,10 @@ static inline void csr_cycle_inc() {
   cpu.csr.mcycle  = (uint32_t)cycle;
   cpu.csr.mcycleh = (uint32_t)(cycle >> 32);
 }
-
+void trace_inst(word_t pc, uint32_t inst);
 int isa_exec_once(Decode *s) {
   csr_cycle_inc();
   s->isa.inst = inst_fetch(&s->snpc, 4);
+  IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
   return decode_exec(s);
 }
