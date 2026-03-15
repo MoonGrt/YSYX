@@ -358,12 +358,15 @@ void parse_elf(const char *elf_file) {
 
 static int find_symbol_func(paddr_t target, bool is_call) {
   int i;
-  for (i = 0; i < symbol_tbl_size; i++)
-    if (ELF32_ST_TYPE(symbol_tbl[i].info) == STT_FUNC)
-      if (is_call)
-        if (symbol_tbl[i].addr == target) break;
-      else
-        if (symbol_tbl[i].addr <= target && target < symbol_tbl[i].addr + symbol_tbl[i].size) break;
+	for (i = 0; i < symbol_tbl_size; i++) {
+		if (ELF64_ST_TYPE(symbol_tbl[i].info) == STT_FUNC) {
+			if (is_call) {
+				if (symbol_tbl[i].addr == target) break;
+			} else {
+				if (symbol_tbl[i].addr <= target && target < symbol_tbl[i].addr + symbol_tbl[i].size) break;
+			}
+		}
+	}
   return i<symbol_tbl_size?i:-1;
 }
 
