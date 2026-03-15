@@ -411,13 +411,12 @@ void ftrace_ret(paddr_t pc) {
 }
 
 void init_ftrace_log(const char *ftrace_file) {
-  ftrace_fp = stdout;
-  if (ftrace_file != NULL) {
-    FILE *fp = fopen(ftrace_file, "w");
-    Assert(fp, "Can not open '%s'", ftrace_file);
-    ftrace_fp = fp;
-  }
-  Log("Ftrace log is written to %s", ftrace_file ? ftrace_file : "stdout");
+  if (ftrace_file == NULL)
+    ftrace_file = "ftrace.txt";
+  FILE *fp = fopen(ftrace_file, "w");
+  Assert(fp, "Can not open '%s'", ftrace_file);
+  ftrace_fp = fp;
+  Log("Ftrace log is written to %s", ftrace_file);
 }
 
 void parse_elf(const char *elf_file) {
