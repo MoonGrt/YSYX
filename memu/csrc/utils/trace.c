@@ -85,6 +85,7 @@ typedef struct tail_rec_node {
 int symbol_tbl_size = 0;
 int call_depth = 0;
 TailRecNode *tail_rec_head = NULL;  // linklist with head, dynamic allocated
+FILE *ftrace_fp = NULL;
 
 static void read_elf_header(int fd, Elf32_Ehdr *eh) {
   assert(lseek(fd, 0, SEEK_SET) == 0);
@@ -101,15 +102,11 @@ static void read_elf_header(int fd, Elf32_Ehdr *eh) {
 }
 
 void ftrace_write(const char *format, ...) {
-  FILE *fp = fopen(FOUTPUT_FILE, "a");
-  if (fp != NULL) {
-    va_list args;
-    va_start(args, format);
-    vfprintf(fp, format, args);
-    va_end(args);
-    fclose(fp);
-  } else
-    printf("Error opening file %s\n", FOUTPUT_FILE);
+  va_list args;
+  va_start(args, format);
+  vfprintf(ftrace_fp, format, args);
+  va_end(args);
+  fclose(ftrace_fp);
 }
 
 static void display_elf_hedaer(Elf32_Ehdr eh) {
@@ -414,7 +411,6 @@ void ftrace_ret(paddr_t pc) {
   call_num--;
 }
 
-FILE *ftrace_fp = NULL;
 void init_ftrace_log(const char *ftrace_file) {
   ftrace_fp = stdout;
   if (ftrace_file != NULL) {
