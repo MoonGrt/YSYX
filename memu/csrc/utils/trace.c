@@ -338,35 +338,17 @@ static void init_tail_rec_list() {
   tail_rec_head->next = NULL;
 }
 
-/* ELF32 as default */
-void parse_elf(const char *elf_file) {
-  if (elf_file == NULL) return;
-  remove(FOUTPUT_FILE);
-  Log("specified ELF file: %s", elf_file);
-  int fd = open(elf_file, O_RDONLY|O_SYNC);
-  Assert(fd >= 0, "Error %d: unable to open %s\n", fd, elf_file);
-  Elf32_Ehdr eh;
-  read_elf_header(fd, &eh);
-  display_elf_hedaer(eh);
-  Elf32_Shdr sh_tbl[eh.e_shentsize * eh.e_shnum];
-  read_section_headers(fd, eh, sh_tbl);
-  display_section_headers(fd, eh, sh_tbl);
-  read_symbols(fd, eh, sh_tbl);
-  init_tail_rec_list();
-  close(fd);
-}
-
 static int find_symbol_func(paddr_t target, bool is_call) {
   int i;
-	for (i = 0; i < symbol_tbl_size; i++) {
-		if (ELF64_ST_TYPE(symbol_tbl[i].info) == STT_FUNC) {
-			if (is_call) {
-				if (symbol_tbl[i].addr == target) break;
-			} else {
-				if (symbol_tbl[i].addr <= target && target < symbol_tbl[i].addr + symbol_tbl[i].size) break;
-			}
-		}
-	}
+  for (i = 0; i < symbol_tbl_size; i++) {
+    if (ELF64_ST_TYPE(symbol_tbl[i].info) == STT_FUNC) {
+      if (is_call) {
+        if (symbol_tbl[i].addr == target) break;
+      } else {
+        if (symbol_tbl[i].addr <= target && target < symbol_tbl[i].addr + symbol_tbl[i].size) break;
+      }
+    }
+  }
   return i<symbol_tbl_size?i:-1;
 }
 
@@ -385,7 +367,6 @@ static void remove_tail_rec() {
 }
 
 int call_num=0;
-
 void ftrace_call(paddr_t pc, paddr_t target, bool is_tail) {
   if (symbol_tbl == NULL) return;
   ++call_depth;
@@ -431,6 +412,28 @@ void ftrace_ret(paddr_t pc) {
     }
   }
   call_num--;
+}
+
+/* ELF32 as default */
+void parse_elf(const char *elf_file) {
+  if (elf_file == NULL) return;
+  remove(FOUTPUT_FILE);
+  Log("specified ELF file: %s", elf_file);
+  int fd = open(elf_file, O_RDONLY|O_SYNC);
+  Assert(fd >= 0, "Error %d: unable to open %s\n", fd, elf_file);
+  Elf32_Ehdr eh;
+  read_elf_header(fd, &eh);
+  display_elf_hedaer(eh);
+  Elf32_Shdr sh_tbl[eh.e_shentsize * eh.e_shnum];
+  read_section_headers(fd, eh, sh_tbl);
+  display_section_headers(fd, eh, sh_tbl);
+  read_symbols(fd, eh, sh_tbl);
+  init_tail_rec_list();
+  close(fd);
+}
+
+void init_ftrace(const char *ftrace_file, const char *elf_file) {
+  parse_elf(elf_file);
 }
 
 #endif  // CONFIG_FTRACE

@@ -23,7 +23,7 @@ void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
 void init_sdb();
 void init_disasm();
-void parse_elf(const char *exec_file);
+void init_ftrace(const char *ftrace_file, const char *elf_file);
 
 static void welcome() {
   Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
@@ -131,7 +131,7 @@ void init_monitor(int argc, char *argv[]) {
   /* Initialize the simple debugger. */
   init_sdb();
   /* Parse ELF file for ftrace. */
-  IFDEF(CONFIG_FTRACE, parse_elf(elf_file));
+  IFDEF(CONFIG_FTRACE, init_ftrace(ftrace_file, elf_file));
   /* Initialize disassembler. */
   IFDEF(CONFIG_ITRACE, init_disasm());
   /* Display welcome message. */
