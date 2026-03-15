@@ -408,7 +408,7 @@ void ftrace_ret(paddr_t pc) {
   call_num--;
 }
 
-#define FOUTPUT_FILE "ftrace.txt"
+#define FOUTPUT_FILE "build/ftrace.txt"
 
 void init_ftrace_log(const char *ftrace_file) {
   if (ftrace_file == NULL)
