@@ -43,7 +43,7 @@ static vaddr_t *csr_register(word_t imm) {
 
 enum {
   TYPE_I, TYPE_U, TYPE_S, TYPE_R, TYPE_J, TYPE_B,
-  TYPE_N, // none
+  TYPE_N,  // none
 };
 
 #define src1R() do { *src1 = R(rs1); } while (0)
@@ -66,7 +66,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     case TYPE_R: src1R(); src2R();         break;
     case TYPE_J:                   immJ(); break;
     case TYPE_B: src1R(); src2R(); immB(); break;
-    case TYPE_N:                           break; // none
+    case TYPE_N:                           break;  // none
     default: panic("unsupported type = %d", type);
   }
 }
@@ -100,11 +100,11 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 000 ????? 1100111", jalr  , I, s->dnpc = (src1 + imm) & ~(uint32_t)0x1; R(rd) = s->snpc; 
   IFDEF(CONFIG_FTRACE, {
     if (s->isa.inst == 0x00008067)
-      ftrace_ret(s->pc); // ret -> jalr x0, 0(x1)
+      ftrace_ret(s->pc);  // ret -> jalr x0, 0(x1)
     else if (rd == 1)
       ftrace_call(s->pc, s->dnpc, false);
     else if (rd == 0 && imm == 0)
-      ftrace_call(s->pc, s->dnpc, true); // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
+      ftrace_call(s->pc, s->dnpc, true);  // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
   }));
 
   INSTPAT("??????? ????? ????? ??? ????? 0010111", auipc , U, R(rd) = s->pc + imm);
@@ -129,21 +129,21 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000001 ????? ????? 010 ????? 0110011", mulhsu, R, R(rd) = (word_t)(((int64_t)(int32_t)src1 * (uint64_t)src2) >> 32););
   INSTPAT("0000001 ????? ????? 011 ????? 0110011", mulhu , R, R(rd) = (word_t)(((uint64_t)src1 * (uint64_t)src2) >> 32););
   INSTPAT("0000001 ????? ????? 100 ????? 0110011", div   , R,
-      R(rd) = (src2 == 0) ? -1 :
+    R(rd) = (src2 == 0) ? -1 :
               ((sword_t)src1 == INT32_MIN && (sword_t)src2 == -1) ? INT32_MIN :
               (sword_t)src1 / (sword_t)src2);
   INSTPAT("0000001 ????? ????? 101 ????? 0110011", divu  , R,
-      R(rd) = (src2 == 0) ? 0xFFFFFFFF : src1 / src2);
+    R(rd) = (src2 == 0) ? 0xFFFFFFFF : src1 / src2);
   INSTPAT("0000001 ????? ????? 110 ????? 0110011", rem   , R,
-      R(rd) = (src2 == 0) ? src1 :
+    R(rd) = (src2 == 0) ? src1 :
               ((sword_t)src1 == INT32_MIN && (sword_t)src2 == -1) ? 0 :
               (sword_t)src1 % (sword_t)src2);
   INSTPAT("0000001 ????? ????? 111 ????? 0110011", remu  , R,
-      R(rd) = (src2 == 0) ? src1 : src1 % src2);
+    R(rd) = (src2 == 0) ? src1 : src1 % src2);
 
   INSTPAT("??????? ????? ????? ??? ????? 1101111", jal   , J, R(rd) = s->pc + 4; s->dnpc = s->pc + imm; 
   IFDEF(CONFIG_FTRACE, { 
-    if (rd == 1) // x1: return address for jumps
+    if (rd == 1)  // x1: return address for jumps
       ftrace_call(s->pc, s->dnpc, false);
   }));
 
@@ -163,7 +163,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? ??? ????? ???????", inv   , N, INV(s->pc));
   INSTPAT_END();
 
-  R(0) = 0; // reset $zero to 0
+  R(0) = 0;  // reset $zero to 0
   return 0;
 }
 
