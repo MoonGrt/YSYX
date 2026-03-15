@@ -58,10 +58,10 @@ static char *img_file = NULL;
 static char *elf_file = NULL;
 static int difftest_port = 1234;
 
-static long load_img() {
+static long load_img(const char *img_file) {
   if (img_file == NULL) {
     Log("No image is given. Use the default build-in image.");
-    return 4096; // built-in image size
+    return 4096;  // built-in image size
   }
   FILE *fp = fopen(img_file, "rb");
   Assert(fp, "Can not open '%s'", img_file);
@@ -125,7 +125,7 @@ void init_monitor(int argc, char *argv[]) {
   /* Perform ISA dependent initialization. */
   init_isa();
   /* Load the image to memory. This will overwrite the built-in image. */
-  long img_size = load_img();
+  long img_size = load_img(img_file);
   /* Initialize differential testing. */
   init_difftest(diff_so_file, img_size, difftest_port);
   /* Initialize the simple debugger. */
