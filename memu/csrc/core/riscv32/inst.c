@@ -65,5 +65,6 @@ static int step(Decode *s) {
 
 int isa_exec_once(Decode *s) {
   *s = rtlDecode;
-  return step(s);
+  rtl_step();
+  return 0;
 }
