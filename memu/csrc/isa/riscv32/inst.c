@@ -169,7 +169,7 @@ static int decode_exec(Decode *s) {
 
 static inline void csr_cycle_inc() {
   uint64_t cycle =
-      ((uint64_t)cpu.csr.mcycleh << 32) | cpu.csr.mcycle;
+    ((uint64_t)cpu.csr.mcycleh << 32) | cpu.csr.mcycle;
   cycle++;
   cpu.csr.mcycle  = (uint32_t)cycle;
   cpu.csr.mcycleh = (uint32_t)(cycle >> 32);
