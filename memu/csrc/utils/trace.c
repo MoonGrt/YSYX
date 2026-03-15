@@ -67,8 +67,6 @@ void display_pwrite(paddr_t addr, int len, word_t data) {
 
 #ifdef CONFIG_FTRACE
 
-#define FOUTPUT_FILE "ftrace.txt"
-
 typedef struct {
   char name[32];  // func name, 32 should be enough
   paddr_t addr;
@@ -85,6 +83,7 @@ typedef struct tail_rec_node {
 int symbol_tbl_size = 0;
 int call_depth = 0;
 TailRecNode *tail_rec_head = NULL;  // linklist with head, dynamic allocated
+FILE *ftrace_fp = NULL;
 
 static void read_elf_header(int fd, Elf32_Ehdr *eh) {
   assert(lseek(fd, 0, SEEK_SET) == 0);
@@ -101,15 +100,10 @@ static void read_elf_header(int fd, Elf32_Ehdr *eh) {
 }
 
 void ftrace_write(const char *format, ...) {
-  FILE *fp = fopen(FOUTPUT_FILE, "a");
-  if (fp != NULL) {
-    va_list args;
-    va_start(args, format);
-    vfprintf(fp, format, args);
-    va_end(args);
-    fclose(fp);
-  } else
-    printf("Error opening file %s\n", FOUTPUT_FILE);
+  va_list args;
+  va_start(args, format);
+  vfprintf(ftrace_fp, format, args);
+  va_end(args);
 }
 
 static void display_elf_hedaer(Elf32_Ehdr eh) {
@@ -338,32 +332,17 @@ static void init_tail_rec_list() {
   tail_rec_head->next = NULL;
 }
 
-/* ELF32 as default */
-void parse_elf(const char *elf_file) {
-  if (elf_file == NULL) return;
-  remove(FOUTPUT_FILE);
-  Log("specified ELF file: %s", elf_file);
-  int fd = open(elf_file, O_RDONLY|O_SYNC);
-  Assert(fd >= 0, "Error %d: unable to open %s\n", fd, elf_file);
-  Elf32_Ehdr eh;
-  read_elf_header(fd, &eh);
-  display_elf_hedaer(eh);
-  Elf32_Shdr sh_tbl[eh.e_shentsize * eh.e_shnum];
-  read_section_headers(fd, eh, sh_tbl);
-  display_section_headers(fd, eh, sh_tbl);
-  read_symbols(fd, eh, sh_tbl);
-  init_tail_rec_list();
-  close(fd);
-}
-
 static int find_symbol_func(paddr_t target, bool is_call) {
   int i;
-  for (i = 0; i < symbol_tbl_size; i++)
-    if (ELF32_ST_TYPE(symbol_tbl[i].info) == STT_FUNC)
-      if (is_call)
+  for (i = 0; i < symbol_tbl_size; i++) {
+    if (ELF64_ST_TYPE(symbol_tbl[i].info) == STT_FUNC) {
+      if (is_call) {
         if (symbol_tbl[i].addr == target) break;
-      else
+      } else {
         if (symbol_tbl[i].addr <= target && target < symbol_tbl[i].addr + symbol_tbl[i].size) break;
+      }
+    }
+  }
   return i<symbol_tbl_size?i:-1;
 }
 
@@ -382,8 +361,7 @@ static void remove_tail_rec() {
 }
 
 int call_num=0;
-
-void trace_func_call(paddr_t pc, paddr_t target, bool is_tail) {
+void ftrace_call(paddr_t pc, paddr_t target, bool is_tail) {
   if (symbol_tbl == NULL) return;
   ++call_depth;
   if (call_depth <= 2) return; // ignore _trm_init & main
@@ -403,7 +381,7 @@ void trace_func_call(paddr_t pc, paddr_t target, bool is_tail) {
   call_num++;
 }
 
-void trace_func_ret(paddr_t pc) {
+void ftrace_ret(paddr_t pc) {
   if (symbol_tbl == NULL) return;
   if (call_depth <= 2) return; // ignore _trm_init & main
   int i = find_symbol_func(pc, false);
@@ -424,10 +402,42 @@ void trace_func_ret(paddr_t pc) {
     if (depend_i == i) {
       paddr_t ret_target = node->pc;
       remove_tail_rec();
-      trace_func_ret(ret_target);
+      ftrace_ret(ret_target);
     }
   }
   call_num--;
+}
+
+#define DEFAULT_FTRACE_FILE "build/memu-ftrace.txt"
+
+void init_ftrace_log(const char *ftrace_file) {
+  if (ftrace_file == NULL)
+    ftrace_file = DEFAULT_FTRACE_FILE;
+  FILE *fp = fopen(ftrace_file, "w");
+  Assert(fp, "Can not open '%s'", ftrace_file);
+  ftrace_fp = fp;
+  Log("Ftrace log is written to %s", ftrace_file);
+}
+
+void parse_elf(const char *elf_file) {
+  if (elf_file == NULL) return;
+  Log("specified ELF file: %s", elf_file);
+  int fd = open(elf_file, O_RDONLY|O_SYNC);
+  Assert(fd >= 0, "Error %d: unable to open %s\n", fd, elf_file);
+  Elf32_Ehdr eh;
+  read_elf_header(fd, &eh);
+  display_elf_hedaer(eh);
+  Elf32_Shdr sh_tbl[eh.e_shentsize * eh.e_shnum];
+  read_section_headers(fd, eh, sh_tbl);
+  display_section_headers(fd, eh, sh_tbl);
+  read_symbols(fd, eh, sh_tbl);
+  init_tail_rec_list();
+  close(fd);
+}
+
+void init_ftrace(const char *ftrace_file, const char *elf_file) {
+  init_ftrace_log(ftrace_file);
+  parse_elf(elf_file);
 }
 
 #endif  // CONFIG_FTRACE
