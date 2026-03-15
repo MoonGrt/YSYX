@@ -106,7 +106,6 @@ void ftrace_write(const char *format, ...) {
   va_start(args, format);
   vfprintf(ftrace_fp, format, args);
   va_end(args);
-  fclose(ftrace_fp);
 }
 
 static void display_elf_hedaer(Elf32_Ehdr eh) {
@@ -418,7 +417,7 @@ void init_ftrace_log(const char *ftrace_file) {
     Assert(fp, "Can not open '%s'", ftrace_file);
     ftrace_fp = fp;
   }
-  Log("Log is written to %s", ftrace_file ? ftrace_file : "stdout");
+  Log("Ftrace log is written to %s", ftrace_file ? ftrace_file : "stdout");
 }
 
 void parse_elf(const char *elf_file) {
