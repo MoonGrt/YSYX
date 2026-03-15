@@ -421,7 +421,7 @@ void init_ftrace_log(const char *ftrace_file) {
 
 void parse_elf(const char *elf_file) {
   if (elf_file == NULL) return;
-  remove(FOUTPUT_FILE);
+  // remove(FOUTPUT_FILE);
   Log("specified ELF file: %s", elf_file);
   int fd = open(elf_file, O_RDONLY|O_SYNC);
   Assert(fd >= 0, "Error %d: unable to open %s\n", fd, elf_file);
