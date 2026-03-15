@@ -408,11 +408,11 @@ void ftrace_ret(paddr_t pc) {
   call_num--;
 }
 
-#define FOUTPUT_FILE "build/ftrace.txt"
+#define DEFAULT_FTRACE_FILE "build/memu-ftrace.txt"
 
 void init_ftrace_log(const char *ftrace_file) {
   if (ftrace_file == NULL)
-    ftrace_file = FOUTPUT_FILE;
+    ftrace_file = DEFAULT_FTRACE_FILE;
   FILE *fp = fopen(ftrace_file, "w");
   Assert(fp, "Can not open '%s'", ftrace_file);
   ftrace_fp = fp;
