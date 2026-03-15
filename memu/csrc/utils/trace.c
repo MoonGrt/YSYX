@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <common.h>
-#include "map.h"
+#include "../../../include/device/map.h"
 
 #ifdef CONFIG_ITRACE
 
