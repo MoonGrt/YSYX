@@ -67,8 +67,6 @@ void display_pwrite(paddr_t addr, int len, word_t data) {
 
 #ifdef CONFIG_FTRACE
 
-#define FOUTPUT_FILE "ftrace.txt"
-
 typedef struct {
   char name[32];  // func name, 32 should be enough
   paddr_t addr;
@@ -410,9 +408,11 @@ void ftrace_ret(paddr_t pc) {
   call_num--;
 }
 
+#define FOUTPUT_FILE "ftrace.txt"
+
 void init_ftrace_log(const char *ftrace_file) {
   if (ftrace_file == NULL)
-    ftrace_file = "ftrace.txt";
+    ftrace_file = FOUTPUT_FILE;
   FILE *fp = fopen(ftrace_file, "w");
   Assert(fp, "Can not open '%s'", ftrace_file);
   ftrace_fp = fp;
