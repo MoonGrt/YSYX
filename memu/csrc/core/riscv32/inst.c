@@ -14,17 +14,12 @@
 ***************************************************************************************/
 
 #include <cpu/decode.h>
-#include "../../utils/local-include/trace.h"
-#if defined(CONFIG_NEMU)
 
-#elif defined(CONFIG_NPC)
-#include "../../core/riscv32/local-include/exec.h"
-#endif
-
+void rtl_step(void);
 extern Decode rtlDecode;
+
 int isa_exec_once(Decode *s) {
   *s = rtlDecode;
-  IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
   rtl_step();
   return 0;
 }

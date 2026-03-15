@@ -14,7 +14,7 @@
 ***************************************************************************************/
 
 #include <isa.h>
-#include "local-include/reg.h"
+#include "include/reg.h"
 
 const char *regs[] = {
   "$0", "ra", "tp", "sp", "a0", "a1", "a2", "a3",

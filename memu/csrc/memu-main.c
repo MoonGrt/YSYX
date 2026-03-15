@@ -14,16 +14,12 @@
 ***************************************************************************************/
 
 #include <common.h>
-#if defined(CONFIG_NEMU)
-
-#elif defined(CONFIG_NPC)
-#include "../../core/riscv32/local-include/exec.h"
-#endif
 
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
 int is_exit_status_bad();
+void rtl_init(int argc, char *argv[]);
 
 // #define PRINTARG
 int main(int argc, char *argv[]) {

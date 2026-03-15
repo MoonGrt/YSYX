@@ -5,7 +5,6 @@
 #include <memory/paddr.h>
 #include <memory/host.h>
 #include <device/mmio.h>
-#include "../../utils/local-include/trace.h"
 
 #include <verilated.h>
 #include <verilated_vcd_c.h>
@@ -25,6 +24,9 @@ VerilatedVcdC *tfp = new VerilatedVcdC;
 Decode rtlDecode;
 
 extern "C" {
+  void display_pread(paddr_t addr, int len, word_t data);
+  void display_pwrite(paddr_t addr, int len, word_t data);
+
   #define EBREAK_CODE    0
   #define ZERO_INST_CODE 1
   #define OTHER_E_CODE   2
