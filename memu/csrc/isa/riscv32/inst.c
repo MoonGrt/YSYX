@@ -94,13 +94,13 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 011 ????? 0010011", sltiu , I, R(rd) = src1 < (uint32_t)imm);
   INSTPAT("0100000 ????? ????? 101 ????? 0010011", srai  , I, R(rd) = ((sword_t)src1 >> (imm & 0x1f)));
   INSTPAT("??????? ????? ????? 000 ????? 1100111", jalr  , I, s->dnpc = (src1 + imm) & ~(uint32_t)0x1; R(rd) = s->snpc; 
-  IFDEF(CONFIG_ITRACE, {
+  IFDEF(CONFIG_FTRACE, {
     if (s->isa.inst == 0x00008067)
-      trace_func_ret(s->pc); // ret -> jalr x0, 0(x1)
+      ftrace_ret(s->pc); // ret -> jalr x0, 0(x1)
     else if (rd == 1)
-      trace_func_call(s->pc, s->dnpc, false);
+      ftrace_call(s->pc, s->dnpc, false);
     else if (rd == 0 && imm == 0)
-      trace_func_call(s->pc, s->dnpc, true); // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
+      ftrace_call(s->pc, s->dnpc, true); // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
   }));
 
   INSTPAT("??????? ????? ????? ??? ????? 0010111", auipc , U, R(rd) = s->pc + imm);
@@ -138,9 +138,9 @@ static int decode_exec(Decode *s) {
       R(rd) = (src2 == 0) ? src1 : src1 % src2);
 
   INSTPAT("??????? ????? ????? ??? ????? 1101111", jal   , J, R(rd) = s->pc + 4; s->dnpc = s->pc + imm; 
-  IFDEF(CONFIG_ITRACE, { 
+  IFDEF(CONFIG_FTRACE, { 
     if (rd == 1) // x1: return address for jumps
-      trace_func_call(s->pc, s->dnpc, false);
+      ftrace_call(s->pc, s->dnpc, false);
   }));
 
   INSTPAT("??????? ????? ????? 001 ????? 1100011", bne   , B, s->dnpc = ((sword_t)src1) != ((sword_t)src2) ? s->pc + imm : s->dnpc);

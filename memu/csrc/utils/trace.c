@@ -383,7 +383,7 @@ static void remove_tail_rec() {
 
 int call_num=0;
 
-void trace_func_call(paddr_t pc, paddr_t target, bool is_tail) {
+void ftrace_call(paddr_t pc, paddr_t target, bool is_tail) {
   if (symbol_tbl == NULL) return;
   ++call_depth;
   if (call_depth <= 2) return; // ignore _trm_init & main
@@ -403,7 +403,7 @@ void trace_func_call(paddr_t pc, paddr_t target, bool is_tail) {
   call_num++;
 }
 
-void trace_func_ret(paddr_t pc) {
+void ftrace_ret(paddr_t pc) {
   if (symbol_tbl == NULL) return;
   if (call_depth <= 2) return; // ignore _trm_init & main
   int i = find_symbol_func(pc, false);
@@ -424,7 +424,7 @@ void trace_func_ret(paddr_t pc) {
     if (depend_i == i) {
       paddr_t ret_target = node->pc;
       remove_tail_rec();
-      trace_func_ret(ret_target);
+      ftrace_ret(ret_target);
     }
   }
   call_num--;
