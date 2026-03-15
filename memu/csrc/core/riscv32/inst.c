@@ -52,7 +52,6 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
 }
 
 static int step(Decode *s) {
-  *s = rtlDecode;
   rtl_step();
 
 #define INSTPAT_INST(s) ((s)->isa.inst)
@@ -83,22 +82,6 @@ static int step(Decode *s) {
 }
 
 int isa_exec_once(Decode *s) {
-
-  // // jalr -> ftrace
-  // IFDEF(CONFIG_FTRACE, {
-  //   if (s->isa.inst == 0x00008067)
-  //     ftrace_ret(s->pc);  // ret -> jalr x0, 0(x1)
-  //   else if (rd == 1)
-  //     ftrace_call(s->pc, s->dnpc, false);
-  //   else if (rd == 0 && imm == 0)
-  //     ftrace_call(s->pc, s->dnpc, true);  // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
-  // });
-  // jal -> ftrace
-  // IFDEF(CONFIG_FTRACE, { 
-  //   if (rd == 1)  // x1: return address for jumps
-  //     ftrace_call(s->pc, s->dnpc, false);
-  // });
-  // ecall -> etrace_exec
-  // IFDEF(CONFIG_ETRACE, if (s->isa.inst == 0x00000073) etrace_exec(s->pc));
+  *s = rtlDecode;
   return step(s);
 }
