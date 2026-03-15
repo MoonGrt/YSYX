@@ -414,7 +414,17 @@ void ftrace_ret(paddr_t pc) {
   call_num--;
 }
 
-/* ELF32 as default */
+FILE *ftrace_fp = NULL;
+void init_ftrace_log(const char *ftrace_file) {
+  ftrace_fp = stdout;
+  if (ftrace_file != NULL) {
+    FILE *fp = fopen(ftrace_file, "w");
+    Assert(fp, "Can not open '%s'", ftrace_file);
+    ftrace_fp = fp;
+  }
+  Log("Log is written to %s", ftrace_file ? ftrace_file : "stdout");
+}
+
 void parse_elf(const char *elf_file) {
   if (elf_file == NULL) return;
   remove(FOUTPUT_FILE);
@@ -433,6 +443,7 @@ void parse_elf(const char *elf_file) {
 }
 
 void init_ftrace(const char *ftrace_file, const char *elf_file) {
+  init_ftrace_log(ftrace_file);
   parse_elf(elf_file);
 }
 
