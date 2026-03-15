@@ -18,12 +18,6 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 #include "../monitor/sdb/sdb.h"
-#include "../utils/local-include/trace.h"
-#if defined(CONFIG_NEMU)
-
-#elif defined(CONFIG_NPC)
-  #include "../../core/riscv32/local-include/exec.h"
-#endif
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -68,12 +62,14 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
 }
 
+void trace_inst(word_t pc, uint32_t inst);
 static void exec_once(Decode *s, vaddr_t pc) {
   s->pc = pc;
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
 #ifdef CONFIG_ITRACE
+  IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), "[ITRACE] " FMT_WORD ": ", s->pc);
   int ilen = s->snpc - s->pc;
@@ -118,6 +114,7 @@ static void statistic() {
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }
 
+void display_inst();
 void assert_fail_msg() {
   IFDEF(CONFIG_ITRACE, display_inst());
   isa_reg_display();
@@ -125,6 +122,7 @@ void assert_fail_msg() {
 }
 
 /* Simulate how the CPU works. */
+void rtl_exit(void);
 void cpu_exec(uint64_t n) {
   g_print_step = (n < MAX_INST_TO_PRINT);
   switch (nemu_state.state) {

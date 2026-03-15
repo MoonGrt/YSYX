@@ -220,28 +220,27 @@ NEMU 中有多少个 dummy 实体： 等于包含 common.h/debug.h 的 .c 文件
 ## D阶段
 ### C1 工具和基础设施
 
-## 3. 什么才算是一个 Symbol？
+1.. 什么才算是一个 Symbol？
 
 在 **ELF 符号表**中，一个 **symbol** 一般指： **在链接阶段需要被识别或解析的名字**. 也就是说： 一个 symbol 必须满足：
-
 1️⃣ **有全局或静态存储位置**
 2️⃣ **在链接时可能被引用**
 
-典型的 symbol 包括：
+典型的 symbol 包括： (1) 全局变量 (2) 函数 (3) static 全局变量 (4) 外部引用
 
-(1) 全局变量
-(2) 函数
-(3) static 全局变量
-(4) 外部引用
-
-## 4. 不属于 Symbol 的情况
-以下通常 **不会进入 ELF symbol table**：
-| 类型            | 原因       |
-| ------------- | -------- |
-| 宏 (`#define`) | 预处理阶段就消失 |
-| 局部变量          | 编译后变为栈偏移 |
-| 临时变量          | 编译器优化    |
-| 常量表达式         | 编译期计算    |
+2. 寻找"Hello World!"
+"Hello World!" 不在 ELF 的字符串表 .strtab 或 .dynstr 中，而是在 .rodata 段。
+```c
+#include <stdio.h>
+int main() {
+    printf("Hello World!\n");
+    return 0;
+}
+```
+```bash
+gcc hello.c -o hello
+readelf -x .rodata hello
+```
 
 ### C2 支持RV32E的单周期NPC
 ### C3 调试技巧

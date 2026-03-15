@@ -17,7 +17,9 @@
 #include <memory/paddr.h>
 #include <device/mmio.h>
 #include <isa.h>
-#include "../../utils/local-include/trace.h"
+
+void display_pread(paddr_t addr, int len, word_t data);
+void display_pwrite(paddr_t addr, int len, word_t data);
 
 #if   defined(CONFIG_PMEM_MALLOC)
 static uint8_t *pmem = NULL;
