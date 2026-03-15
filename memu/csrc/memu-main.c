@@ -21,7 +21,7 @@ void engine_start();
 int is_exit_status_bad();
 void rtl_init(int argc, char *argv[]);
 
-#define PRINTARG
+// #define PRINTARG
 int main(int argc, char *argv[]) {
 #ifdef PRINTARG
   printf("[MEMU] ARGC = %d\n", argc);
