@@ -26,8 +26,7 @@ enum {
   TYPE_N,  // none
 };
 
-#define src1R() do { *src1 = R(rs1); } while (0)
-#define src2R() do { *src2 = R(rs2); } while (0)
+
 #define immI() do { *imm = SEXT(BITS(i, 31, 20), 12); } while(0)
 #define immU() do { *imm = SEXT(BITS(i, 31, 12), 20) << 12; } while(0)
 #define immS() do { *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); } while(0)
@@ -40,12 +39,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
   int rs2 = BITS(i, 24, 20);
      *rd  = BITS(i, 11, 7);
   switch (type) {
-    case TYPE_I: src1R();          immI(); break;
-    case TYPE_U:                   immU(); break;
-    case TYPE_S: src1R(); src2R(); immS(); break;
-    case TYPE_R: src1R(); src2R();         break;
-    case TYPE_J:                   immJ(); break;
-    case TYPE_B: src1R(); src2R(); immB(); break;
+
     case TYPE_N:                           break;  // none
     default: panic("unsupported type = %d", type);
   }
@@ -62,7 +56,7 @@ static int step(Decode *s) {
   __VA_ARGS__ ; \
 }
   INSTPAT_START();
-  INSTPAT("??????? ????? ????? 000 ????? 1100111", jalr  , I, s->dnpc = (src1 + imm) & ~(uint32_t)0x1; R(rd) = s->snpc; 
+  INSTPAT("??????? ????? ????? 000 ????? 1100111", jalr  , I, 
   IFDEF(CONFIG_FTRACE, {
     if (s->isa.inst == 0x00008067)
       ftrace_ret(s->pc);  // ret -> jalr x0, 0(x1)
@@ -71,7 +65,7 @@ static int step(Decode *s) {
     else if (rd == 0 && imm == 0)
       ftrace_call(s->pc, s->dnpc, true);  // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
   }));
-  INSTPAT("??????? ????? ????? ??? ????? 1101111", jal   , J, R(rd) = s->pc + 4; s->dnpc = s->pc + imm; 
+  INSTPAT("??????? ????? ????? ??? ????? 1101111", jal   , J, 
   IFDEF(CONFIG_FTRACE, { 
     if (rd == 1)  // x1: return address for jumps
       ftrace_call(s->pc, s->dnpc, false);
