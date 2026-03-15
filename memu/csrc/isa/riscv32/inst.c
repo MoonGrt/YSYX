@@ -18,6 +18,10 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 
+void ftrace_ret(paddr_t pc);
+void ftrace_call(paddr_t pc, paddr_t target, bool is_tail);
+void etrace_exec(uint32_t pc);
+
 static vaddr_t *csr_register(word_t imm) {
   word_t csr = imm & 0xfff;
   switch (csr) {
@@ -170,7 +174,7 @@ static inline void csr_cycle_inc() {
   cpu.csr.mcycle  = (uint32_t)cycle;
   cpu.csr.mcycleh = (uint32_t)(cycle >> 32);
 }
-
+void trace_inst(word_t pc, uint32_t inst);
 int isa_exec_once(Decode *s) {
   csr_cycle_inc();
   s->isa.inst = inst_fetch(&s->snpc, 4);
