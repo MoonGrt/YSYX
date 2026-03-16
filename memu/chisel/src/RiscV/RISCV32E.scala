@@ -163,13 +163,13 @@ class Riscv32E_ID extends Module {
   io.memsel := memsel
   // CSR
   val CSR_MSTATUS = 0.U
-  val CSR_MEPC    = 1.U
-  val CSR_MCAUSE  = 2.U
-  val CSR_MTVEC   = 3.U
-  val CSR_MCYCLE  = 4.U
-  val CSR_MCYCLEH = 5.U
-  val CSR_MVENDOR = 6.U
-  val CSR_MARCHID = 7.U
+  val CSR_MEPC      = 1.U
+  val CSR_MCAUSE    = 2.U
+  val CSR_MTVEC     = 3.U
+  val CSR_MCYCLE    = 4.U
+  val CSR_MCYCLEH   = 5.U
+  val CSR_MVENDORID = 6.U
+  val CSR_MARCHID   = 7.U
   val csr_addr = immi
   val csrInfo = MuxLookup(csr_addr, (0.U, false.B))(Seq(
     0x300.U -> (CSR_MSTATUS  ,  true.B),  // mstatus
@@ -178,7 +178,7 @@ class Riscv32E_ID extends Module {
     0x305.U -> (CSR_MTVEC    ,  true.B),  // mtvec
     0xB00.U -> (CSR_MCYCLE   ,  true.B),  // mcycle
     0xB80.U -> (CSR_MCYCLEH  ,  true.B),  // mcycleh
-    0xF11.U -> (CSR_MVENDORID, false.B), // mvendorid
+    0xF11.U -> (CSR_MVENDORID, false.B),  // mvendorid
     0xF12.U -> (CSR_MARCHID  , false.B),  // marchid
   ))
   val csr_id       = csrInfo._1
