@@ -15,13 +15,12 @@ class Riscv32E_IF extends Module {
     val bren   = Input(Bool())  // 跳转使能
     val braddr = Input(UInt(WORD_LEN.W))  // 跳转地址
     val pc     = Output(UInt(WORD_LEN.W))  // 当前 PC 输出
+    val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
   })
   val pc = RegInit("h80000000".U(WORD_LEN.W))
-  pc := MuxCase(pc + 4.U, Seq(
-    io.halt -> pc,
-    io.bren -> io.braddr,
-  ))
-  io.pc  := pc
+  io.npc := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.pc + 4.U)  // next pc
+  pc := Mux(io.halt, pc, io.npc)
+  io.pc := pc
 }
 
 // ---------------------------
@@ -30,6 +29,7 @@ class Riscv32E_IF extends Module {
 class Riscv32E_ID extends Module {
   val io = IO(new Bundle {
     val pc      = Input(UInt(WORD_LEN.W))
+    val npc     = Input(UInt(WORD_LEN.W))
     val inst    = Input(UInt(WORD_LEN.W))
 
     // 写回
@@ -218,7 +218,7 @@ class Riscv32E_ID extends Module {
   }
   // GPR
   io.rdAddr := rd
-  io.regWen  := wbsel =/= WB.NONE
+  io.regWen := wbsel =/= WB.NONE
   val memData = MuxLookup(io.memsel, 0.U(WORD_LEN.W))(Seq(
     MEM.RW  -> io.memData,  // LW 直接写回
     MEM.RB  -> Cat(Fill(24, io.memData(7)), io.memData(7,0)),  // LB 符号扩展
@@ -263,6 +263,18 @@ class Riscv32E_ID extends Module {
   trap.io.code := exc_code
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
+
+  // -------- DiffTest --------
+  val difftest = Module(new DiffTest)
+  difftest.io.clk  := clock
+  difftest.io.pc   := io.npc
+  difftest.io.inst := io.inst
+  for (i <- 0 until CSR_NUM) {
+    difftest.io.csr(i) := CSR(i)
+  }
+  for (i <- 0 until GPR_NUM) {
+    difftest.io.gpr(i) := GPR(i)
+  }
 }
 
 // ---------------------------
@@ -337,6 +349,7 @@ class Riscv32E extends Module {
 
   // ID
   idStage.io.pc   := ifStage.io.pc
+  idStage.io.npc  := ifStage.io.npc
   idStage.io.inst := io.inst
 
   // EX
@@ -360,18 +373,6 @@ class Riscv32E extends Module {
   idStage.io.wbrd    := idStage.io.rdAddr
   idStage.io.memData := io.mem_rdata
   idStage.io.exData  := exStage.io.aluout
-
-  // DiffTest
-  val difftest = Module(new DiffTest)
-  difftest.io.clk  := clock
-  difftest.io.pc   := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.pc + 4.U)  // next pc
-  difftest.io.inst := idStage.io.inst
-  for (i <- 0 until CSR_NUM) {
-    difftest.io.csr(i) := idStage.io.csrOut(i)
-  }
-  for (i <- 0 until GPR_NUM) {
-    difftest.io.gpr(i) := idStage.io.gprOut(i)
-  }
 }
 
 // ---------------------------
