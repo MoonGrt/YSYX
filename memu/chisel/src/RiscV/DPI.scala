@@ -47,7 +47,6 @@ class DiffTest extends BlackBox {
   val io = IO(new Bundle {
     val clk  = Input(Clock())
     val pc   = Input(UInt(WORD_LEN.W))
-    val npc  = Input(UInt(WORD_LEN.W))
     val inst = Input(UInt(WORD_LEN.W))
     val csr  = Input(Vec(CSR_NUM, UInt(WORD_LEN.W)))
     val gpr  = Input(Vec(GPR_NUM, UInt(WORD_LEN.W)))
