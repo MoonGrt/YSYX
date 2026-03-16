@@ -17,7 +17,7 @@ class Riscv32E_IF extends Module {
     val pc     = Output(UInt(WORD_LEN.W))  // 当前 PC 输出
     val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
   })
-  val pc = RegInit("h80000000".U(WORD_LEN.W))
+  val pc = RegInit("h80000000".U)
   io.npc := Mux(io.bren, io.braddr, pc + 4.U)  // next pc
   pc := Mux(io.halt, pc, io.npc)
   io.pc := pc
@@ -35,15 +35,15 @@ class Riscv32E_ID extends Module {
     // 写回
     val wben    = Input(Bool())
     val wbrd    = Input(UInt(5.W))
-    val memData = Input(UInt(WORD_LEN.W))
     val exData  = Input(UInt(WORD_LEN.W))
+    val memData = Input(UInt(WORD_LEN.W))
 
     // 输出到 EX
     val exsel   = Output(EX())
     val op1     = Output(UInt(WORD_LEN.W))
     val op2     = Output(UInt(WORD_LEN.W))
-    val immsb   = Output(UInt(WORD_LEN.W))
     val rs2     = Output(UInt(WORD_LEN.W))
+    val immsb   = Output(UInt(WORD_LEN.W))
     val rdAddr  = Output(UInt(5.W))
 
     // Control signals
@@ -360,7 +360,7 @@ class Riscv32E extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
-  val memType = idStage.io.memsel
+  val memType   = idStage.io.memsel
   io.mem_re    := !reset.asBool && memType.isOneOf(MEM.RW, MEM.RH, MEM.RB, MEM.RHU, MEM.RBU)
   io.mem_we    := !reset.asBool && memType.isOneOf(MEM.WW, MEM.WH, MEM.WB)
   io.mem_addr  := exStage.io.aluout
@@ -371,8 +371,8 @@ class Riscv32E extends Module {
   // Write Back
   idStage.io.wben    := idStage.io.regWen
   idStage.io.wbrd    := idStage.io.rdAddr
-  idStage.io.memData := io.mem_rdata
   idStage.io.exData  := exStage.io.aluout
+  idStage.io.memData := io.mem_rdata
 }
 
 // ---------------------------
