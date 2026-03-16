@@ -171,23 +171,24 @@ class Riscv32E_ID extends Module {
   val CSR_MVENDOR = 6.U
   val CSR_MARCHID = 7.U
   val csr_addr = immi
-  val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
-    0x300.U -> 0.U,  // mstatus
-    0x341.U -> 1.U,  // mepc
-    0x342.U -> 2.U,  // mcause
-    0x305.U -> 3.U,  // mtvec
-    0xB00.U -> 4.U,  // mcycle
-    0xB80.U -> 5.U,  // mcycleh
-    0xF11.U -> 6.U,  // mvendorid
-    0xF12.U -> 7.U,  // marchid
+  val csrInfo = MuxLookup(csr_addr, (0.U, false.B))(Seq(
+    0x300.U -> (CSR_MSTATUS , true.B ),  // mstatus
+    0x341.U -> (CSR_MEPC    , true.B ),  // mepc
+    0x342.U -> (CSR_MCAUSE  , true.B ),  // mcause
+    0x305.U -> (CSR_MTVEC   , true.B ),  // mtvec
+    0xB00.U -> (CSR_MCYCLE  , true.B ),  // mcycle
+    0xB80.U -> (CSR_MCYCLEH , true.B ),  // mcycleh
+    0xF11.U -> (CSR_MVENDORID, false.B), // mvendorid
+    0xF12.U -> (CSR_MARCHID , false.B),  // marchid
   ))
+  val csr_id       = csrInfo._1
+  val csr_writable = csrInfo._2
   val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
   CSR(CSR_MCYCLE)  := cycle64(31,0)
   CSR(CSR_MCYCLEH) := cycle64(63,32)
   CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
   CSR(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
   val csr_wen = csrsel.isOneOf(CSRS.W, CSRS.S, CSRS.C)
-  val csr_writable = csr_id.isOneOf(CSR_MSTATUS, CSR_MEPC, CSR_MCAUSE, CSR_MTVEC, CSR_MCYCLE, CSR_MCYCLEH)
   when (~reset.asBool && csr_wen && csr_writable) {
     CSR(csr_id) := MuxCase(io.op1, Seq(
       (csrsel === CSRS.W) -> io.op1,
