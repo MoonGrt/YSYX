@@ -18,7 +18,7 @@ class Riscv32E_IF extends Module {
     val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
   })
   val pc = RegInit("h80000000".U(WORD_LEN.W))
-  io.npc := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.pc + 4.U)  // next pc
+  io.npc := Mux(io.bren, io.braddr, pc + 4.U)  // next pc
   pc := Mux(io.halt, pc, io.npc)
   io.pc := pc
 }
