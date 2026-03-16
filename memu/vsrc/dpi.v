@@ -14,7 +14,7 @@ import "DPI-C" function void dpi_diff(
 );
 module DiffTest (
   input clk,
-  input [31:0] pc, npc, inst,
+  input [31:0] pc, inst,
   input [31:0] csr_0,  csr_1,  csr_2,  csr_3,
   input [31:0] csr_4,  csr_5,  csr_6,  csr_7,
   input [31:0] gpr_0,  gpr_1,  gpr_2,  gpr_3,
@@ -40,7 +40,7 @@ module DiffTest (
     gpr[24] = gpr_24; gpr[25] = gpr_25; gpr[26] = gpr_26; gpr[27] = gpr_27;
     gpr[28] = gpr_28; gpr[29] = gpr_29; gpr[30] = gpr_30; gpr[31] = gpr_31;
   end
-  always @(*) dpi_diff(pc, npc, inst, gpr, csr);
+  always @(*) dpi_diff(pc, inst, gpr, csr);
 endmodule
 
 
