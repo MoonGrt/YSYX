@@ -33,8 +33,6 @@ class Riscv32E_ID extends Module {
     val inst    = Input(UInt(WORD_LEN.W))
 
     // 写回
-    val wben    = Input(Bool())
-    val wbrd    = Input(UInt(5.W))
     val exData  = Input(UInt(WORD_LEN.W))
     val memData = Input(UInt(WORD_LEN.W))
 
@@ -43,13 +41,11 @@ class Riscv32E_ID extends Module {
     val op1   = Output(UInt(WORD_LEN.W))
     val op2   = Output(UInt(WORD_LEN.W))
     val RS2   = Output(UInt(WORD_LEN.W))
-    val rd    = Output(UInt(5.W))
     val immsb = Output(UInt(WORD_LEN.W))
 
     // Control signals
     val halt   = Output(Bool())
     val memsel = Output(MEM())
-    val regWen = Output(Bool())
 
     // Diff
     val csrOut = Output(Vec(CSR_NUM, UInt(WORD_LEN.W)))
@@ -217,8 +213,7 @@ class Riscv32E_ID extends Module {
     CSR(CSR_MSTATUS) := 0x00000080.U
   }
   // GPR
-  io.rd := rd
-  io.regWen := wbsel =/= WB.NONE
+  val regWen = wbsel =/= WB.NONE
   val memData = MuxLookup(io.memsel, 0.U(WORD_LEN.W))(Seq(
     MEM.RW  -> io.memData,  // LW 直接写回
     MEM.RB  -> Cat(Fill(24, io.memData(7)), io.memData(7,0)),  // LB 符号扩展
@@ -226,8 +221,8 @@ class Riscv32E_ID extends Module {
     MEM.RBU -> Cat(0.U(24.W), io.memData(7,0)),  // LBU 零扩展
     MEM.RHU -> Cat(0.U(16.W), io.memData(15,0)),  // LHU 零扩展
   ))
-  when (io.wben && io.wbrd =/= 0.U) {
-    GPR(io.wbrd) := MuxCase(0.U, Seq(
+  when (regWen && rd =/= 0.U) {
+    GPR(rd) := MuxCase(0.U, Seq(
       (wbsel === WB.PC ) -> (io.pc + 4.U),
       (wbsel === WB.EX ) -> io.exData,
       (wbsel === WB.MEM) -> memData,
@@ -369,8 +364,6 @@ class Riscv32E extends Module {
                   Mux(memType.isOneOf(MEM.WH, MEM.RH, MEM.RHU), 2.U, 4.U))
 
   // Write Back
-  idStage.io.wben    := idStage.io.regWen
-  idStage.io.wbrd    := idStage.io.rd
   idStage.io.exData  := exStage.io.aluout
   idStage.io.memData := io.mem_rdata
 }
