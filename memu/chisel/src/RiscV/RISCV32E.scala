@@ -39,12 +39,12 @@ class Riscv32E_ID extends Module {
     val memData = Input(UInt(WORD_LEN.W))
 
     // 输出到 EX
-    val exsel  = Output(EX())
-    val op1    = Output(UInt(WORD_LEN.W))
-    val op2    = Output(UInt(WORD_LEN.W))
-    val RS2    = Output(UInt(WORD_LEN.W))
-    val immsb  = Output(UInt(WORD_LEN.W))
-    val rdAddr = Output(UInt(5.W))
+    val exsel = Output(EX())
+    val op1   = Output(UInt(WORD_LEN.W))
+    val op2   = Output(UInt(WORD_LEN.W))
+    val RS2   = Output(UInt(WORD_LEN.W))
+    val rd    = Output(UInt(5.W))
+    val immsb = Output(UInt(WORD_LEN.W))
 
     // Control signals
     val halt   = Output(Bool())
@@ -217,7 +217,7 @@ class Riscv32E_ID extends Module {
     CSR(CSR_MSTATUS) := 0x00000080.U
   }
   // GPR
-  io.rdAddr := rd
+  io.rd := rd
   io.regWen := wbsel =/= WB.NONE
   val memData = MuxLookup(io.memsel, 0.U(WORD_LEN.W))(Seq(
     MEM.RW  -> io.memData,  // LW 直接写回
@@ -370,7 +370,7 @@ class Riscv32E extends Module {
 
   // Write Back
   idStage.io.wben    := idStage.io.regWen
-  idStage.io.wbrd    := idStage.io.rdAddr
+  idStage.io.wbrd    := idStage.io.rd
   idStage.io.exData  := exStage.io.aluout
   idStage.io.memData := io.mem_rdata
 }
