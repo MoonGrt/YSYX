@@ -23,7 +23,8 @@ $(BINARY):: compile_git
 
 # Some convenient rules
 
-override ARGS ?= --log=$(BUILD_DIR)/memu-log.txt --ftrace=$(BUILD_DIR)/memu-ftrace.txt $(ARGS_DIFF)
+override ARGS ?= --log=$(BUILD_DIR)/memu-log.txt --ftrace=$(BUILD_DIR)/memu-ftrace.txt
+override ARGS += $(ARGS_DIFF)
 
 # Command to execute MEMU
 IMG ?=
