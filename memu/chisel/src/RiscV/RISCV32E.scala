@@ -184,10 +184,10 @@ class Riscv32E_ID extends Module {
   val csr_id       = csrInfo._1
   val csr_writable = csrInfo._2
   val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
-  CSR(CSR_MCYCLE)  := cycle64(31,0)
-  CSR(CSR_MCYCLEH) := cycle64(63,32)
-  CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
-  CSR(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
+  CSR(CSR_MCYCLE   ) := cycle64(31,0)
+  CSR(CSR_MCYCLEH  ) := cycle64(63,32)
+  CSR(CSR_MVENDORID) := 0x79737978.U  // ysyx
+  CSR(CSR_MARCHID  ) := 0x018CE26E.U  // moongrt - 26010030
   val csr_wen = csrsel.isOneOf(CSRS.W, CSRS.S, CSRS.C)
   when (~reset.asBool && csr_wen && csr_writable) {
     CSR(csr_id) := MuxCase(io.op1, Seq(
