@@ -186,19 +186,16 @@ class Riscv32E_ID extends Module {
   CSR(CSR_MCYCLEH) := cycle64(63,32)
   CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
   CSR(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
-
-  val csr_old = CSR(csr_id)
-  val csr_new = MuxCase(io.op1, Seq(
-    (csrsel === CSRS.W) -> io.op1,
-    (csrsel === CSRS.S) -> (csr_old | io.op1),
-    (csrsel === CSRS.C) -> (csr_old & ~io.op1),
-  ))
   val csr_wen = csrsel.isOneOf(CSRS.W, CSRS.S, CSRS.C)
   val csr_writable =
     csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
     csr_id === CSR_MTVEC || csr_id === CSR_MCYCLE || csr_id === CSR_MCYCLEH
   when (~reset.asBool && csr_wen && csr_writable) {
-    CSR(csr_id) := csr_new
+    CSR(csr_id) := MuxCase(io.op1, Seq(
+      (csrsel === CSRS.W) -> io.op1,
+      (csrsel === CSRS.S) -> (CSR(csr_id) | io.op1),
+      (csrsel === CSRS.C) -> (CSR(csr_id) & ~io.op1),
+  ))
   }
   when (~reset.asBool && csrsel === CSRS.E) {
     // mstatus = 0x00001800
@@ -213,7 +210,6 @@ class Riscv32E_ID extends Module {
     CSR(CSR_MSTATUS) := 0x00000080.U
   }
   // GPR
-  val regWen = wbsel =/= WB.NONE
   val memData = MuxLookup(io.memsel, 0.U(WORD_LEN.W))(Seq(
     MEM.RW  -> io.memData,  // LW 直接写回
     MEM.RB  -> Cat(Fill(24, io.memData(7)), io.memData(7,0)),  // LB 符号扩展
@@ -221,12 +217,12 @@ class Riscv32E_ID extends Module {
     MEM.RBU -> Cat(0.U(24.W), io.memData(7,0)),  // LBU 零扩展
     MEM.RHU -> Cat(0.U(16.W), io.memData(15,0)),  // LHU 零扩展
   ))
-  when (regWen && rd =/= 0.U) {
+  when ((wbsel =/= WB.NONE) && (rd =/= 0.U)) {
     GPR(rd) := MuxCase(0.U, Seq(
       (wbsel === WB.PC ) -> (io.pc + 4.U),
       (wbsel === WB.EX ) -> io.exData,
       (wbsel === WB.MEM) -> memData,
-      (wbsel === WB.CSR) -> csr_old,
+      (wbsel === WB.CSR) -> CSR(csr_id),
     ))
   }
 
