@@ -364,8 +364,8 @@ class Riscv32E extends Module {
   // DiffTest
   val difftest = Module(new DiffTest)
   difftest.io.clk  := clock
-  difftest.io.pc   := ifStage.io.pc + 3.U
-  difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.pc + 4.U)
+  difftest.io.pc   := ifStage.io.pc
+  difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.pc + 5.U)
   difftest.io.inst := idStage.io.inst
   for (i <- 0 until CSR_NUM) {
     difftest.io.csr(i) := idStage.io.csrOut(i)

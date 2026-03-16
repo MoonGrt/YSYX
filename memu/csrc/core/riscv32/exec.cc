@@ -56,7 +56,7 @@ extern "C" {
     // Decode
     // rtlDecode.pc = pc;
     // rtlDecode.snpc = pc + 4;
-    rtlDecode.dnpc = npc+1;
+    rtlDecode.dnpc = npc;
     rtlDecode.isa.inst = inst;
     // CPU_state
     cpu.pc = pc;
