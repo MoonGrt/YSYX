@@ -39,12 +39,12 @@ class Riscv32E_ID extends Module {
     val memData = Input(UInt(WORD_LEN.W))
 
     // 输出到 EX
-    val exsel   = Output(EX())
-    val op1     = Output(UInt(WORD_LEN.W))
-    val op2     = Output(UInt(WORD_LEN.W))
-    val rs2     = Output(UInt(WORD_LEN.W))
-    val immsb   = Output(UInt(WORD_LEN.W))
-    val rdAddr  = Output(UInt(5.W))
+    val exsel  = Output(EX())
+    val op1    = Output(UInt(WORD_LEN.W))
+    val op2    = Output(UInt(WORD_LEN.W))
+    val rs2    = Output(UInt(WORD_LEN.W))
+    val immsb  = Output(UInt(WORD_LEN.W))
+    val rdAddr = Output(UInt(5.W))
 
     // Control signals
     val halt   = Output(Bool())
