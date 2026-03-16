@@ -232,12 +232,10 @@ class Riscv32E_ID extends Module {
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
   val is_zero = (io.inst === 0.U)
   val is_ebreak = (io.inst === EBREAK)
-  val is_otherE = (io.inst === E) && (io.inst =/= ECALL) && (io.inst =/= EBREAK)
   val exc_code = MuxCase(1.U(8.W), Seq(  // 默认全零指令
       is_ebreak -> 0.U,  // EBREAK
       is_zero   -> 1.U,  // 全零指令
-      is_otherE -> 2.U,  // 其他E指令
-      is_unimpl -> 3.U,  // 未实现指令
+      is_unimpl -> 2.U,  // 未实现指令
     )
   )
   // 输出到 EBreak 模块
