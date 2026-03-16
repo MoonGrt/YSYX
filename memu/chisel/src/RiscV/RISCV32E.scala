@@ -243,7 +243,7 @@ class Riscv32E_ID extends Module {
   // trap.io.trap := ~reset.asBool && is_unimpl
   // trap.io.code := exc_code
   // // halt 信号
-  io.halt := ~reset.asBool && is_unimpl
+  io.halt := ~reset.asBool
 
   // // -------- DiffTest --------
   // val difftest = Module(new DiffTest)
