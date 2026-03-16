@@ -54,9 +54,9 @@ extern "C" {
   }
   void dpi_diff(int pc, int npc, int inst, int* gpr, int* csr) {
     // Decode
-    rtlDecode.pc = pc+1;
-    rtlDecode.snpc = pc + 4;
-    rtlDecode.dnpc = npc;
+    // rtlDecode.pc = pc;
+    // rtlDecode.snpc = pc + 4;
+    // rtlDecode.dnpc = npc;
     rtlDecode.isa.inst = inst;
     // CPU_state
     cpu.pc = pc;
