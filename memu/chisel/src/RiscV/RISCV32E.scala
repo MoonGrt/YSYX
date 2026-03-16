@@ -14,16 +14,14 @@ class Riscv32E_IF extends Module {
     val halt   = Input(Bool())  // halt 信号
     val bren   = Input(Bool())  // 跳转使能
     val braddr = Input(UInt(WORD_LEN.W))  // 跳转地址
-    val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
     val pc     = Output(UInt(WORD_LEN.W))  // 当前 PC 输出
   })
   val pc = RegInit("h80000000".U(WORD_LEN.W))
-  pc := MuxCase(io.npc, Seq(
+  pc := MuxCase(pc + 4.U, Seq(
     io.halt -> pc,
     io.bren -> io.braddr,
   ))
   io.pc  := pc
-  io.npc := pc + 4.U
 }
 
 // ---------------------------
@@ -367,7 +365,7 @@ class Riscv32E extends Module {
   val difftest = Module(new DiffTest)
   difftest.io.clk  := clock
   difftest.io.pc   := ifStage.io.pc
-  difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
+  difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.pc + 4.U)
   difftest.io.inst := idStage.io.inst
   for (i <- 0 until CSR_NUM) {
     difftest.io.csr(i) := idStage.io.csrOut(i)
