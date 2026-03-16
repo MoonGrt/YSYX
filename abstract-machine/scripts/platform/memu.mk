@@ -12,9 +12,9 @@ CFLAGS    += -I$(AM_HOME)/am/src/platform/nemu/include
 LDSCRIPTS += $(AM_HOME)/scripts/linker.ld
 LDFLAGS   += --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start
-MEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/memu-log.txt
-MEMUFLAGS += -f $(shell dirname $(IMAGE).elf)/memu-ftrace.txt
-MEMUFLAGS += -e $(IMAGE).elf
+MEMUFLAGS += --log=$(shell dirname $(IMAGE).elf)/memu-log.txt
+MEMUFLAGS += --ftrace=$(shell dirname $(IMAGE).elf)/memu-ftrace.txt
+MEMUFLAGS += --elf=$(IMAGE).elf
 
 MAINARGS_MAX_LEN = 64
 MAINARGS_PLACEHOLDER = the_insert-arg_rule_in_Makefile_will_insert_mainargs_here
