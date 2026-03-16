@@ -222,6 +222,40 @@ class Riscv32E_ID extends Module {
     ))
   }
 
+  // // -------- 异常处理 --------
+  // val trap = Module(new EBreak)
+  // // 定义异常编码规则
+  // // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
+  // val impl_inst = Riscv32E_IMPLED.filterNot(inst =>
+  //   inst == E || inst == EBREAK
+  // )
+  // val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
+  // val is_zero = (io.inst === 0.U)
+  // val is_ebreak = (io.inst === EBREAK)
+  // val exc_code = MuxCase(1.U(8.W), Seq(  // 默认全零指令
+  //     is_ebreak -> 0.U,  // EBREAK
+  //     is_zero   -> 1.U,  // 全零指令
+  //     is_unimpl -> 2.U,  // 未实现指令
+  //   )
+  // )
+  // // 输出到 EBreak 模块
+  // trap.io.clk  := clock
+  // trap.io.trap := ~reset.asBool && is_unimpl
+  // trap.io.code := exc_code
+  // // halt 信号
+  io.halt := ~reset.asBool && is_unimpl
+
+  // // -------- DiffTest --------
+  // val difftest = Module(new DiffTest)
+  // difftest.io.clk  := clock
+  // difftest.io.pc   := io.npc
+  // difftest.io.inst := io.inst
+  // for (i <- 0 until CSR_NUM) {
+  //   difftest.io.csr(i) := CSR(i)
+  // }
+  // for (i <- 0 until GPR_NUM) {
+  //   difftest.io.gpr(i) := GPR(i)
+  // }
 }
 
 // ---------------------------
