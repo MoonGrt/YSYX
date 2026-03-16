@@ -26,6 +26,84 @@ class Riscv32E_IF extends Module {
 // ---------------------------
 // ID 模块：Instruction Decode + GPR
 // ---------------------------
+class CSRFile extends Module {
+  val io = IO(new Bundle {
+    val pc        = Input(UInt(WORD_LEN.W))
+    val csr_addr  = Input(UInt(12.W))
+    val csr_cmd   = Input(UInt(3.W))  // CSRS.W / S / C / E / MRET
+    val op1       = Input(UInt(WORD_LEN.W))
+    val rdata     = Output(UInt(WORD_LEN.W))
+    val trapVec   = Output(UInt(WORD_LEN.W))  // mtvec
+    val mepc      = Output(UInt(WORD_LEN.W))
+    val csrOut    = Output(Vec(CSR_NUM, UInt(WORD_LEN.W)))
+  })
+
+  val CSR = RegInit(VecInit(Seq.fill(CSR_NUM)(0.U(WORD_LEN.W))))
+
+  val CSR_MSTATUS = 0.U
+  val CSR_MEPC    = 1.U
+  val CSR_MCAUSE  = 2.U
+  val CSR_MTVEC   = 3.U
+  val CSR_MCYCLE  = 4.U
+  val CSR_MCYCLEH = 5.U
+  val CSR_MVENDOR = 6.U
+  val CSR_MARCHID = 7.U
+  val csr_id = MuxLookup(io.csr_addr, 0.U)(Seq(
+    0x300.U -> 0.U,
+    0x341.U -> 1.U,
+    0x342.U -> 2.U,
+    0x305.U -> 3.U,
+    0xB00.U -> 4.U,
+    0xB80.U -> 5.U,
+    0xF11.U -> 6.U,
+    0xF12.U -> 7.U,
+  ))
+  // cycle auto increment
+  val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
+  CSR(CSR_MCYCLE)  := cycle64(31,0)
+  CSR(CSR_MCYCLEH) := cycle64(63,32)
+  CSR(CSR_MVENDOR) := 0x79737978.U
+  CSR(CSR_MARCHID) := 0x018CE26E.U
+  io.rdata := CSR(csr_id)
+  io.trapVec := CSR(CSR_MTVEC)
+  io.mepc    := CSR(CSR_MEPC)
+  val csr_wen = io.csr_cmd.isOneOf(CSRS.W, CSRS.S, CSRS.C)
+  when(csr_wen) {
+    CSR(csr_id) := MuxLookup(io.csr_cmd, io.op1)(Seq(
+      CSRS.W -> io.op1,
+      CSRS.S -> (CSR(csr_id) | io.op1),
+      CSRS.C -> (CSR(csr_id) & ~io.op1),
+    ))
+  }
+  when(io.csr_cmd === CSRS.E) {
+    CSR(CSR_MSTATUS) := 0x00001800.U
+    CSR(CSR_MEPC)    := io.pc
+    CSR(CSR_MCAUSE)  := 11.U
+  }
+  when(io.csr_cmd === CSRS.MRET) {
+    CSR(CSR_MSTATUS) := 0x00000080.U
+  }
+  io.csrOut := CSR
+}
+class GPRFile extends Module {
+  val io = IO(new Bundle {
+    val rs1    = Input(UInt(5.W))
+    val rs2    = Input(UInt(5.W))
+    val rd     = Input(UInt(5.W))
+    val wen    = Input(Bool())
+    val wdata  = Input(UInt(WORD_LEN.W))
+    val rdata1 = Output(UInt(WORD_LEN.W))
+    val rdata2 = Output(UInt(WORD_LEN.W))
+    val gprOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
+  })
+  val GPR = RegInit(VecInit(Seq.fill(GPR_NUM)(0.U(WORD_LEN.W))))
+  io.rdata1 := Mux(io.rs1 === 0.U, 0.U, GPR(io.rs1))
+  io.rdata2 := Mux(io.rs2 === 0.U, 0.U, GPR(io.rs2))
+  when(io.wen && io.rd =/= 0.U) {
+    GPR(io.rd) := io.wdata
+  }
+  io.gprOut := GPR
+}
 class Riscv32E_ID extends Module {
   val io = IO(new Bundle {
     val pc      = Input(UInt(WORD_LEN.W))
@@ -46,10 +124,6 @@ class Riscv32E_ID extends Module {
     // Control signals
     val halt   = Output(Bool())
     val memsel = Output(MEM())
-
-    // Diff
-    val csrOut = Output(Vec(CSR_NUM, UInt(WORD_LEN.W)))
-    val gprOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
   val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(io.inst,
@@ -109,8 +183,8 @@ class Riscv32E_ID extends Module {
   )
 
   // -------- 寄存器堆 --------
-  val CSR = RegInit(VecInit(Seq.fill(CSR_NUM)(0.U(WORD_LEN.W))))
-  val GPR = RegInit(VecInit(Seq.fill(GPR_NUM)(0.U(WORD_LEN.W))))
+  val gprFile = Module(new GPRFile)
+  val csrFile = Module(new CSRFile)
 
   // -------- 指令字段 --------
   val rd  = io.inst(11,7)
@@ -162,54 +236,16 @@ class Riscv32E_ID extends Module {
   // -------- WB功能 --------
   io.memsel := memsel
   // CSR
-  val CSR_MSTATUS = 0.U
-  val CSR_MEPC    = 1.U
-  val CSR_MCAUSE  = 2.U
-  val CSR_MTVEC   = 3.U
-  val CSR_MCYCLE  = 4.U
-  val CSR_MCYCLEH = 5.U
-  val CSR_MVENDOR = 6.U
-  val CSR_MARCHID = 7.U
-  val csr_addr = immi
-  val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
-    0x300.U -> 0.U,  // mstatus
-    0x341.U -> 1.U,  // mepc
-    0x342.U -> 2.U,  // mcause
-    0x305.U -> 3.U,  // mtvec
-    0xB00.U -> 4.U,  // mcycle
-    0xB80.U -> 5.U,  // mcycleh
-    0xF11.U -> 6.U,  // mvendorid
-    0xF12.U -> 7.U,  // marchid
-  ))
-  val cycle64 = Cat(CSR(CSR_MCYCLEH), CSR(CSR_MCYCLE)) + 1.U
-  CSR(CSR_MCYCLE)  := cycle64(31,0)
-  CSR(CSR_MCYCLEH) := cycle64(63,32)
-  CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
-  CSR(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
-  val csr_wen = csrsel.isOneOf(CSRS.W, CSRS.S, CSRS.C)
-  val csr_writable =
-    csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
-    csr_id === CSR_MTVEC || csr_id === CSR_MCYCLE || csr_id === CSR_MCYCLEH
-  when (~reset.asBool && csr_wen && csr_writable) {
-    CSR(csr_id) := MuxCase(io.op1, Seq(
-      (csrsel === CSRS.W) -> io.op1,
-      (csrsel === CSRS.S) -> (CSR(csr_id) | io.op1),
-      (csrsel === CSRS.C) -> (CSR(csr_id) & ~io.op1),
-  ))
-  }
-  when (~reset.asBool && csrsel === CSRS.E) {
-    // mstatus = 0x00001800
-    CSR(CSR_MSTATUS) := 0x00001800.U
-    // mepc = pc
-    CSR(CSR_MEPC)    := io.pc
-    // mcause = 11 (ECALL from M-mode)
-    CSR(CSR_MCAUSE)  := 11.U
-  }
-  when (~reset.asBool && csrsel === CSRS.MRET) {
-    // mstatus = 0x00000080
-    CSR(CSR_MSTATUS) := 0x00000080.U
-  }
+  csrFile.io.pc       := io.pc
+  csrFile.io.csr_addr := immi
+  csrFile.io.csr_cmd  := csrsel
+  csrFile.io.op1      := io.op1
+  
   // GPR
+  gprFile.io.rs1 := rs1
+  gprFile.io.rs2 := rs2
+  gprFile.io.rd  := rd
+  val gpr_wen = (wbsel =/= WB.NONE)
   val memData = MuxLookup(io.memsel, 0.U(WORD_LEN.W))(Seq(
     MEM.RW  -> io.memData,  // LW 直接写回
     MEM.RB  -> Cat(Fill(24, io.memData(7)), io.memData(7,0)),  // LB 符号扩展
@@ -217,18 +253,15 @@ class Riscv32E_ID extends Module {
     MEM.RBU -> Cat(0.U(24.W), io.memData(7,0)),  // LBU 零扩展
     MEM.RHU -> Cat(0.U(16.W), io.memData(15,0)),  // LHU 零扩展
   ))
-  when ((wbsel =/= WB.NONE) && (rd =/= 0.U)) {
-    GPR(rd) := MuxCase(0.U, Seq(
-      (wbsel === WB.PC ) -> (io.pc + 4.U),
-      (wbsel === WB.EX ) -> io.exData,
-      (wbsel === WB.MEM) -> memData,
-      (wbsel === WB.CSR) -> CSR(csr_id),
-    ))
-  }
-
-  // 输出 CSR & GPR
-  io.csrOut := CSR
-  io.gprOut := GPR
+  val wbData = MuxCase(0.U, Seq(
+    (wbsel === WB.PC ) -> (io.pc + 4.U),
+    (wbsel === WB.EX ) -> io.exData,
+    (wbsel === WB.MEM) -> memData,
+    (wbsel === WB.CSR) -> csrFile.io.rdata,
+  ))
+  gprFile.io.wen   := gpr_wen
+  gprFile.io.wdata := wbData
+  io.RS2 := gprFile.io.rdata2
 
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
