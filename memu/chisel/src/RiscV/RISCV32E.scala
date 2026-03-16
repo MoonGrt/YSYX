@@ -46,10 +46,6 @@ class Riscv32E_ID extends Module {
     // Control signals
     val halt   = Output(Bool())
     val memsel = Output(MEM())
-
-    // Diff
-    val csrOut = Output(Vec(CSR_NUM, UInt(WORD_LEN.W)))
-    val gprOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
   val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(io.inst,
@@ -225,10 +221,6 @@ class Riscv32E_ID extends Module {
       (wbsel === WB.CSR) -> CSR(csr_id),
     ))
   }
-
-  // 输出 CSR & GPR
-  io.csrOut := CSR
-  io.gprOut := GPR
 
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
