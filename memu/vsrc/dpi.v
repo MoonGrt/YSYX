@@ -9,7 +9,7 @@ module EBreak (
 endmodule
 
 import "DPI-C" function void dpi_diff(
-  input int pc, input int npc, input int inst,
+  input int pc, input int inst,
   input int gpr [0:31], input int csr [0:7]
 );
 module DiffTest (
