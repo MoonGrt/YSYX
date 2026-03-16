@@ -42,7 +42,7 @@ class Riscv32E_ID extends Module {
     val exsel  = Output(EX())
     val op1    = Output(UInt(WORD_LEN.W))
     val op2    = Output(UInt(WORD_LEN.W))
-    val rs2    = Output(UInt(WORD_LEN.W))
+    val RS2    = Output(UInt(WORD_LEN.W))
     val immsb  = Output(UInt(WORD_LEN.W))
     val rdAddr = Output(UInt(5.W))
 
@@ -142,7 +142,7 @@ class Riscv32E_ID extends Module {
   // -------- EX功能 --------
   io.exsel := exsel
   io.immsb := immsb
-  io.rs2 := GPR(rs2)
+  io.RS2 := GPR(rs2)
   // Determine 1st operand data signal
   io.op1 := MuxCase(0.U(32.W), Seq(
     (op1sel === OP1.RS1) -> GPR(rs1),
@@ -364,7 +364,7 @@ class Riscv32E extends Module {
   io.mem_re    := !reset.asBool && memType.isOneOf(MEM.RW, MEM.RH, MEM.RB, MEM.RHU, MEM.RBU)
   io.mem_we    := !reset.asBool && memType.isOneOf(MEM.WW, MEM.WH, MEM.WB)
   io.mem_addr  := exStage.io.aluout
-  io.mem_wdata := idStage.io.rs2
+  io.mem_wdata := idStage.io.RS2
   io.mem_len   := Mux(memType.isOneOf(MEM.WB, MEM.RB, MEM.RBU), 1.U,
                   Mux(memType.isOneOf(MEM.WH, MEM.RH, MEM.RHU), 2.U, 4.U))
 
