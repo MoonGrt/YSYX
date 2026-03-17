@@ -64,11 +64,11 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 
 void trace_inst(word_t pc, uint32_t inst);
 static void exec_once(Decode *s, vaddr_t pc) {
-  printf("exec_once: pc = " FMT_WORD "\n", pc);
+  printf("exec_once: pc = " FMT_WORD "\n", s->pc);
   s->pc = pc;
   s->snpc = pc;
   isa_exec_once(s);
-  printf("exec_once: pc = " FMT_WORD "\n", pc);
+  printf("exec_once: pc = " FMT_WORD "\n", s->pc);
   cpu.pc = s->dnpc;
 #ifdef CONFIG_ITRACE
   IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
@@ -90,7 +90,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   space_len = space_len * 3 + 1;
   memset(p, ' ', space_len);
   p += space_len;
-  printf("exec_once: pc = " FMT_WORD "\n", pc);
+  printf("exec_once: pc = " FMT_WORD "\n", s->pc);
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
     MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst, ilen);
