@@ -56,7 +56,6 @@ extern "C" {
     // Decode
     rtlDecode.dnpc = pc;
     rtlDecode.isa.inst = inst;
-    printf("Decode: pc=%08x inst=%08x\n", pc, inst);
     // CPU_state
     cpu.pc = pc;
     cpu.csr.mstatus = csr[0];
