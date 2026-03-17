@@ -93,7 +93,6 @@ void check_hit(char ch) {
   }
 }
 
-
 void video_init() {
   screen_w = io_read(AM_GPU_CONFIG).width;
   screen_h = io_read(AM_GPU_CONFIG).height;
