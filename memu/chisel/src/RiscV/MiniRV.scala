@@ -225,7 +225,8 @@ class MiniRV extends Module {
   // DiffTest
   val difftest = Module(new DiffTest)
   difftest.io.clk  := clock
-  difftest.io.pc   := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
+  difftest.io.pc   := ifStage.io.pc
+  difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
   difftest.io.inst := idStage.io.inst
   for (i <- 0 until CSR_NUM) {
     difftest.io.csr(i) := 0.U(WORD_LEN.W)  // 未实现 CSR

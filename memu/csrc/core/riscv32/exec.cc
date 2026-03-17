@@ -52,9 +52,11 @@ extern "C" {
     if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
     IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   }
-  void dpi_diff(int pc, int inst, int* gpr, int* csr) {
+  void dpi_diff(int pc, int npc, int inst, int* gpr, int* csr) {
     // Decode
-    rtlDecode.dnpc = pc;
+    rtlDecode.pc = pc;
+    rtlDecode.snpc = pc + 4;
+    rtlDecode.dnpc = npc;
     rtlDecode.isa.inst = inst;
     // CPU_state
     cpu.pc = pc;
