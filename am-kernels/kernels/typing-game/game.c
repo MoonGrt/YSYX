@@ -73,7 +73,7 @@ void render() {
       io_write(AM_GPU_FBDRAW, c->x, c->y, texture[col][c->ch - 'A'], CHAR_W, CHAR_H, false);
     }
   }
-  // io_write(AM_GPU_FBDRAW, 0, 0, NULL, 0, 0, true);
+  io_write(AM_GPU_FBDRAW, 0, 0, NULL, 0, 0, true);
   for (int i = 0; i < 40; i++) putch('\b');
   printf("Hit: %d; Miss: %d; Wrong: %d", hit, miss, wrong);
 }
@@ -105,13 +105,14 @@ void video_init() {
     io_write(AM_GPU_FBDRAW, 0, y, blank_line, screen_w, 1, false);
   for (int ch = 0; ch < 26; ch++) {
     char *c = &font[CHAR_H * ch];
-    for (int i = 0, y = 0; y < CHAR_H; y++)
+    for (int i = 0, y = 0; y < CHAR_H; y++) {
       for (int x = 0; x < CHAR_W; x++, i++) {
         int t = (c[y] >> (CHAR_W - x - 1)) & 1;
         texture[WHITE][ch][i] = t ? COL_WHITE : COL_PURPLE;
         texture[GREEN][ch][i] = t ? COL_GREEN : COL_PURPLE;
         texture[RED  ][ch][i] = t ? COL_RED   : COL_PURPLE;
       }
+    }
   }
 }
 
