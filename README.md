@@ -154,7 +154,10 @@ while(1)
 
 将函数展开：
 ```c
-
+uint64_t t = io_read(AM_TIMER_UPTIME).us;
+uint64_t t = ({ AM_TIMER_UPTIME_T __io_param; ioe_read(AM_TIMER_UPTIME, &__io_param); __io_param; }).us;
+io_write(AM_GPU_FBDRAW, x[i], y[i], blank, CHAR_W, CHAR_H, false);
+({ AM_GPU_FBDRAW_T __io_param = (AM_GPU_FBDRAW_T) { x[i], y[i], blank, 8, 16, 0 }; ioe_write(AM_GPU_FBDRAW, &__io_param); });
 ```
 
 3. 优化LiteNES
