@@ -162,6 +162,12 @@ image-dep: $(IMAGE).elf
 force:
 .PHONY: force
 
+### Preprocess all C sources
+preprocess: $(addprefix $(DST_DIR)/, $(addsuffix .i, $(basename $(SRCS))))
+	@echo $(SRCS)
+	@echo "# Preprocessing done"
+.PHONY: preprocess
+
 ### Clean a single project (remove `build/`)
 clean:
 	rm -rf Makefile.html $(WORK_DIR)/build/
