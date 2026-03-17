@@ -66,9 +66,7 @@ void trace_inst(word_t pc, uint32_t inst);
 static void exec_once(Decode *s, vaddr_t pc) {
   s->pc = pc;
   s->snpc = pc;
-  printf("exec_once: pc = " FMT_WORD ", dnpc = " FMT_WORD ", inst = " FMT_WORD "\n", s->pc, s->dnpc, s->isa.inst);
   isa_exec_once(s);
-  printf("exec_once: pc = " FMT_WORD ", dnpc = " FMT_WORD ", inst = " FMT_WORD "\n", s->pc, s->dnpc, s->isa.inst);
   cpu.pc = s->dnpc;
 #ifdef CONFIG_ITRACE
   IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
