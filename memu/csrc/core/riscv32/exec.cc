@@ -7,16 +7,16 @@
 #include <device/mmio.h>
 
 #include <verilated.h>
-#include <verilated_vcd_c.h>
+#include <verilated_fst_c.h>
 
 #ifdef CONFIG_CORE_minirv
 #include "VMiniRVTOP.h"
 VMiniRVTOP *top = new VMiniRVTOP;
-VerilatedVcdC *tfp = new VerilatedVcdC;
+VerilatedFstC *tfp = new VerilatedFstC;
 #elif  CONFIG_CORE_riscv32e
 #include "VRiscv32ETOP.h"
 VRiscv32ETOP *top = new VRiscv32ETOP;
-VerilatedVcdC *tfp = new VerilatedVcdC;
+VerilatedFstC *tfp = new VerilatedFstC;
 #elif  CONFIG_CORE_riscv32
 #elif  CONFIG_CORE_riscv64
 #endif
