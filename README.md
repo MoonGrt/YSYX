@@ -255,24 +255,23 @@ readelf -x .rodata hello
 `cpu-tests/Makefile`
 ```mermaid
 sequenceDiagram
-    autonumber
-    participant User as User
-    participant CPU as cpu-tests/Makefile
-    participant Tmp as Makefile.<test>
-    participant AM as $(AM_HOME)/Makefile
-    participant Arch as Arch/Platform MK (riscv32.mk / nemu.mk)
-    participant NEMU as NEMU Simulator
-
-    User->>CPU: make run / make all
-    CPU->>Tmp: 生成临时 Makefile.<test>
-    Tmp->>AM: include $(AM_HOME)/Makefile
-    AM->>Arch: 引入 rv32.mk / nemu.mk
-    Arch->>NEMU: 构建 ELF → 镜像 → 执行模拟器
-    NEMU-->>Arch: 返回执行状态
-    Arch-->>AM: 返回状态
-    AM-->>Tmp: 返回状态
-    Tmp-->>CPU: PASS / FAIL 写入 $(RESULT)
-    CPU->>User: 输出测试结果
+  autonumber
+  participant User as User
+  participant CPU as cpu-tests/Makefile
+  participant Tmp as Makefile.<test>
+  participant AM as $(AM_HOME)/Makefile
+  participant Arch as Arch/Platform MK (riscv32.mk / nemu.mk)
+  participant NEMU as NEMU Simulator
+  User->>CPU: make run / make all
+  CPU->>Tmp: 生成临时 Makefile.<test>
+  Tmp->>AM: include $(AM_HOME)/Makefile
+  AM->>Arch: 引入 rv32.mk / nemu.mk
+  Arch->>NEMU: 构建 ELF → 镜像 → 执行模拟器
+  NEMU-->>Arch: 返回执行状态
+  Arch-->>AM: 返回状态
+  AM-->>Tmp: 返回状态
+  Tmp-->>CPU: PASS / FAIL 写入 $(RESULT)
+  CPU->>User: 输出测试结果
 ```
 
 
