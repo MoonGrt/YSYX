@@ -52,7 +52,7 @@ $(VLIB): $(RTL_OBJS)
 	  --top-module $(VTOP) -O3 --Mdir $(VBUILD)
 	@echo "+ AR $@"
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
-	ar rcs $@ $(VBUILD)/*.o
+	ar rcs $@ $(VBUILD)/*.o -lz
 
 rtl: $(RTL_OBJS)
 
