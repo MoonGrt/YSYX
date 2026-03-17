@@ -72,10 +72,6 @@ wave: $(WAVE_FILE)
 clean:
 	-rm -rf $(BUILD_DIR)
 
-clean-all:
-	-rm -rf $(RTL_DIR)
-	-rm -rf $(BUILD_DIR)
-
-.PHONY: sim run gdb wave
+.PHONY: sim run gdb wave clean
 
 -include ../Makefile
