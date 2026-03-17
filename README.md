@@ -274,6 +274,18 @@ sequenceDiagram
   CPU->>User: 输出测试结果
 ```
 
-
-
-
+2. Typing-Game 程序流程图
+```mermaid
+%% 用户视角：从按键到命中
+flowchart LR
+  A[用户按下键盘按键] --> B[键盘硬件产生事件]
+  B --> C[NEMU/NPC/AM接口捕获按键]
+  C --> D[游戏程序读取键码]
+  D --> E[check_hit判断是否命中]
+  E --> F{命中?}
+  F -- 否 --> H[更新 wrong 计数]
+  F -- 是 --> G[更新 hit 计数]
+  G --> I[字符速度反向 / 消失]
+  I --> K[render更新帧缓冲]
+  K --> L[用户看到命中效果]
+```

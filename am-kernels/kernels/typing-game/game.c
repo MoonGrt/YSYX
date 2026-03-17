@@ -21,10 +21,6 @@ struct character {
 int screen_w, screen_h, hit, miss, wrong;
 uint32_t texture[3][26][CHAR_W * CHAR_H], blank[CHAR_W * CHAR_H];
 
-int min(int a, int b) {
-  return (a < b) ? a : b;
-}
-
 int randint(int l, int r) {
   return l + (rand() & 0x7fffffff) % (r - l + 1);
 }
