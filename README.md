@@ -95,7 +95,7 @@ int main() {
 
 #### NJU PA2.3
 
-1. volatile关键字
+1. volatile 关键字
 volatile关键字的作用十分特别, 它的作用是避免编译器对相应代码进行优化.`volatile` 主要用于 **硬件 / OS / 并发编程**. 典型场景：
     1.1 硬件寄存器
     ```c
@@ -132,21 +132,37 @@ while(1)
 ```
 程序 **永远读不到 READY**。
 
-`volatile` 的本质是：
+> `volatile` 的本质是：
 > 告诉编译器：
 > **这个内存可能被程序之外的东西改变（硬件 / 中断 / DMA）**
 > **禁止优化访问**
-否则编译器会：
-* 缓存值
-* 删除读
-* 删除写
-* 合并写
-导致 **设备驱动错误**。
+> 否则编译器会： * 缓存值 * 删除读 * 删除写 * 合并写. 导致 **设备驱动错误**。
 
-2. 优化LiteNES
+2. 输入输出 abstract-machine
+
+```c
+#define io_read(reg) \
+  ({ reg##_T __io_param; \
+     ioe_read(reg, &__io_param); \
+     __io_param; })
+#define io_write(reg, ...) \
+  ({ reg##_T __io_param = (reg##_T) { __VA_ARGS__ }; \
+     ioe_write(reg, &__io_param); })
+```
+
+`__VA_ARGS__` 是 C 语言宏中的可变参数占位符。意思是：宏定义时，你可以写不定数量的参数，这些参数在宏展开时会替换 `__VA_ARGS__`。
+
+展开后等价于：
+```c
+
+io_write(AM_GPU_FBDRAW, 0, y, blank_line, screen_w, 1, false);
+AM_GPU_FBDRAW_T __io_param = (AM_GPU_FBDRAW_T){0, y, blank_line, screen_w, 1, false};
+```
+
+3. 优化LiteNES
 TODO:
 
-3. 在NEMU上运行NEMU
+4. 在NEMU上运行NEMU
 进行如下的工作:
   1. 保存NEMU当前的配置选项
   2. 加载一个新的配置文件, 将NEMU编译到AM上, 并把mainargs指示bin文件作为这个NEMU的镜像文件
