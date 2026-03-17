@@ -49,14 +49,10 @@ void game_logic_update(int frame) {
     struct character *c = &chars[i];
     if (c->ch) {
       if (c->t > 0) {
-        if (--c->t == 0) {
-          c->ch = '\0';
-        }
+        if (--c->t == 0) c->ch = '\0';
       } else {
         c->y += c->v;
-        if (c->y < 0) {
-          c->ch = '\0';
-        }
+        if (c->y < 0) c->ch = '\0';
         if (c->y + CHAR_H >= screen_h) {
           miss++;
           c->v = 0;
@@ -70,11 +66,9 @@ void game_logic_update(int frame) {
 
 void render() {
   static int x[NCHAR], y[NCHAR], n = 0;
-
   for (int i = 0; i < n; i++) {
     io_write(AM_GPU_FBDRAW, x[i], y[i], blank, CHAR_W, CHAR_H, false);
   }
-
   n = 0;
   for (int i = 0; i < LENGTH(chars); i++) {
     struct character *c = &chars[i];
@@ -93,13 +87,11 @@ void check_hit(char ch) {
   int m = -1;
   for (int i = 0; i < LENGTH(chars); i++) {
     struct character *c = &chars[i];
-    if (ch == c->ch && c->v > 0 && (m < 0 || c->y > chars[m].y)) {
+    if (ch == c->ch && c->v > 0 && (m < 0 || c->y > chars[m].y))
       m = i;
-    }
   }
-  if (m == -1) {
-    wrong++;
-  } else {
+  if (m == -1) wrong++;
+  else {
     hit++;
     chars[m].v = -(screen_h - CHAR_H + 1) / (FPS);
   }
@@ -109,18 +101,14 @@ void check_hit(char ch) {
 void video_init() {
   screen_w = io_read(AM_GPU_CONFIG).width;
   screen_h = io_read(AM_GPU_CONFIG).height;
-
   extern char font[];
   for (int i = 0; i < CHAR_W * CHAR_H; i++)
     blank[i] = COL_PURPLE;
-
   uint32_t blank_line[screen_w];
   for (int i = 0; i < screen_w; i++)
     blank_line[i] = COL_PURPLE;
-
   for (int y = 0; y < screen_h; y ++)
     io_write(AM_GPU_FBDRAW, 0, y, blank_line, screen_w, 1, false);
-
   for (int ch = 0; ch < 26; ch++) {
     char *c = &font[CHAR_H * ch];
     for (int i = 0, y = 0; y < CHAR_H; y++)
@@ -146,21 +134,16 @@ char lut[256] = {
 int main() {
   ioe_init();
   video_init();
-
   panic_on(!io_read(AM_TIMER_CONFIG).present, "requires timer");
   panic_on(!io_read(AM_INPUT_CONFIG).present, "requires keyboard");
-
   printf("Type 'ESC' to exit\n");
-
   int current = 0, rendered = 0;
   uint64_t t0 = io_read(AM_TIMER_UPTIME).us;
   while (1) {
     int frames = (io_read(AM_TIMER_UPTIME).us - t0) / (1000000 / FPS);
-
     for (; current < frames; current++) {
       game_logic_update(current);
     }
-
     while (1) {
       AM_INPUT_KEYBRD_T ev = io_read(AM_INPUT_KEYBRD);
       if (ev.keycode == AM_KEY_NONE) break;
@@ -169,7 +152,6 @@ int main() {
         check_hit(lut[ev.keycode]);
       }
     };
-
     if (current > rendered) {
       render();
       rendered = current;
