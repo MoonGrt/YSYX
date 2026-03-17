@@ -4,6 +4,7 @@
 ### D1 支持RV32IM的NEMU
 
 #### NJU PA2.1: 实现更多的指令, 在NEMU中运行大部分cpu-tests
+
 > 类似 minirvEMU
 
 1. Macro expansion
@@ -217,7 +218,7 @@ NEMU 中有多少个 dummy 实体： 等于包含 common.h/debug.h 的 .c 文件
 
 ---
 
-## D阶段
+## C阶段
 ### C1 工具和基础设施
 
 1.. 什么才算是一个 Symbol？
@@ -246,3 +247,34 @@ readelf -x .rodata hello
 ### C3 调试技巧
 ### C4 ELF文件和链接
 ### C5 异常处理和RT-Thread
+
+### C阶段答辩
+
+1. Makefile 调用时序图
+
+`cpu-tests/Makefile`
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User as User
+    participant CPU as cpu-tests/Makefile
+    participant Tmp as Makefile.<test>
+    participant AM as $(AM_HOME)/Makefile
+    participant Arch as Arch/Platform MK (riscv32.mk / nemu.mk)
+    participant NEMU as NEMU Simulator
+
+    User->>CPU: make run / make all
+    CPU->>Tmp: 生成临时 Makefile.<test>
+    Tmp->>AM: include $(AM_HOME)/Makefile
+    AM->>Arch: 引入 rv32.mk / nemu.mk
+    Arch->>NEMU: 构建 ELF → 镜像 → 执行模拟器
+    NEMU-->>Arch: 返回执行状态
+    Arch-->>AM: 返回状态
+    AM-->>Tmp: 返回状态
+    Tmp-->>CPU: PASS / FAIL 写入 $(RESULT)
+    CPU->>User: 输出测试结果
+```
+
+
+
+
