@@ -12,9 +12,9 @@ CFLAGS    += -I$(AM_HOME)/am/src/platform/nemu/include
 LDSCRIPTS += $(AM_HOME)/scripts/linker.ld
 LDFLAGS   += --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start
-NEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/memu-log.txt
-NEMUFLAGS += -f $(shell dirname $(IMAGE).elf)/memu-ftrace.txt
-NEMUFLAGS += -e $(IMAGE).elf
+MEMUFLAGS += -l $(shell dirname $(IMAGE).elf)/memu-log.txt
+MEMUFLAGS += -f $(shell dirname $(IMAGE).elf)/memu-ftrace.txt
+MEMUFLAGS += -e $(IMAGE).elf
 
 MAINARGS_MAX_LEN = 64
 MAINARGS_PLACEHOLDER = the_insert-arg_rule_in_Makefile_will_insert_mainargs_here
@@ -29,15 +29,15 @@ image: image-dep
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
 run: insert-arg
-	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) run ARGS="$(NEMUFLAGS)" IMG=$(IMAGE).bin
+	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) run ARGS="$(MEMUFLAGS)" IMG=$(IMAGE).bin
 
 run-sdb: insert-arg
-	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) run-sdb ARGS="$(NEMUFLAGS)" IMG=$(IMAGE).bin
+	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) run-sdb ARGS="$(MEMUFLAGS)" IMG=$(IMAGE).bin
 
 wave: run
 	$(MAKE) -C $(MEMU_HOME) wave
 
 gdb: insert-arg
-	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) gdb ARGS="$(NEMUFLAGS)" IMG=$(IMAGE).bin
+	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) gdb ARGS="$(MEMUFLAGS)" IMG=$(IMAGE).bin
 
 .PHONY: insert-arg
