@@ -62,9 +62,8 @@ void game_logic_update(int frame) {
 
 void render() {
   static int x[NCHAR], y[NCHAR], n = 0;
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++)
     io_write(AM_GPU_FBDRAW, x[i], y[i], blank, CHAR_W, CHAR_H, false);
-  }
   n = 0;
   for (int i = 0; i < LENGTH(chars); i++) {
     struct character *c = &chars[i];
