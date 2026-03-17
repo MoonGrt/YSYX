@@ -33,11 +33,11 @@ MEMU_EXEC := $(BINARY) $(ARGS)
 run-env: $(BINARY) $(DIFF_REF_SO)
 
 run: run-env
-	$(call git_commit, "run NEMU batch mode")
+	$(call git_commit, "run MEMU batch mode")
 	$(MEMU_EXEC) -b $(IMG)
 
 run-sdb: run-env
-	$(call git_commit, "run NEMU")
+	$(call git_commit, "run MEMU")
 	$(MEMU_EXEC) $(IMG)
 
 gdb: run-env

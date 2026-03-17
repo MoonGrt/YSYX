@@ -95,6 +95,11 @@ LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS))
 
 ## 5. Compilation Rules
 
+## Rule (preprocess): a single `.c` -> `.i` (preprocessed C file)
+$(DST_DIR)/%.i: %.c
+	@mkdir -p $(dir $@) && echo + CPP $<
+	@$(CC) -std=gnu11 $(CFLAGS) -E -o $@ $(realpath $<)
+
 ### Rule (compile): a single `.c` -> `.o` (gcc)
 $(DST_DIR)/%.o: %.c
 	@mkdir -p $(dir $@) && echo + CC $<

@@ -152,11 +152,9 @@ while(1)
 
 `__VA_ARGS__` 是 C 语言宏中的可变参数占位符。意思是：宏定义时，你可以写不定数量的参数，这些参数在宏展开时会替换 `__VA_ARGS__`。
 
-展开后等价于：
+将函数展开：
 ```c
 
-io_write(AM_GPU_FBDRAW, 0, y, blank_line, screen_w, 1, false);
-AM_GPU_FBDRAW_T __io_param = (AM_GPU_FBDRAW_T){0, y, blank_line, screen_w, 1, false};
 ```
 
 3. 优化LiteNES
