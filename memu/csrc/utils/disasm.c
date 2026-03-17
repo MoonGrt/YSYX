@@ -61,8 +61,6 @@ void init_disasm() {
 }
 
 void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte) {
-uint32_t inst_val = *(uint32_t *)code;
-printf("size: %d, pc: %lx, code: 0x%08x, nbyte: %d\n", size, pc, inst_val, nbyte);
   cs_insn *insn;
   size_t count = cs_disasm_dl(handle, code, nbyte, pc, 0, &insn);
   assert(count == 1);
