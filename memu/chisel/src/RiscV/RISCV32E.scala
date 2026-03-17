@@ -165,9 +165,8 @@ class Riscv32E_ID extends Module {
   val CSR_MCYCLE  = 4.U
   val CSR_MCYCLEH = 5.U
   val CSR_MVENDOR = 6.U
-  val CSR_MARCHID = 7.U
-  val csr_addr = immi
-  val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
+  val CSR_MARCH   = 7.U
+  val csr_id = MuxLookup(immi, 0.U)(Seq(
     0x300.U -> 0.U,  // mstatus
     0x341.U -> 1.U,  // mepc
     0x342.U -> 2.U,  // mcause
@@ -181,7 +180,7 @@ class Riscv32E_ID extends Module {
   CSR(CSR_MCYCLE)  := cycle64(31,0)
   CSR(CSR_MCYCLEH) := cycle64(63,32)
   CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
-  CSR(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
+  CSR(CSR_MARCH)   := 0x018CE26E.U  // moongrt - 26010030
   val csr_wen = csrsel.isOneOf(CSRS.W, CSRS.S, CSRS.C)
   val csr_writable =
     csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
@@ -191,7 +190,7 @@ class Riscv32E_ID extends Module {
       (csrsel === CSRS.W) -> io.op1,
       (csrsel === CSRS.S) -> (CSR(csr_id) | io.op1),
       (csrsel === CSRS.C) -> (CSR(csr_id) & ~io.op1),
-  ))
+    ))
   }
   when (~reset.asBool && csrsel === CSRS.E) {
     // mstatus = 0x00001800
@@ -222,40 +221,40 @@ class Riscv32E_ID extends Module {
     ))
   }
 
-  // // -------- 异常处理 --------
-  // val trap = Module(new EBreak)
-  // // 定义异常编码规则
-  // // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
-  // val impl_inst = Riscv32E_IMPLED.filterNot(inst =>
-  //   inst == E || inst == EBREAK
-  // )
-  // val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
-  // val is_zero = (io.inst === 0.U)
-  // val is_ebreak = (io.inst === EBREAK)
-  // val exc_code = MuxCase(1.U(8.W), Seq(  // 默认全零指令
-  //     is_ebreak -> 0.U,  // EBREAK
-  //     is_zero   -> 1.U,  // 全零指令
-  //     is_unimpl -> 2.U,  // 未实现指令
-  //   )
-  // )
-  // // 输出到 EBreak 模块
-  // trap.io.clk  := clock
-  // trap.io.trap := ~reset.asBool && is_unimpl
-  // trap.io.code := exc_code
-  // // halt 信号
-  io.halt := ~reset.asBool
+  // -------- 异常处理 --------
+  val trap = Module(new EBreak)
+  // 定义异常编码规则
+  // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
+  val impl_inst = Riscv32E_IMPLED.filterNot(inst =>
+    inst == E || inst == EBREAK
+  )
+  val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
+  val is_zero = (io.inst === 0.U)
+  val is_ebreak = (io.inst === EBREAK)
+  val exc_code = MuxCase(1.U(8.W), Seq(  // 默认全零指令
+      is_ebreak -> 0.U,  // EBREAK
+      is_zero   -> 1.U,  // 全零指令
+      is_unimpl -> 2.U,  // 未实现指令
+    )
+  )
+  // 输出到 EBreak 模块
+  trap.io.clk  := clock
+  trap.io.trap := ~reset.asBool && is_unimpl
+  trap.io.code := exc_code
+  // halt 信号
+  io.halt := ~reset.asBool && is_unimpl
 
-  // // -------- DiffTest --------
-  // val difftest = Module(new DiffTest)
-  // difftest.io.clk  := clock
-  // difftest.io.pc   := io.npc
-  // difftest.io.inst := io.inst
-  // for (i <- 0 until CSR_NUM) {
-  //   difftest.io.csr(i) := CSR(i)
-  // }
-  // for (i <- 0 until GPR_NUM) {
-  //   difftest.io.gpr(i) := GPR(i)
-  // }
+  // -------- DiffTest --------
+  val difftest = Module(new DiffTest)
+  difftest.io.clk  := clock
+  difftest.io.pc   := io.npc
+  difftest.io.inst := io.inst
+  for (i <- 0 until CSR_NUM) {
+    difftest.io.csr(i) := CSR(i)
+  }
+  for (i <- 0 until GPR_NUM) {
+    difftest.io.gpr(i) := GPR(i)
+  }
 }
 
 // ---------------------------
