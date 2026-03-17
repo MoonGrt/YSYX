@@ -294,7 +294,7 @@ sequenceDiagram
 2. Typing-Game 程序流程图
 ```mermaid
 %% 用户视角：从按键到命中
-flowchart LR
+flowchart TD
   A[用户按下键盘按键] --> B[键盘硬件产生事件]
   B --> C[NEMU/NPC/AM接口捕获按键]
   C --> D[游戏程序读取键码]
@@ -306,3 +306,13 @@ flowchart LR
   I --> K[render更新帧缓冲]
   K --> L[用户看到命中效果]
 ```
+
+%% 程序视角：事件处理到渲染
+init(ioe,gpu) → while(1) 主循环
+  → 计时 (AM_TIMER_UPTIME)
+  → game_logic_update() 更新字符状态
+  → 读取键盘 (AM_INPUT_KEYBRD)
+  → check_hit() 判断是否击中
+  → render() 绘制屏幕
+  → 循环执行，形成 30 FPS 的打字下落游戏。
+
