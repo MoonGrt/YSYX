@@ -18,6 +18,10 @@ VRiscv32ETOP *top = new VRiscv32ETOP;
 
 #ifdef CONFIG_WAVE
 #include <verilated.h>
+bool wave_enable() {
+  return MUXDEF(CONFIG_TRACE, (g_nr_guest_inst >= CONFIG_WAVE_START) &&
+         (g_nr_guest_inst <= CONFIG_WAVE_END), false);
+}
 #ifdef CONFIG_WAVE_VCD
 #include <verilated_vcd_c.h>
 VerilatedVcdC *tfp = new VerilatedVcdC;
