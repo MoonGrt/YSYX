@@ -176,91 +176,16 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     } while(0)
 
   ftrace_write("Storage class\t= "); 
-  // printf("class_map.val=%d, class_map.desc=%s\n", class_map[0].val, class_map[0].desc);
   PRINT_MAP(eh.e_ident[EI_CLASS], class_map, "INVALID CLASS\n");
-
-  /* Storage capacity class */
-  ftrace_write("Storage class\t= ");
-  switch(eh.e_ident[EI_CLASS]) {
-    case ELFCLASS32:
-      ftrace_write("32-bit objects\n"); break;
-    case ELFCLASS64:
-      ftrace_write("64-bit objects\n"); break;
-    default:
-      ftrace_write("INVALID CLASS\n"); break;
-  }
-  /* Data Format */
   ftrace_write("Data format\t= ");
-  switch(eh.e_ident[EI_DATA]) {
-    case ELFDATA2LSB:
-      ftrace_write("2's complement, little endian\n"); break;
-    case ELFDATA2MSB:
-      ftrace_write("2's complement, big endian\n"); break;
-    default:
-      ftrace_write("INVALID Format\n"); break;
-  }
-  /* OS ABI */
+  PRINT_MAP(eh.e_ident[EI_DATA], data_map, "INVALID Format\n");
   ftrace_write("OS ABI\t\t= ");
-  switch(eh.e_ident[EI_OSABI]) {
-    case ELFOSABI_SYSV:
-      ftrace_write("UNIX System V ABI\n"); break;
-    case ELFOSABI_HPUX:
-      ftrace_write("HP-UX\n"); break;
-    case ELFOSABI_NETBSD:
-      ftrace_write("NetBSD\n"); break;
-    case ELFOSABI_LINUX:
-      ftrace_write("Linux\n"); break;
-    case ELFOSABI_SOLARIS:
-      ftrace_write("Sun Solaris\n"); break;
-    case ELFOSABI_AIX:
-      ftrace_write("IBM AIX\n"); break;
-    case ELFOSABI_IRIX:
-      ftrace_write("SGI Irix\n"); break;
-    case ELFOSABI_FREEBSD:
-      ftrace_write("FreeBSD\n"); break;
-    case ELFOSABI_TRU64:
-      ftrace_write("Compaq TRU64 UNIX\n"); break;
-    case ELFOSABI_MODESTO:
-      ftrace_write("Novell Modesto\n"); break;
-    case ELFOSABI_OPENBSD:
-      ftrace_write("OpenBSD\n"); break;
-    case ELFOSABI_ARM_AEABI:
-      ftrace_write("ARM EABI\n"); break;
-    case ELFOSABI_ARM:
-      ftrace_write("ARM\n"); break;
-    case ELFOSABI_STANDALONE:
-      ftrace_write("Standalone (embedded) app\n"); break;
-    default:
-      ftrace_write("Unknown (0x%x)\n", eh.e_ident[EI_OSABI]); break;
-  }
-  /* ELF filetype */
+  PRINT_MAP(eh.e_ident[EI_OSABI], osabi_map, "Unknown (0x%x)\n");
   ftrace_write("Filetype \t= ");
-  switch(eh.e_type) {
-    case ET_NONE:
-      ftrace_write("N/A (0x0)\n"); break;
-    case ET_REL:
-      ftrace_write("Relocatable\n"); break;
-    case ET_EXEC:
-      ftrace_write("Executable\n"); break;
-    case ET_DYN:
-      ftrace_write("Shared Object\n"); break;
-    default:
-      ftrace_write("Unknown (0x%x)\n", eh.e_type); break;
-  }
-  /* ELF Machine-id */
+  PRINT_MAP(eh.e_type, type_map, "Unknown (0x%x)\n");
   ftrace_write("Machine\t\t= ");
-  switch(eh.e_machine) {
-    case EM_NONE:
-      ftrace_write("None (0x0)\n"); break;
-    case EM_386:
-      ftrace_write("INTEL x86 (0x%x)\n", EM_386); break;
-    case EM_X86_64:
-      ftrace_write("AMD x86_64 (0x%x)\n", EM_X86_64); break;
-    case EM_AARCH64:
-      ftrace_write("AARCH64 (0x%x)\n", EM_AARCH64); break;
-    default:
-      ftrace_write(" 0x%x\n", eh.e_machine); break;
-  }
+  PRINT_MAP(eh.e_machine, machine_map, "0x%x\n");
+
   /* Entry point */
   ftrace_write("Entry point\t= 0x%08lx\n", eh.e_entry);
   /* ELF header size in bytes */
