@@ -38,7 +38,14 @@ endef
 .clean_index:
 	rm -f $(WORK_INDEX)
 
+clean-all: 
+	$(MAKE) -C $(NEMU_HOME) clean
+	$(MAKE) -C $(MEMU_HOME) clean
+	$(MAKE) -C $(AM_HOME) clean-all
+	$(MAKE) -C $(AM_TEST_HOME) clean-all
+	$(MAKE) -C $(NPC_HOME) clean
+
 _default:
 	@echo "Please run 'make' under subprojects."
 
-.PHONY: .git_commit .clean_index _default
+.PHONY: .git_commit .clean_index .clean-all _default

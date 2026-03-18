@@ -14,16 +14,13 @@ class Riscv32E_IF extends Module {
     val halt   = Input(Bool())  // halt 信号
     val bren   = Input(Bool())  // 跳转使能
     val braddr = Input(UInt(WORD_LEN.W))  // 跳转地址
-    val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
     val pc     = Output(UInt(WORD_LEN.W))  // 当前 PC 输出
+    val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
   })
-  val pc = RegInit("h80000000".U(WORD_LEN.W))
-  pc := MuxCase(io.npc, Seq(
-    io.halt -> pc,
-    io.bren -> io.braddr,
-  ))
-  io.pc  := pc
-  io.npc := pc + 4.U
+  val pc = RegInit("h80000000".U)
+  io.npc := Mux(io.bren, io.braddr, pc + 4.U)  // next pc
+  pc := Mux(io.halt, pc, io.npc)
+  io.pc := pc
 }
 
 // ---------------------------
@@ -32,30 +29,23 @@ class Riscv32E_IF extends Module {
 class Riscv32E_ID extends Module {
   val io = IO(new Bundle {
     val pc      = Input(UInt(WORD_LEN.W))
+    val npc     = Input(UInt(WORD_LEN.W))
     val inst    = Input(UInt(WORD_LEN.W))
 
     // 写回
-    val wb_en   = Input(Bool())
-    val wb_rd   = Input(UInt(5.W))
-    val memData = Input(UInt(WORD_LEN.W))
     val exData  = Input(UInt(WORD_LEN.W))
+    val memData = Input(UInt(WORD_LEN.W))
 
     // 输出到 EX
-    val exsel   = Output(EX())
-    val op1     = Output(UInt(WORD_LEN.W))
-    val op2     = Output(UInt(WORD_LEN.W))
-    val immsb   = Output(UInt(WORD_LEN.W))
-    val rs2     = Output(UInt(WORD_LEN.W))
-    val rd_addr = Output(UInt(5.W))
+    val exsel = Output(EX())
+    val op1   = Output(UInt(WORD_LEN.W))
+    val op2   = Output(UInt(WORD_LEN.W))
+    val RS2   = Output(UInt(WORD_LEN.W))
+    val immsb = Output(UInt(WORD_LEN.W))
 
     // Control signals
     val halt   = Output(Bool())
     val memsel = Output(MEM())
-    val regWen = Output(Bool())
-
-    // Diff
-    val csrOut = Output(Vec(CSR_NUM, UInt(WORD_LEN.W)))
-    val gprOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
   })
 
   val List(op1sel, op2sel, exsel, wbsel, memsel, csrsel) = ListLookup(io.inst,
@@ -144,7 +134,7 @@ class Riscv32E_ID extends Module {
   // -------- EX功能 --------
   io.exsel := exsel
   io.immsb := immsb
-  io.rs2 := GPR(rs2)
+  io.RS2 := GPR(rs2)
   // Determine 1st operand data signal
   io.op1 := MuxCase(0.U(32.W), Seq(
     (op1sel === OP1.RS1) -> GPR(rs1),
@@ -175,9 +165,8 @@ class Riscv32E_ID extends Module {
   val CSR_MCYCLE  = 4.U
   val CSR_MCYCLEH = 5.U
   val CSR_MVENDOR = 6.U
-  val CSR_MARCHID = 7.U
-  val csr_addr = immi
-  val csr_id = MuxLookup(csr_addr, 0.U)(Seq(
+  val CSR_MARCH   = 7.U
+  val csr_id = MuxLookup(immi, 0.U)(Seq(
     0x300.U -> 0.U,  // mstatus
     0x341.U -> 1.U,  // mepc
     0x342.U -> 2.U,  // mcause
@@ -191,20 +180,17 @@ class Riscv32E_ID extends Module {
   CSR(CSR_MCYCLE)  := cycle64(31,0)
   CSR(CSR_MCYCLEH) := cycle64(63,32)
   CSR(CSR_MVENDOR) := 0x79737978.U  // ysyx
-  CSR(CSR_MARCHID) := 0x018CE26E.U  // moongrt - 26010030
-
-  val csr_old = CSR(csr_id)
-  val csr_new = MuxCase(io.op1, Seq(
-    (csrsel === CSRS.W) -> io.op1,
-    (csrsel === CSRS.S) -> (csr_old | io.op1),
-    (csrsel === CSRS.C) -> (csr_old & ~io.op1),
-  ))
+  CSR(CSR_MARCH)   := 0x018CE26E.U  // moongrt - 26010030
   val csr_wen = csrsel.isOneOf(CSRS.W, CSRS.S, CSRS.C)
   val csr_writable =
     csr_id === CSR_MSTATUS || csr_id === CSR_MEPC || csr_id === CSR_MCAUSE ||
     csr_id === CSR_MTVEC || csr_id === CSR_MCYCLE || csr_id === CSR_MCYCLEH
   when (~reset.asBool && csr_wen && csr_writable) {
-    CSR(csr_id) := csr_new
+    CSR(csr_id) := MuxCase(io.op1, Seq(
+      (csrsel === CSRS.W) -> io.op1,
+      (csrsel === CSRS.S) -> (CSR(csr_id) | io.op1),
+      (csrsel === CSRS.C) -> (CSR(csr_id) & ~io.op1),
+    ))
   }
   when (~reset.asBool && csrsel === CSRS.E) {
     // mstatus = 0x00001800
@@ -219,8 +205,6 @@ class Riscv32E_ID extends Module {
     CSR(CSR_MSTATUS) := 0x00000080.U
   }
   // GPR
-  io.rd_addr := rd
-  io.regWen  := wbsel =/= WB.NONE
   val memData = MuxLookup(io.memsel, 0.U(WORD_LEN.W))(Seq(
     MEM.RW  -> io.memData,  // LW 直接写回
     MEM.RB  -> Cat(Fill(24, io.memData(7)), io.memData(7,0)),  // LB 符号扩展
@@ -228,18 +212,14 @@ class Riscv32E_ID extends Module {
     MEM.RBU -> Cat(0.U(24.W), io.memData(7,0)),  // LBU 零扩展
     MEM.RHU -> Cat(0.U(16.W), io.memData(15,0)),  // LHU 零扩展
   ))
-  when (io.wb_en && io.wb_rd =/= 0.U) {
-    GPR(io.wb_rd) := MuxCase(0.U, Seq(
+  when ((wbsel =/= WB.NONE) && (rd =/= 0.U)) {
+    GPR(rd) := MuxCase(0.U, Seq(
       (wbsel === WB.PC ) -> (io.pc + 4.U),
       (wbsel === WB.EX ) -> io.exData,
       (wbsel === WB.MEM) -> memData,
-      (wbsel === WB.CSR) -> csr_old,
+      (wbsel === WB.CSR) -> CSR(csr_id),
     ))
   }
-
-  // 输出 CSR & GPR
-  io.csrOut := CSR
-  io.gprOut := GPR
 
   // -------- 异常处理 --------
   val trap = Module(new EBreak)
@@ -251,12 +231,10 @@ class Riscv32E_ID extends Module {
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
   val is_zero = (io.inst === 0.U)
   val is_ebreak = (io.inst === EBREAK)
-  val is_otherE = (io.inst === E) && (io.inst =/= ECALL) && (io.inst =/= EBREAK)
   val exc_code = MuxCase(1.U(8.W), Seq(  // 默认全零指令
       is_ebreak -> 0.U,  // EBREAK
       is_zero   -> 1.U,  // 全零指令
-      is_otherE -> 2.U,  // 其他E指令
-      is_unimpl -> 3.U,  // 未实现指令
+      is_unimpl -> 2.U,  // 未实现指令
     )
   )
   // 输出到 EBreak 模块
@@ -265,6 +243,19 @@ class Riscv32E_ID extends Module {
   trap.io.code := exc_code
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
+
+  // -------- DiffTest --------
+  val difftest = Module(new DiffTest)
+  difftest.io.clk  := clock
+  difftest.io.pc   := io.pc
+  difftest.io.npc  := io.npc
+  difftest.io.inst := io.inst
+  for (i <- 0 until CSR_NUM) {
+    difftest.io.csr(i) := CSR(i)
+  }
+  for (i <- 0 until GPR_NUM) {
+    difftest.io.gpr(i) := GPR(i)
+  }
 }
 
 // ---------------------------
@@ -339,6 +330,7 @@ class Riscv32E extends Module {
 
   // ID
   idStage.io.pc   := ifStage.io.pc
+  idStage.io.npc  := ifStage.io.npc
   idStage.io.inst := io.inst
 
   // EX
@@ -349,32 +341,17 @@ class Riscv32E extends Module {
   exStage.io.exsel := idStage.io.exsel
 
   // Memory
-  val memType = idStage.io.memsel
+  val memType   = idStage.io.memsel
   io.mem_re    := !reset.asBool && memType.isOneOf(MEM.RW, MEM.RH, MEM.RB, MEM.RHU, MEM.RBU)
   io.mem_we    := !reset.asBool && memType.isOneOf(MEM.WW, MEM.WH, MEM.WB)
   io.mem_addr  := exStage.io.aluout
-  io.mem_wdata := idStage.io.rs2
+  io.mem_wdata := idStage.io.RS2
   io.mem_len   := Mux(memType.isOneOf(MEM.WB, MEM.RB, MEM.RBU), 1.U,
                   Mux(memType.isOneOf(MEM.WH, MEM.RH, MEM.RHU), 2.U, 4.U))
 
   // Write Back
-  idStage.io.wb_en   := idStage.io.regWen
-  idStage.io.wb_rd   := idStage.io.rd_addr
-  idStage.io.memData := io.mem_rdata
   idStage.io.exData  := exStage.io.aluout
-
-  // DiffTest
-  val difftest = Module(new DiffTest)
-  difftest.io.clk  := clock
-  difftest.io.pc   := ifStage.io.pc
-  difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
-  difftest.io.inst := idStage.io.inst
-  for (i <- 0 until CSR_NUM) {
-    difftest.io.csr(i) := idStage.io.csrOut(i)
-  }
-  for (i <- 0 until GPR_NUM) {
-    difftest.io.gpr(i) := idStage.io.gprOut(i)
-  }
+  idStage.io.memData := io.mem_rdata
 }
 
 // ---------------------------
