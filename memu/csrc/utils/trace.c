@@ -28,7 +28,7 @@ void trace_inst(word_t pc, uint32_t inst) {
   full = full || p_cur == 0;
 }
 
-void display_inst() {
+void display_inst(void) {
   if (!full && !p_cur) return;
   int end = p_cur;
   int i = full?p_cur:0;
