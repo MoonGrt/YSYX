@@ -90,8 +90,7 @@ typedef struct {
 } SymEntry;
 SymEntry *symbol_tbl = NULL;  // dynamic allocated
 typedef struct tail_rec_node {
-  paddr_t pc;
-  paddr_t depend;
+  paddr_t pc, depend;
   struct tail_rec_node *next;
 } TailRecNode;
 
@@ -204,11 +203,7 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
   /* File flags (Machine specific)*/
   ftrace_write("File flags \t= 0x%08x\n", eh.e_flags);
 
-  /* ELF file flags are machine specific.
-   * INTEL implements NO flags.
-   * ARM implements a few.
-   * Add support below to parse ELF file flags on ARM
-   */
+  /* ARM-specific ELF flags */
   int32_t ef = eh.e_flags;
   ftrace_write("\t\t  ");
   #define ARM_FLAG_PRINT(flag, name) if(ef & (flag)) ftrace_write("," name " ");
