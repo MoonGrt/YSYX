@@ -53,7 +53,7 @@ $(OBJ_DIR)/%.o: %.cc
 $(OBJ_DIR)/%.i: %.c
 	@echo + CPP $<
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -E -dD $< -o $@
+	@$(CC) $(CFLAGS) -E -P -dD $< -o $@
 
 $(OBJ_DIR)/%.i: %.cc
 	@echo + CPP $<

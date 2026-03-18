@@ -177,7 +177,8 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
 
   ftrace_write("Storage class\t= "); 
   // printf("class_map.val=%d, class_map.desc=%s\n", class_map[0].val, class_map[0].desc);
-  PRINT_MAP(eh.e_ident[EI_CLASS], class_map, "INVALID CLASS\n");
+  // PRINT_MAP(eh.e_ident[EI_CLASS], class_map, "INVALID CLASS\n");
+  do { size_t i; for (i = 0; i < sizeof(class_map)/sizeof(class_map[0]); i++) { if ((eh.e_ident[4]) == class_map[i].eh.e_ident[4]) { ftrace_write(class_map[i].desc, class_map[i].eh.e_ident[4]); break; } } if (i == sizeof(class_map)/sizeof(class_map[0])) ftrace_write("INVALID CLASS\n", eh.e_ident[4]); } while(0);
 
 
   /* Storage capacity class */
