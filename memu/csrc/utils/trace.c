@@ -192,14 +192,14 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
   ftrace_write("ELF header size\t= 0x%08x\n", eh.e_ehsize);
   /* Program Header */
   ftrace_write("Program Header\t= ");
-  ftrace_write("0x%08lx\n", eh.e_phoff);		/* start */
-  ftrace_write("\t\t  %d entries\n", eh.e_phnum);	/* num entry */
-  ftrace_write("\t\t  %d bytes\n", eh.e_phentsize);	/* size/entry */
+  ftrace_write("0x%08lx\n", eh.e_phoff);  /* start */
+  ftrace_write("\t\t  %d entries\n", eh.e_phnum);  /* num entry */
+  ftrace_write("\t\t  %d bytes\n", eh.e_phentsize);  /* size/entry */
   /* Section header starts at */
   ftrace_write("Section Header\t= ");
-  ftrace_write("0x%08lx\n", eh.e_shoff);		/* start */
-  ftrace_write("\t\t  %d entries\n", eh.e_shnum);	/* num entry */
-  ftrace_write("\t\t  %d bytes\n", eh.e_shentsize);	/* size/entry */
+  ftrace_write("0x%08lx\n", eh.e_shoff);  /* start */
+  ftrace_write("\t\t  %d entries\n", eh.e_shnum);  /* num entry */
+  ftrace_write("\t\t  %d bytes\n", eh.e_shentsize);  /* size/entry */
   ftrace_write("\t\t  0x%08x (string table offset)\n", eh.e_shstrndx);
   /* File flags (Machine specific)*/
   ftrace_write("File flags \t= 0x%08x\n", eh.e_flags);
@@ -211,30 +211,19 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
    */
   int32_t ef = eh.e_flags;
   ftrace_write("\t\t  ");
-  if(ef & EF_ARM_RELEXEC)
-    ftrace_write(",RELEXEC ");
-  if(ef & EF_ARM_HASENTRY)
-    ftrace_write(",HASENTRY ");
-  if(ef & EF_ARM_INTERWORK)
-    ftrace_write(",INTERWORK ");
-  if(ef & EF_ARM_APCS_26)
-    ftrace_write(",APCS_26 ");
-  if(ef & EF_ARM_APCS_FLOAT)
-    ftrace_write(",APCS_FLOAT ");
-  if(ef & EF_ARM_PIC)
-    ftrace_write(",PIC ");
-  if(ef & EF_ARM_ALIGN8)
-    ftrace_write(",ALIGN8 ");
-  if(ef & EF_ARM_NEW_ABI)
-    ftrace_write(",NEW_ABI ");
-  if(ef & EF_ARM_OLD_ABI)
-    ftrace_write(",OLD_ABI ");
-  if(ef & EF_ARM_SOFT_FLOAT)
-    ftrace_write(",SOFT_FLOAT ");
-  if(ef & EF_ARM_VFP_FLOAT)
-    ftrace_write(",VFP_FLOAT ");
-  if(ef & EF_ARM_MAVERICK_FLOAT)
-    ftrace_write(",MAVERICK_FLOAT ");
+  #define ARM_FLAG_PRINT(flag, name) if(ef & (flag)) ftrace_write("," name " ");
+  ARM_FLAG_PRINT(EF_ARM_RELEXEC, "RELEXEC");
+  ARM_FLAG_PRINT(EF_ARM_HASENTRY, "HASENTRY");
+  ARM_FLAG_PRINT(EF_ARM_INTERWORK, "INTERWORK");
+  ARM_FLAG_PRINT(EF_ARM_APCS_26, "APCS_26");
+  ARM_FLAG_PRINT(EF_ARM_APCS_FLOAT, "APCS_FLOAT");
+  ARM_FLAG_PRINT(EF_ARM_PIC, "PIC");
+  ARM_FLAG_PRINT(EF_ARM_ALIGN8, "ALIGN8");
+  ARM_FLAG_PRINT(EF_ARM_NEW_ABI, "NEW_ABI");
+  ARM_FLAG_PRINT(EF_ARM_OLD_ABI, "OLD_ABI");
+  ARM_FLAG_PRINT(EF_ARM_SOFT_FLOAT, "SOFT_FLOAT");
+  ARM_FLAG_PRINT(EF_ARM_VFP_FLOAT, "VFP_FLOAT");
+  ARM_FLAG_PRINT(EF_ARM_MAVERICK_FLOAT, "MAVERICK_FLOAT");
   ftrace_write("\n");
   /* MSB of flags conatins ARM EABI version */
   ftrace_write("ARM EABI\t= Version %d\n", (ef & EF_ARM_EABIMASK)>>24);
