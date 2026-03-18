@@ -16,14 +16,15 @@ VRiscv32ETOP *top = new VRiscv32ETOP;
 #elif  CONFIG_CORE_riscv64
 #endif
 
-#ifdef CONFIG_WAVE_VCD
+#ifdef CONFIG_WAVE
 #include <verilated.h>
+#ifdef CONFIG_WAVE_VCD
 #include <verilated_vcd_c.h>
 VerilatedVcdC *tfp = new VerilatedVcdC;
 #elif  CONFIG_WAVE_FST
-#include <verilated.h>
 #include <verilated_fst_c.h>
 VerilatedFstC *tfp = new VerilatedFstC;
+#endif
 #endif
 
 Decode rtlDecode;
@@ -82,13 +83,17 @@ static void tick(){
   // ======== 下降沿 ========
   top->clock = 0;
   top->eval();
+#ifdef CONFIG_WAVE
   tfp->dump(sim_time++);
+#endif
   // ======== 上升沿 ========
   top->clock = 1;
   top->eval();
+#ifdef CONFIG_WAVE
   tfp->dump(sim_time++);
   // ======== 刷新 ========
   tfp->flush();
+#endif
 }
 
 static void reset(){
@@ -99,8 +104,10 @@ static void reset(){
 }
 
 void exit(void) {
+#ifdef CONFIG_WAVE
   tfp->close();
   delete tfp;
+#endif
   delete top;
 }
 
@@ -111,10 +118,12 @@ extern "C" {
     Verilated::mkdir("logs");
     // 创建 build 目录（如果不存在）
     Verilated::mkdir("build");
+#ifdef CONFIG_WAVE
     // 创建波形对象
     Verilated::traceEverOn(true);  // 必须先打开 trace
     top->trace(tfp, 99);  // 99 是 trace depth
     tfp->open("build/wave.vcd");
+#endif
     // 复位
     reset();
   }
