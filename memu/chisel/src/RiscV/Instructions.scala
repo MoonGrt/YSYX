@@ -67,7 +67,7 @@ object Instructions {
   // Implemented instructions
   val MiniRV_IMPLED = Seq(LW, LBU, SW, SB, ADD, ADDI, JALR, LUI, E, EBREAK)
   val Riscv32E_IMPLED = Seq(
-    LW, LH, LB, LHU, SW, SH, SB,
+    LW, LH, LB, LHU, LBU, SW, SH, SB,
     ADD, ADDI, SUB, AND, OR, XOR, ANDI, ORI, XORI,
     SLL, SRL, SRA, SLLI, SRLI, SRAI, SLT, SLTU, SLTI, SLTIU,
     BEQ, BNE, BLT, BGE, BLTU, BGEU,
