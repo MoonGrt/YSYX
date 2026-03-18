@@ -7,7 +7,12 @@
 #include <device/mmio.h>
 
 #include <verilated.h>
+#ifdef CONFIG_WAVE_VCD
+#include <verilated_vcd_c.h>
+#elif  CONFIG_WAVE_FST
 #include <verilated_fst_c.h>
+#endif
+
 
 #ifdef CONFIG_CORE_minirv
 #include "VMiniRVTOP.h"
