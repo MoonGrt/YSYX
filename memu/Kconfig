@@ -156,7 +156,7 @@ config CC_ASAN
   default n
 endmenu
 
-menu "Testing and Debugging"
+menu "Tracing and Debugging"
 
 config WAVE
   depends on NPC
