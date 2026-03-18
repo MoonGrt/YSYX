@@ -111,8 +111,8 @@ void ftrace_write(const char *format, ...) {
 
 // #define ftrace_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
 //   do { \
-//     extern bool ftrace_enable(); \
-//     if (ftrace_enable() && ftrace_fp != NULL) { \
+//     extern bool log_enable(); \
+//     if (log_enable() && ftrace_fp != NULL) { \
 //       fprintf(ftrace_fp, __VA_ARGS__); \
 //       fflush(ftrace_fp); \
 //     } \
