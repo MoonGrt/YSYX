@@ -171,7 +171,8 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
           break; \
         } \
       } \
-      ftrace_write(def_fmt, value); \
+      if (i == sizeof(map)/sizeof(map[0])) \
+        ftrace_write(def_fmt, value); \
     } while(0)
 
   ftrace_write("Storage class\t= "); 
@@ -190,16 +191,11 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
   /* ELF header size in bytes */
   ftrace_write("ELF header size\t= 0x%08x\n", eh.e_ehsize);
   /* Program Header */
-  ftrace_write("Program Header\t= ");
-  ftrace_write("0x%08lx\n", eh.e_phoff);  /* start */
-  ftrace_write("\t\t  %d entries\n", eh.e_phnum);  /* num entry */
-  ftrace_write("\t\t  %d bytes\n", eh.e_phentsize);  /* size/entry */
+  ftrace_write("Program Header\t= 0x%08lx\n\t\t  %d entries\n\t\t  %d bytes\n",
+                 eh.e_phoff, eh.e_phnum, eh.e_phentsize);
   /* Section header starts at */
-  ftrace_write("Section Header\t= ");
-  ftrace_write("0x%08lx\n", eh.e_shoff);  /* start */
-  ftrace_write("\t\t  %d entries\n", eh.e_shnum);  /* num entry */
-  ftrace_write("\t\t  %d bytes\n", eh.e_shentsize);  /* size/entry */
-  ftrace_write("\t\t  0x%08x (string table offset)\n", eh.e_shstrndx);
+  ftrace_write("Section Header\t= 0x%08lx\n\t\t  %d entries\n\t\t  %d bytes\n\t\t  0x%08x (string table offset)\n",
+                 eh.e_shoff, eh.e_shnum, eh.e_shentsize, eh.e_shstrndx);
   /* File flags (Machine specific)*/
   ftrace_write("File flags \t= 0x%08x\n", eh.e_flags);
 
