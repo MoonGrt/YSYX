@@ -90,7 +90,8 @@ typedef struct {
 } SymEntry;
 SymEntry *symbol_tbl = NULL;  // dynamic allocated
 typedef struct tail_rec_node {
-  paddr_t pc, depend;
+  paddr_t pc;
+  paddr_t depend;
   struct tail_rec_node *next;
 } TailRecNode;
 
