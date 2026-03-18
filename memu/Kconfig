@@ -164,7 +164,7 @@ config WAVE
   default y
 
 choice
-  depends on NPC
+  depends on WAVE
   prompt "Wave format"
   default WAVE_FST
 config WAVE_VCD
