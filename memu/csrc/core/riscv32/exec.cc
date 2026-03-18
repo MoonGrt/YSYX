@@ -85,33 +85,28 @@ extern "C" {
 }
 
 static vluint64_t sim_time = 0;
+static void wave_tracer() {
+  if (!wave_enable()) return;
+#ifdef CONFIG_WAVE_VCD
+  tfp->dump(sim_time++);
+  tfp->flush();
+#elif CONFIG_WAVE_FST
+  tfp->dump(sim_time++);
+  tfp->flush();
+#endif
+}
 static void tick(){
   // ======== 下降沿 ========
   top->clock = 0;
   top->eval();
 #ifdef CONFIG_WAVE
-  if (wave_enable()) {
-#ifdef CONFIG_WAVE_VCD
-    tfp->dump(sim_time++);
-#elif CONFIG_WAVE_FST
-    tfp->dump(sim_time++);
+  wave_tracer();
 #endif
-  }
-#endif
-
   // ======== 上升沿 ========
   top->clock = 1;
   top->eval();
 #ifdef CONFIG_WAVE
-  if (wave_enable()) {
-#ifdef CONFIG_WAVE_VCD
-    tfp->dump(sim_time++);
-    tfp->flush();
-#elif CONFIG_WAVE_FST
-    tfp->dump(sim_time++);
-    tfp->flush();
-#endif
-  }
+  wave_tracer();
 #endif
 }
 
