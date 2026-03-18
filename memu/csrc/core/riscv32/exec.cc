@@ -24,8 +24,7 @@ VerilatedFstC *tfp = new VerilatedFstC;
 Decode rtlDecode;
 
 extern "C" {
-  void display_pread(paddr_t addr, int len, word_t data);
-  void display_pwrite(paddr_t addr, int len, word_t data);
+  void mtrace(bool is_write, paddr_t addr, int len, word_t data);
 
   #define EBREAK_CODE    0
   #define ZERO_INST_CODE 1
@@ -40,7 +39,7 @@ extern "C" {
     if (addr == 0) return 0;
     if (likely(in_pmem(addr))) {
       word_t data = pmem_read(addr, len);
-      IFDEF(CONFIG_MTRACE, display_pread(addr, len, data));
+      IFDEF(CONFIG_MTRACE, mtrace(false, addr, len, data));
       return data;
     }
     IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
@@ -48,7 +47,7 @@ extern "C" {
   }
   void dpi_paddr_write(int addr, char len, int data){
     if (addr == 0) return;
-    IFDEF(CONFIG_MTRACE, display_pwrite(addr, len, data));
+    IFDEF(CONFIG_MTRACE, mtrace(true, addr, len, data));
     if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
     IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   }
@@ -107,7 +106,7 @@ extern "C" {
     Verilated::mkdir("logs");
     // 创建 build 目录（如果不存在）
     Verilated::mkdir("build");
-    // 创建 VCD 波形对象
+    // 创建波形对象
     Verilated::traceEverOn(true);  // 必须先打开 trace
     top->trace(tfp, 99);  // 99 是 trace depth
     tfp->open("build/wave.vcd");

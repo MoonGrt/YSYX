@@ -49,18 +49,15 @@ void display_inst() {
 
 #ifdef CONFIG_MTRACE
 
-static inline bool mtrace_addr_ok(paddr_t addr) {
+static inline bool mtrace_limit(paddr_t addr) {
   return addr >= CONFIG_MTRACE_LO && addr < CONFIG_MTRACE_HI;
 }
 
-void display_pread(paddr_t addr, int len, word_t data) {
-  if (!mtrace_addr_ok(addr)) return;
-  log_write("[MTRACE] R addr=" FMT_PADDR ", len=%d, -read=" FMT_WORD "\n", addr, len, data);
-}
-
-void display_pwrite(paddr_t addr, int len, word_t data) {
-  if (!mtrace_addr_ok(addr)) return;
-  log_write("[MTRACE] W addr=" FMT_PADDR ", len=%d, write=" FMT_WORD "\n", addr, len, data);
+void mtrace(bool is_write, paddr_t addr, int len, word_t data) {
+  if (!mtrace_limit(addr)) return;
+  log_write("[MTRACE] %c addr=" FMT_PADDR ", len=%d, %s=" FMT_WORD "\n",
+            is_write ? 'W' : 'R', addr, len,
+            is_write ? "write" : "-read", data);
 }
 
 #endif  // CONFIG_MTRACE
