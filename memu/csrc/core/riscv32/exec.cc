@@ -18,7 +18,6 @@ VRiscv32ETOP *top = new VRiscv32ETOP;
 
 #ifdef CONFIG_WAVE
 #include <verilated.h>
-extern uint64_t g_nr_guest_inst;
 #ifdef CONFIG_WAVE_VCD
 #include <verilated_vcd_c.h>
 VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -28,6 +27,7 @@ VerilatedFstC *tfp = new VerilatedFstC;
 #endif
 #endif
 
+extern uint64_t g_nr_guest_inst;
 bool wave_enable() {
   return MUXDEF(CONFIG_WAVE, (g_nr_guest_inst >= CONFIG_WAVE_START) &&
          (g_nr_guest_inst <= CONFIG_WAVE_END), false);
