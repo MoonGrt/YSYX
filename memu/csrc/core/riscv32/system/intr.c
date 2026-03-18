@@ -15,8 +15,8 @@
 
 #include <isa.h>
 
-word_t isa_raise_intr(word_t NO, vaddr_t epc) {
-  cpu.csr.mcause = 11; // ecall from M-mode
+word_t isa_raise_intr(vaddr_t epc, word_t ecode) {
+  cpu.csr.mcause = ecode; // ecall from M-mode
   cpu.csr.mepc = epc;
   cpu.csr.mstatus = 0x1800;
   return cpu.csr.mtvec;
