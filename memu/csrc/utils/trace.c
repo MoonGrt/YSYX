@@ -166,8 +166,8 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     do { \
       size_t i; \
       for (i = 0; i < sizeof(map)/sizeof(map[0]); i++) { \
-        if ((val) == map[i].val) { \
-          ftrace_write(map[i].desc, map[i].val); \
+        if ((val) == map[i]->val) { \
+          ftrace_write(map[i]->desc, map[i]->val); \
           break; \
         } \
       } \
@@ -176,8 +176,15 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     } while(0)
 
   ftrace_write("Storage class\t= "); 
-  printf("class_map.val=%d, class_map.desc=%s\n", class_map->val, class_map->desc);
+  // printf("class_map.val=%d, class_map.desc=%s\n", class_map->val, class_map->desc);
   // PRINT_MAP(eh.e_ident, class_map, "INVALID CLASS\n");
+
+  for (int i = 0; i < sizeof(class_map)/sizeof(class_map[0]); i++) {
+    if ((eh.e_ident[EI_CLASS]) == class_map[i].val) {
+      ftrace_write(class_map[i].desc, class_map[i].val);
+      break;
+    }
+  }
 
   /* Storage capacity class */
   ftrace_write("Storage class\t= ");
