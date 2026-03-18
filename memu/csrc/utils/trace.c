@@ -64,14 +64,10 @@ void mtrace(bool is_write, paddr_t addr, int len, word_t data) {
 
 #ifdef CONFIG_DTRACE
 
-void trace_dread(paddr_t addr, int len, word_t data, IOMap *map) {
-  log_write("[DTRACE]  read %10s at " FMT_PADDR ",%d return " FMT_WORD "\n",
-    map->name, addr, len, data);
-}
-
-void trace_dwrite(paddr_t addr, int len, word_t data, IOMap *map) {
-  log_write("[DTRACE] write %10s at " FMT_PADDR ",%d with " FMT_WORD "\n",
-    map->name, addr, len, data);
+void dtrace(bool is_write, paddr_t addr, int len, word_t data, IOMap *map) {
+  log_write("[DTRACE] %s %10s at " FMT_PADDR ",%d %s " FMT_WORD "\n",
+            is_write ? "write" : " read", map->name, addr, len,
+            is_write ? "with" : "return", data);
 }
 
 #endif  // CONFIG_DTRACE
