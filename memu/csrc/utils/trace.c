@@ -162,24 +162,22 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     { EM_AARCH64, "AARCH64 (0x%x)" }
   };
 
-  #define PRINT_MAP(val, map, def_fmt) \
+  #define PRINT_MAP(value, map, def_fmt) \
     do { \
       size_t i; \
       for (i = 0; i < sizeof(map)/sizeof(map[0]); i++) { \
-        if ((val) == map[i].val) { \
+        if ((value) == map[i].val) { \
           ftrace_write(map[i].desc, map[i].val); \
           break; \
         } \
       } \
       if (i == sizeof(map)/sizeof(map[0])) \
-        ftrace_write(def_fmt, val); \
+        ftrace_write(def_fmt, value); \
     } while(0)
 
   ftrace_write("Storage class\t= "); 
   // printf("class_map.val=%d, class_map.desc=%s\n", class_map[0].val, class_map[0].desc);
-  // PRINT_MAP(eh.e_ident[EI_CLASS], class_map, "INVALID CLASS\n");
-  do { size_t i; for (i = 0; i < sizeof(class_map)/sizeof(class_map[0]); i++) { if ((eh.e_ident[4]) == class_map[i].eh.e_ident[4]) { ftrace_write(class_map[i].desc, class_map[i].eh.e_ident[4]); break; } } if (i == sizeof(class_map)/sizeof(class_map[0])) ftrace_write("INVALID CLASS\n", eh.e_ident[4]); } while(0);
-
+  PRINT_MAP(eh.e_ident[EI_CLASS], class_map, "INVALID CLASS\n");
 
   /* Storage capacity class */
   ftrace_write("Storage class\t= ");
