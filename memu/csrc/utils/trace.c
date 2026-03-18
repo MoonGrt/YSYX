@@ -272,16 +272,14 @@ static void read_symbol_table(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[], int sy
   ftrace_write("====================================================\n");
   ftrace_write(" num    value            type size       name\n");
   ftrace_write("====================================================\n");
-  for (int i = 0; i < sym_count; i++) {
+  for (int i = 0; i < sym_count; i++)
     ftrace_write(" %-3d    %016lx %-4d %-10ld %s\n", i,
       sym_tbl[i].st_value,
       ELF32_ST_TYPE(sym_tbl[i].st_info),
       sym_tbl[i].st_size,
       str_tbl + sym_tbl[i].st_name
     );
-  }
   ftrace_write("====================================================\n\n");
-
   // read
   symbol_tbl_size = sym_count;
   symbol_tbl = malloc(sizeof(SymEntry) * sym_count);
@@ -399,7 +397,7 @@ void init_ftrace_log(const char *ftrace_file) {
 void parse_elf(const char *elf_file) {
   if (elf_file == NULL) return;
   Log("specified ELF file: %s", elf_file);
-  int fd = open(elf_file, O_RDONLY|O_SYNC);
+  int fd = open(elf_file, O_RDONLY | O_SYNC);
   Assert(fd >= 0, "Error %d: unable to open %s\n", fd, elf_file);
   Elf32_Ehdr eh;
   read_elf_header(fd, &eh);
