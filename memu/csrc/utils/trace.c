@@ -99,12 +99,16 @@ static void read_elf_header(int fd, Elf32_Ehdr *eh) {
     panic("malformed ELF file");
 }
 
-void ftrace_write(const char *format, ...) {
-  va_list args;
-  va_start(args, format);
-  vfprintf(ftrace_fp, format, args);
-  va_end(args);
-}
+#define ftrace_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE *ftrace_fp; \
+    extern bool ftrace_enable(); \
+    if (ftrace_enable() && ftrace_fp != NULL) { \
+      fprintf(ftrace_fp, __VA_ARGS__); \
+      fflush(ftrace_fp); \
+    } \
+  } while (0) \
+)
 
 static void display_elf_hedaer(Elf32_Ehdr eh) {
   /* Storage capacity class */
