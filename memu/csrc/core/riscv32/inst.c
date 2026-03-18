@@ -3,7 +3,7 @@
 void rtl_step(void);
 void ftrace_ret(paddr_t pc);
 void ftrace_call(paddr_t pc, paddr_t target, bool is_tail);
-void etrace_exec(uint32_t pc);
+void etrace(uint32_t pc);
 extern Decode rtlDecode;
 
 enum {
@@ -43,7 +43,7 @@ static int step(Decode *s) {
     if (rd == 1)  // x1: return address for jumps
       ftrace_call(s->pc, s->dnpc, false);
   }));
-  INSTPAT("0000000 00000 00000 000 00000 1110011", ecall , N, IFDEF(CONFIG_ETRACE, etrace_exec(s->pc)); s->dnpc = isa_raise_intr(17, s->pc));
+  INSTPAT("0000000 00000 00000 000 00000 1110011", ecall , N, IFDEF(CONFIG_ETRACE, etrace(s->pc)); s->dnpc = isa_raise_intr(17, s->pc));
   INSTPAT_END();
   return 0;
 }

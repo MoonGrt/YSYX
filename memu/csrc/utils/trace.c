@@ -62,6 +62,28 @@ void mtrace(bool is_write, paddr_t addr, int len, word_t data) {
 
 #endif  // CONFIG_MTRACE
 
+#ifdef CONFIG_DTRACE
+
+void trace_dread(paddr_t addr, int len, word_t data, IOMap *map) {
+  log_write("[DTRACE]  read %10s at " FMT_PADDR ",%d return " FMT_WORD "\n",
+    map->name, addr, len, data);
+}
+
+void trace_dwrite(paddr_t addr, int len, word_t data, IOMap *map) {
+  log_write("[DTRACE] write %10s at " FMT_PADDR ",%d with " FMT_WORD "\n",
+    map->name, addr, len, data);
+}
+
+#endif  // CONFIG_DTRACE
+
+#ifdef CONFIG_ETRACE
+
+void etrace(uint32_t pc) {
+  log_write("etrace: ecall at " FMT_WORD "\n", pc);
+}
+
+#endif  // CONFIG_ETRACE
+
 #ifdef CONFIG_FTRACE
 
 typedef struct {
@@ -441,25 +463,3 @@ void init_ftrace(const char *ftrace_file, const char *elf_file) {
 }
 
 #endif  // CONFIG_FTRACE
-
-#ifdef CONFIG_DTRACE
-
-void trace_dread(paddr_t addr, int len, word_t data, IOMap *map) {
-  log_write("[DTRACE]  read %10s at " FMT_PADDR ",%d return " FMT_WORD "\n",
-    map->name, addr, len, data);
-}
-
-void trace_dwrite(paddr_t addr, int len, word_t data, IOMap *map) {
-  log_write("[DTRACE] write %10s at " FMT_PADDR ",%d with " FMT_WORD "\n",
-    map->name, addr, len, data);
-}
-
-#endif  // CONFIG_DTRACE
-
-#ifdef CONFIG_ETRACE
-
-void etrace_exec(uint32_t pc) {
-  log_write("etrace: ecall at " FMT_WORD "\n", pc);
-}
-
-#endif  // CONFIG_ETRACE
