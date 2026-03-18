@@ -125,6 +125,43 @@ static void read_elf_header(int fd, Elf32_Ehdr *eh) {
 }
 
 static void display_elf_hedaer(Elf32_Ehdr eh) {
+  struct { uint8_t val; const char *desc; } class_map[] = {
+    { ELFCLASS32, "32-bit objects" },
+    { ELFCLASS64, "64-bit objects" }
+  };
+  struct { uint8_t val; const char *desc; } data_map[] = {
+    { ELFDATA2LSB, "2's complement, little endian" },
+    { ELFDATA2MSB, "2's complement, big endian" }
+  };
+  struct { uint8_t val; const char *desc; } osabi_map[] = {
+    { ELFOSABI_SYSV, "UNIX System V ABI" },
+    { ELFOSABI_HPUX, "HP-UX" },
+    { ELFOSABI_NETBSD, "NetBSD" },
+    { ELFOSABI_LINUX, "Linux" },
+    { ELFOSABI_SOLARIS, "Sun Solaris" },
+    { ELFOSABI_AIX, "IBM AIX" },
+    { ELFOSABI_IRIX, "SGI Irix" },
+    { ELFOSABI_FREEBSD, "FreeBSD" },
+    { ELFOSABI_TRU64, "Compaq TRU64 UNIX" },
+    { ELFOSABI_MODESTO, "Novell Modesto" },
+    { ELFOSABI_OPENBSD, "OpenBSD" },
+    { ELFOSABI_ARM_AEABI, "ARM EABI" },
+    { ELFOSABI_ARM, "ARM" },
+    { ELFOSABI_STANDALONE, "Standalone (embedded) app" }
+  };
+  struct { uint16_t val; const char *desc; } type_map[] = {
+    { ET_NONE, "N/A (0x0)" },
+    { ET_REL, "Relocatable" },
+    { ET_EXEC, "Executable" },
+    { ET_DYN, "Shared Object" }
+  };
+  struct { uint16_t val; const char *desc; } machine_map[] = {
+    { EM_NONE, "None (0x0)" },
+    { EM_386, "INTEL x86 (0x%x)" },
+    { EM_X86_64, "AMD x86_64 (0x%x)" },
+    { EM_AARCH64, "AARCH64 (0x%x)" }
+  };
+
   /* Storage capacity class */
   ftrace_write("Storage class\t= ");
   switch(eh.e_ident[EI_CLASS]) {
