@@ -75,7 +75,7 @@ void dtrace(bool is_write, paddr_t addr, int len, word_t data, IOMap *map) {
 #ifdef CONFIG_ETRACE
 
 void etrace(uint32_t pc) {
-  log_write("etrace: ecall at " FMT_WORD "\n", pc);
+  log_write("[ETRACE]: ecall at " FMT_WORD "\n", pc);
 }
 
 #endif  // CONFIG_ETRACE
@@ -100,6 +100,16 @@ int call_depth = 0;
 TailRecNode *tail_rec_head = NULL;  // linklist with head, dynamic allocated
 FILE *ftrace_fp = NULL;
 
+void ftrace_write(const char *format, ...) {
+  extern bool log_enable();
+  if (log_enable() && ftrace_fp != NULL) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(ftrace_fp, format, args);
+    va_end(args);
+  }
+}
+
 static void read_elf_header(int fd, Elf32_Ehdr *eh) {
   assert(lseek(fd, 0, SEEK_SET) == 0);
   assert(read(fd, (void *)eh, sizeof(Elf32_Ehdr)) == sizeof(Elf32_Ehdr));
@@ -112,16 +122,6 @@ static void read_elf_header(int fd, Elf32_Ehdr *eh) {
   // check if is elf using fixed format of Magic: 7f 45 4c 46 ...
   if(strncmp((char*)eh->e_ident, "\177ELF", 4))
     panic("malformed ELF file");
-}
-
-void ftrace_write(const char *format, ...) {
-  extern bool log_enable();
-  if (log_enable() && ftrace_fp != NULL) {
-    va_list args;
-    va_start(args, format);
-    vfprintf(ftrace_fp, format, args);
-    va_end(args);
-  }
 }
 
 static void display_elf_hedaer(Elf32_Ehdr eh) {
