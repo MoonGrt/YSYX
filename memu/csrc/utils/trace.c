@@ -165,14 +165,13 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
   #define PRINT_MAP(value, map, def_fmt) \
     do { \
       size_t i; \
-      for (i = 0; i < sizeof(map)/sizeof(map[0]); i++) { \
+      for (size_t i = 0; i < sizeof(map)/sizeof(map[0]); i++) { \
         if ((value) == map[i].val) { \
           ftrace_write("%s\n", map[i].desc); \
           break; \
         } \
       } \
-      if (i == sizeof(map)/sizeof(map[0])) \
-        ftrace_write(def_fmt, value); \
+      ftrace_write(def_fmt, value); \
     } while(0)
 
   ftrace_write("Storage class\t= "); 
