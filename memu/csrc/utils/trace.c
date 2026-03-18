@@ -161,7 +161,6 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     { EM_X86_64, "AMD x86_64 (0x%x)" },
     { EM_AARCH64, "AARCH64 (0x%x)" }
   };
-
   #define PRINT_MAP(value, map, def_fmt) \
     do { \
       size_t i; \
@@ -174,7 +173,6 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
       if (i == sizeof(map)/sizeof(map[0])) \
         ftrace_write(def_fmt, value); \
     } while(0)
-
   ftrace_write("Storage class\t= "); 
   PRINT_MAP(eh.e_ident[EI_CLASS], class_map, "INVALID CLASS\n");
   ftrace_write("Data format\t= ");
@@ -185,7 +183,6 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
   PRINT_MAP(eh.e_type, type_map, "Unknown (0x%x)\n");
   ftrace_write("Machine\t\t= ");
   PRINT_MAP(eh.e_machine, machine_map, "0x%x\n");
-
   /* Entry point */
   ftrace_write("Entry point\t= 0x%08lx\n", eh.e_entry);
   /* ELF header size in bytes */
@@ -198,7 +195,6 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
                  eh.e_shoff, eh.e_shnum, eh.e_shentsize, eh.e_shstrndx);
   /* File flags (Machine specific)*/
   ftrace_write("File flags \t= 0x%08x\n", eh.e_flags);
-
   /* ARM-specific ELF flags */
   int32_t ef = eh.e_flags;
   ftrace_write("\t\t  ");
@@ -293,12 +289,11 @@ static void read_symbol_table(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[], int sy
 }
 
 static void read_symbols(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[]) {
-  for (int i = 0; i < eh.e_shnum; i++) {
+  for (int i = 0; i < eh.e_shnum; i++)
     switch (sh_tbl[i].sh_type) {
     case SHT_SYMTAB: case SHT_DYNSYM:
       read_symbol_table(fd, eh, sh_tbl, i); break;
     }
-  }
 }
 
 static void init_tail_rec_list() {
