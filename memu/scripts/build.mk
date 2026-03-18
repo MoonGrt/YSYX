@@ -58,7 +58,7 @@ $(OBJ_DIR)/%.i: %.c
 $(OBJ_DIR)/%.i: %.cc
 	@echo + CPP $<
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) -E -dD $< -o $@
+	@$(CXX) $(CFLAGS) $(CXXFLAGS) -E -P -dD $< -o $@
 
 # Depencies
 -include $(OBJS:.o=.d)

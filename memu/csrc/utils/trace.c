@@ -176,8 +176,8 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     } while(0)
 
   ftrace_write("Storage class\t= "); 
-  printf("class_map.val=%d, class_map.desc=%s\n", class_map[0].val, class_map[0].desc);
-  // PRINT_MAP(eh.e_ident[EI_CLASS], class_map, "INVALID CLASS\n");
+  // printf("class_map.val=%d, class_map.desc=%s\n", class_map[0].val, class_map[0].desc);
+  PRINT_MAP(eh.e_ident[EI_CLASS], class_map, "INVALID CLASS\n");
 
 
   /* Storage capacity class */
