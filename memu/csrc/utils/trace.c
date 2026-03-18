@@ -100,10 +100,13 @@ static void read_elf_header(int fd, Elf32_Ehdr *eh) {
 }
 
 void ftrace_write(const char *format, ...) {
-  va_list args;
-  va_start(args, format);
-  vfprintf(ftrace_fp, format, args);
-  va_end(args);
+  extern bool log_enable();
+  if (log_enable() && ftrace_fp != NULL) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(ftrace_fp, format, args);
+    va_end(args);
+  }
 }
 
 // #define ftrace_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
