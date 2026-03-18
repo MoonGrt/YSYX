@@ -295,12 +295,11 @@ static void read_symbol_table(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[], int sy
 }
 
 static void read_symbols(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[]) {
-  for (int i = 0; i < eh.e_shnum; i++) {
+  for (int i = 0; i < eh.e_shnum; i++)
     switch (sh_tbl[i].sh_type) {
     case SHT_SYMTAB: case SHT_DYNSYM:
       read_symbol_table(fd, eh, sh_tbl, i); break;
     }
-  }
 }
 
 static void init_tail_rec_list() {
