@@ -158,6 +158,30 @@ endmenu
 
 menu "Testing and Debugging"
 
+config WAVE
+  depends on NPC
+  bool "Enable wave tracing"
+  default y
+
+choice
+  depends on NPC
+  prompt "Wave format"
+  default WAVE_FST
+config WAVE_VCD
+  bool "vcd"
+config WAVE_FST
+  bool "fst"
+endchoice
+
+config WAVE_START
+  depends on WAVE
+  int "When wave tracing is enabled (unit: number of instructions)"
+  default 0
+
+config WAVE_END
+  depends on WAVE
+  int "When wave tracing is disabled (unit: number of instructions)"
+  default 10000
 
 config TRACE
   bool "Enable tracer"
