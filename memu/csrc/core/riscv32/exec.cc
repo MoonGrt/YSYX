@@ -19,10 +19,6 @@ VRiscv32ETOP *top = new VRiscv32ETOP;
 #ifdef CONFIG_WAVE
 #include <verilated.h>
 extern uint64_t g_nr_guest_inst;
-bool wave_enable() {
-  return MUXDEF(CONFIG_WAVE, (g_nr_guest_inst >= CONFIG_WAVE_START) &&
-         (g_nr_guest_inst <= CONFIG_WAVE_END), false);
-}
 #ifdef CONFIG_WAVE_VCD
 #include <verilated_vcd_c.h>
 VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -31,6 +27,11 @@ VerilatedVcdC *tfp = new VerilatedVcdC;
 VerilatedFstC *tfp = new VerilatedFstC;
 #endif
 #endif
+
+bool wave_enable() {
+  return MUXDEF(CONFIG_WAVE, (g_nr_guest_inst >= CONFIG_WAVE_START) &&
+         (g_nr_guest_inst <= CONFIG_WAVE_END), false);
+}
 
 Decode rtlDecode;
 
@@ -89,15 +90,28 @@ static void tick(){
   top->clock = 0;
   top->eval();
 #ifdef CONFIG_WAVE
-  tfp->dump(sim_time++);
+  if (wave_enable()) {
+#ifdef CONFIG_WAVE_VCD
+    tfp->dump(sim_time++);
+#elif CONFIG_WAVE_FST
+    tfp->dump(sim_time++);
 #endif
+  }
+#endif
+
   // ======== 上升沿 ========
   top->clock = 1;
   top->eval();
 #ifdef CONFIG_WAVE
-  tfp->dump(sim_time++);
-  // ======== 刷新 ========
-  tfp->flush();
+  if (wave_enable()) {
+#ifdef CONFIG_WAVE_VCD
+    tfp->dump(sim_time++);
+    tfp->flush();
+#elif CONFIG_WAVE_FST
+    tfp->dump(sim_time++);
+    tfp->flush();
+#endif
+  }
 #endif
 }
 
