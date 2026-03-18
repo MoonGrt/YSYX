@@ -30,7 +30,7 @@ VerilatedFstC *tfp = new VerilatedFstC;
 extern uint64_t g_nr_guest_inst;
 bool wave_enable() {
   return MUXDEF(CONFIG_WAVE, (g_nr_guest_inst >= CONFIG_WAVE_START) &&
-         (g_nr_guest_inst <= CONFIG_WAVE_END), false);
+         (g_nr_guest_inst < CONFIG_WAVE_END), false);
 }
 
 Decode rtlDecode;
