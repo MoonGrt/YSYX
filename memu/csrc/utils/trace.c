@@ -167,7 +167,7 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
       size_t i; \
       for (i = 0; i < sizeof(map)/sizeof(map[0]); i++) { \
         if ((value) == map[i].val) { \
-          ftrace_write(map[i].desc, map[i].val); \
+          ftrace_write("%s\n", map[i].desc); \
           break; \
         } \
       } \
