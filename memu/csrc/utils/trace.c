@@ -28,7 +28,7 @@ void trace_inst(word_t pc, uint32_t inst) {
   full = full || p_cur == 0;
 }
 
-void display_inst() {
+void display_inst(void) {
   if (!full && !p_cur) return;
   int end = p_cur;
   int i = full?p_cur:0;
@@ -49,21 +49,36 @@ void display_inst() {
 
 #ifdef CONFIG_MTRACE
 
-static inline bool mtrace_addr_ok(paddr_t addr) {
+static inline bool mtrace_limit(paddr_t addr) {
   return addr >= CONFIG_MTRACE_LO && addr < CONFIG_MTRACE_HI;
 }
 
-void display_pread(paddr_t addr, int len, word_t data) {
-  if (!mtrace_addr_ok(addr)) return;
-  log_write("[MTRACE] R addr=" FMT_PADDR ", len=%d, -read=" FMT_WORD "\n", addr, len, data);
-}
-
-void display_pwrite(paddr_t addr, int len, word_t data) {
-  if (!mtrace_addr_ok(addr)) return;
-  log_write("[MTRACE] W addr=" FMT_PADDR ", len=%d, write=" FMT_WORD "\n", addr, len, data);
+void mtrace(bool is_write, paddr_t addr, int len, word_t data) {
+  if (!mtrace_limit(addr)) return;
+  log_write("[MTRACE] %c addr=" FMT_PADDR ", len=%d, %s=" FMT_WORD "\n",
+            is_write ? 'W' : 'R', addr, len,
+            is_write ? "write" : "-read", data);
 }
 
 #endif  // CONFIG_MTRACE
+
+#ifdef CONFIG_DTRACE
+
+void dtrace(bool is_write, paddr_t addr, int len, word_t data, IOMap *map) {
+  log_write("[DTRACE] %s %10s at " FMT_PADDR ",%d %s " FMT_WORD "\n",
+            is_write ? "write" : " read", map->name, addr, len,
+            is_write ? "with" : "return", data);
+}
+
+#endif  // CONFIG_DTRACE
+
+#ifdef CONFIG_ETRACE
+
+void etrace(uint32_t pc) {
+  log_write("[ETRACE]: ecall at " FMT_WORD "\n", pc);
+}
+
+#endif  // CONFIG_ETRACE
 
 #ifdef CONFIG_FTRACE
 
@@ -75,8 +90,7 @@ typedef struct {
 } SymEntry;
 SymEntry *symbol_tbl = NULL;  // dynamic allocated
 typedef struct tail_rec_node {
-  paddr_t pc;
-  paddr_t depend;
+  paddr_t pc, depend;
   struct tail_rec_node *next;
 } TailRecNode;
 
@@ -84,6 +98,16 @@ int symbol_tbl_size = 0;
 int call_depth = 0;
 TailRecNode *tail_rec_head = NULL;  // linklist with head, dynamic allocated
 FILE *ftrace_fp = NULL;
+
+void ftrace_write(const char *format, ...) {
+  extern bool log_enable();
+  if (log_enable() && ftrace_fp != NULL) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(ftrace_fp, format, args);
+    va_end(args);
+  }
+}
 
 static void read_elf_header(int fd, Elf32_Ehdr *eh) {
   assert(lseek(fd, 0, SEEK_SET) == 0);
@@ -99,145 +123,93 @@ static void read_elf_header(int fd, Elf32_Ehdr *eh) {
     panic("malformed ELF file");
 }
 
-void ftrace_write(const char *format, ...) {
-  va_list args;
-  va_start(args, format);
-  vfprintf(ftrace_fp, format, args);
-  va_end(args);
-}
-
 static void display_elf_hedaer(Elf32_Ehdr eh) {
-  /* Storage capacity class */
-  ftrace_write("Storage class\t= ");
-  switch(eh.e_ident[EI_CLASS]) {
-    case ELFCLASS32:
-      ftrace_write("32-bit objects\n"); break;
-    case ELFCLASS64:
-      ftrace_write("64-bit objects\n"); break;
-    default:
-      ftrace_write("INVALID CLASS\n"); break;
-  }
-  /* Data Format */
+  struct { uint8_t val; const char *desc; } class_map[] = {
+    { ELFCLASS32, "32-bit objects" },
+    { ELFCLASS64, "64-bit objects" }
+  };
+  struct { uint8_t val; const char *desc; } data_map[] = {
+    { ELFDATA2LSB, "2's complement, little endian" },
+    { ELFDATA2MSB, "2's complement, big endian" }
+  };
+  struct { uint8_t val; const char *desc; } osabi_map[] = {
+    { ELFOSABI_SYSV, "UNIX System V ABI" },
+    { ELFOSABI_HPUX, "HP-UX" },
+    { ELFOSABI_NETBSD, "NetBSD" },
+    { ELFOSABI_LINUX, "Linux" },
+    { ELFOSABI_SOLARIS, "Sun Solaris" },
+    { ELFOSABI_AIX, "IBM AIX" },
+    { ELFOSABI_IRIX, "SGI Irix" },
+    { ELFOSABI_FREEBSD, "FreeBSD" },
+    { ELFOSABI_TRU64, "Compaq TRU64 UNIX" },
+    { ELFOSABI_MODESTO, "Novell Modesto" },
+    { ELFOSABI_OPENBSD, "OpenBSD" },
+    { ELFOSABI_ARM_AEABI, "ARM EABI" },
+    { ELFOSABI_ARM, "ARM" },
+    { ELFOSABI_STANDALONE, "Standalone (embedded) app" }
+  };
+  struct { uint16_t val; const char *desc; } type_map[] = {
+    { ET_NONE, "N/A (0x0)" },
+    { ET_REL, "Relocatable" },
+    { ET_EXEC, "Executable" },
+    { ET_DYN, "Shared Object" }
+  };
+  struct { uint16_t val; const char *desc; } machine_map[] = {
+    { EM_NONE, "None (0x0)" },
+    { EM_386, "INTEL x86 (0x%x)" },
+    { EM_X86_64, "AMD x86_64 (0x%x)" },
+    { EM_AARCH64, "AARCH64 (0x%x)" }
+  };
+  #define PRINT_MAP(value, map, def_fmt) \
+    do { \
+      size_t i; \
+      for (size_t i = 0; i < sizeof(map)/sizeof(map[0]); i++) { \
+        if ((value) == map[i].val) { \
+          ftrace_write("%s\n", map[i].desc); \
+          break; \
+        } \
+      } \
+      if (i == sizeof(map)/sizeof(map[0])) \
+        ftrace_write(def_fmt, value); \
+    } while(0)
+  ftrace_write("Storage class\t= "); 
+  PRINT_MAP(eh.e_ident[EI_CLASS], class_map, "INVALID CLASS\n");
   ftrace_write("Data format\t= ");
-  switch(eh.e_ident[EI_DATA]) {
-    case ELFDATA2LSB:
-      ftrace_write("2's complement, little endian\n"); break;
-    case ELFDATA2MSB:
-      ftrace_write("2's complement, big endian\n"); break;
-    default:
-      ftrace_write("INVALID Format\n"); break;
-  }
-  /* OS ABI */
+  PRINT_MAP(eh.e_ident[EI_DATA], data_map, "INVALID Format\n");
   ftrace_write("OS ABI\t\t= ");
-  switch(eh.e_ident[EI_OSABI]) {
-    case ELFOSABI_SYSV:
-      ftrace_write("UNIX System V ABI\n"); break;
-    case ELFOSABI_HPUX:
-      ftrace_write("HP-UX\n"); break;
-    case ELFOSABI_NETBSD:
-      ftrace_write("NetBSD\n"); break;
-    case ELFOSABI_LINUX:
-      ftrace_write("Linux\n"); break;
-    case ELFOSABI_SOLARIS:
-      ftrace_write("Sun Solaris\n"); break;
-    case ELFOSABI_AIX:
-      ftrace_write("IBM AIX\n"); break;
-    case ELFOSABI_IRIX:
-      ftrace_write("SGI Irix\n"); break;
-    case ELFOSABI_FREEBSD:
-      ftrace_write("FreeBSD\n"); break;
-    case ELFOSABI_TRU64:
-      ftrace_write("Compaq TRU64 UNIX\n"); break;
-    case ELFOSABI_MODESTO:
-      ftrace_write("Novell Modesto\n"); break;
-    case ELFOSABI_OPENBSD:
-      ftrace_write("OpenBSD\n"); break;
-    case ELFOSABI_ARM_AEABI:
-      ftrace_write("ARM EABI\n"); break;
-    case ELFOSABI_ARM:
-      ftrace_write("ARM\n"); break;
-    case ELFOSABI_STANDALONE:
-      ftrace_write("Standalone (embedded) app\n"); break;
-    default:
-      ftrace_write("Unknown (0x%x)\n", eh.e_ident[EI_OSABI]); break;
-  }
-  /* ELF filetype */
+  PRINT_MAP(eh.e_ident[EI_OSABI], osabi_map, "Unknown (0x%x)\n");
   ftrace_write("Filetype \t= ");
-  switch(eh.e_type) {
-    case ET_NONE:
-      ftrace_write("N/A (0x0)\n"); break;
-    case ET_REL:
-      ftrace_write("Relocatable\n"); break;
-    case ET_EXEC:
-      ftrace_write("Executable\n"); break;
-    case ET_DYN:
-      ftrace_write("Shared Object\n"); break;
-    default:
-      ftrace_write("Unknown (0x%x)\n", eh.e_type); break;
-  }
-  /* ELF Machine-id */
+  PRINT_MAP(eh.e_type, type_map, "Unknown (0x%x)\n");
   ftrace_write("Machine\t\t= ");
-  switch(eh.e_machine) {
-    case EM_NONE:
-      ftrace_write("None (0x0)\n"); break;
-    case EM_386:
-      ftrace_write("INTEL x86 (0x%x)\n", EM_386); break;
-    case EM_X86_64:
-      ftrace_write("AMD x86_64 (0x%x)\n", EM_X86_64); break;
-    case EM_AARCH64:
-      ftrace_write("AARCH64 (0x%x)\n", EM_AARCH64); break;
-    default:
-      ftrace_write(" 0x%x\n", eh.e_machine); break;
-  }
+  PRINT_MAP(eh.e_machine, machine_map, "0x%x\n");
   /* Entry point */
   ftrace_write("Entry point\t= 0x%08lx\n", eh.e_entry);
   /* ELF header size in bytes */
   ftrace_write("ELF header size\t= 0x%08x\n", eh.e_ehsize);
   /* Program Header */
-  ftrace_write("Program Header\t= ");
-  ftrace_write("0x%08lx\n", eh.e_phoff);		/* start */
-  ftrace_write("\t\t  %d entries\n", eh.e_phnum);	/* num entry */
-  ftrace_write("\t\t  %d bytes\n", eh.e_phentsize);	/* size/entry */
+  ftrace_write("Program Header\t= 0x%08lx\n\t\t  %d entries\n\t\t  %d bytes\n",
+                 eh.e_phoff, eh.e_phnum, eh.e_phentsize);
   /* Section header starts at */
-  ftrace_write("Section Header\t= ");
-  ftrace_write("0x%08lx\n", eh.e_shoff);		/* start */
-  ftrace_write("\t\t  %d entries\n", eh.e_shnum);	/* num entry */
-  ftrace_write("\t\t  %d bytes\n", eh.e_shentsize);	/* size/entry */
-  ftrace_write("\t\t  0x%08x (string table offset)\n", eh.e_shstrndx);
+  ftrace_write("Section Header\t= 0x%08lx\n\t\t  %d entries\n\t\t  %d bytes\n\t\t  0x%08x (string table offset)\n",
+                 eh.e_shoff, eh.e_shnum, eh.e_shentsize, eh.e_shstrndx);
   /* File flags (Machine specific)*/
   ftrace_write("File flags \t= 0x%08x\n", eh.e_flags);
-
-  /* ELF file flags are machine specific.
-   * INTEL implements NO flags.
-   * ARM implements a few.
-   * Add support below to parse ELF file flags on ARM
-   */
+  /* ARM-specific ELF flags */
   int32_t ef = eh.e_flags;
   ftrace_write("\t\t  ");
-  if(ef & EF_ARM_RELEXEC)
-    ftrace_write(",RELEXEC ");
-  if(ef & EF_ARM_HASENTRY)
-    ftrace_write(",HASENTRY ");
-  if(ef & EF_ARM_INTERWORK)
-    ftrace_write(",INTERWORK ");
-  if(ef & EF_ARM_APCS_26)
-    ftrace_write(",APCS_26 ");
-  if(ef & EF_ARM_APCS_FLOAT)
-    ftrace_write(",APCS_FLOAT ");
-  if(ef & EF_ARM_PIC)
-    ftrace_write(",PIC ");
-  if(ef & EF_ARM_ALIGN8)
-    ftrace_write(",ALIGN8 ");
-  if(ef & EF_ARM_NEW_ABI)
-    ftrace_write(",NEW_ABI ");
-  if(ef & EF_ARM_OLD_ABI)
-    ftrace_write(",OLD_ABI ");
-  if(ef & EF_ARM_SOFT_FLOAT)
-    ftrace_write(",SOFT_FLOAT ");
-  if(ef & EF_ARM_VFP_FLOAT)
-    ftrace_write(",VFP_FLOAT ");
-  if(ef & EF_ARM_MAVERICK_FLOAT)
-    ftrace_write(",MAVERICK_FLOAT ");
+  #define ARM_FLAG_PRINT(flag, name) if(ef & (flag)) ftrace_write("," name " ");
+  ARM_FLAG_PRINT(EF_ARM_RELEXEC, "RELEXEC");
+  ARM_FLAG_PRINT(EF_ARM_HASENTRY, "HASENTRY");
+  ARM_FLAG_PRINT(EF_ARM_INTERWORK, "INTERWORK");
+  ARM_FLAG_PRINT(EF_ARM_APCS_26, "APCS_26");
+  ARM_FLAG_PRINT(EF_ARM_APCS_FLOAT, "APCS_FLOAT");
+  ARM_FLAG_PRINT(EF_ARM_PIC, "PIC");
+  ARM_FLAG_PRINT(EF_ARM_ALIGN8, "ALIGN8");
+  ARM_FLAG_PRINT(EF_ARM_NEW_ABI, "NEW_ABI");
+  ARM_FLAG_PRINT(EF_ARM_OLD_ABI, "OLD_ABI");
+  ARM_FLAG_PRINT(EF_ARM_SOFT_FLOAT, "SOFT_FLOAT");
+  ARM_FLAG_PRINT(EF_ARM_VFP_FLOAT, "VFP_FLOAT");
+  ARM_FLAG_PRINT(EF_ARM_MAVERICK_FLOAT, "MAVERICK_FLOAT");
   ftrace_write("\n");
   /* MSB of flags conatins ARM EABI version */
   ftrace_write("ARM EABI\t= Version %d\n", (ef & EF_ARM_EABIMASK)>>24);
@@ -295,16 +267,14 @@ static void read_symbol_table(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[], int sy
   ftrace_write("====================================================\n");
   ftrace_write(" num    value            type size       name\n");
   ftrace_write("====================================================\n");
-  for (int i = 0; i < sym_count; i++) {
+  for (int i = 0; i < sym_count; i++)
     ftrace_write(" %-3d    %016lx %-4d %-10ld %s\n", i,
       sym_tbl[i].st_value,
       ELF32_ST_TYPE(sym_tbl[i].st_info),
       sym_tbl[i].st_size,
       str_tbl + sym_tbl[i].st_name
     );
-  }
   ftrace_write("====================================================\n\n");
-
   // read
   symbol_tbl_size = sym_count;
   symbol_tbl = malloc(sizeof(SymEntry) * sym_count);
@@ -318,12 +288,11 @@ static void read_symbol_table(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[], int sy
 }
 
 static void read_symbols(int fd, Elf32_Ehdr eh, Elf32_Shdr sh_tbl[]) {
-  for (int i = 0; i < eh.e_shnum; i++) {
+  for (int i = 0; i < eh.e_shnum; i++)
     switch (sh_tbl[i].sh_type) {
     case SHT_SYMTAB: case SHT_DYNSYM:
       read_symbol_table(fd, eh, sh_tbl, i); break;
     }
-  }
 }
 
 static void init_tail_rec_list() {
@@ -422,7 +391,7 @@ void init_ftrace_log(const char *ftrace_file) {
 void parse_elf(const char *elf_file) {
   if (elf_file == NULL) return;
   Log("specified ELF file: %s", elf_file);
-  int fd = open(elf_file, O_RDONLY|O_SYNC);
+  int fd = open(elf_file, O_RDONLY | O_SYNC);
   Assert(fd >= 0, "Error %d: unable to open %s\n", fd, elf_file);
   Elf32_Ehdr eh;
   read_elf_header(fd, &eh);
@@ -441,25 +410,3 @@ void init_ftrace(const char *ftrace_file, const char *elf_file) {
 }
 
 #endif  // CONFIG_FTRACE
-
-#ifdef CONFIG_DTRACE
-
-void trace_dread(paddr_t addr, int len, word_t data, IOMap *map) {
-  log_write("[DTRACE]  read %10s at " FMT_PADDR ",%d return " FMT_WORD "\n",
-    map->name, addr, len, data);
-}
-
-void trace_dwrite(paddr_t addr, int len, word_t data, IOMap *map) {
-  log_write("[DTRACE] write %10s at " FMT_PADDR ",%d with " FMT_WORD "\n",
-    map->name, addr, len, data);
-}
-
-#endif  // CONFIG_DTRACE
-
-#ifdef CONFIG_ETRACE
-
-void etrace_exec(uint32_t pc) {
-  log_write("etrace: ecall at " FMT_WORD "\n", pc);
-}
-
-#endif  // CONFIG_ETRACE

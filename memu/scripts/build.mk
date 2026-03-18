@@ -53,12 +53,12 @@ $(OBJ_DIR)/%.o: %.cc
 $(OBJ_DIR)/%.i: %.c
 	@echo + CPP $<
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -E -dD $< -o $@
+	@$(CC) $(CFLAGS) -E -P -dD $< -o $@
 
 $(OBJ_DIR)/%.i: %.cc
 	@echo + CPP $<
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) -E -dD $< -o $@
+	@$(CXX) $(CFLAGS) $(CXXFLAGS) -E -P -dD $< -o $@
 
 # Depencies
 -include $(OBJS:.o=.d)
@@ -76,7 +76,7 @@ $(BINARY):: $(OBJS) $(ARCHIVES)
 else
 $(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES)
 	@echo + LD $@
-	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB)
+	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB) -lz
 endif
 
 preprocess: $(PREPS)

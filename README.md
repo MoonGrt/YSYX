@@ -4,6 +4,7 @@
 ### D1 支持RV32IM的NEMU
 
 #### NJU PA2.1: 实现更多的指令, 在NEMU中运行大部分cpu-tests
+
 > 类似 minirvEMU
 
 1. Macro expansion
@@ -94,7 +95,7 @@ int main() {
 
 #### NJU PA2.3
 
-1. volatile关键字
+1. volatile 关键字
 volatile关键字的作用十分特别, 它的作用是避免编译器对相应代码进行优化.`volatile` 主要用于 **硬件 / OS / 并发编程**. 典型场景：
     1.1 硬件寄存器
     ```c
@@ -131,21 +132,38 @@ while(1)
 ```
 程序 **永远读不到 READY**。
 
-`volatile` 的本质是：
+> `volatile` 的本质是：
 > 告诉编译器：
 > **这个内存可能被程序之外的东西改变（硬件 / 中断 / DMA）**
 > **禁止优化访问**
-否则编译器会：
-* 缓存值
-* 删除读
-* 删除写
-* 合并写
-导致 **设备驱动错误**。
+> 否则编译器会： * 缓存值 * 删除读 * 删除写 * 合并写. 导致 **设备驱动错误**。
 
-2. 优化LiteNES
+2. 输入输出 abstract-machine
+
+```c
+#define io_read(reg) \
+  ({ reg##_T __io_param; \
+     ioe_read(reg, &__io_param); \
+     __io_param; })
+#define io_write(reg, ...) \
+  ({ reg##_T __io_param = (reg##_T) { __VA_ARGS__ }; \
+     ioe_write(reg, &__io_param); })
+```
+
+`__VA_ARGS__` 是 C 语言宏中的可变参数占位符。意思是：宏定义时，你可以写不定数量的参数，这些参数在宏展开时会替换 `__VA_ARGS__`。
+
+将函数展开：
+```c
+uint64_t t = io_read(AM_TIMER_UPTIME).us;
+uint64_t t = ({ AM_TIMER_UPTIME_T __io_param; ioe_read(AM_TIMER_UPTIME, &__io_param); __io_param; }).us;
+io_write(AM_GPU_FBDRAW, x[i], y[i], blank, CHAR_W, CHAR_H, false);
+({ AM_GPU_FBDRAW_T __io_param = (AM_GPU_FBDRAW_T) { x[i], y[i], blank, 8, 16, 0 }; ioe_write(AM_GPU_FBDRAW, &__io_param); });
+```
+
+3. 优化LiteNES
 TODO:
 
-3. 在NEMU上运行NEMU
+4. 在NEMU上运行NEMU
 进行如下的工作:
   1. 保存NEMU当前的配置选项
   2. 加载一个新的配置文件, 将NEMU编译到AM上, 并把mainargs指示bin文件作为这个NEMU的镜像文件
@@ -168,7 +186,7 @@ TODO:
 
 4. 实验报告
 4.1 程序是个状态机 理解YEMU的执行过程
-exec_once → IF → ID → EX → PC+1 
+exec_once → IF → ID → EX → PC+1
 → whether halt: yes → return
                  no → exec_once
 4.2 RTFSC 请整理一条指令在NEMU中的执行过程
@@ -217,7 +235,7 @@ NEMU 中有多少个 dummy 实体： 等于包含 common.h/debug.h 的 .c 文件
 
 ---
 
-## D阶段
+## C阶段
 ### C1 工具和基础设施
 
 1.. 什么才算是一个 Symbol？
@@ -246,3 +264,169 @@ readelf -x .rodata hello
 ### C3 调试技巧
 ### C4 ELF文件和链接
 ### C5 异常处理和RT-Thread
+
+### C阶段答辩
+
+1. Typing-Game 程序流程图
+%% 按键视角：从按键到命中
+按下键盘 → 键盘硬件产生事件
+→ NEMU/NPC/AM接口捕获按键
+→ 游戏程序读取键码
+→ check_hit判断是否命中
+→ 命中?
+→ 更新 wrong 计数 / 更新 hit 计数
+→ render更新帧缓冲
+
+%% 程序视角：事件处理到渲染
+init(ioe,gpu) → while(1) 主循环
+  → 计时 (AM_TIMER_UPTIME)
+  → game_logic_update() 更新字符状态
+  → 读取键盘 (AM_INPUT_KEYBRD)
+  → check_hit() 判断是否击中
+  → render() 绘制屏幕
+  → 循环执行，形成 30 FPS 的打字下落游戏。
+
+2. Makefile 调用时序图
+
+`cpu-tests/Makefile`
+```mermaid
+sequenceDiagram
+  autonumber
+  participant User as User
+  participant CPU as cpu-tests/Makefile
+  participant Tmp as Makefile.<test>
+  participant AM as $(AM_HOME)/Makefile
+  participant Arch as Arch/Platform MK (riscv32.mk / nemu.mk)
+  participant NEMU as NEMU Simulator
+  User->>CPU: make run / make all
+  CPU->>Tmp: 生成临时 Makefile.<test>
+  Tmp->>AM: include $(AM_HOME)/Makefile
+  AM->>Arch: 引入 rv32.mk / nemu.mk
+  Arch->>NEMU: 构建 ELF → 镜像 → 执行模拟器
+  NEMU-->>Arch: 返回执行状态
+  Arch-->>AM: 返回状态
+  AM-->>Tmp: 返回状态
+  Tmp-->>CPU: PASS / FAIL 写入 $(RESULT)
+  CPU->>User: 输出测试结果
+```
+
+- 2.1. **cpu-tests/Makefile** 是入口，生成每个测试的临时 Makefile
+- 2.2. **临时 Makefile** 引入 **AM Makefile**
+- 2.3. **AM Makefile** 根据 `ARCH` 分析并引入对应的 **ISA/Platform makefiles**
+- 2.4. 平台 makefile（nemu.mk）负责生成 ELF、镜像并调用 NEMU 执行
+- 2.5. 执行结果逐层返回，最终记录到 `$(RESULT)` 并输出
+
+
+
+3. Abstract Machine Makefile 调用时序图
+```mermaid
+sequenceDiagram
+  autonumber
+  participant User as User
+  participant AM as AM Makefile
+  participant Arch as Arch/Platform MK
+  participant Build as build/$(ARCH)
+  participant Lib as Libraries (am, klib, ...)
+  participant Insert as insert-arg
+  %% 1. 入口
+  User->>AM: make run / make image / make archive
+  %% 2. 环境检查 & 架构/平台配置
+  AM->>AM: 检查 AM_HOME 是否有效 <br> 检查 ARCH 是否支持
+  %% 3. 架构/平台配置
+  AM->>Arch: include 架构/平台 Makefile <br> 设置编译 flag、库路径、汇编/链接脚本
+  %% 4. 编译
+  Arch->>Build: 自动创建 `build/$(ARCH)` <br> 编译 .c/.cc/.cpp/.S -> .o
+  %% 5. 依赖库编译
+  Build->>Lib: 递归 make archive am, klib, ... <br>
+  Lib-->>Build: 返回 .a 文件
+  %% 6. 链接 ELF
+  Build->>Build: 链接 .o + .a -> IMAGE.elf
+  %% 7. insert-arg
+  Build->>Insert: 嵌入 mainarg 到 ELF 镜像
+  %% 8. 完成
+  Insert-->>User: 返回最终 ELF 或 archive <br> Platform 运行相关Makfile
+```
+
+- 3.1. **入口**：用户执行 `make run`、`make image` 或 `make archive`。
+- 3.2. **环境检查**：
+  * 确认 `AM_HOME` 指向 Abstract-Machine 仓库。
+  * 检查 `ARCH` 是否在支持列表。
+  * 拆分 `ARCH` 得到 `ISA` 和 `PLATFORM`。
+- 3.3. **架构/平台配置**：
+  * 引入架构/平台特定 makefile（`x86_64-qemu.mk`、`riscv64-nemu.mk` 等）。
+  * 配置架构相关 flag、编译器、库路径、汇编/链接脚本。
+- 3.4. **编译**：
+  * 自动创建 `build/$(ARCH)`。
+  * `.c/.cc/.cpp/.S -> .o`。
+- 3.4.1. **依赖库编译**：
+  * 对 `am`、`klib` 等库执行递归 make archive。
+  * 返回 `.a` 文件。
+- 3.5. **链接 ELF**：
+  * `.o` + `.a` → 最终 `IMAGE.elf`。
+- 3.6. **insert-arg**:(前进到8)
+  * 嵌入 `mainarg` 到 ELF 镜像。
+- 3.7. **完成**：
+  * 返回给用户最终 ELF 或 archive 文件。
+  * Platform 运行相关Makfile
+
+4. MEMU Makefile 调用时序图
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant User as User
+  participant Config as menuconfig / auto.conf
+  participant MEMU as MEMU Makefile
+  participant Compiler as Compiler (CC/CXX)
+  participant RTL as RTL/Chisel
+  participant Diff as DIFF Reference
+  participant Exec as MEMU_EXEC
+  %% 4.0 menuconfig
+  User->>MEMU:
+  MEMU->>Config: 检查 .config 存在
+  Config-->>MEMU: 生成 .config, auto.conf, auto.conf.cmd
+  %% 4.1 环境检查
+  MEMU->>MEMU: 检查 MEMU_HOME 是否有效
+  %% 4.2 编译设置
+  MEMU->>Compiler: include filelist.mk <br> 收集 csrc/**/*.c, 过滤黑名单
+  MEMU->>Compiler: 设置 CC, CFLAGS, LDFLAGS <br> 支持 LTO, ASAN, 调试选项
+  %% 4.3 项目编译
+  %% 4.3.1 RTL/Chisel 支持
+  alt CONFIG_NPC=y
+      Compiler->>RTL: chisel scala -> verilog
+      RTL->>RTL: verilate -> VLIB
+      RTL-->>Compiler:
+  end
+  %% 4.3.2 差分测试 DIFFTEST
+  alt CONFIG_DIFFTEST=y
+      Compiler->>Diff: 构建 DIFF_REF_SO
+      Diff-->>Compiler: run 时添加 --diff=DIFF_REF_SO
+  end
+  Compiler->>Exec: Build: 编译 OBJ, 链接 BINARY
+  %% 4.4 最终执行
+  User->>Exec: run / run-sdb / gdb
+  Exec-->>User: MEMU_EXEC 执行完成
+```
+
+- 4.0. **menuconfig**
+  * menuconfig 生成配置文件 .config auto.conf auto.conf.cmd
+- 4.1. **环境检查**：
+  * 确保 `MEMU_HOME` 指向 MEMU 仓库
+  * `.config` 文件必须存在，否则提示 `make menuconfig`
+- 4.2. **源文件收集**：
+  * `filelist.mk`: 包含 `csrc/**/*.c` ...
+  * 过滤黑名单目录/文件
+- 4.3. **编译器配置**：
+  * 根据 menuconfig 设置 CC、CFLAGS、LDFLAGS
+  * 支持 LTO、ASAN、调试选项
+- 4.4. **项目编译**：
+  * 遍历 am/klib 等库构建 `.a`
+  * 与 OBJ 一起链接最终可执行文件
+- 4.4.1. **RTL/Chisel 支持**：
+  * 如果配置 NPC（用 RTL CPU），生成 Verilog
+  * 使用 Verilator 生成 VLIB
+- 4.4.2. **差分测试（DIFFTEST）**：
+  * 构建参考实现 SO 文件
+  * run 时加 `--diff=DIFF_REF_SO` 参数
+- 4.5. **最终执行**：
+  * MEMU_EXEC 可以运行 batch 模式、SDB 调试模式或 gdb

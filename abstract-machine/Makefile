@@ -95,6 +95,11 @@ LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS))
 
 ## 5. Compilation Rules
 
+## Rule (preprocess): a single `.c` -> `.i` (preprocessed C file)
+$(DST_DIR)/%.i: %.c
+	@mkdir -p $(dir $@) && echo + CPP $<
+	@$(CC) -std=gnu11 $(CFLAGS) -E -P -o $@ $(realpath $<)
+
 ### Rule (compile): a single `.c` -> `.o` (gcc)
 $(DST_DIR)/%.o: %.c
 	@mkdir -p $(dir $@) && echo + CC $<
@@ -156,6 +161,11 @@ image-dep: $(IMAGE).elf
 ### Force to rebuild a rule
 force:
 .PHONY: force
+
+### Preprocess all C sources
+preprocess: $(addprefix $(DST_DIR)/, $(addsuffix .i, $(basename $(SRCS))))
+	@echo "# Preprocessing done"
+.PHONY: preprocess
 
 ### Clean a single project (remove `build/`)
 clean:

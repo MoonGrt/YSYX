@@ -76,12 +76,11 @@ static void exec_once(Decode *s, vaddr_t pc) {
   int i;
   uint8_t *inst = (uint8_t *)&s->isa.inst;
 #ifdef CONFIG_ISA_x86
-  for (i = 0; i < ilen; i ++) {
+  for (i = 0; i < ilen; i ++)
 #else
-  for (i = ilen - 1; i >= 0; i --) {
+  for (i = ilen - 1; i >= 0; i --)
 #endif
     p += snprintf(p, 4, "%02x", inst[i]);
-  }
   int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
   int space_len = ilen_max - ilen;
   if (space_len < 0) space_len = 0;
@@ -90,7 +89,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   p += space_len;
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-      MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst, ilen);
+    MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst, ilen);
 #endif
 }
 
@@ -114,7 +113,7 @@ static void statistic() {
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }
 
-void display_inst();
+void display_inst(void);
 void assert_fail_msg() {
   IFDEF(CONFIG_ITRACE, display_inst());
   isa_reg_display();
