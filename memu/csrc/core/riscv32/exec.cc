@@ -9,19 +9,19 @@
 #include <verilated.h>
 #ifdef CONFIG_WAVE_VCD
 #include <verilated_vcd_c.h>
+VerilatedVcdC *tfp = new VerilatedVcdC;
 #elif  CONFIG_WAVE_FST
 #include <verilated_fst_c.h>
+VerilatedFstC *tfp = new VerilatedFstC;
 #endif
 
 
 #ifdef CONFIG_CORE_minirv
 #include "VMiniRVTOP.h"
 VMiniRVTOP *top = new VMiniRVTOP;
-VerilatedFstC *tfp = new VerilatedFstC;
 #elif  CONFIG_CORE_riscv32e
 #include "VRiscv32ETOP.h"
 VRiscv32ETOP *top = new VRiscv32ETOP;
-VerilatedFstC *tfp = new VerilatedFstC;
 #elif  CONFIG_CORE_riscv32
 #elif  CONFIG_CORE_riscv64
 #endif
