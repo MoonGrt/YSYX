@@ -260,6 +260,83 @@ gcc hello.c -o hello
 readelf -x .rodata hello
 ```
 
+3. ELF 文件结构
+ELF - Executable and Linkable Format
+
+
+我们先写一段极简的 C 代码，来论证 ELF 是如何将不同数据分类存放的。
+```c
+// main.c
+#include <stdio.h>
+int global_init = 42;  // 已初始化，应在 .data
+int global_uninit[10000];  // 未初始化数组（占据约 40KB），应在 .bss
+const char* msg = "Hello ELF";  // 字符串常量，应在 .rodata
+int main() {
+  printf("%s\n", msg);  // 代码逻辑，应在 .text
+  return 0;
+}
+```
+编译它：gcc main.c -o app
+
+3.1. 链接视图：Section（给编译器和链接器看）
+使用 readelf -S app 查看 Section 头部表，你会清晰地看到刚才代码中的元素被安排得明明白白：
+
+.text（代码段）：存放 main 函数的机器指令。权限是只读且可执行。
+.data（数据段）：存放 global_init（值为 42）。权限是可读可写。
+.rodata（只读数据段）：存放 "Hello ELF"。权限是只读。
+.bss（BSS段）：存放 global_uninit。
+🎯 重点实证：如果你用 ls -l app 查看文件大小，可能只有 16KB。但 global_uninit 数组明明需要 40KB 的空间！这是因为 .bss 段在 ELF 文件中不占实际的磁盘空间，ELF 只记录了一句：“这里需要 40KB 的内存”。等程序运行加载到内存时，操作系统才会分配这 40KB 并清零。
+
+3.2. 执行视图：Segment（给操作系统加载器看）
+操作系统在运行程序时，嫌弃一个个细碎的 Section 效率太低，它只关心内存权限。使用 readelf -l app 查看 Segment（Program Headers）：
+你会看到两个主要的 LOAD 段：
+第一个 LOAD 段（只读/可执行 R E）：操作系统将 .text 和 .rodata 打包进这个内存页。如果程序企图修改这片内存，会直接触发 Segmentation Fault（段错误）。
+第二个 LOAD 段（可读/可写 R W）：操作系统将 .data 和 .bss 打包进这个内存页。
+
+3.3 ELF vs BIN
+ELF 文件和 BIN 文件是两种完全不同类型的文件，它们的用途和结构差异很大。下面做一个详细对比：
+
+- 3.3.1. 文件定义
+  * **ELF（Executable and Linkable Format）文件**
+    * 是一种可执行文件格式，常用于 Linux、Unix 系统。
+    * 可以包含 **程序代码、数据、符号表、调试信息** 等。
+    * 可以直接被操作系统加载执行，或用于链接生成最终可执行程序。
+    * 有不同类型：可执行文件（`ET_EXEC`）、共享库（`ET_DYN`）、目标文件（`ET_REL`）等。
+  * **BIN 文件**
+    * 通常指 **纯二进制文件**，没有任何头信息或元数据。
+    * 直接包含机器码或者原始数据，系统无法直接识别结构。
+    * 常用于嵌入式系统的固件烧写、裸机程序等。
+
+- 3.3.2. 文件结构
+
+  | 特性         | ELF 文件                           | BIN 文件             |
+  | ---------- | -------------------------------- | ------------------ |
+  | 头信息        | 有 ELF header，包括程序入口、段表、节表等       | 没有头信息              |
+  | 段（Segment） | 包含多个段，如 `.text`, `.data`, `.bss` | 通常是一个连续的内存映像       |
+  | 符号信息       | 可以包含符号表、调试信息                     | 通常没有符号信息           |
+  | 可执行性       | 可以直接在操作系统中加载                     | 不能直接执行，需要特定地址/方式加载 |
+  | 可移植性       | 依赖操作系统和 CPU 架构                   | 完全依赖硬件架构，纯码        |
+
+- 3.3.3. 使用场景
+  * **ELF 文件**
+    * Linux 可执行程序（如 `gcc` 编译出的 `a.out`）
+    * 动态链接库 (`.so`)
+    * 调试与分析工具（可以使用 `objdump`、`readelf` 查看内部信息）
+  * **BIN 文件**
+    * MCU/FPGA/嵌入式裸机程序烧写
+    * Bootloader、固件更新
+    * 需要直接加载到内存执行的场景
+
+- 3.3.4. 转换
+  通常在嵌入式开发中会把 ELF 文件转成 BIN 文件：
+  ```bash
+  # 使用 objcopy
+  arm-none-eabi-objcopy -O binary input.elf output.bin
+  ```
+  * ELF → BIN：丢掉符号表、节信息，只保留机器码和初始化数据。
+  * BIN → ELF：理论上不可逆，需要额外工具重建段和符号表。
+
+
 ### C2 支持RV32E的单周期NPC
 ### C3 调试技巧
 ### C4 ELF文件和链接
