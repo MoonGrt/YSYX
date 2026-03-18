@@ -162,6 +162,19 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
     { EM_AARCH64, "AARCH64 (0x%x)" }
   };
 
+  #define PRINT_MAP(val, map, def_fmt) \
+    do { \
+      size_t i; \
+      for (i = 0; i < sizeof(map)/sizeof(map[0]); i++) { \
+        if ((val) == map[i].val) { \
+          ftrace_write(map[i].desc, map[i].val); \
+          break; \
+        } \
+      } \
+      if (i == sizeof(map)/sizeof(map[0])) \
+        ftrace_write(def_fmt, val); \
+    } while(0)
+
   /* Storage capacity class */
   ftrace_write("Storage class\t= ");
   switch(eh.e_ident[EI_CLASS]) {
