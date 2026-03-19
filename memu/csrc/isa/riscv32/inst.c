@@ -155,7 +155,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 110 ????? 1100011", bltu  , B, s->dnpc = src1 < src2 ? s->pc + imm : s->dnpc);
 
   INSTPAT("0000000 00001 00000 000 00000 1110011", ebreak, N, MEMUTRAP(s->pc, R(10)));
-  INSTPAT("0000000 00000 00000 000 00000 1110011", ecall , N, IFDEF(CONFIG_ETRACE, etrace(s->pc)); s->dnpc = isa_raise_intr(17, s->pc));
+  INSTPAT("0000000 00000 00000 000 00000 1110011", ecall , N, IFDEF(CONFIG_ETRACE, etrace(s->pc, 11)); s->dnpc = isa_raise_intr(s->pc, 11));
   INSTPAT("0011000 00010 00000 000 00000 1110011", mret  , N, s->dnpc = cpu.csr.mepc; cpu.csr.mstatus=0x80;);
   INSTPAT("??????? ????? ????? 001 ????? 1110011", csrrw , I, R(rd) = CSR(imm); CSR(imm) = src1);
   INSTPAT("??????? ????? ????? 010 ????? 1110011", csrrs , I, R(rd) = CSR(imm); CSR(imm) |= src1);
