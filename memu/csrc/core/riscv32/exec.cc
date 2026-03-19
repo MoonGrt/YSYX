@@ -6,26 +6,37 @@
 #include <memory/host.h>
 #include <device/mmio.h>
 
-#include <verilated.h>
-#include <verilated_vcd_c.h>
-
 #ifdef CONFIG_CORE_minirv
 #include "VMiniRVTOP.h"
 VMiniRVTOP *top = new VMiniRVTOP;
-VerilatedVcdC *tfp = new VerilatedVcdC;
 #elif  CONFIG_CORE_riscv32e
 #include "VRiscv32ETOP.h"
 VRiscv32ETOP *top = new VRiscv32ETOP;
-VerilatedVcdC *tfp = new VerilatedVcdC;
 #elif  CONFIG_CORE_riscv32
 #elif  CONFIG_CORE_riscv64
 #endif
 
+#ifdef CONFIG_WAVE
+#include <verilated.h>
+#ifdef CONFIG_WAVE_VCD
+#include <verilated_vcd_c.h>
+VerilatedVcdC *tfp = new VerilatedVcdC;
+#elif  CONFIG_WAVE_FST
+#include <verilated_fst_c.h>
+VerilatedFstC *tfp = new VerilatedFstC;
+#endif
+#endif
+
+extern uint64_t g_nr_guest_inst;
+bool wave_enable() {
+  return MUXDEF(CONFIG_WAVE, (g_nr_guest_inst >= CONFIG_WAVE_START) &&
+         (g_nr_guest_inst < CONFIG_WAVE_END), false);
+}
+
 Decode rtlDecode;
 
 extern "C" {
-  void display_pread(paddr_t addr, int len, word_t data);
-  void display_pwrite(paddr_t addr, int len, word_t data);
+  void mtrace(bool is_write, paddr_t addr, int len, word_t data);
 
   #define EBREAK_CODE    0
   #define ZERO_INST_CODE 1
@@ -40,7 +51,7 @@ extern "C" {
     if (addr == 0) return 0;
     if (likely(in_pmem(addr))) {
       word_t data = pmem_read(addr, len);
-      IFDEF(CONFIG_MTRACE, display_pread(addr, len, data));
+      IFDEF(CONFIG_MTRACE, mtrace(false, addr, len, data));
       return data;
     }
     IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
@@ -48,7 +59,7 @@ extern "C" {
   }
   void dpi_paddr_write(int addr, char len, int data){
     if (addr == 0) return;
-    IFDEF(CONFIG_MTRACE, display_pwrite(addr, len, data));
+    IFDEF(CONFIG_MTRACE, mtrace(true, addr, len, data));
     if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
     IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   }
@@ -74,17 +85,29 @@ extern "C" {
 }
 
 static vluint64_t sim_time = 0;
+static void wave_tracer() {
+  if (!wave_enable()) return;
+#ifdef CONFIG_WAVE_VCD
+  tfp->dump(sim_time++);
+  tfp->flush();
+#elif CONFIG_WAVE_FST
+  tfp->dump(sim_time++);
+  tfp->flush();
+#endif
+}
 static void tick(){
   // ======== 下降沿 ========
   top->clock = 0;
   top->eval();
-  tfp->dump(sim_time++);
+#ifdef CONFIG_WAVE
+  wave_tracer();
+#endif
   // ======== 上升沿 ========
   top->clock = 1;
   top->eval();
-  tfp->dump(sim_time++);
-  // ======== 刷新 ========
-  tfp->flush();
+#ifdef CONFIG_WAVE
+  wave_tracer();
+#endif
 }
 
 static void reset(){
@@ -95,8 +118,10 @@ static void reset(){
 }
 
 void exit(void) {
+#ifdef CONFIG_WAVE
   tfp->close();
   delete tfp;
+#endif
   delete top;
 }
 
@@ -107,10 +132,12 @@ extern "C" {
     Verilated::mkdir("logs");
     // 创建 build 目录（如果不存在）
     Verilated::mkdir("build");
-    // 创建 VCD 波形对象
+#ifdef CONFIG_WAVE
+    // 创建波形对象
     Verilated::traceEverOn(true);  // 必须先打开 trace
     top->trace(tfp, 99);  // 99 是 trace depth
     tfp->open("build/wave.vcd");
+#endif
     // 复位
     reset();
   }
