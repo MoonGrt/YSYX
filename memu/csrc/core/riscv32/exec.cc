@@ -135,7 +135,6 @@ extern "C" {
     // 复位
     reset();
   }
-
   void rtl_step() {
     tick();
   }
