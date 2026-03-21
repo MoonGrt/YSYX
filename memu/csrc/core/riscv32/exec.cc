@@ -109,8 +109,8 @@ extern "C" {
     Verilated::mkdir("build");
     // 创建 VCD 波形对象
     Verilated::traceEverOn(true);  // 必须先打开 trace
-    top->trace(tfp, 99);  // 99 是 trace depth
     tfp->open("build/wave.vcd");
+    top->trace(tfp, 99);  // 99 是 trace depth
     // 复位
     reset();
   }
