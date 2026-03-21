@@ -131,15 +131,11 @@ extern "C" {
     // 创建 build 目录（如果不存在）
     Verilated::mkdir("build");
 #ifdef CONFIG_WAVE
-    // 创建波形对象
-#ifdef CONFIG_WAVE_VCD
-    tfp = new VerilatedVcdC;
-#elif  CONFIG_WAVE_FST
-    tfp = new VerilatedFstC;
-#endif
-    Verilated::traceEverOn(true);  // 必须先打开 trace
-    top->trace(tfp, 99);  // 99 是 trace depth
-    tfp->open("build/wave.vcd");
+  top->contextp()->traceEverOn(true);
+
+  tfp = new VerilatedVcdC;
+  top->trace(tfp, 99);
+  tfp->open("build/wave.vcd");
 #endif
     // 复位
     reset();
