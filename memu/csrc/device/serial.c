@@ -31,8 +31,9 @@ static int serial_getc(void) {
 #ifdef CONFIG_TARGET_AM
   return getch();
 #else
-  int ch = getchar();
-  return (ch == EOF) ? 0 : ch;
+  // int ch = getchar();
+  // return (ch == EOF) ? 0 : ch;
+  return 0;
 #endif
 }
 
