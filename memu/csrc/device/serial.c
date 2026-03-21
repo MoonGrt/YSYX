@@ -28,13 +28,7 @@ static void serial_putc(char ch) {
 }
 
 static int serial_getc(void) {
-#ifdef CONFIG_TARGET_AM
-  return getch();
-#else
-  int ret = fgetc(stdin);
-  if (ret == EOF) ret = -1;
-  return ret;
-#endif
+  return MUXDEF(CONFIG_TARGET_AM, getch(), getc(stdin));
 }
 
 static void serial_io_handler(uint32_t offset, int len, bool is_write) {
