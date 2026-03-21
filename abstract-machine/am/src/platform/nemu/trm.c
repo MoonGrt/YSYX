@@ -35,7 +35,7 @@ static inline void _csr_info() {
 }
 
 void _trm_init() {
-  _csr_info();
+  // _csr_info();
   int ret = main(mainargs);
   halt(ret);
 }
