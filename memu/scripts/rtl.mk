@@ -1,14 +1,7 @@
 GTKWAVE ?= gtkwave
 VERILATOR ?= verilator
 VERILATOR_ROOT = /usr/local/share/verilator
-
-ifeq ($(CONFIG_WAVE_VCD),y)
-VERILATOR_CFLAGS += --trace
-endif
-ifeq ($(CONFIG_WAVE_FST),y)
-VERILATOR_CFLAGS += --trace-fst
-endif
-VERILATOR_CFLAGS += -cc -MMD -cc -O3 --x-assign fast --x-initial fast \
+VERILATOR_CFLAGS += --trace -cc -MMD -cc -O3 --x-assign fast --x-initial fast \
                     --timescale "1ns/1ns" --no-timing \
                     -CFLAGS -ggdb -LDFLAGS -ggdb -j 8
 
