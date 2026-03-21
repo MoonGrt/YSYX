@@ -32,8 +32,8 @@ static int serial_getc(void) {
   return getch();
 #else
   // int ch = getchar();
-  // return (ch == EOF) ? 0 : ch;
-  return 0;
+  // return (ch == EOF) ? -1 : ch;
+  return -1;
 #endif
 }
 
