@@ -124,6 +124,7 @@ extern "C" {
   void rtl_init(int argc, char *argv[]) {
     // 初始化仿真对象
     Verilated::commandArgs(argc, argv);
+    Verilated::mkdir("logs");
     // 创建 build 目录（如果不存在）
     Verilated::mkdir("build");
 #ifdef CONFIG_WAVE
