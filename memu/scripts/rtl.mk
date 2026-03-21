@@ -31,6 +31,7 @@ ifeq ($(CONFIG_CORE_riscv32),y)
 TOP := Riscv32
 endif
 
+CONFIG    := .config
 VTOP      := $(TOP)TOP
 RTL_OBJS  := $(RTL_DIR)/$(VTOP).sv
 VSRCS      = $(RTL_OBJS) \
@@ -52,7 +53,7 @@ $(RTL_OBJS): $(SCALA_SRCS)
 	@mkdir -p $(RTL_DIR)
 	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
-$(VLIB): $(RTL_OBJS) .config
+$(VLIB): $(RTL_OBJS) $(CONFIG)
 	@echo "+ VERILATE RTL"
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
