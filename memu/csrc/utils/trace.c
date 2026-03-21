@@ -74,8 +74,8 @@ void dtrace(bool is_write, paddr_t addr, int len, word_t data, IOMap *map) {
 
 #ifdef CONFIG_ETRACE
 
-void etrace(uint32_t epc, uint32_t ecode) {
-  log_write("[ETRACE]: ecall at " FMT_WORD "\n", epc);
+void etrace(uint32_t pc) {
+  log_write("[ETRACE]: ecall at " FMT_WORD "\n", pc);
 }
 
 #endif  // CONFIG_ETRACE
