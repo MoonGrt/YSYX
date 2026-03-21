@@ -43,11 +43,18 @@ static void serial_io_handler(uint32_t offset, int len, bool is_write) {
   }
 }
 
+#include <fcntl.h> 
+#include <unistd.h>
 void init_serial() {
   serial_base = new_space(8);
 #ifdef CONFIG_HAS_PORT_IO
   add_pio_map ("serial", CONFIG_SERIAL_PORT, serial_base, 8, serial_io_handler);
 #else
+  int ret = fcntl(STDIN_FILENO, F_GETFL);
+  assert(ret != -1);
+  int flag = ret | O_NONBLOCK;
+  ret = fcntl(STDIN_FILENO, F_SETFL, flag);
+  assert(ret != -1);
   add_mmio_map("serial", CONFIG_SERIAL_MMIO, serial_base, 8, serial_io_handler);
 #endif
 }

@@ -49,16 +49,6 @@ enum {
   AM_KEYS(AM_KEY_NAMES)
 };
 
-#define AM_KEY_CHAR_MAP(key, ch) case AM_KEY_##key: return ch;
-#define AM_KEY_TO_CHAR(_) \
-  _(RETURN, '\n') _(SPACE, ' ') _(BACKSPACE, '\b') _(TAB, '\t') \
-  _(A, 'a') _(B, 'b') _(C, 'c') _(D, 'd') _(E, 'e') _(F, 'f') _(G, 'g') _(H, 'h') _(I, 'i') \
-  _(J, 'j') _(K, 'k') _(L, 'l') _(M, 'm') _(N, 'n') _(O, 'o') _(P, 'p') _(Q, 'q') _(R, 'r') \
-  _(S, 's') _(T, 't') _(U, 'u') _(V, 'v') _(W, 'w') _(X, 'x') _(Y, 'y') _(Z, 'z') \
-  _(0, '0') _(1, '1') _(2, '2') _(3, '3') _(4, '4') _(5, '5') _(6, '6') _(7, '7') _(8, '8') _(9, '9') \
-  _(MINUS, '-') _(EQUALS, '=') _(LEFTBRACKET, '[') _(RIGHTBRACKET, ']') _(BACKSLASH, '\\') \
-  _(SEMICOLON, ';') _(APOSTROPHE, '\'') _(COMMA, ',') _(PERIOD, '.') _(SLASH, '/')
-
 // GPU
 
 #define AM_GPU_TEXTURE  1
