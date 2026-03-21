@@ -87,10 +87,7 @@ extern "C" {
 static vluint64_t sim_time = 0;
 static void wave_tracer() {
   if (!wave_enable()) return;
-#ifdef CONFIG_WAVE_VCD
-  tfp->dump(sim_time++);
-  tfp->flush();
-#elif CONFIG_WAVE_FST
+#ifdef CONFIG_WAVE
   tfp->dump(sim_time++);
   tfp->flush();
 #endif
