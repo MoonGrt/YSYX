@@ -122,7 +122,7 @@ void exit(void) {
   tfp->close();
   delete tfp;
 #endif
-  delete top;
+  // delete top;
 }
 
 extern "C" {
