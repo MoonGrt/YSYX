@@ -20,10 +20,10 @@ VRiscv32ETOP *top = new VRiscv32ETOP;
 #include <verilated.h>
 #ifdef CONFIG_WAVE_VCD
 #include <verilated_vcd_c.h>
-VerilatedVcdC *tfp = nullptr;
+VerilatedVcdC *tfp = new VerilatedVcdC;
 #elif  CONFIG_WAVE_FST
 #include <verilated_fst_c.h>
-VerilatedFstC *tfp = nullptr;
+VerilatedFstC *tfp = new VerilatedFstC;
 #endif
 #endif
 
@@ -87,7 +87,10 @@ extern "C" {
 static vluint64_t sim_time = 0;
 static void wave_tracer() {
   if (!wave_enable()) return;
-#ifdef CONFIG_WAVE
+#ifdef CONFIG_WAVE_VCD
+  tfp->dump(sim_time++);
+  tfp->flush();
+#elif CONFIG_WAVE_FST
   tfp->dump(sim_time++);
   tfp->flush();
 #endif
@@ -116,28 +119,29 @@ static void reset(){
 
 void exit(void) {
 #ifdef CONFIG_WAVE
-  if (tfp) {
-    tfp->close();
-    delete tfp;
-    tfp = nullptr;
-  }
+  tfp->close();
+  delete tfp;
 #endif
+  delete top;
 }
 
 extern "C" {
   void rtl_init(int argc, char *argv[]) {
     // 初始化仿真对象
     Verilated::commandArgs(argc, argv);
+    Verilated::mkdir("logs");
     // 创建 build 目录（如果不存在）
     Verilated::mkdir("build");
 #ifdef CONFIG_WAVE
-  top->contextp()->traceEverOn(true);
-
-  tfp = new VerilatedVcdC;
-  top->trace(tfp, 99);
-  tfp->open("build/wave.vcd");
+    // 创建波形对象
+    Verilated::traceEverOn(true);  // 必须先打开 trace
+    top->trace(tfp, 99);  // 99 是 trace depth
+    tfp->open("build/wave.vcd");
 #endif
     // 复位
+    reset();
+  }
+  void rtl_reset() {
     reset();
   }
   void rtl_step() {
