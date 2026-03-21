@@ -31,9 +31,9 @@ static int serial_getc(void) {
 #ifdef CONFIG_TARGET_AM
   return getch();
 #else
-  // int ch = getchar();
-  // return (ch == EOF) ? -1 : ch;
-  return -1;
+  int ret = fgetc(stdin);
+  if (ret == EOF) ret = -1;
+  return ret;
 #endif
 }
 
