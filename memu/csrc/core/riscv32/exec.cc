@@ -20,10 +20,10 @@ VRiscv32ETOP *top = new VRiscv32ETOP;
 #include <verilated.h>
 #ifdef CONFIG_WAVE_VCD
 #include <verilated_vcd_c.h>
-VerilatedVcdC *tfp = new VerilatedVcdC;
+VerilatedVcdC *tfp = nullptr;
 #elif  CONFIG_WAVE_FST
 #include <verilated_fst_c.h>
-VerilatedFstC *tfp = new VerilatedFstC;
+VerilatedFstC *tfp = nullptr;
 #endif
 #endif
 
@@ -132,6 +132,11 @@ extern "C" {
     Verilated::mkdir("build");
 #ifdef CONFIG_WAVE
     // 创建波形对象
+#ifdef CONFIG_WAVE_VCD
+    tfp = new VerilatedVcdC;
+#elif  CONFIG_WAVE_FST
+    tfp = new VerilatedFstC;
+#endif
     Verilated::traceEverOn(true);  // 必须先打开 trace
     top->trace(tfp, 99);  // 99 是 trace depth
     tfp->open("build/wave.vcd");
