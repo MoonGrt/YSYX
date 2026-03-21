@@ -116,7 +116,11 @@ static void reset(){
 
 void exit(void) {
 #ifdef CONFIG_WAVE
-  if (tfp) tfp->close();
+  if (tfp) {
+    tfp->close();
+    delete tfp;
+    tfp = nullptr;
+  }
 #endif
 }
 
