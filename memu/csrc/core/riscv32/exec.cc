@@ -120,7 +120,7 @@ static void reset(){
 void exit(void) {
 #ifdef CONFIG_WAVE
   tfp->close();
-  // delete tfp;
+  delete tfp;
 #endif
   delete top;
 }
