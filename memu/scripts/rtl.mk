@@ -52,7 +52,7 @@ $(RTL_OBJS): $(SCALA_SRCS)
 	@mkdir -p $(RTL_DIR)
 	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 
-$(VLIB): $(RTL_OBJS)
+$(VLIB): $(RTL_OBJS) .config
 	@echo "+ VERILATE RTL"
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \
