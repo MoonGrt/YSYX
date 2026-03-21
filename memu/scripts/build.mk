@@ -75,11 +75,11 @@ $(BINARY):: $(OBJS) $(ARCHIVES)
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
 else
 ifeq ($(CONFIG_WAVE_FST),y)
-$(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES)
+$(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES) .config
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB) -lz
 else
-$(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES)
+$(BINARY):: $(VLIB) $(OBJS) $(ARCHIVES) .config
 	@echo + LD $@
 	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS) $(VLIB)
 endif
