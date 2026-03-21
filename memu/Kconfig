@@ -161,7 +161,7 @@ menu "Tracing and Debugging"
 config WAVE
   depends on NPC
   bool "Enable wave tracing"
-  default y
+  default n
 
 choice
   depends on WAVE
