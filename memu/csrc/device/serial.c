@@ -51,7 +51,6 @@ static void serial_io_handler(uint32_t offset, int len, bool is_write) {
 
 #include <fcntl.h> 
 #include <unistd.h>
-#include <assert.h>
 void init_serial() {
   serial_base = new_space(8);
 #ifdef CONFIG_HAS_PORT_IO
