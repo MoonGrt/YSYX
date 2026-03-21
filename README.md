@@ -20,7 +20,7 @@
 1. 尝试使用综合器
     make syn error: `/bin/bash: line 1: yosys: command not found`
     > 查看 OSCPU/yosys-sta README. 安装yosys.
-    > !!! 注意该部分运行后会改变默认verilator
+    > !!! 注意该部分运行后会改变默认 verilator
 
     `test/yosys` 文件夹中:
     ```bash
