@@ -3,7 +3,7 @@
 void rtl_step(void);
 void ftrace_ret(paddr_t pc);
 void ftrace_call(paddr_t pc, paddr_t target, bool is_tail);
-void etrace(uint32_t pc);
+void etrace(uint32_t epc, uint32_t ecode);
 extern Decode rtlDecode;
 
 enum {

@@ -20,7 +20,7 @@
 
 void ftrace_ret(paddr_t pc);
 void ftrace_call(paddr_t pc, paddr_t target, bool is_tail);
-void etrace(uint32_t pc);
+void etrace(uint32_t epc, uint32_t ecode);
 
 static vaddr_t *csr_register(word_t imm) {
   word_t csr = imm & 0xfff;

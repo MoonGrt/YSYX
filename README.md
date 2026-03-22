@@ -19,7 +19,8 @@
 
 1. 尝试使用综合器
     make syn error: `/bin/bash: line 1: yosys: command not found`
-    >  查看 OSCPU/yosys-sta README. 安装yosys
+    > 查看 OSCPU/yosys-sta README. 安装yosys.
+    > !!! 注意该部分运行后会改变默认 verilator
 
     `test/yosys` 文件夹中:
     ```bash
@@ -869,3 +870,25 @@ yield() → 在 a7 寄存器放入自陷的标志，并要求执行 ecall 指令
       * run 时加 `--diff=DIFF_REF_SO` 参数
     - 4.5. **最终执行**：
       * MEMU_EXEC 可以运行 batch 模式、SDB 调试模式或 gdb
+
+
+
+## Issue
+
+1. java.lang.ClassNotFoundException: build_.package_$
+
+> build.sc 没被正确编译，或编译产物损坏/缺失
+
+最常见原因: `.mill` 缓存损坏. 直接清缓存：
+
+```bash
+rm -rf .mill
+rm -rf out
+```
+
+然后重新执行：
+
+```bash
+mill clean
+mill chisel.runMain Riscv32ETOP
+```
