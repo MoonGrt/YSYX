@@ -30,10 +30,6 @@ config CORE_minirv
   bool "minirv"
 config CORE_riscv32e
   bool "riscv32e"
-config CORE_riscv32
-  bool "riscv32"
-config CORE_riscv64
-  bool "riscv64"
 endchoice
 endif
 

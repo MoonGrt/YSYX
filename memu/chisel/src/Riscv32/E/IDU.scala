@@ -1,47 +1,31 @@
-package riscv
+package riscv.e
 
 import chisel3._
 import chisel3.util._
-import Instructions._
-import Constants._
-import Constants.Riscv32E._
+import riscv.Instructions._
+import riscv.Constants._
+import riscv.Constants.Riscv32E._
+import riscv.util._
 
 // ---------------------------
-// IF 模块：Instruction Fetch
+// IDU 模块：Instruction Decode + GPR
 // ---------------------------
-class Riscv32E_IF extends Module {
+class IDU extends Module {
   val io = IO(new Bundle {
-    val halt   = Input(Bool())  // halt 信号
-    val bren   = Input(Bool())  // 跳转使能
-    val braddr = Input(UInt(WORD_LEN.W))  // 跳转地址
-    val pc     = Output(UInt(WORD_LEN.W))  // 当前 PC 输出
-    val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
-  })
-  val pc = RegInit("h80000000".U)
-  io.npc := Mux(io.bren, io.braddr, pc + 4.U)  // next pc
-  pc := Mux(io.halt, pc, io.npc)
-  io.pc := pc
-}
-
-// ---------------------------
-// ID 模块：Instruction Decode + GPR
-// ---------------------------
-class Riscv32E_ID extends Module {
-  val io = IO(new Bundle {
-    val pc      = Input(UInt(WORD_LEN.W))
-    val npc     = Input(UInt(WORD_LEN.W))
-    val inst    = Input(UInt(WORD_LEN.W))
+    val pc      = Input(UInt(DataWidth.W))
+    val npc     = Input(UInt(DataWidth.W))
+    val inst    = Input(UInt(DataWidth.W))
 
     // 写回
-    val exData  = Input(UInt(WORD_LEN.W))
-    val memData = Input(UInt(WORD_LEN.W))
+    val exData  = Input(UInt(DataWidth.W))
+    val memData = Input(UInt(DataWidth.W))
 
-    // 输出到 EX
+    // 输出到 EXU
     val exsel = Output(EX())
-    val op1   = Output(UInt(WORD_LEN.W))
-    val op2   = Output(UInt(WORD_LEN.W))
-    val RS2   = Output(UInt(WORD_LEN.W))
-    val immsb = Output(UInt(WORD_LEN.W))
+    val op1   = Output(UInt(DataWidth.W))
+    val op2   = Output(UInt(DataWidth.W))
+    val RS2   = Output(UInt(DataWidth.W))
+    val immsb = Output(UInt(DataWidth.W))
 
     // Control signals
     val halt   = Output(Bool())
@@ -105,8 +89,8 @@ class Riscv32E_ID extends Module {
   )
 
   // -------- 寄存器堆 --------
-  val CSR = RegInit(VecInit(Seq.fill(CSR_NUM)(0.U(WORD_LEN.W))))
-  val GPR = RegInit(VecInit(Seq.fill(GPR_NUM)(0.U(WORD_LEN.W))))
+  val CSR = RegInit(VecInit(Seq.fill(CSR_NUM)(0.U(DataWidth.W))))
+  val GPR = RegInit(VecInit(Seq.fill(GPR_NUM)(0.U(DataWidth.W))))
 
   // -------- 指令字段 --------
   val rd  = io.inst(11,7)
@@ -205,7 +189,7 @@ class Riscv32E_ID extends Module {
     CSR(CSR_MSTATUS) := 0x00000080.U
   }
   // GPR
-  val memData = MuxLookup(io.memsel, 0.U(WORD_LEN.W))(Seq(
+  val memData = MuxLookup(io.memsel, 0.U(DataWidth.W))(Seq(
     MEM.RW  -> io.memData,  // LW 直接写回
     MEM.RB  -> Cat(Fill(24, io.memData(7)), io.memData(7,0)),  // LB 符号扩展
     MEM.RH  -> Cat(Fill(16, io.memData(15)), io.memData(15,0)),  // LH 符号扩展
@@ -221,17 +205,17 @@ class Riscv32E_ID extends Module {
     ))
   }
 
-  // -------- 异常处理 --------
+  // -------- Trap --------
   val trap = Module(new EBreak)
   // 定义异常编码规则
-  // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
+  // 0: EBREAK, 1: 全零指令, 2: 未实现指令
   val impl_inst = Riscv32E_IMPLED.filterNot(inst =>
     inst == E || inst == EBREAK
   )
   val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
   val is_zero = (io.inst === 0.U)
   val is_ebreak = (io.inst === EBREAK)
-  val exc_code = MuxCase(1.U(8.W), Seq(  // 默认全零指令
+  val ecode = MuxCase(1.U(8.W), Seq(  // 默认全零指令
       is_ebreak -> 0.U,  // EBREAK
       is_zero   -> 1.U,  // 全零指令
       is_unimpl -> 2.U,  // 未实现指令
@@ -240,7 +224,7 @@ class Riscv32E_ID extends Module {
   // 输出到 EBreak 模块
   trap.io.clk  := clock
   trap.io.trap := ~reset.asBool && is_unimpl
-  trap.io.code := exc_code
+  trap.io.code := ecode
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
 
@@ -256,120 +240,4 @@ class Riscv32E_ID extends Module {
   for (i <- 0 until GPR_NUM) {
     difftest.io.gpr(i) := GPR(i)
   }
-}
-
-// ---------------------------
-// EX 模块
-// ---------------------------
-class Riscv32E_EX extends Module {
-  val io = IO(new Bundle {
-    val pc     = Input(UInt(WORD_LEN.W))
-    val op1    = Input(UInt(WORD_LEN.W))
-    val op2    = Input(UInt(WORD_LEN.W))
-    val immsb  = Input(UInt(WORD_LEN.W))
-    val exsel  = Input(EX())
-    val aluout = Output(UInt(WORD_LEN.W))
-    val bren   = Output(Bool())
-    val braddr = Output(UInt(WORD_LEN.W))
-  })
-  // -------- ALU --------
-  io.aluout := MuxCase(0.U(WORD_LEN.W), Seq(
-    (io.exsel === EX.ADD ) -> (io.op1 + io.op2),
-    (io.exsel === EX.SUB ) -> (io.op1 - io.op2),
-    (io.exsel === EX.AND ) -> (io.op1 & io.op2),
-    (io.exsel === EX.OR  ) -> (io.op1 | io.op2),
-    (io.exsel === EX.XOR ) -> (io.op1 ^ io.op2),
-    (io.exsel === EX.SLL ) -> (io.op1 << io.op2(4,0)),
-    (io.exsel === EX.SRL ) -> (io.op1 >> io.op2(4,0)),
-    (io.exsel === EX.SRA ) -> (io.op1.asSInt >> io.op2(4,0)).asUInt,
-    (io.exsel === EX.SLT ) -> (io.op1.asSInt < io.op2.asSInt).asUInt,
-    (io.exsel === EX.SLTU) -> (io.op1 < io.op2),
-  ))
-  // -------- Branch --------
-  io.bren := MuxCase(false.B, Seq(
-    (io.exsel === EX.JAL ) ->  true.B,
-    (io.exsel === EX.CSR ) ->  true.B,
-    (io.exsel === EX.BEQ ) ->  (io.op1 === io.op2),
-    (io.exsel === EX.BNE ) -> !(io.op1 === io.op2),
-    (io.exsel === EX.BLT ) ->  (io.op1.asSInt < io.op2.asSInt),
-    (io.exsel === EX.BGE ) -> !(io.op1.asSInt < io.op2.asSInt),
-    (io.exsel === EX.BLTU) ->  (io.op1 < io.op2),
-    (io.exsel === EX.BGEU) -> !(io.op1 < io.op2),
-  ))
-  io.braddr := MuxCase(io.pc + io.immsb, Seq(
-    (io.exsel === EX.JAL) -> (io.op1 + io.op2),
-    (io.exsel === EX.CSR) -> (io.op2),  // mtvec
-  ))
-}
-
-// ---------------------------
-// Riscv32E CPU（单周期）
-// ---------------------------
-class Riscv32E extends Module {
-  val io = IO(new Bundle {
-    val pc   = Output(UInt(WORD_LEN.W))
-    val inst = Input(UInt(WORD_LEN.W))
-
-    val mem_re    = Output(Bool())
-    val mem_we    = Output(Bool())
-    val mem_len   = Output(UInt(4.W))
-    val mem_addr  = Output(UInt(WORD_LEN.W))
-    val mem_wdata = Output(UInt(WORD_LEN.W))
-    val mem_rdata = Input(UInt(WORD_LEN.W))
-  })
-
-  val ifStage = Module(new Riscv32E_IF)
-  val idStage = Module(new Riscv32E_ID)
-  val exStage = Module(new Riscv32E_EX)
-
-  // IF
-  io.pc := ifStage.io.pc
-  ifStage.io.bren   := exStage.io.bren
-  ifStage.io.braddr := exStage.io.braddr
-  ifStage.io.halt   := idStage.io.halt
-
-  // ID
-  idStage.io.pc   := ifStage.io.pc
-  idStage.io.npc  := ifStage.io.npc
-  idStage.io.inst := io.inst
-
-  // EX
-  exStage.io.pc    := idStage.io.pc
-  exStage.io.op1   := idStage.io.op1
-  exStage.io.op2   := idStage.io.op2
-  exStage.io.immsb := idStage.io.immsb
-  exStage.io.exsel := idStage.io.exsel
-
-  // Memory
-  val memType   = idStage.io.memsel
-  io.mem_re    := !reset.asBool && memType.isOneOf(MEM.RW, MEM.RH, MEM.RB, MEM.RHU, MEM.RBU)
-  io.mem_we    := !reset.asBool && memType.isOneOf(MEM.WW, MEM.WH, MEM.WB)
-  io.mem_addr  := exStage.io.aluout
-  io.mem_wdata := idStage.io.RS2
-  io.mem_len   := Mux(memType.isOneOf(MEM.WB, MEM.RB, MEM.RBU), 1.U,
-                  Mux(memType.isOneOf(MEM.WH, MEM.RH, MEM.RHU), 2.U, 4.U))
-
-  // Write Back
-  idStage.io.exData  := exStage.io.aluout
-  idStage.io.memData := io.mem_rdata
-}
-
-// ---------------------------
-// Riscv32E TOP：自包含 CPU + ROM + RAM
-// ---------------------------
-class Riscv32ETOP extends Module {
-  val cpu = Module(new Riscv32E)
-  val rom = Module(new ROM_DPI)
-  val ram = Module(new RAM_DPI)
-  // 指令取值
-  rom.io.addr := cpu.io.pc
-  cpu.io.inst := rom.io.data
-  // 数据访存
-  ram.io.clk   := clock
-  ram.io.re    := cpu.io.mem_re
-  ram.io.we    := cpu.io.mem_we
-  ram.io.len   := cpu.io.mem_len
-  ram.io.addr  := cpu.io.mem_addr
-  ram.io.wdata := cpu.io.mem_wdata
-  cpu.io.mem_rdata := ram.io.rdata
 }

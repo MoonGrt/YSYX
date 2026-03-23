@@ -1,23 +1,24 @@
-package riscv
+package riscv.mini
 
 import chisel3._
 import chisel3.util._
-import Instructions._
-import Constants._
-import Constants.MiniRV._
+import riscv.Instructions._
+import riscv.Constants._
+import riscv.Constants.MiniRV._
+import riscv.util._
 
 // ---------------------------
-// IF 模块：Instruction Fetch
+// IFU 模块：Instruction Fetch
 // ---------------------------
-class MiniRV_IF extends Module {
+class IFU extends Module {
   val io = IO(new Bundle {
     val halt   = Input(Bool())  // halt 信号
     val bren   = Input(Bool())  // 跳转使能
-    val braddr = Input(UInt(WORD_LEN.W))  // 跳转地址
-    val npc    = Output(UInt(WORD_LEN.W))  // 下一个 PC
-    val pc     = Output(UInt(WORD_LEN.W))  // 当前 PC 输出
+    val braddr = Input(UInt(DataWidth.W))  // 跳转地址
+    val npc    = Output(UInt(DataWidth.W))  // 下一个 PC
+    val pc     = Output(UInt(DataWidth.W))  // 当前 PC 输出
   })
-  val pc = RegInit("h80000000".U(WORD_LEN.W))
+  val pc = RegInit("h80000000".U(DataWidth.W))
   pc := MuxCase(io.npc, Seq(
     io.halt -> pc,
     io.bren -> io.braddr,
@@ -27,24 +28,24 @@ class MiniRV_IF extends Module {
 }
 
 // ---------------------------
-// ID 模块：Instruction Decode + GPR
+// IDU 模块：Instruction Decode + GPR
 // ---------------------------
-class MiniRV_ID extends Module {
+class IDU extends Module {
   val io = IO(new Bundle {
-    val pc      = Input(UInt(WORD_LEN.W))
-    val inst    = Input(UInt(WORD_LEN.W))
+    val pc      = Input(UInt(DataWidth.W))
+    val inst    = Input(UInt(DataWidth.W))
 
     // 写回
     val wb_en   = Input(Bool())
     val wb_rd   = Input(UInt(5.W))
-    val memData = Input(UInt(WORD_LEN.W))
-    val exData  = Input(UInt(WORD_LEN.W))
+    val memData = Input(UInt(DataWidth.W))
+    val exData  = Input(UInt(DataWidth.W))
 
-    // 输出到 EX
+    // 输出到 EXU
     val exsel   = Output(EX())
-    val op1     = Output(UInt(WORD_LEN.W))
-    val op2     = Output(UInt(WORD_LEN.W))
-    val rs2     = Output(UInt(WORD_LEN.W))
+    val op1     = Output(UInt(DataWidth.W))
+    val op2     = Output(UInt(DataWidth.W))
+    val rs2     = Output(UInt(DataWidth.W))
     val rd_addr = Output(UInt(5.W))
 
     // Control signals
@@ -53,7 +54,7 @@ class MiniRV_ID extends Module {
     val regWen = Output(Bool())
 
     // Diff
-    val gprOut = Output(Vec(GPR_NUM, UInt(WORD_LEN.W)))
+    val gprOut = Output(Vec(GPR_NUM, UInt(DataWidth.W)))
   })
 
   val List(op2sel, exsel, wbsel, memsel) = ListLookup(io.inst,
@@ -71,7 +72,7 @@ class MiniRV_ID extends Module {
   )
 
   // -------- 寄存器堆 --------
-  val GPR = RegInit(VecInit(Seq.fill(GPR_NUM)(0.U(WORD_LEN.W))))
+  val GPR = RegInit(VecInit(Seq.fill(GPR_NUM)(0.U(DataWidth.W))))
 
   // -------- 指令字段 --------
   val rd  = io.inst(11,7)
@@ -105,7 +106,7 @@ class MiniRV_ID extends Module {
   // GPR
   io.rd_addr := rd
   io.regWen  := wbsel =/= WB.NONE
-  val memData = MuxLookup(io.memsel, 0.U(WORD_LEN.W))(Seq(
+  val memData = MuxLookup(io.memsel, 0.U(DataWidth.W))(Seq(
     MEM.RW  -> io.memData,  // LW 直接写回
     MEM.RBU -> Cat(0.U(24.W), io.memData(7,0)),  // LBU 零扩展
   ))
@@ -120,10 +121,10 @@ class MiniRV_ID extends Module {
   // 输出 GPR
   io.gprOut := GPR
 
-  // -------- 异常处理 --------
+  // -------- Trap --------
   val trap = Module(new EBreak)
   // 定义异常编码规则
-  // 0: EBREAK, 1: 全零指令, 2: 其他E指令, 3: 未实现指令
+  // 0: EBREAK, 1: 全零指令, 2: 未实现指令
   val impl_inst = MiniRV_IMPLED.filterNot(inst =>
     inst == E || inst == EBREAK
   )
@@ -131,33 +132,32 @@ class MiniRV_ID extends Module {
   val is_zero = (io.inst === 0.U)
   val is_ebreak = (io.inst === EBREAK)
   val is_otherE = (io.inst === E) && (io.inst =/= EBREAK)
-  val exc_code = MuxCase(1.U(8.W), Seq(  // 默认全零指令
+  val ecode = MuxCase(1.U(8.W), Seq(  // 默认全零指令
       is_ebreak -> 0.U,  // EBREAK
       is_zero   -> 1.U,  // 全零指令
-      is_otherE -> 2.U,  // 其他E指令
-      is_unimpl -> 3.U,  // 未实现指令
+      is_unimpl -> 2.U,  // 未实现指令
     )
   )
   // 输出到 EBreak 模块
   trap.io.clk  := clock
   trap.io.trap := ~reset.asBool && is_unimpl
-  trap.io.code := exc_code
+  trap.io.code := ecode
   // halt 信号
   io.halt := ~reset.asBool && is_unimpl
 }
 
 // ---------------------------
-// EX 模块
+// EXU 模块
 // ---------------------------
-class MiniRV_EX extends Module {
+class EXU extends Module {
   val io = IO(new Bundle {
-    val pc     = Input(UInt(WORD_LEN.W))
-    val op1    = Input(UInt(WORD_LEN.W))
-    val op2    = Input(UInt(WORD_LEN.W))
+    val pc     = Input(UInt(DataWidth.W))
+    val op1    = Input(UInt(DataWidth.W))
+    val op2    = Input(UInt(DataWidth.W))
     val exsel  = Input(EX())
-    val aluout = Output(UInt(WORD_LEN.W))
+    val aluout = Output(UInt(DataWidth.W))
     val bren   = Output(Bool())
-    val braddr = Output(UInt(WORD_LEN.W))
+    val braddr = Output(UInt(DataWidth.W))
   })
   // -------- ALU --------
   io.aluout := MuxCase(0.U, Seq(
@@ -177,62 +177,62 @@ class MiniRV_EX extends Module {
 // ---------------------------
 class MiniRV extends Module {
   val io = IO(new Bundle {
-    val pc   = Output(UInt(WORD_LEN.W))
-    val inst = Input(UInt(WORD_LEN.W))
+    val pc   = Output(UInt(DataWidth.W))
+    val inst = Input(UInt(DataWidth.W))
 
     val mem_re    = Output(Bool())
     val mem_we    = Output(Bool())
-    val mem_len   = Output(UInt(4.W))
-    val mem_addr  = Output(UInt(WORD_LEN.W))
-    val mem_wdata = Output(UInt(WORD_LEN.W))
-    val mem_rdata = Input(UInt(WORD_LEN.W))
+    val mem_len   = Output(UInt((DataWidth/8).W))
+    val mem_addr  = Output(UInt(DataWidth.W))
+    val mem_wdata = Output(UInt(DataWidth.W))
+    val mem_rdata = Input(UInt(DataWidth.W))
   })
 
-  val ifStage = Module(new MiniRV_IF)
-  val idStage = Module(new MiniRV_ID)
-  val exStage = Module(new MiniRV_EX)
+  val ifu = Module(new IFU)
+  val idu = Module(new IDU)
+  val exu = Module(new EXU)
 
-  // IF
-  io.pc := ifStage.io.pc
-  ifStage.io.bren   := exStage.io.bren
-  ifStage.io.braddr := exStage.io.braddr
-  ifStage.io.halt   := idStage.io.halt
+  // IFU
+  io.pc := ifu.io.pc
+  ifu.io.bren   := exu.io.bren
+  ifu.io.braddr := exu.io.braddr
+  ifu.io.halt   := idu.io.halt
 
-  // ID
-  idStage.io.pc   := ifStage.io.pc
-  idStage.io.inst := io.inst
+  // IDU
+  idu.io.pc   := ifu.io.pc
+  idu.io.inst := io.inst
 
-  // EX
-  exStage.io.pc    := idStage.io.pc
-  exStage.io.op1   := idStage.io.op1
-  exStage.io.op2   := idStage.io.op2
-  exStage.io.exsel := idStage.io.exsel
+  // EXU
+  exu.io.pc    := idu.io.pc
+  exu.io.op1   := idu.io.op1
+  exu.io.op2   := idu.io.op2
+  exu.io.exsel := idu.io.exsel
 
   // Memory
-  val memType = idStage.io.memsel
+  val memType   = idu.io.memsel
   io.mem_re    := !reset.asBool && memType.isOneOf(MEM.RW, MEM.RBU)
   io.mem_we    := !reset.asBool && memType.isOneOf(MEM.WW, MEM.WB)
-  io.mem_addr  := exStage.io.aluout
-  io.mem_wdata := idStage.io.rs2
+  io.mem_addr  := exu.io.aluout
+  io.mem_wdata := idu.io.rs2
   io.mem_len   := Mux(memType.isOneOf(MEM.WB, MEM.RBU), 1.U, 4.U)
 
   // Write Back
-  idStage.io.wb_en   := idStage.io.regWen
-  idStage.io.wb_rd   := idStage.io.rd_addr
-  idStage.io.memData := io.mem_rdata
-  idStage.io.exData  := exStage.io.aluout
+  idu.io.wb_en   := idu.io.regWen
+  idu.io.wb_rd   := idu.io.rd_addr
+  idu.io.memData := io.mem_rdata
+  idu.io.exData  := exu.io.aluout
 
   // DiffTest
   val difftest = Module(new DiffTest)
   difftest.io.clk  := clock
-  difftest.io.pc   := ifStage.io.pc
-  difftest.io.npc  := Mux(exStage.io.bren, exStage.io.braddr, ifStage.io.npc)
-  difftest.io.inst := idStage.io.inst
+  difftest.io.pc   := ifu.io.pc
+  difftest.io.npc  := Mux(exu.io.bren, exu.io.braddr, ifu.io.npc)
+  difftest.io.inst := idu.io.inst
   for (i <- 0 until CSR_NUM) {
-    difftest.io.csr(i) := 0.U(WORD_LEN.W)  // 未实现 CSR
+    difftest.io.csr(i) := 0.U(DataWidth.W)  // 未实现 CSR
   }
   for (i <- 0 until GPR_NUM) {
-    difftest.io.gpr(i) := idStage.io.gprOut(i)
+    difftest.io.gpr(i) := idu.io.gprOut(i)
   }
 }
 

@@ -167,13 +167,40 @@
 
 ### D4 用RTL实现迷你RISC-V处理器
 
+1. GCC 内联汇编
+
+    ```c
+    #define nemu_trap(code) asm volatile("mv a0, %0; ebreak" : :"r"(code))
+    ```
+
+    > 将 `code` 放入寄存器 `a0`，然后执行 `ebreak` 指令，使 NEMU 捕获这个断点异常，并读取 `a0` 作为程序的返回值。
+
+- 1.1 `asm volatile(...)`
+
+    表示一段 GCC 内联汇编。
+    * `asm`: 内联汇编
+    * `volatile`: 禁止编译器优化删除或重排
+    如果不加 `volatile`，编译器可能会认为这段代码没有“可见副作用”而删除它。
+
+- 1.2 `"mv a0, %0; ebreak"`
+
+    `mv a0, %0`: `mv` 是 RISC-V 伪指令. 实际等价于:  `addi a0, x0, code`
+    `ebreak`: RISC-V 的**断点指令**。
+
+- 1.3 `: :"r"(code)`
+
+    这是 GCC 内联汇编的约束说明。完整结构是: 
+    ```
+    asm volatile(汇编代码 : 输出操作数 : 输入操作数 : clobber列表)
+    ```
+
 ### D5 设备和输入输出
 
 #### NJU PA2.3
 
 1. volatile 关键字
 
-    volatile关键字的作用十分特别, 它的作用是避免编译器对相应代码进行优化.`volatile` 主要用于 **硬件 / OS / 并发编程**. 典型场景：
+    volatile关键字的作用十分特别, 它的作用是避免编译器对相应代码进行优化.`volatile` 主要用于 **硬件 / OS / 并发编程**. 典型场景: 
         1.1 硬件寄存器
         ```c
         volatile uint32_t *uart = (void*)0x10000000;
@@ -185,7 +212,7 @@
         ```
 
     举例:
-    写寄存器. 假设：UART发送多个字符
+    写寄存器. 假设: UART发送多个字符
     ```
     volatile char *p = UART寄存器;
     *p = 0x33;
@@ -193,27 +220,27 @@
     *p = 0x86;
     ```
 
-    如果被编译器优化成：(编译器认为前两次写入没效果). 设备行为就 **完全错误**。
+    如果被编译器优化成: (编译器认为前两次写入没效果). 设备行为就 **完全错误**。
     ```
     *p = 0x86
     ```
 
 
-    读取寄存器也是一样. 假设：
+    读取寄存器也是一样. 假设: 
     ```
     while(*status != READY);
     ```
-    设备会在未来某个时刻把寄存器改成 READY。如果没有 `volatile`： 编译器认为： `status 没被修改`. 于是：
+    设备会在未来某个时刻把寄存器改成 READY。如果没有 `volatile`:  编译器认为:  `status 没被修改`. 于是: 
     ```
     while(1)
     ```
     程序 **永远读不到 READY**。
 
-    > `volatile` 的本质是：
-    > 告诉编译器：
+    > `volatile` 的本质是: 
+    > 告诉编译器: 
     > **这个内存可能被程序之外的东西改变（硬件 / 中断 / DMA）**
     > **禁止优化访问**
-    > 否则编译器会： * 缓存值 * 删除读 * 删除写 * 合并写. 导致 **设备驱动错误**。
+    > 否则编译器会:  * 缓存值 * 删除读 * 删除写 * 合并写. 导致 **设备驱动错误**。
 
 2. 输入输出 abstract-machine
 
@@ -227,9 +254,9 @@
         ioe_write(reg, &__io_param); })
     ```
 
-    `__VA_ARGS__` 是 C 语言宏中的可变参数占位符。意思是：宏定义时，你可以写不定数量的参数，这些参数在宏展开时会替换 `__VA_ARGS__`。
+    `__VA_ARGS__` 是 C 语言宏中的可变参数占位符。意思是: 宏定义时，你可以写不定数量的参数，这些参数在宏展开时会替换 `__VA_ARGS__`。
 
-    将函数展开：
+    将函数展开: 
     ```c
     uint64_t t = io_read(AM_TIMER_UPTIME).us;
     uint64_t t = ({ AM_TIMER_UPTIME_T __io_param; ioe_read(AM_TIMER_UPTIME, &__io_param); __io_param; }).us;
@@ -251,13 +278,13 @@ TODO:
     > sdb, DiffTest等调试功能不再开启, 因为AM无法提供它所需要的库函数(如文件读写, 动态链接, 正则表达式等)
     > 通过AM IOE来实现NEMU的设备
 
-    把这一层层“套娃”理顺，其实就是一条 **IO 请求逐层向外传递** 的路径。系统看起来像三层机器：
-    1. **最外层：主机上的 NEMU（Outer NEMU）**
-    2. **中间层：运行在 AM 上的 NEMU（Inner NEMU）**
-    3. **最内层：打字游戏程序**
-    关键点：**真正的键盘和屏幕只有最外层主机有**。里面所有程序看到的设备，都是逐层模拟出来的。
+    把这一层层“套娃”理顺，其实就是一条 **IO 请求逐层向外传递** 的路径。系统看起来像三层机器: 
+    1. **最外层: 主机上的 NEMU（Outer NEMU）**
+    2. **中间层: 运行在 AM 上的 NEMU（Inner NEMU）**
+    3. **最内层: 打字游戏程序**
+    关键点: **真正的键盘和屏幕只有最外层主机有**。里面所有程序看到的设备，都是逐层模拟出来的。
 
-    把完整链条画出来会非常清楚：
+    把完整链条画出来会非常清楚: 
     打字游戏 (AM IOE) → 内层NEMU里的设备 (MMIO) → 内层NEMU CPU模拟 → 外层NEMU设备模拟 → SDL / 主机硬件 → 真实键盘 / 屏幕
 
 
@@ -305,7 +332,7 @@ TODO:
     > common.h -> 36
     > debug.h -> redefinition of ‘volatile int dummy’
 
-    NEMU 中有多少个 dummy 实体： 等于包含 common.h/debug.h 的 .c 文件数量。
+    NEMU 中有多少个 dummy 实体:  等于包含 common.h/debug.h 的 .c 文件数量。
 
     5.6 了解Makefile
     `am-kernels/kernels/hello`敲入`make ARCH=$ISA-nemu`后:
@@ -323,11 +350,11 @@ TODO:
 
 1. 什么才算是一个 Symbol？
 
-    在 **ELF 符号表**中，一个 **symbol** 一般指： **在链接阶段需要被识别或解析的名字**. 也就是说： 一个 symbol 必须满足：
+    在 **ELF 符号表**中，一个 **symbol** 一般指:  **在链接阶段需要被识别或解析的名字**. 也就是说:  一个 symbol 必须满足: 
     - **有全局或静态存储位置**
     - **在链接时可能被引用**
 
-    典型的 symbol 包括： (1) 全局变量 (2) 函数 (3) static 全局变量 (4) 外部引用
+    典型的 symbol 包括:  (1) 全局变量 (2) 函数 (3) static 全局变量 (4) 外部引用
 
 2. 寻找"Hello World!"
 
@@ -359,32 +386,32 @@ TODO:
       return 0;
     }
     ```
-    编译它：gcc main.c -o app
+    编译它: gcc main.c -o app
 
-    3.1. 链接视图：Section（给编译器和链接器看）
-    使用 readelf -S app 查看 Section 头部表，你会清晰地看到刚才代码中的元素被安排得明明白白：
+    3.1. 链接视图: Section（给编译器和链接器看）
+    使用 readelf -S app 查看 Section 头部表，你会清晰地看到刚才代码中的元素被安排得明明白白: 
 
-    .text（代码段）：存放 main 函数的机器指令。权限是只读且可执行。
-    .data（数据段）：存放 global_init（值为 42）。权限是可读可写。
-    .rodata（只读数据段）：存放 "Hello ELF"。权限是只读。
-    .bss（BSS段）：存放 global_uninit。
-    重点实证：如果你用 ls -l app 查看文件大小，可能只有 16KB。但 global_uninit 数组明明需要 40KB 的空间！这是因为 .bss 段在 ELF 文件中不占实际的磁盘空间，ELF 只记录了一句：“这里需要 40KB 的内存”。等程序运行加载到内存时，操作系统才会分配这 40KB 并清零。
+    .text（代码段）: 存放 main 函数的机器指令。权限是只读且可执行。
+    .data（数据段）: 存放 global_init（值为 42）。权限是可读可写。
+    .rodata（只读数据段）: 存放 "Hello ELF"。权限是只读。
+    .bss（BSS段）: 存放 global_uninit。
+    重点实证: 如果你用 ls -l app 查看文件大小，可能只有 16KB。但 global_uninit 数组明明需要 40KB 的空间！这是因为 .bss 段在 ELF 文件中不占实际的磁盘空间，ELF 只记录了一句: “这里需要 40KB 的内存”。等程序运行加载到内存时，操作系统才会分配这 40KB 并清零。
 
-    3.2. 执行视图：Segment（给操作系统加载器看）
-    操作系统在运行程序时，嫌弃一个个细碎的 Section 效率太低，它只关心内存权限。使用 readelf -l app 查看 Segment（Program Headers）：
-    你会看到两个主要的 LOAD 段：
-    第一个 LOAD 段（只读/可执行 R E）：操作系统将 .text 和 .rodata 打包进这个内存页。如果程序企图修改这片内存，会直接触发 Segmentation Fault（段错误）。
-    第二个 LOAD 段（可读/可写 R W）：操作系统将 .data 和 .bss 打包进这个内存页。
+    3.2. 执行视图: Segment（给操作系统加载器看）
+    操作系统在运行程序时，嫌弃一个个细碎的 Section 效率太低，它只关心内存权限。使用 readelf -l app 查看 Segment（Program Headers）: 
+    你会看到两个主要的 LOAD 段: 
+    第一个 LOAD 段（只读/可执行 R E）: 操作系统将 .text 和 .rodata 打包进这个内存页。如果程序企图修改这片内存，会直接触发 Segmentation Fault（段错误）。
+    第二个 LOAD 段（可读/可写 R W）: 操作系统将 .data 和 .bss 打包进这个内存页。
 
     3.3 ELF vs BIN
-    ELF 文件和 BIN 文件是两种完全不同类型的文件，它们的用途和结构差异很大。下面做一个详细对比：
+    ELF 文件和 BIN 文件是两种完全不同类型的文件，它们的用途和结构差异很大。下面做一个详细对比: 
 
     - 3.3.1. 文件定义
       * **ELF（Executable and Linkable Format）文件**
         * 是一种可执行文件格式，常用于 Linux、Unix 系统。
         * 可以包含 **程序代码、数据、符号表、调试信息** 等。
         * 可以直接被操作系统加载执行，或用于链接生成最终可执行程序。
-        * 有不同类型：可执行文件（`ET_EXEC`）、共享库（`ET_DYN`）、目标文件（`ET_REL`）等。
+        * 有不同类型: 可执行文件（`ET_EXEC`）、共享库（`ET_DYN`）、目标文件（`ET_REL`）等。
       * **BIN 文件**
         * 通常指 **纯二进制文件**，没有任何头信息或元数据。
         * 直接包含机器码或者原始数据，系统无法直接识别结构。
@@ -411,19 +438,19 @@ TODO:
         * 需要直接加载到内存执行的场景
 
     - 3.3.4. 转换
-      通常在嵌入式开发中会把 ELF 文件转成 BIN 文件：
+      通常在嵌入式开发中会把 ELF 文件转成 BIN 文件: 
       ```bash
       # 使用 objcopy
       arm-none-eabi-objcopy -O binary input.elf output.bin
       ```
-      * ELF → BIN：丢掉符号表、节信息，只保留机器码和初始化数据。
-      * BIN → ELF：理论上不可逆，需要额外工具重建段和符号表。
+      * ELF → BIN: 丢掉符号表、节信息，只保留机器码和初始化数据。
+      * BIN → ELF: 理论上不可逆，需要额外工具重建段和符号表。
 
 
 ### C2 支持RV32E的单周期NPC
 
 1. NEMU 动态库
-    nemu/src/cpu/difftest/ref.c -> `ref.c` 的核心逻辑： 把 NEMU 封装成一个“可被外部控制的参考模型”，供 NPC 做逐条对比。`ref.c` 只是把 NEMU 的内部状态暴露出来，变成一个可控的 golden model。
+    nemu/src/cpu/difftest/ref.c -> `ref.c` 的核心逻辑:  把 NEMU 封装成一个“可被外部控制的参考模型”，供 NPC 做逐条对比。`ref.c` 只是把 NEMU 的内部状态暴露出来，变成一个可控的 golden model。
 
     > 提供的四个接口的本质:
     > **difftest_memcpy**: 同步内存（NPC ↔ NEMU）。
@@ -455,18 +482,18 @@ TODO:
       c:   00008067                ret
     ```
 
-    **结论：硬件本身不区分有符号数和无符号数。**
-    在 RISC-V 中，`add` 指令执行的是 **模 2³² 的加法**，只对比特做运算，不关心类型。 因此：
+    **结论: 硬件本身不区分有符号数和无符号数。**
+    在 RISC-V 中，`add` 指令执行的是 **模 2³² 的加法**，只对比特做运算，不关心类型。 因此: 
     ```c
     int32_t  a + b
     uint32_t a + b
     ```
-    生成的都是：
+    生成的都是: 
     ```
     add a0, a0, a1
     ```
-    区别只存在于： 软件如何解释结果
-    硬件有区别情况在：
+    区别只存在于:  软件如何解释结果
+    硬件有区别情况在: 
     * 比较指令（`slt` vs `sltu`）
     * 右移指令（`sra` vs `srl`）
     类型是编译器概念，不是硬件概念。
@@ -512,19 +539,19 @@ TODO:
 > ```verilog
 > a << b (2 bits)
 > ```
-> 会变成：
+> 会变成: 
 > ```
 > if b[0] → shift 1 bit
 > if b[1] → shift 2 bit
 > ```
-> 也就是： log2(N) 级 MUX 级联
+> 也就是:  log2(N) 级 MUX 级联
 
 >  **特别说明**
 > * 常数移位(a << 2) → 直接 rewiring
 > * 可变移位(a << b) → barrel shifter（多级MUX）
 
 **问题 3** "从运算符直接综合是否有改进空间？"
-> Yosys 是逻辑综合工具，不是高级算术优化器。它：
+> Yosys 是逻辑综合工具，不是高级算术优化器。它: 
 > * 不做 aggressive 资源共享
 > * 不做高层算术结构合并
 > * 不做算术单元调度
@@ -592,7 +619,7 @@ https://blog.stevepaul.cc/course-lab/nju-ics-pa/pa3
       sd t2, ((32 + 2) * 8)(sp)
       # ===============================
       # 5. 设置 mstatus.MPRV 位
-      #    MPRV = 1 时：
+      #    MPRV = 1 时: 
       #    load/store 使用 MPP 指示的特权级
       #    这里用于通过 difftest
       # ===============================
@@ -605,7 +632,7 @@ https://blog.stevepaul.cc/course-lab/nju-ics-pa/pa3
       # ===============================
       mv a0, sp
       call __am_irq_handle
-      # 返回后：
+      # 返回后: 
       #  - Context 可能被修改
       #  - 甚至可能被替换（调度）
       # ===============================
@@ -670,22 +697,19 @@ https://blog.stevepaul.cc/course-lab/nju-ics-pa/pa3
 
 
 2. 理解上下文结构体的前世今生
-    查看RISC-V手册就会知道这个a0通用寄存器就是用来放函数的第一个参数的。看看上面的汇编就会发现是mv a0, sp把参数给传给__am_irq_hendle这个函数了。为什么要传sp寄存器呢？由于我们把上下文从低地址到高地址相对于sp存的，所以sp实际上就是上下文结构体的首地址了，所以把它当作指针的值传过去也很合理吧。
+    查看RISC-V手册就会知道这个a0通用寄存器就是用来放函数的第一个参数的。看看上面的汇编就会发现是mv a0, sp把参数给传给__am_irq_hendle这个函数了:由于我们把上下文从低地址到高地址相对于sp存的，所以sp实际上就是上下文结构体的首地址了。这里面成员的赋值的位置，看看刚才的预处理后的结果就知道了，都是相对于sp的分别的一个偏移处。
 
-    这里面成员的赋值的位置，看看刚才的预处理后的结果就知道了，都是相对于sp的分别的一个偏移处。
-
-    这四部分的联系：
-
+    这四部分的联系: 
     riscv.h指定了上下文结构体的定义，方便CTE去使用上下文。
     trap.S负责异常发生后对之前的程序状态进行保存，然后调用__am_irq_handle进一步处理异常，然后再恢复之前的程序状态。
     上面的讲义文字把这一切的大纲给阐明了。
     实现的新指令让这些东西能在NEMU上作为一个个指令能执行得动。具体而言ecall让程序具有了跳到异常处理程序的能力，csrrw和csrrs使得可以读取、写入CSR，让保存、恢复CSR的状态成为可能。
 
 3. 标准 RISC-V（RV32I / RV64I）
-  在标准 RISC-V ABI（如 RV32I）中：
+  在标准 RISC-V ABI（如 RV32I）中: 
     - a0–a7 是参数寄存器
     - a7 约定用于存放 syscall number
-    - ecall 时：
+    - ecall 时: 
       - a7 = syscall 号
       - a0–a6 = 参数
       - 返回值放在 a0
@@ -709,7 +733,7 @@ yield() → 在 a7 寄存器放入自陷的标志，并要求执行 ecall 指令
 ### C阶段答辩
 
 1. Typing-Game 程序流程图
-    %% 按键视角：从按键到命中
+    %% 按键视角: 从按键到命中
     按下键盘 → 键盘硬件产生事件
     → NEMU/NPC/AM接口捕获按键
     → 游戏程序读取键码
@@ -718,7 +742,7 @@ yield() → 在 a7 寄存器放入自陷的标志，并要求执行 ecall 指令
     → 更新 wrong 计数 / 更新 hit 计数
     → render更新帧缓冲
 
-    %% 程序视角：事件处理到渲染
+    %% 程序视角: 事件处理到渲染
     init(ioe,gpu) → while(1) 主循环
       → 计时 (AM_TIMER_UPTIME)
       → game_logic_update() 更新字符状态
@@ -787,25 +811,25 @@ yield() → 在 a7 寄存器放入自陷的标志，并要求执行 ecall 指令
       Insert-->>User: 返回最终 ELF 或 archive <br> Platform 运行相关Makfile
     ```
 
-    - 3.1. **入口**：用户执行 `make run`、`make image` 或 `make archive`。
-    - 3.2. **环境检查**：
+    - 3.1. **入口**: 用户执行 `make run`、`make image` 或 `make archive`。
+    - 3.2. **环境检查**: 
       * 确认 `AM_HOME` 指向 Abstract-Machine 仓库。
       * 检查 `ARCH` 是否在支持列表。
       * 拆分 `ARCH` 得到 `ISA` 和 `PLATFORM`。
-    - 3.3. **架构/平台配置**：
+    - 3.3. **架构/平台配置**: 
       * 引入架构/平台特定 makefile（`x86_64-qemu.mk`、`riscv64-nemu.mk` 等）。
       * 配置架构相关 flag、编译器、库路径、汇编/链接脚本。
-    - 3.4. **编译**：
+    - 3.4. **编译**: 
       * 自动创建 `build/$(ARCH)`。
       * `.c/.cc/.cpp/.S -> .o`。
-    - 3.4.1. **依赖库编译**：
+    - 3.4.1. **依赖库编译**: 
       * 对 `am`、`klib` 等库执行递归 make archive。
       * 返回 `.a` 文件。
-    - 3.5. **链接 ELF**：
+    - 3.5. **链接 ELF**: 
       * `.o` + `.a` → 最终 `IMAGE.elf`。
     - 3.6. **insert-arg**:(前进到8)
       * 嵌入 `mainarg` 到 ELF 镜像。
-    - 3.7. **完成**：
+    - 3.7. **完成**: 
       * 返回给用户最终 ELF 或 archive 文件。
       * Platform 运行相关Makfile
 
@@ -850,28 +874,31 @@ yield() → 在 a7 寄存器放入自陷的标志，并要求执行 ecall 指令
 
     - 4.0. **menuconfig**
       * menuconfig 生成配置文件 .config auto.conf auto.conf.cmd
-    - 4.1. **环境检查**：
+    - 4.1. **环境检查**: 
       * 确保 `MEMU_HOME` 指向 MEMU 仓库
       * `.config` 文件必须存在，否则提示 `make menuconfig`
-    - 4.2. **源文件收集**：
+    - 4.2. **源文件收集**: 
       * `filelist.mk`: 包含 `csrc/**/*.c` ...
       * 过滤黑名单目录/文件
-    - 4.3. **编译器配置**：
+    - 4.3. **编译器配置**: 
       * 根据 menuconfig 设置 CC、CFLAGS、LDFLAGS
       * 支持 LTO、ASAN、调试选项
-    - 4.4. **项目编译**：
+    - 4.4. **项目编译**: 
       * 遍历 am/klib 等库构建 `.a`
       * 与 OBJ 一起链接最终可执行文件
-    - 4.4.1. **RTL/Chisel 支持**：
+    - 4.4.1. **RTL/Chisel 支持**: 
       * 如果配置 NPC（用 RTL CPU），生成 Verilog
       * 使用 Verilator 生成 VLIB
-    - 4.4.2. **差分测试（DIFFTEST）**：
+    - 4.4.2. **差分测试（DIFFTEST）**: 
       * 构建参考实现 SO 文件
       * run 时加 `--diff=DIFF_REF_SO` 参数
-    - 4.5. **最终执行**：
+    - 4.5. **最终执行**: 
       * MEMU_EXEC 可以运行 batch 模式、SDB 调试模式或 gdb
 
-
+## git merge
+```bash
+git merge master
+```
 
 ## Issue
 
@@ -879,14 +906,14 @@ yield() → 在 a7 寄存器放入自陷的标志，并要求执行 ecall 指令
 
 > build.sc 没被正确编译，或编译产物损坏/缺失
 
-最常见原因: `.mill` 缓存损坏. 直接清缓存：
+最常见原因: `.mill` 缓存损坏. 直接清缓存: 
 
 ```bash
 rm -rf .mill
 rm -rf out
 ```
 
-然后重新执行：
+然后重新执行: 
 
 ```bash
 mill clean
