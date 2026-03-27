@@ -1,146 +1,174 @@
-#include <klib.h>
-#include <klib-macros.h>
-#include <stdint.h>
+#include "klib.h"
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 size_t strlen(const char *s) {
-  int l=0;
-  while(*s!='\0') {
-    l++;
-    s++;
+  size_t sz = 0;
+  for (; *s; s ++) {
+    sz ++;
   }
-  return l;
+  return sz;
 }
 
-char *strcpy(char *dst, const char *src) {
-  char *result=dst;
-  while(*src!='\0') {
-    *dst=*src;
-    src++;
+char *strcpy(char* dst,const char* src) {
+  char *ret;
+  ret = dst;
+  while((*dst++=*src++)!='\0');
+  return ret;
+}
+char* strncpy(char* dst, const char* src, size_t n){
+  char* ret;
+  ret=dst;
+  while(n-->0){
+    *dst++=*src++;
+  }
+  return ret;
+}
+
+char* strcat(char* dst, const char* src){
+  char* d=dst;
+  while(*dst!='\0')
     dst++;
-  }
-  *dst='\0';
-  return result;
+  while((*dst++=*src++)!='\0');
+  return d;
+}
+int strcmp(const char* s1, const char* s2){
+  while(*s1&&*s1==*s2)s1++,s2++;
+  return (int)(*s1-*s2);
+}
+int strncmp(const char* s1, const char* s2, size_t n){
+  while(--n>0&&*s1&&*s1==*s2)s1++,s2++;
+  return (int)(*s1-*s2);
 }
 
-char *strncpy(char *dst, const char *src, size_t n) {
-  char *result=dst;
-  int c=0;
-  while(*src!='\0') {
-    if (c>=n) {
-      break;
+
+void* memset(void* v,int c,size_t n){
+  c &= 0xff;
+  uint32_t c2 = (c << 8) | c;
+  uint32_t c4 = (c2 << 16) | c2;
+  uint64_t c8 = (((uint64_t)c4 << 16) << 16) | c4;
+
+  char *dst = (char *)v;
+  const size_t threshold = 32;
+
+  if (n >= threshold) {
+    // first let dst aligned by 8 bytes
+    int pad = (8 - (uintptr_t)dst % 8) % 8;
+    n -= pad;
+    while (pad --) { *dst ++ = c; }
+
+    // loop unrolling
+    uint64_t *dst8 = (void *)dst;
+    while (n >= threshold) {
+      *dst8 ++ = c8;
+      *dst8 ++ = c8;
+      *dst8 ++ = c8;
+      *dst8 ++ = c8;
+      n -= threshold;
     }
-    c++;
-    *dst=*src;
-    src++;
-    dst++;
-  }
-  while(c<=n) {
-    c++;
-    *dst='\0';
-    dst++;
-  }
-  return result;
-}
 
-char *strcat(char *dst, const char *src) {
-  char *result=dst;
-  while(*dst!='\0') {
-    dst++;
-  }
-  while(*src!='\0') {
-    *dst=*src;
-    src++;
-    dst++;
-  }
-  return result;
-}
-
-int strcmp(const char *s1, const char *s2) {
-  while(*s1!='\0' && *s2!='\0') {
-    if (*s1!=*s2) {
-      return *s1-*s2;
+    while (n >= 8) {
+      *dst8 ++ = c8;
+      n -= 8;
     }
-    s1++;
-    s2++;
+
+    // copy the remaining bytes
+    dst = (void *)dst8;
   }
-  if (*s1!='\0') {
-    return 1;
-  } else if (*s2!='\0') {
-    return -1;
-  } else {
-    return 0;
-  }
+
+  while (n--) { *dst++ = c; }
+  return v;
 }
 
-int strncmp(const char *s1, const char *s2, size_t n) {
-  int c=0;
-  while(*s1!='\0' && *s2!='\0' && c<n) {
-    c++;
-    if (*s1!=*s2) {
-      return *s1-*s2;
+void* memmove(void* dst,const void* src,size_t n){
+  const char* s;
+  char* d;
+  if(src+n>dst&&src<dst){
+    s=src+n;
+    d=dst+n;
+    while(n-->0)*--d=*--s;
+  }
+  else{
+    memcpy(dst, src, n);
+  }
+  return dst;
+}
+
+void* memcpy(void* out, const void* in, size_t n) {
+  char *dst = (char *)out;
+  char *src = (char *)in;
+  const size_t threshold = 32;
+  int is_align8 = ((uintptr_t)(dst - src) % 8 == 0);
+
+  if (n >= threshold && is_align8) {
+    // first let dst aligned by 8 bytes
+    int pad = (8 - (uintptr_t)dst % 8) % 8;
+    n -= pad;
+    while (pad --) { *dst ++ = *src ++; }
+
+    // loop unrolling
+    uint64_t *dst8 = (void *)dst;
+    uint64_t *src8 = (void *)src;
+    while (n >= threshold) {
+      *dst8 ++ = *src8 ++;
+      *dst8 ++ = *src8 ++;
+      *dst8 ++ = *src8 ++;
+      *dst8 ++ = *src8 ++;
+      n -= threshold;
     }
-    s1++;
-    s2++;
-  }
-  if (*s1!='\0' && *s2=='\0') {
-    return 1;
-  } else if (*s2!='\0' && *s1=='\0') {
-    return -1;
-  } else {
-    return 0;
-  }
-}
 
-void *memset(void *s, int c, size_t n) {
-  for(int i=0; i<n; i++) {
-    ((uint8_t*)s)[i]=c;
-  }
-  return s;
-}
+    while (n >= 8) {
+      *dst8 ++ = *src8 ++;
+      n -= 8;
+    }
 
-void *memmove(void *dest, const void *src, size_t n) {
-  uint8_t* from = (uint8_t*) src;
-  uint8_t* to = (uint8_t*) dest;
-
-  if (from == to || n == 0)
-    return dest;
-  if (to > from && to-from < (int)n) {
-    /* to overlaps with from */
-    /*  <from......>         */
-    /*         <to........>  */
-    /* copy in reverse, to avoid overwriting from */
-    int i;
-    for(i=n-1; i>=0; i--)
-      to[i] = from[i];
-    return dest;
+    // copy the remaining bytes
+    dst = (void *)dst8;
+    src = (void *)src8;
   }
-  if (from > to && from-to < (int)n) {
-    /* to overlaps with from */
-    /*        <from......>   */
-    /*  <to........>         */
-    /* copy forwards, to avoid overwriting from */
-    size_t i;
-    for(i=0; i<n; i++)
-      to[i] = from[i];
-    return dest;
-  }
-  memcpy(dest, src, n);
-  return dest;
-}
 
-void *memcpy(void *out, const void *in, size_t n) {
-  for(int i=0; i<n; i++)
-    ((char*)out)[i]=((char*)in)[i];
+  int is_align4 = ((uintptr_t)(dst - src) % 4 == 0);
+
+  if (n >= threshold && is_align4) {
+    // first let dst aligned by 4 bytes
+    int pad = (4 - (uintptr_t)dst % 4) % 4;
+    n -= pad;
+    while (pad --) { *dst ++ = *src ++; }
+
+    // loop unrolling
+    uint32_t *dst4 = (void *)dst;
+    uint32_t *src4 = (void *)src;
+    while (n >= threshold) {
+      *dst4 ++ = *src4 ++;
+      *dst4 ++ = *src4 ++;
+      *dst4 ++ = *src4 ++;
+      *dst4 ++ = *src4 ++;
+      *dst4 ++ = *src4 ++;
+      *dst4 ++ = *src4 ++;
+      *dst4 ++ = *src4 ++;
+      *dst4 ++ = *src4 ++;
+      n -= threshold;
+    }
+
+    while (n >= 4) {
+      *dst4 ++ = *src4 ++;
+      n -= 4;
+    }
+
+    // copy the remaining bytes
+    dst = (void *)dst4;
+    src = (void *)src4;
+  }
+
+  while (n--) { *dst++ = *src++; }
   return out;
 }
 
-int memcmp(const void *s1, const void *s2, size_t n) {
-  for(int i=0; i<n; i++)
-    if (((uint8_t*)s1)[i]!=((uint8_t*)s2)[i])
-      return ((uint8_t*)s1)[i]-((uint8_t*)s2)[i];
-  return 0;
+int memcmp(const void* s1, const void* s2, size_t n){
+  const char *t1 = s1;
+  const char *t2 = s2;
+  while(--n>0&&*t1==*t2)t1++,t2++;
+  return (int)(*t1-*t2);
 }
 
 #endif
