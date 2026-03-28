@@ -122,28 +122,9 @@ class IDU extends Module {
   io.gprOut := GPR
 
   // -------- Trap --------
-  val trap = Module(new EBreak)
-  // 定义异常编码规则
-  // 0: EBREAK, 1: 全零指令, 2: 未实现指令
-  val impl_inst = MiniRV_IMPLED.filterNot(inst =>
-    inst == E || inst == EBREAK
-  )
-  val is_unimpl = ~impl_inst.map(inst => io.inst === inst).reduce(_ || _)
-  val is_zero = (io.inst === 0.U)
-  val is_ebreak = (io.inst === EBREAK)
-  val is_otherE = (io.inst === E) && (io.inst =/= EBREAK)
-  val ecode = MuxCase(1.U(8.W), Seq(  // 默认全零指令
-      is_ebreak -> 0.U,  // EBREAK
-      is_zero   -> 1.U,  // 全零指令
-      is_unimpl -> 2.U,  // 未实现指令
-    )
-  )
-  // 输出到 EBreak 模块
-  trap.io.clk  := clock
-  trap.io.trap := ~reset.asBool && is_unimpl
-  trap.io.code := ecode
-  // halt 信号
-  io.halt := ~reset.asBool && is_unimpl
+  val trap = Module(new Trap(MiniRV_IMPLED))
+  trap.io.inst := io.inst
+  io.halt := trap.io.halt
 }
 
 // ---------------------------
@@ -222,17 +203,18 @@ class MiniRV extends Module {
   idu.io.memData := io.mem_rdata
   idu.io.exData  := exu.io.aluout
 
-  // DiffTest
-  val difftest = Module(new DiffTest)
-  difftest.io.clk  := clock
-  difftest.io.pc   := ifu.io.pc
-  difftest.io.npc  := Mux(exu.io.bren, exu.io.braddr, ifu.io.npc)
-  difftest.io.inst := idu.io.inst
-  for (i <- 0 until CSR_NUM) {
-    difftest.io.csr(i) := 0.U(DataWidth.W)  // 未实现 CSR
-  }
+  // -------- DiffTest --------
+  val diffpc = Module(new DiffPC)
+  diffpc.io.pc   := ifu.io.pc
+  diffpc.io.npc  := Mux(exu.io.bren, exu.io.braddr, ifu.io.npc)
+  diffpc.io.inst := idu.io.inst
+  val diffgpr = Module(new DiffGPR)
   for (i <- 0 until GPR_NUM) {
-    difftest.io.gpr(i) := idu.io.gprOut(i)
+    diffgpr.io.gpr(i) := idu.io.gprOut(i)
+  }
+  val diffcsr = Module(new DiffCSR)
+  for (i <- 0 until CSR_NUM) {
+    diffcsr.io.csr(i) := 0.U(DataWidth.W)  // 未实现 CSR
   }
 }
 

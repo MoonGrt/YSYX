@@ -37,14 +37,33 @@ Decode rtlDecode;
 
 extern "C" {
   void mtrace(bool is_write, paddr_t addr, int len, word_t data);
+  void etrace(uint32_t epc, uint32_t ecode);
 
   #define EBREAK_CODE    0
-  #define ZERO_INST_CODE 1
-  #define OTHER_E_CODE   2
+  #define ECALL_CODE     1
+  #define ZERO_INST_CODE 2
   #define UNIMPL_CODE    3
-  void ebreak(uint8_t code) {
-    if (code == EBREAK_CODE) MEMUTRAP(cpu.pc, code);
-    else INV(cpu.pc);
+  void exception(uint8_t code) {
+    switch (code) {
+      case EBREAK_CODE:
+        printf("[MEMU] EBREAK exception\n");
+        MEMUTRAP(cpu.pc, code);
+        break;
+      case ECALL_CODE:
+        IFDEF(CONFIG_ETRACE, etrace(s->pc, 11));
+        break;
+      case ZERO_INST_CODE:
+        printf("[MEMU] Zero instruction exception\n");
+        INV(cpu.pc);
+        break;
+      case UNIMPL_CODE:
+        printf("[MEMU] Unimplemented instruction exception\n");
+        INV(cpu.pc);
+        break;
+      default:
+        printf("[MEMU] Unknown exception code %d\n", code);
+        break;
+    }
     Verilated::gotFinish(true);
   }
   int dpi_paddr_read(int addr, char len){
@@ -63,7 +82,7 @@ extern "C" {
     if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
     IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   }
-  void dpi_diff(int pc, int npc, int inst, int* gpr, int* csr) {
+  void dpi_diffpc(int pc, int npc, int inst) {
     // Decode
     rtlDecode.pc = pc;
     rtlDecode.snpc = pc + 4;
@@ -71,6 +90,12 @@ extern "C" {
     rtlDecode.isa.inst = inst;
     // CPU_state
     cpu.pc = pc;
+  }
+  void dpi_diffgpr(int* gpr) {
+    for (int i = 0; i < 32; i++)
+      cpu.gpr[i] = gpr[i];
+  }
+  void dpi_diffcsr(int* csr) {
     cpu.csr.mstatus = csr[0];
     cpu.csr.mepc = csr[1];
     cpu.csr.mcause = csr[2];
@@ -79,8 +104,6 @@ extern "C" {
     cpu.csr.mcycleh = csr[5];
     cpu.csr.mvendorid = csr[6];
     cpu.csr.marchid = csr[7];
-    for (int i = 0; i < 32; i++)
-      cpu.gpr[i] = gpr[i];
   }
 }
 

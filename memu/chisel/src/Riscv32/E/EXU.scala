@@ -5,16 +5,16 @@ import chisel3.util._
 import riscv.Constants._
 import riscv.Constants.Riscv32E._
 
-// ---------------------------
-// EXU 模块
-// ---------------------------
+// ----------------------------------
+// EXU 模块: Execution Unit
+// ----------------------------------
 class EXU extends Module {
   val io = IO(new Bundle {
+    val exsel  = Input(EX())
     val pc     = Input(UInt(DataWidth.W))
     val op1    = Input(UInt(DataWidth.W))
     val op2    = Input(UInt(DataWidth.W))
     val immsb  = Input(UInt(DataWidth.W))
-    val exsel  = Input(EX())
     val aluout = Output(UInt(DataWidth.W))
     val bren   = Output(Bool())
     val braddr = Output(UInt(DataWidth.W))

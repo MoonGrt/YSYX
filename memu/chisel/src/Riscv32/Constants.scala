@@ -5,8 +5,8 @@ import chisel3.util._
 
 object Constants {
   val DataWidth = 32
-  val CSR_NUM  = 8
-  val GPR_NUM  = 32
+  val CSR_NUM   = 8
+  val GPR_NUM   = 32
 
   object MiniRV {
     object OP2 extends ChiselEnum {

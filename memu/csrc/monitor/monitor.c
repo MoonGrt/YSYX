@@ -117,7 +117,7 @@ void init_monitor(int argc, char *argv[]) {
   /* Set random seed. */
   init_rand();
   /* Open the log file. */
-  init_log(log_file);
+  IFDEF(CONFIG_TRACE, init_log(log_file););
   /* Initialize memory. */
   init_mem();
   /* Initialize devices. */

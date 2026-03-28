@@ -2,6 +2,7 @@ package riscv.util
 
 import chisel3._
 import chisel3.util._
+import riscv.Instructions._
 import riscv.Constants._
 
 // ---------------------------
@@ -30,26 +31,60 @@ class RAM_DPI extends BlackBox {
 }
 
 // ---------------------------
-// EBreak BlackBox (异常处理模块)
+// Exception BlackBox (异常处理模块)
 // ---------------------------
-class EBreak extends BlackBox {
+class Exception extends BlackBox {
   val io = IO(new Bundle {
     val clk  = Input(Clock())
-    val trap = Input(Bool())
+    val en   = Input(Bool())
     val code = Input(UInt(8.W))
   })
+}
+
+class Trap(val impled: Seq[BitPat]) extends Module {
+  val io = IO(new Bundle {
+    val inst = Input(UInt(DataWidth.W))
+    val halt = Output(Bool())
+  })
+  // -------- 异常类型 --------
+  val is_ebreak = (io.inst === EBREAK)
+  val is_ecall  = (io.inst === ECALL)
+  val is_zero   = (io.inst === 0.U)
+  val is_impl   = VecInit(impled.map(_ === io.inst)).asUInt.orR
+  val is_unimpl = ~is_impl
+  // -------- 异常编码 --------
+  val ecode = MuxCase(0.U, Seq(
+    is_ebreak -> 0.U,
+    is_ecall  -> 1.U,
+    is_zero   -> 2.U,
+    is_unimpl -> 3.U,
+  ))
+  // -------- Exception --------
+  val exception = Module(new Exception)
+  exception.io.clk  := clock
+  exception.io.en   := ~reset.asBool && (is_unimpl || is_zero || is_ebreak || is_ecall)
+  exception.io.code := ecode
+  // -------- halt --------
+  io.halt := ~reset.asBool && is_unimpl
 }
 
 // ---------------------------
 // DiffTest BlackBox (差分测试模块)
 // ---------------------------
-class DiffTest extends BlackBox {
+class DiffPC extends BlackBox {
   val io = IO(new Bundle {
-    val clk  = Input(Clock())
     val pc   = Input(UInt(DataWidth.W))
     val npc  = Input(UInt(DataWidth.W))
     val inst = Input(UInt(DataWidth.W))
-    val csr  = Input(Vec(CSR_NUM, UInt(DataWidth.W)))
+  })
+}
+class DiffGPR extends BlackBox {
+  val io = IO(new Bundle {
     val gpr  = Input(Vec(GPR_NUM, UInt(DataWidth.W)))
+  })
+}
+class DiffCSR extends BlackBox {
+  val io = IO(new Bundle {
+    val csr  = Input(Vec(CSR_NUM, UInt(DataWidth.W)))
   })
 }

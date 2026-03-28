@@ -4,9 +4,9 @@ import chisel3._
 import chisel3.util._
 import riscv.Constants._
 
-// ---------------------------
+// ----------------------------------
 // IFU 模块：Instruction Fetch
-// ---------------------------
+// ----------------------------------
 class IFU extends Module {
   val io = IO(new Bundle {
     val halt   = Input(Bool())  // halt 信号
@@ -16,7 +16,7 @@ class IFU extends Module {
     val npc    = Output(UInt(DataWidth.W))  // 下一个 PC
   })
   val pc = RegInit("h80000000".U)
-  io.npc := Mux(io.bren, io.braddr, pc + 4.U)  // next pc
   pc := Mux(io.halt, pc, io.npc)
+  io.npc := Mux(io.bren, io.braddr, pc + 4.U)  // next pc
   io.pc := pc
 }
