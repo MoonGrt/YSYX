@@ -80,11 +80,11 @@ class DiffPC extends BlackBox {
 }
 class DiffGPR extends BlackBox {
   val io = IO(new Bundle {
-    val gpr  = Input(Vec(GPR_NUM, UInt(DataWidth.W)))
+    val gpr  = Input(Vec(GPRNum, UInt(DataWidth.W)))
   })
 }
 class DiffCSR extends BlackBox {
   val io = IO(new Bundle {
-    val csr  = Input(Vec(CSR_NUM, UInt(DataWidth.W)))
+    val csr  = Input(Vec(CSRNum, UInt(DataWidth.W)))
   })
 }

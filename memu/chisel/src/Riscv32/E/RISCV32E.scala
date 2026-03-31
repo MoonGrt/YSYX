@@ -7,80 +7,69 @@ import riscv.Constants.Riscv32E._
 import riscv.util._
 
 // ---------------------------
-// Riscv32E CPU（单周期）
+// Riscv32E CPU
 // ---------------------------
+class InstBus extends Bundle{
+  val addr = Decoupled(UInt(DataWidth.W))
+  val data = Flipped(Decoupled(UInt(DataWidth.W)))
+}
+class DataBus extends Bundle{
+  val memRen   = Output(Bool())  // read enable
+  val memWen   = Output(Bool())  // write enable
+  val memLen   = Output(UInt((DataWidth/8).W))  // length
+  val memAddr  = Output(UInt(DataWidth.W))
+  val memWdata = Output(UInt(DataWidth.W))
+  val memRdata = Input(UInt(DataWidth.W))
+}
 class Riscv32E extends Module {
   val io = IO(new Bundle {
-    val pc   = Output(UInt(DataWidth.W))
-    val inst = Input(UInt(DataWidth.W))
-
-    val memRen   = Output(Bool())
-    val memWen   = Output(Bool())
-    val memLen   = Output(UInt((DataWidth/8).W))
-    val memAddr  = Output(UInt(DataWidth.W))
-    val memWdata = Output(UInt(DataWidth.W))
-    val memRdata = Input(UInt(DataWidth.W))
+    val inst = new InstBus
+    val data = new DataBus
   })
 
+  // Modules
   val ifu = Module(new IFU)
   val idu = Module(new IDU)
   val exu = Module(new EXU)
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
 
+  // Inst Bus
+  io.inst <> ifu.io.bus
+  // Data Bus
+  io.data <> lsu.io.bus
+
   // IFU
-  io.pc := ifu.io.pc
-  ifu.io.bren   := exu.io.bren
-  ifu.io.braddr := exu.io.braddr
-  ifu.io.halt   := idu.io.halt
+  ifu.io.in <> exu.io.br
   // IDU
-  idu.io.pc   := ifu.io.pc
-  idu.io.npc  := ifu.io.npc
-  idu.io.inst := io.inst
-  idu.io.wben   := wbu.io.wben
-  idu.io.wbAddr := wbu.io.wbAddr
-  idu.io.wbData := wbu.io.wbData
+  idu.io.ifuin <> ifu.io.out
+  idu.io.wbuin <> wbu.io.out
   // EXU
-  exu.io.pc    := idu.io.pc
-  exu.io.op1   := idu.io.op1
-  exu.io.op2   := idu.io.op2
-  exu.io.immsb := idu.io.immsb
-  exu.io.exsel := idu.io.exsel
+  exu.io.in <> idu.io.out
   // LSU
-  lsu.io.memsel := idu.io.memsel
-  lsu.io.addr   := exu.io.aluout
-  lsu.io.data   := idu.io.RS2
-  io.memRen   := lsu.io.memRen
-  io.memWen   := lsu.io.memWen
-  io.memLen   := lsu.io.memLen
-  io.memAddr  := lsu.io.memAddr
-  io.memWdata := lsu.io.memWdata
+  lsu.io.in <> exu.io.out
   // WBU
-  wbu.io.wbsel   := idu.io.wbsel
-  wbu.io.wbrd    := idu.io.wbrd
-  wbu.io.memsel  := idu.io.memsel
-  wbu.io.pc      := idu.io.pc
-  wbu.io.csr     := idu.io.op2
-  wbu.io.exData  := exu.io.aluout
-  wbu.io.memData := io.memRdata
+  wbu.io.in <> lsu.io.out
 }
 
 // ---------------------------
-// Riscv32E TOP：自包含 CPU + ROM + RAM
+// Riscv32E TOP = CPU + ROM + RAM
 // ---------------------------
 class Riscv32ETOP extends Module {
   val cpu = Module(new Riscv32E)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)
-  // 指令取值
-  rom.io.addr := cpu.io.pc
-  cpu.io.inst := rom.io.data
-  // 数据访存
+  // Inst
+  cpu.io.inst.addr.ready := true.B
+  rom.io.addr := cpu.io.inst.addr.bits
+  cpu.io.inst.data.valid := cpu.io.inst.data.ready
+  cpu.io.inst.data.bits := rom.io.data
+  // Data
   ram.io.clk   := clock
-  ram.io.re    := cpu.io.memRen
-  ram.io.we    := cpu.io.memWen
-  ram.io.len   := cpu.io.memLen
-  ram.io.addr  := cpu.io.memAddr
-  ram.io.wdata := cpu.io.memWdata
-  cpu.io.memRdata := ram.io.rdata
+  ram.io.re    := cpu.io.data.memRen
+  ram.io.we    := cpu.io.data.memWen
+  ram.io.len   := cpu.io.data.memLen
+  ram.io.addr  := cpu.io.data.memAddr
+  ram.io.wdata := cpu.io.data.memWdata
+  cpu.io.data.memRdata := ram.io.rdata
 }

@@ -5,8 +5,8 @@ import chisel3.util._
 
 object Constants {
   val DataWidth = 32
-  val CSR_NUM   = 8
-  val GPR_NUM   = 32
+  val CSRNum    = 8
+  val GPRNum    = 32
 
   object MiniRV {
     object OP2 extends ChiselEnum {
@@ -35,12 +35,12 @@ object Constants {
           BEQ, BNE, BLT, BGE, BLTU, BGEU, JAL, CSR = Value
     }
     object WB extends ChiselEnum {
-      val NONE, PC, EX, MEM, CSR = Value
+      val NONE, PC, EX, LS, CSR = Value
     }
-    object MEM extends ChiselEnum {
+    object LS extends ChiselEnum {
       val NONE, RW, RH, RB, RHU, RBU, WW, WH, WB = Value
     }
-    object CSRS extends ChiselEnum {
+    object CSR extends ChiselEnum {
       val NONE, W, S, C, B, E, MRET = Value
     }
   }

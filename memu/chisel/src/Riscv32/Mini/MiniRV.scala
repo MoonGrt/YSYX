@@ -54,7 +54,7 @@ class IDU extends Module {
     val regWen = Output(Bool())
 
     // Diff
-    val gprOut = Output(Vec(GPR_NUM, UInt(DataWidth.W)))
+    val gprOut = Output(Vec(GPRNum, UInt(DataWidth.W)))
   })
 
   val List(op2sel, exsel, wbsel, memsel) = ListLookup(io.inst,
@@ -72,7 +72,7 @@ class IDU extends Module {
   )
 
   // -------- 寄存器堆 --------
-  val GPR = RegInit(VecInit(Seq.fill(GPR_NUM)(0.U(DataWidth.W))))
+  val GPR = RegInit(VecInit(Seq.fill(GPRNum)(0.U(DataWidth.W))))
 
   // -------- 指令字段 --------
   val rd  = io.inst(11,7)
@@ -209,11 +209,11 @@ class MiniRV extends Module {
   diffpc.io.npc  := Mux(exu.io.bren, exu.io.braddr, ifu.io.npc)
   diffpc.io.inst := idu.io.inst
   val diffgpr = Module(new DiffGPR)
-  for (i <- 0 until GPR_NUM) {
+  for (i <- 0 until GPRNum) {
     diffgpr.io.gpr(i) := idu.io.gprOut(i)
   }
   val diffcsr = Module(new DiffCSR)
-  for (i <- 0 until CSR_NUM) {
+  for (i <- 0 until CSRNum) {
     diffcsr.io.csr(i) := 0.U(DataWidth.W)  // 未实现 CSR
   }
 }
