@@ -18,14 +18,14 @@
 #include "../include/reg.h"
 
 #define CHECKDIFF(p) \
-  if (ref_r->p != cpu.p) { \
-    printf("difftest fail at " #p ", expect " FMT_WORD " got " FMT_WORD "\n", ref_r->p, cpu.p); \
+  if (ref->p != cpu.p) { \
+    printf("difftest fail at { " #p " } -> ref: " FMT_WORD " - dut " FMT_WORD "\n", ref->p, cpu.p); \
     result = false; \
   }
 
 #define CHECKDIFF_FMT(p, fmt, ...) \
-  if (ref_r->p != cpu.p) { \
-    printf("difftest fail at " fmt ", expect " FMT_WORD " got " FMT_WORD "\n", ## __VA_ARGS__, ref_r->p, cpu.p); \
+  if (ref->p != cpu.p) { \
+    printf("difftest fail at { " fmt " } -> ref: " FMT_WORD " - dut " FMT_WORD "\n", ## __VA_ARGS__, ref->p, cpu.p); \
     result = false; \
   }
 
@@ -36,13 +36,13 @@
   _(mtvec)          \
 
 #define CHECKDIFF_CSR(p) \
-  if (ref_r->csr.p != cpu.csr.p) { \
-    printf("difftest fail at csr." #p ", expect " FMT_WORD " got " FMT_WORD "\n", \
-           ref_r->csr.p, cpu.csr.p); \
+  if (ref->csr.p != cpu.csr.p) { \
+    printf("difftest fail at { csr." #p " } -> ref: " FMT_WORD " - dut " FMT_WORD "\n", \
+           ref->csr.p, cpu.csr.p); \
     result = false; \
   }
 
-bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
+bool isa_difftest_checkregs(CPU_state *ref) {
   bool result = true;
   CHECKDIFF(pc);
   for (int i = 0; i < 32; i++)

@@ -3,50 +3,48 @@
 void rtl_step(void);
 void ftrace_ret(paddr_t pc);
 void ftrace_call(paddr_t pc, paddr_t target, bool is_tail);
-extern Decode rtlDecode;
 
 enum {
   TYPE_I, TYPE_U, TYPE_S, TYPE_R, TYPE_J, TYPE_B,
   TYPE_N,  // none
 };
 
-static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_t *imm, int type) {
-  uint32_t i = s->isa.inst;
+static void decode_operand(int *rd, word_t *src1, word_t *src2, word_t *imm, int type) {
+  uint32_t i = decode.isa.inst;
   int rs1 = BITS(i, 19, 15);
   int rs2 = BITS(i, 24, 20);
-     *rd  = BITS(i, 11, 7);
+      *rd = BITS(i, 11, 7);
 }
 
-static int step(Decode *s) {
+static int step() {
   rtl_step();
 
-#define INSTPAT_INST(s) ((s)->isa.inst)
-#define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
+#define INSTPAT_INST(decode) ((decode).isa.inst)
+#define INSTPAT_MATCH(decode, name, type, ... /* execute body */ ) { \
   int rd = 0; \
   word_t src1 = 0, src2 = 0, imm = 0; \
-  decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type)); \
+  decode_operand(&rd, &src1, &src2, &imm, concat(TYPE_, type)); \
   __VA_ARGS__ ; \
 }
   INSTPAT_START();
-  INSTPAT("??????? ????? ????? 000 ????? 1100111", jalr  , I, 
+  INSTPAT("??????? ????? ????? 000 ????? 1100111", jalr  , I,
   IFDEF(CONFIG_FTRACE, {
-    if (s->isa.inst == 0x00008067)
-      ftrace_ret(s->pc);  // ret -> jalr x0, 0(x1)
+    if (decode.isa.inst == 0x00008067)
+      ftrace_ret(decode.pc);  // ret -> jalr x0, 0(x1)
     else if (rd == 1)
-      ftrace_call(s->pc, s->dnpc, false);
+      ftrace_call(decode.pc, decode.dnpc, false);
     else if (rd == 0 && imm == 0)
-      ftrace_call(s->pc, s->dnpc, true);  // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
+      ftrace_call(decode.pc, decode.dnpc, true);  // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
   }));
-  INSTPAT("??????? ????? ????? ??? ????? 1101111", jal   , J, 
-  IFDEF(CONFIG_FTRACE, { 
+  INSTPAT("??????? ????? ????? ??? ????? 1101111", jal   , J,
+  IFDEF(CONFIG_FTRACE, {
     if (rd == 1)  // x1: return address for jumps
-      ftrace_call(s->pc, s->dnpc, false);
+      ftrace_call(decode.pc, decode.dnpc, false);
   }));
   INSTPAT_END();
   return 0;
 }
 
-int isa_exec_once(Decode *s) {
-  *s = rtlDecode;
-  return step(s);
+int isa_exec_once() {
+  return step();
 }

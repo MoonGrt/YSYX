@@ -33,8 +33,6 @@ bool wave_enable() {
          (g_nr_guest_inst < CONFIG_WAVE_END), false);
 }
 
-Decode rtlDecode;
-
 extern "C" {
   void mtrace(bool is_write, paddr_t addr, int len, word_t data);
   void etrace(uint32_t epc, uint32_t ecode);
@@ -50,7 +48,7 @@ extern "C" {
         MEMUTRAP(cpu.pc, code);
         break;
       case ECALL_CODE:
-        IFDEF(CONFIG_ETRACE, etrace(s->pc, 11));
+        IFDEF(CONFIG_ETRACE, etrace(decode.pc, 11));
         break;
       case ZERO_INST_CODE:
         printf("[MEMU] Zero instruction exception\n");
@@ -90,10 +88,10 @@ extern "C" {
   }
   void dpi_diffpc(int pc, int npc, int inst) {
     // Decode
-    rtlDecode.pc = pc;
-    rtlDecode.snpc = pc + 4;
-    rtlDecode.dnpc = npc;
-    rtlDecode.isa.inst = inst;
+    decode.pc = pc;
+    decode.snpc = pc + 4;
+    decode.dnpc = npc;
+    decode.isa.inst = inst;
     // CPU_state
     cpu.pc = pc;
   }
@@ -140,7 +138,6 @@ static void tick(){
 }
 
 static void reset(){
-  // printf("[MEMU] Resetting ...\n");
   top->reset = 1;
   tick();
   top->reset = 0;
@@ -158,9 +155,6 @@ extern "C" {
   void rtl_init(int argc, char *argv[]) {
     // 初始化仿真对象
     Verilated::commandArgs(argc, argv);
-    Verilated::mkdir("logs");
-    // 创建 build 目录（如果不存在）
-    Verilated::mkdir("build");
 #ifdef CONFIG_WAVE
     // 创建波形对象
     Verilated::traceEverOn(true);  // 必须先打开 trace

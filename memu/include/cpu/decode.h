@@ -25,6 +25,7 @@ typedef struct Decode {
   ISADecodeInfo isa;
   IFDEF(CONFIG_ITRACE, char logbuf[128]);
 } Decode;
+extern Decode decode;
 
 // --- pattern matching mechanism ---
 __attribute__((always_inline))
@@ -90,8 +91,8 @@ finish:
 #define INSTPAT(pattern, ...) do { \
   uint64_t key, mask, shift; \
   pattern_decode(pattern, STRLEN(pattern), &key, &mask, &shift); \
-  if ((((uint64_t)INSTPAT_INST(s) >> shift) & mask) == key) { \
-    INSTPAT_MATCH(s, ##__VA_ARGS__); \
+  if ((((uint64_t)INSTPAT_INST(decode) >> shift) & mask) == key) { \
+    INSTPAT_MATCH(decode, ##__VA_ARGS__); \
     goto *(__instpat_end); \
   } \
 } while (0)

@@ -40,20 +40,20 @@ typedef union {
   uint8_t val;
 } SIB;
 
-static word_t x86_inst_fetch(Decode *s, int len) {
+static word_t x86_inst_fetch(int len) {
 #if defined(CONFIG_ITRACE) || defined(CONFIG_IQUEUE)
-  uint8_t *p = &s->isa.inst[s->snpc - s->pc];
-  word_t ret = inst_fetch(&s->snpc, len);
+  uint8_t *p = &decode.isa.inst[decode.snpc - decode.pc];
+  word_t ret = inst_fetch(&decode.snpc, len);
   word_t ret_save = ret;
   int i;
-  assert(s->snpc - s->pc < sizeof(s->isa.inst));
+  assert(decode.snpc - decode.pc < sizeof(decode.isa.inst));
   for (i = 0; i < len; i ++) {
     p[i] = ret & 0xff;
     ret >>= 8;
   }
   return ret_save;
 #else
-  return inst_fetch(&s->snpc, len);
+  return inst_fetch(&decode.snpc, len);
 #endif
 }
 
@@ -68,14 +68,14 @@ word_t reg_read(int idx, int width) {
 
 static void reg_write(int idx, int width, word_t data) {
   switch (width) {
-    case 4: reg_l(idx) = data; return;
     case 1: reg_b(idx) = data; return;
     case 2: reg_w(idx) = data; return;
+    case 4: reg_l(idx) = data; return;
     default: assert(0);
   }
 }
 
-static void load_addr(Decode *s, ModR_M *m, word_t *rm_addr) {
+static void load_addr(ModR_M *m, word_t *rm_addr) {
   assert(m->mod != 3);
 
   sword_t disp = 0;
@@ -84,7 +84,7 @@ static void load_addr(Decode *s, ModR_M *m, word_t *rm_addr) {
 
   if (m->R_M == R_ESP) {
     SIB sib;
-    sib.val = x86_inst_fetch(s, 1);
+    sib.val = x86_inst_fetch(1);
     base_reg = sib.base;
     scale = sib.ss;
 
@@ -99,7 +99,7 @@ static void load_addr(Decode *s, ModR_M *m, word_t *rm_addr) {
   else if (m->mod == 1) { disp_size = 1; }
 
   if (disp_size != 0) { /* has disp */
-    disp = x86_inst_fetch(s, disp_size);
+    disp = x86_inst_fetch(disp_size);
     if (disp_size == 1) { disp = (int8_t)disp; }
   }
 
@@ -109,12 +109,12 @@ static void load_addr(Decode *s, ModR_M *m, word_t *rm_addr) {
   *rm_addr = addr;
 }
 
-static void decode_rm(Decode *s, int *rm_reg, word_t *rm_addr, int *reg, int width) {
+static void decode_rm(int *rm_reg, word_t *rm_addr, int *reg, int width) {
   ModR_M m;
-  m.val = x86_inst_fetch(s, 1);
+  m.val = x86_inst_fetch(1);
   if (reg != NULL) *reg = m.reg;
   if (m.mod == 3) *rm_reg = m.R_M;
-  else { load_addr(s, &m, rm_addr); *rm_reg = -1; }
+  else { load_addr(&m, rm_addr); *rm_reg = -1; }
 }
 
 #define Rr reg_read
@@ -126,8 +126,8 @@ static void decode_rm(Decode *s, int *rm_reg, word_t *rm_addr, int *reg, int wid
 
 #define destr(r)  do { *rd_ = (r); } while (0)
 #define src1r(r)  do { *src1 = Rr(r, w); } while (0)
-#define imm()     do { *imm = x86_inst_fetch(s, w); } while (0)
-#define simm(w)   do { *imm = SEXT(x86_inst_fetch(s, w), w * 8); } while (0)
+#define imm()     do { *imm = x86_inst_fetch(decode, w); } while (0)
+#define simm(w)   do { *imm = SEXT(x86_inst_fetch(decode, w), w * 8); } while (0)
 
 enum {
   TYPE_r, TYPE_I, TYPE_SI, TYPE_J, TYPE_E,
@@ -146,25 +146,25 @@ enum {
   TYPE_N, // none
 };
 
-#define INSTPAT_INST(s) opcode
-#define INSTPAT_MATCH(s, name, type, width, ... /* execute body */ ) { \
+#define INSTPAT_INST(decode) opcode
+#define INSTPAT_MATCH(decode, name, type, width, ... /* execute body */ ) { \
   int rd = 0, rs = 0, gp_idx = 0; \
   word_t src1 = 0, addr = 0, imm = 0; \
   int w = width == 0 ? (is_operand_size_16 ? 2 : 4) : width; \
-  decode_operand(s, opcode, &rd, &src1, &addr, &rs, &gp_idx, &imm, w, concat(TYPE_, type)); \
-  s->dnpc = s->snpc; \
+  decode_operand(opcode, &rd, &src1, &addr, &rs, &gp_idx, &imm, w, concat(TYPE_, type)); \
+  decode.dnpc = decode.snpc; \
   __VA_ARGS__ ; \
 }
 
-static void decode_operand(Decode *s, uint8_t opcode, int *rd_, word_t *src1,
+static void decode_operand(uint8_t opcode, int *rd_, word_t *src1,
     word_t *addr, int *rs, int *gp_idx, word_t *imm, int w, int type) {
   switch (type) {
     case TYPE_I2r:  destr(opcode & 0x7); imm(); break;
-    case TYPE_G2E:  decode_rm(s, rd_, addr, rs, w); src1r(*rs); break;
-    case TYPE_E2G:  decode_rm(s, rs, addr, rd_, w); break;
-    case TYPE_I2E:  decode_rm(s, rd_, addr, gp_idx, w); imm(); break;
-    case TYPE_O2a:  destr(R_EAX); *addr = x86_inst_fetch(s, 4); break;
-    case TYPE_a2O:  *rs = R_EAX;  *addr = x86_inst_fetch(s, 4); break;
+    case TYPE_G2E:  decode_rm(rd_, addr, rs, w); src1r(*rs); break;
+    case TYPE_E2G:  decode_rm(rs, addr, rd_, w); break;
+    case TYPE_I2E:  decode_rm(rd_, addr, gp_idx, w); imm(); break;
+    case TYPE_O2a:  destr(R_EAX); *addr = x86_inst_fetch(decode, 4); break;
+    case TYPE_a2O:  *rs = R_EAX;  *addr = x86_inst_fetch(decode, 4); break;
     case TYPE_N:    break;
     default: panic("Unsupported type = %d", type);
   }
@@ -172,27 +172,27 @@ static void decode_operand(Decode *s, uint8_t opcode, int *rd_, word_t *src1,
 
 #define gp1() do { \
   switch (gp_idx) { \
-    default: INV(s->pc); \
+    default: INV(decode.pc); \
   }; \
 } while (0)
 
-void _2byte_esc(Decode *s, bool is_operand_size_16) {
-  uint8_t opcode = x86_inst_fetch(s, 1);
+void _2byte_esc(bool is_operand_size_16) {
+  uint8_t opcode = x86_inst_fetch(1);
   INSTPAT_START();
-  INSTPAT("???? ????", inv,    N,    0, INV(s->pc));
+  INSTPAT("???? ????", inv,    N,    0, INV(decode.pc));
   INSTPAT_END();
 }
 
-int isa_exec_once(Decode *s) {
+int isa_exec_once() {
   bool is_operand_size_16 = false;
   uint8_t opcode = 0;
 
 again:
-  opcode = x86_inst_fetch(s, 1);
+  opcode = x86_inst_fetch(decode, 1);
 
   INSTPAT_START();
 
-  INSTPAT("0000 1111", 2byte_esc, N,    0, _2byte_esc(s, is_operand_size_16));
+  INSTPAT("0000 1111", 2byte_esc, N,    0, _2byte_esc(decode, is_operand_size_16));
 
   INSTPAT("0110 0110", data_size, N,    0, is_operand_size_16 = true; goto again;);
 
@@ -212,8 +212,8 @@ again:
 
   INSTPAT("1100 0110", mov,       I2E,  1, RMw(imm));
   INSTPAT("1100 0111", mov,       I2E,  0, RMw(imm));
-  INSTPAT("1100 1100", nemu_trap, N,    0, MEMUTRAP(s->pc, cpu.eax));
-  INSTPAT("???? ????", inv,       N,    0, INV(s->pc));
+  INSTPAT("1100 1100", nemu_trap, N,    0, MEMUTRAP(decode.pc, cpu.eax));
+  INSTPAT("???? ????", inv,       N,    0, INV(decode.pc));
   INSTPAT_END();
 
   return 0;

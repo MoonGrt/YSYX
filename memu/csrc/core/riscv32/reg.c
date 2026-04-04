@@ -24,10 +24,10 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
-  printf("  pc = 0x%08x\n", cpu.pc);
-  printf("  GPR:\n");
+  printf(" pc = 0x%08x\n", cpu.pc);
+  printf(" GPR:\n");
   for (int i = 0; i < 32; i++) {
-    printf("    %-3s = 0x%08x\t", regs[i], cpu.gpr[i]);
+    printf("  %-3s = %08x", regs[i], cpu.gpr[i]);
     if ((i + 1) % 4 == 0) printf("\n");
   }
 }

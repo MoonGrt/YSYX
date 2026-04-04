@@ -27,6 +27,7 @@
 #define MAX_INST_TO_PRINT 10
 
 CPU_state cpu = {};
+Decode decode = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
@@ -63,18 +64,17 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 }
 
 void trace_inst(word_t pc, uint32_t inst);
-static void exec_once(Decode *s, vaddr_t pc) {
-  s->pc = pc;
-  s->snpc = pc;
-  isa_exec_once(s);
-  cpu.pc = s->dnpc;
+static void exec_once(vaddr_t pc) {
+  decode.pc = pc;
+  decode.snpc = pc;
+  isa_exec_once(decode);
 #ifdef CONFIG_ITRACE
-  IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst));
-  char *p = s->logbuf;
-  p += snprintf(p, sizeof(s->logbuf), "[ITRACE] " FMT_WORD ": ", s->pc);
-  int ilen = s->snpc - s->pc;
+  IFDEF(CONFIG_ITRACE, trace_inst(decode.pc, decode.isa.inst));
+  char *p = decode.logbuf;
+  p += snprintf(p, sizeof(decode.logbuf), "[I] " FMT_WORD ": ", decode.pc);
+  int ilen = decode.snpc - decode.pc;
   int i;
-  uint8_t *inst = (uint8_t *)&s->isa.inst;
+  uint8_t *inst = (uint8_t *)&decode.isa.inst;
 #ifdef CONFIG_ISA_x86
   for (i = 0; i < ilen; i ++)
 #else
@@ -88,19 +88,18 @@ static void exec_once(Decode *s, vaddr_t pc) {
   memset(p, ' ', space_len);
   p += space_len;
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-  disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-    MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst, ilen);
+  disassemble(p, decode.logbuf + sizeof(decode.logbuf) - p,
+    MUXDEF(CONFIG_ISA_x86, decode.snpc, decode.pc), (uint8_t *)&decode.isa.inst, ilen);
 #endif
 }
 
 static void execute(uint64_t n) {
-  Decode s;
-  for (;n > 0; n --) {
-    exec_once(&s, cpu.pc);
+  for (;n > 0; n--) {
+    exec_once(cpu.pc);
     g_nr_guest_inst ++;
-    trace_and_difftest(&s, cpu.pc);
+    trace_and_difftest(&decode, cpu.pc);
     if (nemu_state.state != MEMU_RUNNING) break;
-    IFDEF(CONFIG_DEVICE, device_update());
+    IFDEF(CONFIG_DEVICE, if (g_nr_guest_inst % 10) device_update());
   }
 }
 

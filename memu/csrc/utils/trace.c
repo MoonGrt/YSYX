@@ -55,7 +55,7 @@ static inline bool mtrace_limit(paddr_t addr) {
 
 void mtrace(bool is_write, paddr_t addr, int len, word_t data) {
   if (!mtrace_limit(addr)) return;
-  log_write("[MTRACE] %c addr=" FMT_PADDR ", len=%d, %s=" FMT_WORD "\n",
+  log_write("[M] %c addr=" FMT_PADDR ", len=%d, %s=" FMT_WORD "\n",
             is_write ? 'W' : 'R', addr, len,
             is_write ? "write" : "-read", data);
 }
@@ -65,8 +65,8 @@ void mtrace(bool is_write, paddr_t addr, int len, word_t data) {
 #ifdef CONFIG_DTRACE
 
 void dtrace(bool is_write, paddr_t addr, int len, word_t data, IOMap *map) {
-  log_write("[DTRACE] %s %10s at " FMT_PADDR ",%d %s " FMT_WORD "\n",
-            is_write ? "write" : " read", map->name, addr, len,
+  log_write("[D] %s %s: " FMT_PADDR ", len=%d, %s=" FMT_WORD "\n",
+            is_write ? "W" : " R", map->name, addr, len,
             is_write ? "with" : "return", data);
 }
 
@@ -75,7 +75,7 @@ void dtrace(bool is_write, paddr_t addr, int len, word_t data, IOMap *map) {
 #ifdef CONFIG_ETRACE
 
 void etrace(uint32_t epc, uint32_t ecode) {
-  log_write("[ETRACE]: ecall at " FMT_WORD "\n", epc);
+  log_write("[E]: ecall at " FMT_WORD "\n", epc);
 }
 
 #endif  // CONFIG_ETRACE
@@ -163,7 +163,7 @@ static void display_elf_hedaer(Elf32_Ehdr eh) {
   #define PRINT_MAP(value, map, def_fmt) \
     do { \
       size_t i; \
-      for (size_t i = 0; i < sizeof(map)/sizeof(map[0]); i++) { \
+      for (i = 0; i < sizeof(map)/sizeof(map[0]); i++) { \
         if ((value) == map[i].val) { \
           ftrace_write("%s\n", map[i].desc); \
           break; \

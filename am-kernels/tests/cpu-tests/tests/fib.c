@@ -9,8 +9,6 @@ int main() {
 		fib[i] = fib[i - 1] + fib[i - 2];
 		check(fib[i] == ans[i]);
 	}
-
 	check(i == 40);
-
 	return 0;
 }

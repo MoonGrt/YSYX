@@ -17,7 +17,7 @@
 #include <cpu/difftest.h>
 #include "../include/reg.h"
 
-bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc, vaddr_t npc) {
+bool isa_difftest_checkregs(CPU_state *ref, vaddr_t pc, vaddr_t npc) {
   return false;
 }
 
