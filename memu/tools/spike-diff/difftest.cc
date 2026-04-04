@@ -85,9 +85,8 @@ void sim_t::diff_get_regs(void* diff_context) {
 
 void sim_t::diff_set_regs(void* diff_context) {
   struct diff_context_t* ctx = (struct diff_context_t*)diff_context;
-  for (int i = 0; i < NR_GPR; i++) {
+  for (int i = 0; i < NR_GPR; i++)
     state->XPR.write(i, (sword_t)ctx->gpr[i]);
-  }
   state->pc = ctx->pc;
   state->mepc->write(ctx->csr.mepc);
   state->mstatus->write(ctx->csr.mstatus);
@@ -99,27 +98,23 @@ void sim_t::diff_set_regs(void* diff_context) {
 
 void sim_t::diff_memcpy(reg_t dest, void* src, size_t n) {
   mmu_t* mmu = p->get_mmu();
-  for (size_t i = 0; i < n; i++) {
+  for (size_t i = 0; i < n; i++)
     mmu->store<uint8_t>(dest+i, *((uint8_t*)src+i));
-  }
 }
 
 extern "C" {
 
 __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
-  if (direction == DIFFTEST_TO_REF) {
+  if (direction == DIFFTEST_TO_REF)
     s->diff_memcpy(addr, buf, n);
-  } else {
-    assert(0);
-  }
+  else assert(0);
 }
 
 __EXPORT void difftest_regcpy(void* dut, bool direction) {
-  if (direction == DIFFTEST_TO_REF) {
+  if (direction == DIFFTEST_TO_REF)
     s->diff_set_regs(dut);
-  } else {
+  else
     s->diff_get_regs(dut);
-  }
 }
 
 __EXPORT void difftest_exec(uint64_t n) {

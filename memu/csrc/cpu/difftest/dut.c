@@ -14,7 +14,6 @@
 ***************************************************************************************/
 
 #include <dlfcn.h>
-
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <memory/paddr.h>
@@ -53,9 +52,8 @@ void difftest_skip_ref() {
 //   We expect that DUT will catch up with REF within `nr_dut` instructions.
 void difftest_skip_dut(int nr_ref, int nr_dut) {
   skip_dut_nr_inst += nr_dut;
-  while (nr_ref -- > 0) {
+  while (nr_ref -- > 0)
     ref_difftest_exec(1);
-  }
 }
 
 void init_difftest(char *ref_so_file, long img_size, int port) {
@@ -67,16 +65,12 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
 
   ref_difftest_memcpy = dlsym(handle, "difftest_memcpy");
   assert(ref_difftest_memcpy);
-
   ref_difftest_regcpy = dlsym(handle, "difftest_regcpy");
   assert(ref_difftest_regcpy);
-
   ref_difftest_exec = dlsym(handle, "difftest_exec");
   assert(ref_difftest_exec);
-
   ref_difftest_raise_intr = dlsym(handle, "difftest_raise_intr");
   assert(ref_difftest_raise_intr);
-
   void (*ref_difftest_init)(int) = dlsym(handle, "difftest_init");
   assert(ref_difftest_init);
 
@@ -117,14 +111,10 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
   if (is_skip_ref) {
     // to skip the checking of an instruction, just copy the reg state to reference design
     ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
-    // printf("----------------------------------------\n");
-    // isa_reg_display();
-    // printf("----------------------------------------\n");
     is_skip_ref = false;
     return;
   }
 
-  // isa_reg_display();
   ref_difftest_exec(1);
   ref_difftest_regcpy(&ref, DIFFTEST_TO_DUT);
   checkregs(&ref, pc);

@@ -38,7 +38,7 @@
 #define CHECKDIFF_CSR(p) \
   if (ref->csr.p != cpu.csr.p) { \
     printf("difftest fail at { csr." #p " } -> ref: " FMT_WORD " - dut " FMT_WORD "\n", \
-           ref->csr.p, cpu.csr.p); \
+      ref->csr.p, cpu.csr.p); \
     result = false; \
   }
 

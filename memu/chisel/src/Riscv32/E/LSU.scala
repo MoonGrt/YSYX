@@ -61,8 +61,10 @@ class LSU extends Module {
     LS.RHU -> Cat(0.U(16.W), rdataShift(15,0)),
   ))
   // -------- Data Bus --------
-  io.bus.memRen   := io.in.valid && lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
-  io.bus.memWen   := io.in.valid && lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
+  // io.bus.memRen   := io.in.valid && lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
+  // io.bus.memWen   := io.in.valid && lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
+  io.bus.memRen   := !reset.asBool && lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
+  io.bus.memWen   := !reset.asBool && lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
   io.bus.memMask  := mask
   io.bus.memAddr  := memAddrAlign
   io.bus.memWdata := wdataShift
