@@ -2,10 +2,8 @@
 
 int main() {
 	// 使用 scanf 测试输入
-	char str[100];
 	int a, b;
 	char c;
-	printf("You entered: %s\n", str);
 	printf("Enter two integers and a character (e.g., 10 20 X): ");
 	scanf("%d %d %c", &a, &b, &c);
 	printf("Read values: a=%d, b=%d, c=%c\n", a, b, c);

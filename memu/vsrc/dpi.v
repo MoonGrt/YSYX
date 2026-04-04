@@ -55,8 +55,8 @@ endmodule
 
 
 
-import "DPI-C" function int  dpi_paddr_read(input int addr, input byte len);
-import "DPI-C" function void dpi_paddr_write(input int addr, input byte len, input int data);
+import "DPI-C" function int  dpi_paddr_read(input int addr);
+import "DPI-C" function void dpi_paddr_write(input int addr, input byte mask, input int data);
 
 module ROM_DPI(
   input  wire [31:0] addr,
@@ -65,22 +65,22 @@ module ROM_DPI(
   // TODO: When reading from a device using combinational logic, 
   //       multiple reads may overwrite the results; 
   //       instructions read are currently working without issue.
-  assign data = dpi_paddr_read(addr, 4);
+  assign data = dpi_paddr_read(addr);
 endmodule
 module RAM_DPI(
   input  wire        clk,
-  input  wire        re,
-  input  wire        we,
-  input  wire [ 7:0] len,
+  input  wire        ren,
+  input  wire        wen,
+  input  wire [ 7:0] mask,
   input  wire [31:0] addr,
   input  wire [31:0] wdata,
   output reg  [31:0] rdata
 );
   always @(*) begin
     rdata = 0;
-    if (re) rdata = dpi_paddr_read(addr, len);
+    if (ren) rdata = dpi_paddr_read(addr);
   end
   always @(posedge clk) begin
-    if (we) dpi_paddr_write(addr, len, wdata);
+    if (wen) dpi_paddr_write(addr, mask, wdata);
   end
 endmodule

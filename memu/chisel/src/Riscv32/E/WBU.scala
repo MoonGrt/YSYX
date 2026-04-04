@@ -9,7 +9,7 @@ import riscv.Constants.Riscv32E._
 // WBU: Write Back Unit
 // ----------------------------------
 class WBUOut extends Bundle{
-  val gprWen   = Bool()
+  val gprWen  = Bool()
   val gprAddr = UInt(log2Ceil(GPRNum).W)
   val gprData = UInt(DataWidth.W)
 }
@@ -31,8 +31,8 @@ class WBU extends Module {
   // -------------------- Input --------------------
   // -----------------------------------------------
   io.in.ready := true.B
-  val wbSel   = io.in.bits.wbSel
-  val wbrd    = io.in.bits.wbrd
+  val gprSel  = io.in.bits.gprSel
+  val gprAddr = io.in.bits.gprAddr
   val pc      = io.in.bits.pc
   val csrData = io.in.bits.csrData
   val aluData = io.in.bits.aluData
@@ -40,19 +40,18 @@ class WBU extends Module {
   // -----------------------------------------------
   // -------------------- Logic --------------------
   // -----------------------------------------------
-  val gprData = MuxLookup(wbSel, 0.U)(Seq(
-    WB.PC  -> (pc + 4.U),
-    WB.EX  -> aluData,
-    WB.LS  -> memData,
-    WB.CSR -> csrData,
+  val gprWen  = (gprSel =/= GPR.NONE) && (gprAddr =/= 0.U)
+  val gprData = MuxLookup(gprSel, 0.U)(Seq(
+    GPR.PC  -> (pc + 4.U),
+    GPR.EX  -> aluData,
+    GPR.LS  -> memData,
+    GPR.CSR -> csrData,
   ))
-  val gprWen   = (wbSel =/= WB.NONE) && (wbrd =/= 0.U)
-  val gprAddr = wbrd
   // -----------------------------------------------
   // -------------------- Output -------------------
   // -----------------------------------------------
-  io.out.valid       := io.out.ready
-  io.out.bits.gprWen   := gprWen
+  io.out.valid        := io.out.ready
+  io.out.bits.gprWen  := gprWen
   io.out.bits.gprAddr := gprAddr
   io.out.bits.gprData := gprData
 }

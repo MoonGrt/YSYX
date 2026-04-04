@@ -10,8 +10,8 @@ import riscv.Constants.Riscv32E._
 // ----------------------------------
 class EXUOut extends Bundle{
   val lsSel   = LS()
-  val wbSel   = WB()
-  val wbrd    = UInt(log2Ceil(GPRNum).W)
+  val gprSel  = GPR()
+  val gprAddr = UInt(log2Ceil(GPRNum).W)
   val pc      = UInt(DataWidth.W)
   val RS2     = UInt(DataWidth.W)
   val csrData = UInt(DataWidth.W)
@@ -86,8 +86,8 @@ class EXU extends Module {
   io.br.bits.braddr   := braddr
   // pass through
   io.out.bits.lsSel   := io.in.bits.lsSel
-  io.out.bits.wbSel   := io.in.bits.wbSel
-  io.out.bits.wbrd    := io.in.bits.wbrd
+  io.out.bits.gprSel  := io.in.bits.gprSel
+  io.out.bits.gprAddr := io.in.bits.gprAddr
   io.out.bits.pc      := io.in.bits.pc
   io.out.bits.RS2     := io.in.bits.RS2
   io.out.bits.csrData := io.in.bits.csrData

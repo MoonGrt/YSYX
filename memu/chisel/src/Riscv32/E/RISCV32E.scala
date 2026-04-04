@@ -16,7 +16,7 @@ class InstBus extends Bundle{
 class DataBus extends Bundle{
   val memRen   = Output(Bool())  // read enable
   val memWen   = Output(Bool())  // write enable
-  val memLen   = Output(UInt((DataWidth/8).W))  // length
+  val memMask  = Output(UInt((DataWidth/8).W))
   val memAddr  = Output(UInt(DataWidth.W))
   val memWdata = Output(UInt(DataWidth.W))
   val memRdata = Input(UInt(DataWidth.W))
@@ -66,9 +66,9 @@ class Riscv32ETOP extends Module {
   cpu.io.inst.data.bits := rom.io.data
   // Data
   ram.io.clk   := clock
-  ram.io.re    := cpu.io.data.memRen
-  ram.io.we    := cpu.io.data.memWen
-  ram.io.len   := cpu.io.data.memLen
+  ram.io.ren   := cpu.io.data.memRen
+  ram.io.wen   := cpu.io.data.memWen
+  ram.io.mask  := cpu.io.data.memMask
   ram.io.addr  := cpu.io.data.memAddr
   ram.io.wdata := cpu.io.data.memWdata
   cpu.io.data.memRdata := ram.io.rdata

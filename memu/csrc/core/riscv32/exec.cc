@@ -66,21 +66,27 @@ extern "C" {
     }
     Verilated::gotFinish(true);
   }
-  int dpi_paddr_read(int addr, char len){
+  int dpi_paddr_read(int addr){
     if (addr == 0) return 0;
     if (likely(in_pmem(addr))) {
-      word_t data = pmem_read(addr, len);
-      IFDEF(CONFIG_MTRACE, mtrace(false, addr, len, data));
+      word_t data = pmem_read(addr, 4);
+      IFDEF(CONFIG_MTRACE, mtrace(false, addr, 4, data));
       return data;
     }
-    IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
+    IFDEF(CONFIG_DEVICE, return mmio_read(addr, 4));
     return 0;
   }
-  void dpi_paddr_write(int addr, char len, int data){
+  void dpi_paddr_write(int addr, char mask, int data) {
     if (addr == 0) return;
-    IFDEF(CONFIG_MTRACE, mtrace(true, addr, len, data));
-    if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
-    IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
+    for (int i = 0; i < 4; i++) {
+      if (mask & (1 << i)) {
+        int byte_addr = addr + i;
+        int byte_data = (data >> (i * 8)) & 0xFF;
+        IFDEF(CONFIG_MTRACE, mtrace(true, byte_addr, 1, byte_data));
+        if (likely(in_pmem(byte_addr))) pmem_write(byte_addr, 1, byte_data);
+        else IFDEF(CONFIG_DEVICE, mmio_write(byte_addr, 1, byte_data));
+      }
+    }
   }
   void dpi_diffpc(int pc, int npc, int inst) {
     // Decode

@@ -32,7 +32,7 @@ static int serial_getc(void) {
 }
 
 static void serial_io_handler(uint32_t offset, int len, bool is_write) {
-  assert(len == 1);
+  assert(len == 1 || len == 4);  // After memory alignment, NPC only support `len=4`
   switch (offset) {
     /* We bind the serial port with the host stderr in MEMU. */
     case CH_OFFSET:
