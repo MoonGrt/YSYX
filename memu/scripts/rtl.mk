@@ -1,6 +1,5 @@
-GTKWAVE ?= gtkwave
+GTKWAVE   ?= gtkwave
 VERILATOR ?= verilator
-VERILATOR_ROOT = /usr/local/share/verilator
 
 ifeq ($(CONFIG_WAVE_VCD),y)
 VERILATOR_CFLAGS += --trace
@@ -27,9 +26,6 @@ endif
 ifeq ($(CONFIG_CORE_riscv32e),y)
 TOP := Riscv32E
 endif
-ifeq ($(CONFIG_CORE_riscv32),y)
-TOP := Riscv32
-endif
 
 CONFIG    := .config
 VTOP      := $(TOP)TOP
@@ -39,19 +35,18 @@ VSRCS      = $(RTL_OBJS) \
 VLIB      := $(VBUILD)/libV$(VTOP).a
 WAVE_FILE := $(BUILD_DIR)/wave.vcd
 
-CXXSRC += csrc/core/riscv32/exec.cc
-
-ifeq ($(CONFIG_NPC),y)
+VROOT    := /usr/local/share/verilator
+INC_PATH += $(VROOT)/include
+INC_PATH += $(VROOT)/include/vltstd
 INC_PATH += $(VBUILD)
-INC_PATH += $(VERILATOR_ROOT)/include
-INC_PATH += $(VERILATOR_ROOT)/include/vltstd
-endif
 
 $(RTL_OBJS): $(SCALA_SRCS)
 	$(call git_commit, "generate verilog")
 	@echo "+ CHISEL  (scala -> verilog)"
 	@mkdir -p $(RTL_DIR)
 	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
+rtl: $(RTL_OBJS)
+.PHONY: rtl
 
 $(VLIB): $(RTL_OBJS) $(CONFIG)
 	@echo "+ VERILATE RTL"
@@ -61,12 +56,9 @@ $(VLIB): $(RTL_OBJS) $(CONFIG)
 	@echo "+ AR $@"
 	$(MAKE) -C $(VBUILD) -f V$(VTOP).mk
 	ar rcs $@ $(VBUILD)/*.o
-
-rtl: $(RTL_OBJS)
-
 verilate: $(VLIB)
+.PHONY: verilate
 
 wave: $(WAVE_FILE)
 	$(GTKWAVE) $(WAVE_FILE) > /dev/null 2>&1 &
-
-.PHONY: rtl verilate wave
+.PHONY: wave

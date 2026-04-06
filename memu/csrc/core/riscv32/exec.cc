@@ -17,21 +17,35 @@ VRiscv32ETOP *top = new VRiscv32ETOP;
 #endif
 
 #ifdef CONFIG_WAVE
+
 #include <verilated.h>
 #ifdef CONFIG_WAVE_VCD
 #include <verilated_vcd_c.h>
-VerilatedVcdC *tfp = new VerilatedVcdC;
+VerilatedVcdC *tfp;
 #elif  CONFIG_WAVE_FST
 #include <verilated_fst_c.h>
-VerilatedFstC *tfp = new VerilatedFstC;
+VerilatedFstC *tfp;
 #endif
+
+#ifdef CONFIG_WAVE_ABSOLUTE
+
+#elif CONFIG_WAVE_RELATIVE
+#include <utils.h>
+#include <lightsss.h>
+// LightSSS lightsss;
+LightSSS *lightsss = new LightSSS;
+bool have_initial_fork = false;
+#endif
+
 #endif
 
 extern uint64_t g_nr_guest_inst;
+#ifdef CONFIG_WAVE_ABSOLUTE
 bool wave_enable() {
   return MUXDEF(CONFIG_WAVE, (g_nr_guest_inst >= CONFIG_WAVE_START) &&
-         (g_nr_guest_inst < CONFIG_WAVE_END), false);
+    (g_nr_guest_inst < CONFIG_WAVE_END), false);
 }
+#endif
 
 extern "C" {
   void mtrace(bool is_write, paddr_t addr, int len, word_t data);
@@ -111,29 +125,78 @@ extern "C" {
   }
 }
 
-static vluint64_t sim_time = 0;
-static void wave_tracer() {
-  if (!wave_enable()) return;
+void wave_init() {
+#if defined(CONFIG_WAVE)
+  Verilated::traceEverOn(true);
 #ifdef CONFIG_WAVE_VCD
-  tfp->dump(sim_time++);
-  tfp->flush();
-#elif CONFIG_WAVE_FST
-  tfp->dump(sim_time++);
-  tfp->flush();
+  tfp = new VerilatedVcdC;
+#elif  CONFIG_WAVE_FST
+  tfp = new VerilatedFstC;
+#endif
+  top->trace(tfp, 99);  // 99 是 trace depth
+  tfp->open("build/wave.vcd");
+  // const char* path = getenv("WAVE_FILE");
+  // tfp->open(path ? path : "build/wave.vcd");
 #endif
 }
+
+bool force_dump_wave = false;
+uint32_t inst_last = 0;
+uint32_t INST_WAIT = 1000;
+
+static vluint64_t sim_time = 0;
+static void wave_tracer() {
+#ifdef CONFIG_WAVE
+#ifdef CONFIG_WAVE_ABSOLUTE
+  if (!wave_enable()) return;
+  tfp->dump(sim_time++);
+  tfp->flush();
+#elif CONFIG_WAVE_RELATIVE
+  if (force_dump_wave)
+    tfp->dump(sim_time++);
+#endif
+#endif
+}
+
+#ifdef CONFIG_WAVE_RELATIVE
+void fork_child_init() {
+  FORK_PRINTF("the oldest checkpoint start to dump wave...\n")
+  wave_init();
+  force_dump_wave = true;
+}
+#endif
+
 static void tick(){
-  // ======== 下降沿 ========
   top->clock = 0;
   top->eval();
-#ifdef CONFIG_WAVE
   wave_tracer();
-#endif
-  // ======== 上升沿 ========
   top->clock = 1;
   top->eval();
-#ifdef CONFIG_WAVE
   wave_tracer();
+
+#ifdef CONFIG_WAVE_RELATIVE
+  if ((g_nr_guest_inst - inst_last == INST_WAIT || !have_initial_fork) && !lightsss->is_child()) {
+    have_initial_fork = true;
+    printf(ANSI_FMT("Lightsss do_fork\n", ANSI_FG_GREEN));
+    switch (lightsss->do_fork()) {
+    case FORK_ERROR:
+      printf(ANSI_FMT("Lightsss error\n", ANSI_FG_RED));
+      printf(" \n");
+      return;
+    case FORK_CHILD:
+      printf(ANSI_FMT("Lightsss fork_child_init\n", ANSI_FG_GREEN));
+      printf(" \n");
+      fork_child_init();
+    default:
+      break;
+    }
+    inst_last = g_nr_guest_inst;
+  }
+#endif
+#ifdef CONFIG_WAVE_RELATIVE
+  if (!lightsss->is_child() && g_nr_guest_inst != 0)
+    if (g_nr_guest_inst == lightsss->get_end_cycles())
+      FORK_PRINTF("checkpoint has reached the main process abort point: %lu\n", g_nr_guest_inst)
 #endif
 }
 
@@ -147,6 +210,20 @@ void exit(void) {
 #ifdef CONFIG_WAVE
   tfp->close();
   delete tfp;
+#ifdef CONFIG_WAVE_RELATIVE
+  if(!lightsss->is_child()) {
+    printf(ANSI_FMT("Lightsss wakeup_child\n", ANSI_FG_GREEN));
+    lightsss->wakeup_child(g_nr_guest_inst);
+    printf(ANSI_FMT("Lightsss wakeup_child\n", ANSI_FG_RED));
+    delete lightsss;
+    lightsss = NULL;
+  } else {
+    printf(ANSI_FMT("Lightsss do_clear\n", ANSI_FG_RED));
+    lightsss->do_clear();
+    delete lightsss;
+    lightsss = NULL;
+  }
+#endif
 #endif
   delete top;
 }
@@ -155,13 +232,7 @@ extern "C" {
   void rtl_init(int argc, char *argv[]) {
     // 初始化仿真对象
     Verilated::commandArgs(argc, argv);
-#ifdef CONFIG_WAVE
-    // 创建波形对象
-    Verilated::traceEverOn(true);  // 必须先打开 trace
-    top->trace(tfp, 99);  // 99 是 trace depth
-    tfp->open("build/wave.vcd");
-#endif
-    // 复位
+    IFDEF(CONFIG_WAVE, wave_init());
     reset();
   }
   void rtl_reset() {

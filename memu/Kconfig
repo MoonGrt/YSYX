@@ -169,15 +169,38 @@ config WAVE_FST
   bool "fst"
 endchoice
 
-config WAVE_START
+choice
   depends on WAVE
-  int "When wave tracing is enabled (unit: number of instructions)"
+  prompt "Wave trace mode"
+  default WAVE_ABSOLUTE
+
+config WAVE_ABSOLUTE
+  bool "Absolute"
+
+config WAVE_RELATIVE
+  bool "Relative - LightSSS"
+
+endchoice
+
+config WAVE_START
+  depends on WAVE && WAVE_ABSOLUTE
+  int "Wave start (instruction count)"
   default 0
 
 config WAVE_END
-  depends on WAVE
-  int "When wave tracing is disabled (unit: number of instructions)"
+  depends on WAVE && WAVE_ABSOLUTE
+  int "Wave end (instruction count)"
   default 10000
+
+config LIGHTSSS_INTERVAL
+  depends on WAVE && WAVE_RELATIVE
+  int "Snapshot interval (instructions)"
+  default 2000
+
+config LIGHTSSS_SLOTS
+  depends on WAVE && WAVE_RELATIVE
+  int "Snapshot slot number"
+  default 2
 
 config TRACE
   bool "Enable tracer"
