@@ -12,39 +12,37 @@ VMiniRVTOP *top = new VMiniRVTOP;
 #elif  CONFIG_CORE_riscv32e
 #include "VRiscv32ETOP.h"
 VRiscv32ETOP *top = new VRiscv32ETOP;
-#elif  CONFIG_CORE_riscv32
-#elif  CONFIG_CORE_riscv64
 #endif
 
-#ifdef CONFIG_WAVE
+#if defined(CONFIG_WAVE_ABSOLUTE) || defined(CONFIG_WAVE_RELATIVE)
 
+extern uint64_t g_nr_guest_inst;
 #include <verilated.h>
-#ifdef CONFIG_WAVE_VCD
+#if defined(CONFIG_WAVE_VCD)
 #include <verilated_vcd_c.h>
 VerilatedVcdC *tfp;
-#elif  CONFIG_WAVE_FST
+#else
 #include <verilated_fst_c.h>
 VerilatedFstC *tfp;
 #endif
 
-#ifdef CONFIG_WAVE_ABSOLUTE
+#endif
 
-#elif CONFIG_WAVE_RELATIVE
+bool wave_enable() {
+#ifdef CONFIG_WAVE_ABSOLUTE
+  return MUXDEF(CONFIG_WAVE_ABSOLUTE, (g_nr_guest_inst >= CONFIG_WAVE_ABS_START) &&
+    (g_nr_guest_inst < CONFIG_WAVE_ABS_END), false);
+#else
+  return false;
+#endif
+}
+
+#ifdef CONFIG_WAVE_RELATIVE
 #include <utils.h>
 #include <lightsss.h>
 // LightSSS lightsss;
 LightSSS *lightsss = new LightSSS;
 bool have_initial_fork = false;
-#endif
-
-#endif
-
-extern uint64_t g_nr_guest_inst;
-#ifdef CONFIG_WAVE_ABSOLUTE
-bool wave_enable() {
-  return MUXDEF(CONFIG_WAVE, (g_nr_guest_inst >= CONFIG_WAVE_START) &&
-    (g_nr_guest_inst < CONFIG_WAVE_END), false);
-}
 #endif
 
 extern "C" {
@@ -58,22 +56,22 @@ extern "C" {
   void exception(uint8_t code) {
     switch (code) {
       case EBREAK_CODE:
-        printf("[MEMU] EBREAK exception\n");
+        printf("%s\n", ANSI_FMT("[MEMU] EBREAK exception", ANSI_FG_GREEN));
         MEMUTRAP(cpu.pc, code);
         break;
       case ECALL_CODE:
         IFDEF(CONFIG_ETRACE, etrace(decode.pc, 11));
         break;
       case ZERO_INST_CODE:
-        printf("[MEMU] Zero instruction exception\n");
+        printf("%s\n", ANSI_FMT("[MEMU] Zero instruction exception", ANSI_FG_RED));
         INV(cpu.pc);
         break;
       case UNIMPL_CODE:
-        printf("[MEMU] Unimplemented instruction exception\n");
+        printf("%s\n", ANSI_FMT("[MEMU] Unimplemented instruction exception", ANSI_FG_RED));
         INV(cpu.pc);
         break;
       default:
-        printf("[MEMU] Unknown exception code %d\n", code);
+        printf("%s %d\n", ANSI_FMT("[MEMU] Unknown exception code", ANSI_FG_RED), code);
         break;
     }
     Verilated::gotFinish(true);
@@ -126,11 +124,11 @@ extern "C" {
 }
 
 void wave_init() {
-#if defined(CONFIG_WAVE)
+#if defined(CONFIG_WAVE_ABSOLUTE) || defined(CONFIG_WAVE_RELATIVE)
   Verilated::traceEverOn(true);
-#ifdef CONFIG_WAVE_VCD
+#if defined(CONFIG_WAVE_VCD)
   tfp = new VerilatedVcdC;
-#elif  CONFIG_WAVE_FST
+#else
   tfp = new VerilatedFstC;
 #endif
   top->trace(tfp, 99);  // 99 是 trace depth
@@ -142,19 +140,14 @@ void wave_init() {
 
 bool force_dump_wave = false;
 uint32_t inst_last = 0;
-uint32_t INST_WAIT = 1000;
 
 static vluint64_t sim_time = 0;
 static void wave_tracer() {
-#ifdef CONFIG_WAVE
-#ifdef CONFIG_WAVE_ABSOLUTE
-  if (!wave_enable()) return;
-  tfp->dump(sim_time++);
-  tfp->flush();
-#elif CONFIG_WAVE_RELATIVE
-  if (force_dump_wave)
+#if defined(CONFIG_WAVE_ABSOLUTE) || defined(CONFIG_WAVE_RELATIVE)
+  if (wave_enable() | force_dump_wave) {
     tfp->dump(sim_time++);
-#endif
+    tfp->flush();
+  }
 #endif
 }
 
@@ -175,28 +168,23 @@ static void tick(){
   wave_tracer();
 
 #ifdef CONFIG_WAVE_RELATIVE
-  if ((g_nr_guest_inst - inst_last == INST_WAIT || !have_initial_fork) && !lightsss->is_child()) {
+  if (lightsss->is_child() && g_nr_guest_inst != 0)
+    if (g_nr_guest_inst == lightsss->get_end_cycles())
+      FORK_PRINTF("checkpoint has reached the main process abort point: %lu\n", g_nr_guest_inst)
+  if ((g_nr_guest_inst - inst_last == CONFIG_WAVE_REL_INTERVAL || !have_initial_fork) && !lightsss->is_child()) {
+    if (!have_initial_fork) printf("%s\n", ANSI_FMT("[Lightsss] do_fork", ANSI_FG_GREEN));
     have_initial_fork = true;
-    printf(ANSI_FMT("Lightsss do_fork\n", ANSI_FG_GREEN));
     switch (lightsss->do_fork()) {
-    case FORK_ERROR:
-      printf(ANSI_FMT("Lightsss error\n", ANSI_FG_RED));
-      printf(" \n");
-      return;
-    case FORK_CHILD:
-      printf(ANSI_FMT("Lightsss fork_child_init\n", ANSI_FG_GREEN));
-      printf(" \n");
-      fork_child_init();
-    default:
-      break;
+      case FORK_ERROR:
+        printf("%s\n", ANSI_FMT("[Lightsss] error", ANSI_FG_RED));
+        return;
+      case FORK_CHILD:
+        // printf("%s\n", ANSI_FMT("[Lightsss] fork_child_init", ANSI_FG_GREEN));
+        fork_child_init();
+      default: break;
     }
     inst_last = g_nr_guest_inst;
   }
-#endif
-#ifdef CONFIG_WAVE_RELATIVE
-  if (!lightsss->is_child() && g_nr_guest_inst != 0)
-    if (g_nr_guest_inst == lightsss->get_end_cycles())
-      FORK_PRINTF("checkpoint has reached the main process abort point: %lu\n", g_nr_guest_inst)
 #endif
 }
 
@@ -207,32 +195,37 @@ static void reset(){
 }
 
 void exit(void) {
-#ifdef CONFIG_WAVE
-  tfp->close();
-  delete tfp;
+  delete top;
+#if defined(CONFIG_WAVE_ABSOLUTE) || defined(CONFIG_WAVE_RELATIVE)
+  if (tfp) {
+    tfp->close();
+    delete tfp;
+  }
 #ifdef CONFIG_WAVE_RELATIVE
-  if(!lightsss->is_child()) {
-    printf(ANSI_FMT("Lightsss wakeup_child\n", ANSI_FG_GREEN));
-    lightsss->wakeup_child(g_nr_guest_inst);
-    printf(ANSI_FMT("Lightsss wakeup_child\n", ANSI_FG_RED));
+  if (!lightsss->is_child()) {  // parent process
+    bool need_wakeup = 
+          (nemu_state.state == MEMU_ABORT) ||
+          (nemu_state.state == MEMU_END && nemu_state.halt_ret != 0);
+    if (need_wakeup) {
+      printf(ANSI_FMT("\n\n[Lightsss] wakeup_child\n", ANSI_FG_GREEN));
+      lightsss->wakeup_child(g_nr_guest_inst);
+    } else {
+      printf(ANSI_FMT("[Lightsss] do_clear\n", ANSI_FG_GREEN));
+      lightsss->do_clear();
+    }
     delete lightsss;
-    lightsss = NULL;
-  } else {
-    printf(ANSI_FMT("Lightsss do_clear\n", ANSI_FG_RED));
+  } else {  // child process
+    printf(ANSI_FMT("[Lightsss] do_clear\n", ANSI_FG_RED));
     lightsss->do_clear();
-    delete lightsss;
-    lightsss = NULL;
   }
 #endif
 #endif
-  delete top;
 }
 
 extern "C" {
   void rtl_init(int argc, char *argv[]) {
-    // 初始化仿真对象
     Verilated::commandArgs(argc, argv);
-    IFDEF(CONFIG_WAVE, wave_init());
+    IFDEF(CONFIG_WAVE_ABSOLUTE, wave_init());
     reset();
   }
   void rtl_reset() {

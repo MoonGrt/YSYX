@@ -137,11 +137,6 @@ void cpu_exec(uint64_t n) {
   switch (nemu_state.state) {
     case MEMU_RUNNING: nemu_state.state = MEMU_STOP; break;
     case MEMU_END: case MEMU_ABORT:
-      #if defined(CONFIG_NEMU)
-
-      #elif defined(CONFIG_NPC)
-        rtl_exit();
-      #endif
       Log("memu: %s at pc = " FMT_WORD,
           (nemu_state.state == MEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
           (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
@@ -149,4 +144,7 @@ void cpu_exec(uint64_t n) {
       // fall through
     case MEMU_QUIT: statistic();
   }
+  #if defined(CONFIG_NPC)
+    rtl_exit();
+  #endif
 }

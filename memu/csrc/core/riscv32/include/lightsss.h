@@ -17,11 +17,11 @@
 #ifndef __LIGHTSSS_H
 #define __LIGHTSSS_H
 
-#define FAIT_EXIT exit(EXIT_FAILURE);
-#define WAIT_INTERVAL 5
-#define SLOT_SIZE 2
+#ifdef CONFIG_WAVE_RELATIVE
 
-#include <lcommon.h>
+#define FAIT_EXIT exit(EXIT_FAILURE);
+#define WAIT_INTERVAL 1  // seconds
+
 #include <deque>
 #include <list>
 #include <signal.h>
@@ -30,11 +30,20 @@
 #include <sys/shm.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <debug.h>
+#include <atomic>
+#include <linux/futex.h>
+#include <sys/syscall.h>
+
+#include <cstdio>
+#include <cstdint>
+#include <cstdarg>
+#include <cstdlib>
+#include <climits>
 
 typedef struct shinfo {
-  bool flag;
-  bool notgood;
-	bool is_p_dead;
+  int flag;
+  int notgood;
   uint64_t endCycles;
   pid_t oldest;
 } shinfo;
@@ -67,19 +76,10 @@ class LightSSS {
   static ForkShareMemory forkshm;
 
 public:
-	LightSSS() {
-		p_pid = getpid();
-		signal(SIGINT, signal_handler);
-		signal(SIGTERM, signal_handler);
-		signal(SIGABRT, signal_handler_abort);
-	}
-	~LightSSS() {}
   int do_fork();
   int wakeup_child(uint64_t cycles);
   bool is_child();
   int do_clear();
-	static void signal_handler(int signum);
-	static void signal_handler_abort(int signum);
   uint64_t get_end_cycles() {
     return forkshm.info->endCycles;
   }
@@ -87,8 +87,10 @@ public:
 
 #define FORK_PRINTF(format, args...)                       \
   do {                                                     \
-    Info("[FORK_INFO pid(%d)] " format, getpid(), ##args); \
+    printf("[FORK_INFO pid(%d)] " format, getpid(), ##args); \
     fflush(stdout);                                        \
   } while (0);
+
+#endif
 
 #endif
