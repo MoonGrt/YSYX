@@ -17,6 +17,5 @@ ifeq ($(CONFIG_NPC),y)
   INC_PATH += $(MEMU_HOME)/csrc/core/$(GUEST_ISA)/include
   DIRS-y += csrc/core/$(GUEST_ISA)
   CXXSRC += csrc/core/riscv32/exec.cc \
-            csrc/core/riscv32/lightsss.cc \
-            csrc/core/riscv32/lcommon.cc
+            csrc/core/riscv32/lightsss.cc
 endif

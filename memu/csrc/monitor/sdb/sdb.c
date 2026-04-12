@@ -46,13 +46,13 @@ static int cmd_c(char *args) {
 }
 
 static int cmd_q(char *args) {
-  nemu_state.state = MEMU_QUIT;
+  memu_state.state = MEMU_QUIT;
   return -1;
 }
 
 static int cmd_r(char *args) {
   init_isa();
-  nemu_state.state = MEMU_STOP;
+  memu_state.state = MEMU_STOP;
   return 0;
 }
 

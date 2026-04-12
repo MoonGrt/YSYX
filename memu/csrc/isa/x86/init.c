@@ -26,7 +26,7 @@ static const uint8_t img []  = {
   0x66, 0xc7, 0x84, 0x99, 0x00, 0xe0,  // 100017:  movw  $0x1,-0x2000(%ecx,%ebx,4)
   0xff, 0xff, 0x01, 0x00,
   0xb8, 0x00, 0x00, 0x00, 0x00,        // 100021:  movl  $0x0,%eax
-  0xcc,                                // 100026:  int3 (used as nemu_trap)
+  0xcc,                                // 100026:  int3 (used as memu_trap)
 };
 
 static void restart() {

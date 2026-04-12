@@ -40,7 +40,6 @@ bool wave_enable() {
 #ifdef CONFIG_WAVE_RELATIVE
 #include <utils.h>
 #include <lightsss.h>
-// LightSSS lightsss;
 LightSSS *lightsss = new LightSSS;
 bool have_initial_fork = false;
 #endif
@@ -204,8 +203,8 @@ void exit(void) {
 #ifdef CONFIG_WAVE_RELATIVE
   if (!lightsss->is_child()) {  // parent process
     bool need_wakeup = 
-          (nemu_state.state == MEMU_ABORT) ||
-          (nemu_state.state == MEMU_END && nemu_state.halt_ret != 0);
+          (memu_state.state == MEMU_ABORT) ||
+          (memu_state.state == MEMU_END && memu_state.halt_ret != 0);
     if (need_wakeup) {
       printf(ANSI_FMT("\n\n[Lightsss] wakeup_child\n", ANSI_FG_GREEN));
       lightsss->wakeup_child(g_nr_guest_inst);
@@ -222,10 +221,20 @@ void exit(void) {
 #endif
 }
 
+void signal_handler(int signum) {
+  // printf("signal_handler: signum = %d\n", signum);
+  if(getpid()) {
+    // printf("do_clear: clear child pid = %d\n", getpid());
+    kill(getpid(), SIGKILL);
+    waitpid(getpid(), NULL, 0);
+  }
+}
+
 extern "C" {
   void rtl_init(int argc, char *argv[]) {
     Verilated::commandArgs(argc, argv);
     IFDEF(CONFIG_WAVE_ABSOLUTE, wave_init());
+    IFDEF(CONFIG_WAVE_RELATIVE, signal(SIGINT, signal_handler));
     reset();
   }
   void rtl_reset() {

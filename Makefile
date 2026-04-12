@@ -6,7 +6,7 @@ STUNAME = MoonGrt
 TRACER = tracer-ysyx
 GITFLAGS = -q --author='$(TRACER) <tracer@ysyx.org>' --no-verify --allow-empty
 
-YSYX_HOME = $(NEMU_HOME)/..
+YSYX_HOME = $(MEMU_HOME)/..
 WORK_BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
 WORK_INDEX = $(YSYX_HOME)/.git/index.$(WORK_BRANCH)
 TRACER_BRANCH = $(TRACER)
@@ -39,11 +39,9 @@ endef
 	rm -f $(WORK_INDEX)
 
 clean-all: 
-	$(MAKE) -C $(NEMU_HOME) clean
 	$(MAKE) -C $(MEMU_HOME) clean
 	$(MAKE) -C $(AM_HOME) clean-all
 	$(MAKE) -C $(AM_TEST_HOME) clean-all
-	$(MAKE) -C $(NPC_HOME) clean
 
 _default:
 	@echo "Please run 'make' under subprojects."

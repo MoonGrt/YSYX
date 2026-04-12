@@ -121,10 +121,6 @@ int LightSSS::do_clear() {
     waitpid(temp, NULL, 0);
     slotCnt--;
   }
-  if(getpid() != p_pid) {
-    kill(getpid(), SIGKILL);
-    waitpid(getpid(), NULL, 0);
-  }
   return 0;
 }
 

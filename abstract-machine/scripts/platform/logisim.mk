@@ -1,9 +1,9 @@
 AM_SRCS := platform/logisim/trm.c \
            platform/logisim/ioe.c \
-           platform/nemu/mpe.c
+           platform/memu/mpe.c
 
 CFLAGS    += -fdata-sections -ffunction-sections
-CFLAGS    += -I$(AM_HOME)/am/src/platform/nemu/include
+CFLAGS    += -I$(AM_HOME)/am/src/platform/memu/include
 LDSCRIPTS += $(AM_HOME)/scripts/linker.ld
 LDFLAGS   += --defsym=_pmem_start=0x0 --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start

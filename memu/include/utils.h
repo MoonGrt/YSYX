@@ -28,7 +28,7 @@ typedef struct {
   uint32_t halt_ret;
 } MEMUState;
 
-extern MEMUState nemu_state;
+extern MEMUState memu_state;
 
 // ----------- timer -----------
 

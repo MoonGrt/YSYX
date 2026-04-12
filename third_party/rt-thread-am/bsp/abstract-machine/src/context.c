@@ -36,9 +36,7 @@ static Context* ev_handler(Event e, Context* c) {
     case EVENT_YIELD: {
       rt_thread_t current = rt_thread_self();
       ctx_switch_ud_t *ud = (ctx_switch_ud_t *)current->user_data;
-      if (ud->from) {
-        *((Context**)ud->from) = c;
-      }
+      if (ud->from) *((Context**)ud->from) = c;
       c = *(Context**)ud->to;
       break;
     }

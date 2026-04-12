@@ -1,14 +1,14 @@
-AM_SRCS := platform/nemu/trm.c \
-           platform/nemu/ioe/ioe.c \
-           platform/nemu/ioe/timer.c \
-           platform/nemu/ioe/input.c \
-           platform/nemu/ioe/gpu.c \
-           platform/nemu/ioe/audio.c \
-           platform/nemu/ioe/disk.c \
-           platform/nemu/mpe.c
+AM_SRCS := platform/memu/trm.c \
+           platform/memu/ioe/ioe.c \
+           platform/memu/ioe/timer.c \
+           platform/memu/ioe/input.c \
+           platform/memu/ioe/gpu.c \
+           platform/memu/ioe/audio.c \
+           platform/memu/ioe/disk.c \
+           platform/memu/mpe.c
 
 CFLAGS    += -fdata-sections -ffunction-sections
-CFLAGS    += -I$(AM_HOME)/am/src/platform/nemu/include
+CFLAGS    += -I$(AM_HOME)/am/src/platform/memu/include
 LDSCRIPTS += $(AM_HOME)/scripts/linker.ld
 LDFLAGS   += --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start

@@ -15,10 +15,10 @@
 
 #include <utils.h>
 
-MEMUState nemu_state = { .state = MEMU_STOP };
+MEMUState memu_state = { .state = MEMU_STOP };
 
 int is_exit_status_bad() {
-  int good = (nemu_state.state == MEMU_END && nemu_state.halt_ret == 0) ||
-    (nemu_state.state == MEMU_QUIT);
+  int good = (memu_state.state == MEMU_END && memu_state.halt_ret == 0) ||
+    (memu_state.state == MEMU_QUIT);
   return !good;
 }
