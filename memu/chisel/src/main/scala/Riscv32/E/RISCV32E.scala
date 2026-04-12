@@ -6,6 +6,8 @@ import riscv.Constants._
 import riscv.Constants.Riscv32E._
 import riscv.util._
 
+import demo._
+
 // ---------------------------
 // Riscv32E CPU
 // ---------------------------
