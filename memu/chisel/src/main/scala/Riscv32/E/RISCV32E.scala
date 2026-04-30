@@ -6,8 +6,6 @@ import riscv.Constants._
 import riscv.Constants.Riscv32E._
 import riscv.util._
 
-import demo._
-
 // ---------------------------
 // Riscv32E CPU
 // ---------------------------
@@ -39,7 +37,9 @@ class Riscv32E extends Module {
   // Inst Bus
   io.inst <> ifu.io.bus
   // Data Bus
-  io.data <> lsu.io.bus
+  // io.data <> lsu.io.bus
+  Connector(io.data, lsu.io.bus, WireMode)
+  // lsu.io.bus <> Connector(io.data, WireMode)
 
   // IFU
   ifu.io.in <> exu.io.br
