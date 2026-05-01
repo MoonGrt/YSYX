@@ -19,7 +19,7 @@ class LSUOut extends Bundle{
 class LSU extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new EXUOut))
-    val bus = new DataBus
+    val dbus = new DataBus
     val out = Decoupled(new LSUOut)
   })
   // -----------------------------------------------
@@ -28,7 +28,7 @@ class LSU extends Module {
   // private val sIdle :: sWait :: Nil = Enum(2)
   // val state = RegInit(sIdle)
   // state := MuxLookup(state, sIdle)(List(
-  //   sIdle -> Mux(io.bus.addr.fire, sWait, sIdle),
+  //   sIdle -> Mux(io.dbus.addr.fire, sWait, sIdle),
   //   sWait -> Mux(io.out.fire, sIdle, sWait)
   // ))
   // -----------------------------------------------
@@ -37,7 +37,7 @@ class LSU extends Module {
   io.in.ready := true.B
   val lsSel    = io.in.bits.lsSel
   val memAddr  = io.in.bits.aluData
-  val memRdata = io.bus.memRdata
+  val memRdata = io.dbus.memRdata
   // -----------------------------------------------
   // -------------------- Logic --------------------
   // -----------------------------------------------
@@ -61,13 +61,13 @@ class LSU extends Module {
     LS.RHU -> Cat(0.U(16.W), rdataShift(15,0)),
   ))
   // -------- Data Bus --------
-  // io.bus.memRen   := io.in.valid && lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
-  // io.bus.memWen   := io.in.valid && lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
-  io.bus.memRen   := !reset.asBool && lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
-  io.bus.memWen   := !reset.asBool && lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
-  io.bus.memMask  := mask
-  io.bus.memAddr  := memAddrAlign
-  io.bus.memWdata := wdataShift
+  // io.dbus.memRen   := io.in.valid && lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
+  // io.dbus.memWen   := io.in.valid && lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
+  io.dbus.memRen   := !reset.asBool && lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
+  io.dbus.memWen   := !reset.asBool && lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
+  io.dbus.memMask  := mask
+  io.dbus.memAddr  := memAddrAlign
+  io.dbus.memWdata := wdataShift
   // -----------------------------------------------
   // -------------------- Output -------------------
   // -----------------------------------------------

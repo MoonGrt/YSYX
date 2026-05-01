@@ -21,5 +21,32 @@ object Riscv32ETOP extends App {
       "locationInfoStyle=wrapInAtSquareBracket"
     ).reduce(_ + "," + _)
   )
-  circt.stage.ChiselStage.emitSystemVerilogFile(new riscv.e.Riscv32ETOP(), args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new riscv.e.Riscv32ETOP, args, firtoolOptions)
+}
+
+// Generate Test
+object TestWireConnect extends App {
+  val firtoolOptions = Array(
+    "--lowering-options=" + List(
+      // make yosys happy
+      // see https://github.com/llvm/circt/blob/main/docs/VerilogGeneration.md
+      "disallowLocalVariables",
+      "disallowPackedArrays",
+      "locationInfoStyle=wrapInAtSquareBracket"
+    ).reduce(_ + "," + _)
+  )
+  circt.stage.ChiselStage.emitSystemVerilogFile(new riscv.util.WireConnect, args, firtoolOptions)
+}
+
+object TestRegConnect extends App {
+  val firtoolOptions = Array(
+    "--lowering-options=" + List(
+      // make yosys happy
+      // see https://github.com/llvm/circt/blob/main/docs/VerilogGeneration.md
+      "disallowLocalVariables",
+      "disallowPackedArrays",
+      "locationInfoStyle=wrapInAtSquareBracket"
+    ).reduce(_ + "," + _)
+  )
+  circt.stage.ChiselStage.emitSystemVerilogFile(new riscv.util.RegConnect, args, firtoolOptions)
 }

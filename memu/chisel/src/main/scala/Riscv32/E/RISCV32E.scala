@@ -35,23 +35,21 @@ class Riscv32E extends Module {
   val wbu = Module(new WBU)
 
   // Inst Bus
-  io.inst <> ifu.io.bus
+  Connector(ifu.io.ibus, io.inst, WireMode)
   // Data Bus
-  // io.data <> lsu.io.bus
-  Connector(io.data, lsu.io.bus, WireMode)
-  // lsu.io.bus <> Connector(io.data, WireMode)
+  Connector(io.data, lsu.io.dbus, WireMode)
 
   // IFU
-  ifu.io.in <> exu.io.br
+  Connector(ifu.io.in, exu.io.br, WireMode)
   // IDU
-  idu.io.ifuin <> ifu.io.out
-  idu.io.wbuin <> wbu.io.out
+  Connector(idu.io.ifuin, ifu.io.out, WireMode)
+  Connector(idu.io.wbuin, wbu.io.out, WireMode)
   // EXU
-  exu.io.in <> idu.io.out
+  Connector(exu.io.in, idu.io.out, WireMode)
   // LSU
-  lsu.io.in <> exu.io.out
+  Connector(lsu.io.in, exu.io.out, WireMode)
   // WBU
-  wbu.io.in <> lsu.io.out
+  Connector(wbu.io.in, lsu.io.out, WireMode)
 }
 
 // ---------------------------
@@ -62,16 +60,16 @@ class Riscv32ETOP extends Module {
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)
   // Inst
-  cpu.io.inst.addr.ready := true.B
-  rom.io.addr := cpu.io.inst.addr.bits
-  cpu.io.inst.data.valid := cpu.io.inst.data.ready
-  cpu.io.inst.data.bits := rom.io.data
+  cpu.io.inst.addr.ready <> true.B
+  cpu.io.inst.addr.bits  <> rom.io.addr
+  cpu.io.inst.data.valid <> cpu.io.inst.data.ready
+  cpu.io.inst.data.bits  <> rom.io.data
   // Data
-  ram.io.clk   := clock
-  ram.io.ren   := cpu.io.data.memRen
-  ram.io.wen   := cpu.io.data.memWen
-  ram.io.mask  := cpu.io.data.memMask
-  ram.io.addr  := cpu.io.data.memAddr
-  ram.io.wdata := cpu.io.data.memWdata
-  cpu.io.data.memRdata := ram.io.rdata
+  ram.io.clk   <> clock
+  ram.io.ren   <> cpu.io.data.memRen
+  ram.io.wen   <> cpu.io.data.memWen
+  ram.io.mask  <> cpu.io.data.memMask
+  ram.io.addr  <> cpu.io.data.memAddr
+  ram.io.wdata <> cpu.io.data.memWdata
+  ram.io.rdata <> cpu.io.data.memRdata
 }

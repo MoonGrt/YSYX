@@ -3,114 +3,62 @@ package riscv.util
 import chisel3._
 import chisel3.util._
 
-// ==============================
-// Connect Strategy Definition
-// ==============================
-sealed trait ConnMode
-case object WireMode  extends ConnMode
-case object RegMode   extends ConnMode
-case object QueueMode extends ConnMode
-
-// ==============================
-// Connector
-// ==============================
-object Connector {
-  def apply[T <: Data](in: T, mode: String): T = {
-    val m = mode match {
-      case "Wire"  => WireMode
-      case "Reg"   => RegMode
-      case "Queue" => QueueMode
-      case _ => throw new IllegalArgumentException(s"Unknown mode: $mode")
-    }
-    apply(in, m)
-  }
-  def apply[T <: Data](in: T, out: T, mode: String): Unit = {
-    val m = mode match {
-      case "Wire"  => WireMode
-      case "Reg"   => RegMode
-      case "Queue" => QueueMode
-      case _ => throw new IllegalArgumentException(s"Unknown mode: $mode")
-    }
-    apply(in, out, m)
-  }
-  // =========================================================
-  // (A) 纯函数式接口：返回生成后的节点
-  // =========================================================
-  def apply[T <: Data](in: T, mode: ConnMode): T = {
+object StageConnect {
+  def apply[T <: Data](left: DecoupledIO[T], right: DecoupledIO[T], mode: String = "Wire") = {
     mode match {
-      // ---------- Wire ----------
-      case WireMode =>
-        val out = Wire(chiselTypeOf(in))
-        connectWire(in, out)
-        out
-      // ---------- Reg ----------
-      case RegMode =>
-        val out = Wire(chiselTypeOf(in))
-        val reg = RegInit(0.U.asTypeOf(in))
-        reg := in.asTypeOf(reg)
-        out := reg
-        out
-      // ---------- Queue ----------
-      case QueueMode =>
-        val out = Wire(chiselTypeOf(in))
-        val q = Module(new Queue(chiselTypeOf(in), 2))
-        q.io.enq.bits  := in.asTypeOf(q.io.enq.bits)
-        q.io.enq.valid := true.B
-        out := q.io.deq.bits.asTypeOf(out)
-        out
-    }
-  }
-  // =========================================================
-  // (B) in → out 直接连接版本
-  // =========================================================
-  def apply[T <: Data](in: T, out: T, mode: ConnMode): Unit = {
-    mode match {
-      // ---------- Wire ----------
-      case WireMode =>
-        connectWire(in, out)
-      // ---------- Reg ----------
-      case RegMode =>
-        val reg = RegInit(0.U.asTypeOf(out))
-        reg := in.asTypeOf(reg)
-        out := reg
-      // ---------- Queue ----------
-      case QueueMode =>
-        val q = Module(new Queue(chiselTypeOf(in), 2))
-        q.io.enq.bits  := in.asTypeOf(q.io.enq.bits)
-        q.io.enq.valid := true.B
-        out := q.io.deq.bits.asTypeOf(out)
-    }
-  }
-  // ==============================
-  // Partial Connection (Custom Mapping)
-  // ==============================
-  trait PartialConnect[A <: Data, B <: Data] {
-    def connect(a: A, b: B): Unit
-  }
-  def partial[A <: Data, B <: Data](a: A, b: B)(implicit pc: PartialConnect[A, B]): Unit = {
-    pc.connect(a, b)
-  }
-  // ======================================================
-  // 核心：支持 mixed Input/Output Bundle
-  // ======================================================
-  private def connectWire[T <: Data](in: T, out: T): Unit = {
-    (in, out) match {
-      case (_: Bundle, _: Bundle) =>
-        out <> in
-      case (_: UInt, _: UInt) =>
-        out := in
-      case (_: Vec[_], _: Vec[_]) =>
-        out <> in
-      case _ =>
-        out := in.asTypeOf(out)
+      case "Wire"  => { right <> left }
+      case "Reg"   => { right <> RegEnable(left, left.fire) }
+      case "Queue" => { right <> Queue(left, 16) }
+      case _ => throw new IllegalArgumentException(s"Unknown mode: $mode")
     }
   }
 }
 
-/*
-// ==============================
-// Example Module Usage
-// ==============================
-Connector(io.ibus, io.obus, WireMode)
-io.obus <> Connector(io.ibus, WireMode)
-*/
+import chisel3.internal._
+sealed trait ConnectMode
+case object WireMode extends ConnectMode
+case object RegMode  extends ConnectMode
+object Connector {
+  private object Impl {
+    def toBiConnectMode(mode: ConnectMode): BiConnectSmart.ConnectMode = mode match {
+      case WireMode => BiConnectSmart.WireMode
+      case RegMode  => BiConnectSmart.RegMode
+    }
+  }
+  def apply(in: Data, out: Data, mode: ConnectMode = WireMode): Unit = {
+    BiConnectSmart.connect(in, out, Impl.toBiConnectMode(mode))
+  }
+}
+
+class Bus extends Bundle {
+  val data = UInt(32.W)
+}
+class SrcModule extends Module {
+  val io = IO(new Bundle {
+    val out = Decoupled(new Bus)
+  })
+  io.out.valid := io.out.ready
+  io.out.bits.data := 42.U
+  dontTouch(io.out)
+}
+class SinkModule extends Module {
+  val io = IO(new Bundle {
+    val in = Flipped(Decoupled(new Bus))
+  })
+  val regData = RegInit(0.U(32.W))
+  io.in.ready := true.B
+  dontTouch(io.in)
+  when(io.in.fire) {
+    regData := io.in.bits.data
+  }
+}
+class WireConnect extends Module {
+  val src = Module(new SrcModule)
+  val sink = Module(new SinkModule)
+  Connector(src.io.out, sink.io.in, WireMode)
+}
+class RegConnect extends Module {
+  val src = Module(new SrcModule)
+  val sink = Module(new SinkModule)
+  Connector(src.io.out, sink.io.in, RegMode)
+}
