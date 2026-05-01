@@ -24,13 +24,14 @@ class WBU extends Module {
   // private val sIdle :: sWait :: Nil = Enum(2)
   // val state = RegInit(sIdle)
   // state := MuxLookup(state, sIdle)(List(
-  //   sIdle -> Mux(io.bus.addr.fire, sWait, sIdle),
+  //   sIdle -> Mux(io.in.fire, sWait, sIdle),
   //   sWait -> Mux(io.out.fire, sIdle, sWait)
   // ))
+  io.in.ready := true.B
+  io.out.valid := io.in.fire
   // -----------------------------------------------
   // -------------------- Input --------------------
   // -----------------------------------------------
-  io.in.ready := true.B
   val gprSel  = io.in.bits.gprSel
   val gprAddr = io.in.bits.gprAddr
   val pc      = io.in.bits.pc
@@ -50,8 +51,7 @@ class WBU extends Module {
   // -----------------------------------------------
   // -------------------- Output -------------------
   // -----------------------------------------------
-  io.out.valid        := io.out.ready
-  io.out.bits.gprWen  := gprWen
+  io.out.bits.gprWen  := io.in.fire && gprWen
   io.out.bits.gprAddr := gprAddr
   io.out.bits.gprData := gprData
 }

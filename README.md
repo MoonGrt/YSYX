@@ -1,3 +1,8 @@
+---
+type: [note]
+tags: [YSYX] [RiscV]
+---
+
 ## F阶段
 ### F1 如何科学地提问
 ### F2 Logisim安装和使用
@@ -895,10 +900,73 @@ yield() → 在 a7 寄存器放入自陷的标志，并要求执行 ecall 指令
     - 4.5. **最终执行**: 
       * MEMU_EXEC 可以运行 batch 模式、SDB 调试模式或 gdb
 
-## git merge
+---
+
+## B阶段
+### B1 总线
+
+1. microbench 的 train 规模测: am-kernels/benchmarks/microbench
+
+> 跑分时关闭 NEMU 的监视点, trace, DiffTest, 同时取消 menuconfig 中的 `Enable debug information` 并重新编译NEMU, 以获得较为真实的跑分
+
 ```bash
-git merge master
+cd $AM_TEST_HOME/benchmarks/microbench
+make ARCH=riscv32e-memu run mainargs=train
 ```
+
+```
+[MEMU] Welcome to riscv32-MEMU-npc-riscv32e!
+[MEMU] For help, type "help"
+======= Running MicroBench [input *train*] =======
+[qsort] Quick sort: * Passed.
+  min time: 1056.504 ms [0]
+[queen] Queen placement: * Passed.
+  min time: 1422.238 ms [0]
+[bf] Brainf**k interpreter: * Passed.
+  min time: 1885.735 ms [0]
+[fib] Fibonacci number: * Passed.
+  min time: 25040.079 ms [0]
+[sieve] Eratosthenes sieve: * Passed.
+  min time: 1715.377 ms [0]
+[15pz] A* 15-puzzle search: * Passed.
+  min time: 1412.233 ms [0]
+[dinic] Dinic's maxflow algorithm: * Passed.
+  min time: 685.078 ms [0]
+[lzip] Lzip compression: * Passed.
+  min time: 778.658 ms [0]
+[ssort] Suffix sort: * Passed.
+  min time: 2082.401 ms [0]
+[md5] MD5 digest: * Passed.
+  min time: 1894.344 ms [0]
+==================================================
+MicroBench PASS
+Scored time: 37972.647 ms
+Total  time: 42478.522 ms
+[MEMU] EBREAK exception
+[csrc/cpu/cpu-exec.c:140 cpu_exec] memu: HIT GOOD TRAP at pc = 0x800055fc
+[csrc/cpu/cpu-exec.c:109 statistic] host time spent = 42,481,315 us
+[csrc/cpu/cpu-exec.c:110 statistic] total guest instructions = 195,143,195
+[csrc/cpu/cpu-exec.c:111 statistic] simulation frequency = 4,593,624 inst/s
+```
+
+> nangate45 工艺下主频为 51.491MHz → microbench 需要运行 3.870s. (仿真花费了 42478.522 ms)
+
+### B2 SoC计算机系统
+
+
+
+
+### B3 时序分析和优化
+### B4 性能优化和简易缓存
+### B5 流水线处理器
+
+
+
+
+
+
+
+
 
 ## Issue
 

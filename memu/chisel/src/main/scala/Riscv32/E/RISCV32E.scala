@@ -9,17 +9,31 @@ import riscv.util._
 // ---------------------------
 // Riscv32E CPU
 // ---------------------------
-class InstBus extends Bundle{
-  val addr = Decoupled(UInt(DataWidth.W))
-  val data = Flipped(Decoupled(UInt(DataWidth.W)))
+// Inst Bus
+class InstReq extends Bundle {
+  val addr = UInt(DataWidth.W)
 }
-class DataBus extends Bundle{
-  val memRen   = Output(Bool())  // read enable
-  val memWen   = Output(Bool())  // write enable
-  val memMask  = Output(UInt((DataWidth/8).W))
-  val memAddr  = Output(UInt(DataWidth.W))
-  val memWdata = Output(UInt(DataWidth.W))
-  val memRdata = Input(UInt(DataWidth.W))
+class InstResp extends Bundle {
+  val data = UInt(DataWidth.W)
+}
+class InstBus extends Bundle {
+  val req  = Decoupled(new InstReq)
+  val resp = Flipped(Decoupled(new InstResp))
+}
+// Data Bus
+class DataReq extends Bundle {
+  val ren   = Bool()
+  val wen   = Bool()
+  val mask  = UInt((DataWidth/8).W)
+  val addr  = UInt(DataWidth.W)
+  val wdata = UInt(DataWidth.W)
+}
+class DataResp extends Bundle {
+  val rdata = UInt(DataWidth.W)
+}
+class DataBus extends Bundle {
+  val req  = Decoupled(new DataReq)
+  val resp = Flipped(Decoupled(new DataResp))
 }
 class Riscv32E extends Module {
   val io = IO(new Bundle {
@@ -52,21 +66,31 @@ class Riscv32E extends Module {
 // ---------------------------
 // Riscv32E TOP = CPU + ROM + RAM
 // ---------------------------
+// import peripheral._
 class Riscv32ETOP extends Module {
   val cpu = Module(new Riscv32E)
   val rom = Module(new ROM_DPI)
   val ram = Module(new RAM_DPI)
+  // val rom = Module(new ROM(depth = 256, dataWidth = 32))
+  // val ram = Module(new RAM(depth = 256, dataWidth = 32))
   // Inst
-  cpu.io.inst.addr.ready <> true.B
-  cpu.io.inst.addr.bits  <> rom.io.addr
-  cpu.io.inst.data.valid <> cpu.io.inst.data.ready
-  cpu.io.inst.data.bits  <> rom.io.data
+  rom.io.clk        <> clock
+  rom.io.req_ready  <> cpu.io.inst.req.ready
+  rom.io.addr       <> cpu.io.inst.req.bits.addr
+  rom.io.req_valid  <> cpu.io.inst.req.valid
+  rom.io.resp_ready <> cpu.io.inst.resp.ready
+  rom.io.data       <> cpu.io.inst.resp.bits.data
+  rom.io.resp_valid <> cpu.io.inst.resp.valid
   // Data
   ram.io.clk   <> clock
-  ram.io.ren   <> cpu.io.data.memRen
-  ram.io.wen   <> cpu.io.data.memWen
-  ram.io.mask  <> cpu.io.data.memMask
-  ram.io.addr  <> cpu.io.data.memAddr
-  ram.io.wdata <> cpu.io.data.memWdata
-  ram.io.rdata <> cpu.io.data.memRdata
+  ram.io.req_ready  <> cpu.io.data.req.ready
+  ram.io.ren        <> cpu.io.data.req.bits.ren
+  ram.io.wen        <> cpu.io.data.req.bits.wen
+  ram.io.mask       <> cpu.io.data.req.bits.mask
+  ram.io.addr       <> cpu.io.data.req.bits.addr
+  ram.io.wdata      <> cpu.io.data.req.bits.wdata
+  ram.io.req_valid  <> cpu.io.data.req.valid
+  ram.io.resp_ready <> cpu.io.data.resp.ready
+  ram.io.rdata      <> cpu.io.data.resp.bits.rdata
+  ram.io.resp_valid <> cpu.io.data.resp.valid     
 }

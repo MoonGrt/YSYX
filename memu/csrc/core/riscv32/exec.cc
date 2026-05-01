@@ -240,8 +240,10 @@ extern "C" {
   void rtl_reset() {
     reset();
   }
+  #define CYCLE_NUM 2
   void rtl_step() {
-    tick();
+    for (int i = 0; i < CYCLE_NUM; i++)
+      tick();
   }
   void rtl_exit() {
     exit();

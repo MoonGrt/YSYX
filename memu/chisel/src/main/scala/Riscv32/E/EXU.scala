@@ -33,13 +33,14 @@ class EXU extends Module {
   // private val sIdle :: sWait :: Nil = Enum(2)
   // val state = RegInit(sIdle)
   // state := MuxLookup(state, sIdle)(List(
-  //   sIdle -> Mux(io.bus.addr.fire, sWait, sIdle),
+  //   sIdle -> Mux(io.in.fire, sWait, sIdle),
   //   sWait -> Mux(io.out.fire, sIdle, sWait)
   // ))
+  io.in.ready := true.B
+  io.out.valid := io.in.fire
   // -----------------------------------------------
   // -------------------- Input --------------------
   // -----------------------------------------------
-  io.in.ready := true.B
   val exSel = io.in.bits.exSel
   val pc    = io.in.bits.pc
   val op1   = io.in.bits.op1
@@ -79,7 +80,6 @@ class EXU extends Module {
   // -----------------------------------------------
   // -------------------- Output -------------------
   // -----------------------------------------------
-  io.out.valid        := io.out.ready
   io.out.bits.aluData := aluout
   io.br.valid         := io.br.ready
   io.br.bits.bren     := bren

@@ -10,8 +10,13 @@ import riscv.Constants._
 // ---------------------------
 class ROM_DPI extends BlackBox{
   val io = IO(new Bundle {
-    val addr = Input(UInt(DataWidth.W))
-    val data = Output(UInt(DataWidth.W))
+    val clk        = Input(Clock())
+    val req_ready  = Output(Bool())
+    val addr       = Input(UInt(DataWidth.W))
+    val req_valid  = Input(Bool())
+    val resp_ready = Input(Bool())
+    val data       = Output(UInt(DataWidth.W))
+    val resp_valid = Output(Bool())
   })
 }
 
@@ -20,13 +25,17 @@ class ROM_DPI extends BlackBox{
 // ---------------------------
 class RAM_DPI extends BlackBox {
   val io = IO(new Bundle {
-    val clk   = Input(Clock())
-    val ren   = Input(Bool())
-    val wen   = Input(Bool())
-    val mask  = Input(UInt(8.W))
-    val addr  = Input(UInt(DataWidth.W))
-    val wdata = Input(UInt(DataWidth.W))
-    val rdata = Output(UInt(DataWidth.W))
+    val clk        = Input(Clock())
+    val req_ready  = Output(Bool())
+    val ren        = Input(Bool())
+    val wen        = Input(Bool())
+    val mask       = Input(UInt(8.W))
+    val addr       = Input(UInt(DataWidth.W))
+    val wdata      = Input(UInt(DataWidth.W))
+    val req_valid  = Input(Bool())
+    val resp_ready = Input(Bool())
+    val rdata      = Output(UInt(DataWidth.W))
+    val resp_valid = Output(Bool())
   })
 }
 
@@ -43,15 +52,16 @@ class Exception extends BlackBox {
 
 class Trap(val impled: Seq[BitPat]) extends Module {
   val io = IO(new Bundle {
-    val inst = Input(UInt(DataWidth.W))
-    val halt = Output(Bool())
+    val valid = Input(Bool())
+    val inst  = Input(UInt(DataWidth.W))
+    val halt  = Output(Bool())
   })
   // -------- 异常类型 --------
-  val is_ebreak = (io.inst === EBREAK)
-  val is_ecall  = (io.inst === ECALL)
-  val is_zero   = (io.inst === 0.U)
-  val is_impl   = VecInit(impled.map(_ === io.inst)).asUInt.orR
-  val is_unimpl = ~is_impl
+  val is_ebreak = io.valid && (io.inst === EBREAK)
+  val is_ecall  = io.valid && (io.inst === ECALL)
+  val is_zero   = io.valid && (io.inst === 0.U)
+  val is_impl   = io.valid && VecInit(impled.map(_ === io.inst)).asUInt.orR
+  val is_unimpl = io.valid && ~is_impl
   // -------- 异常编码 --------
   val ecode = MuxCase(0.U, Seq(
     is_ebreak -> 0.U,
@@ -62,10 +72,11 @@ class Trap(val impled: Seq[BitPat]) extends Module {
   // -------- Exception --------
   val exception = Module(new Exception)
   exception.io.clk  := clock
-  exception.io.en   := ~reset.asBool && (is_unimpl || is_zero || is_ebreak || is_ecall)
+  exception.io.en   := io.valid && ~reset.asBool && 
+                       (is_unimpl || is_zero || is_ebreak || is_ecall)
   exception.io.code := ecode
   // -------- halt --------
-  io.halt := ~reset.asBool && is_unimpl
+  io.halt := io.valid && ~reset.asBool && is_unimpl
 }
 
 // ---------------------------

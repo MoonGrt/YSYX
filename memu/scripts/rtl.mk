@@ -48,7 +48,7 @@ $(RTL_OBJS): $(SCALA_SRCS)
 rtl: $(RTL_OBJS)
 .PHONY: rtl
 
-$(VLIB): $(RTL_OBJS) $(CONFIG)
+$(VLIB): $(RTL_OBJS) $(CONFIG) $(VSRCS)
 	@echo "+ VERILATE RTL"
 	@mkdir -p $(VBUILD)
 	$(VERILATOR) $(VERILATOR_CFLAGS) $(VSRCS) \

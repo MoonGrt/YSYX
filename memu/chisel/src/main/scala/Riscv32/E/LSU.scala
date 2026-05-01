@@ -18,26 +18,33 @@ class LSUOut extends Bundle{
 }
 class LSU extends Module {
   val io = IO(new Bundle {
-    val in  = Flipped(Decoupled(new EXUOut))
     val dbus = new DataBus
-    val out = Decoupled(new LSUOut)
+    val in   = Flipped(Decoupled(new EXUOut))
+    val out  = Decoupled(new LSUOut)
   })
-  // -----------------------------------------------
-  // -------------------- State --------------------
-  // -----------------------------------------------
-  // private val sIdle :: sWait :: Nil = Enum(2)
-  // val state = RegInit(sIdle)
-  // state := MuxLookup(state, sIdle)(List(
-  //   sIdle -> Mux(io.dbus.addr.fire, sWait, sIdle),
-  //   sWait -> Mux(io.out.fire, sIdle, sWait)
-  // ))
   // -----------------------------------------------
   // -------------------- Input --------------------
   // -----------------------------------------------
-  io.in.ready := true.B
   val lsSel    = io.in.bits.lsSel
   val memAddr  = io.in.bits.aluData
-  val memRdata = io.dbus.memRdata
+  val memRdata = io.dbus.resp.bits.rdata
+  // -------- Data Bus --------
+  io.dbus.req.bits.ren := !reset.asBool && lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
+  io.dbus.req.bits.wen := !reset.asBool && lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
+  val dbus_req = io.dbus.req.bits.ren || io.dbus.req.bits.wen
+  // -----------------------------------------------
+  // -------------------- State --------------------
+  // -----------------------------------------------
+  private val sIdle :: sWait :: Nil = Enum(2)
+  val state = RegInit(sIdle)
+  state := MuxLookup(state, sIdle)(List(
+    sIdle -> Mux(io.dbus.req.fire, sWait, sIdle),
+    sWait -> Mux(io.out.fire, sIdle, sWait)
+  ))
+  io.dbus.req.valid := !reset.asBool && (state === sIdle) && dbus_req
+  io.dbus.resp.ready := true.B
+  io.in.ready := !reset.asBool && (state === sIdle)
+  io.out.valid := io.dbus.resp.fire || (!dbus_req && io.in.fire)
   // -----------------------------------------------
   // -------------------- Logic --------------------
   // -----------------------------------------------
@@ -61,17 +68,12 @@ class LSU extends Module {
     LS.RHU -> Cat(0.U(16.W), rdataShift(15,0)),
   ))
   // -------- Data Bus --------
-  // io.dbus.memRen   := io.in.valid && lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
-  // io.dbus.memWen   := io.in.valid && lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
-  io.dbus.memRen   := !reset.asBool && lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
-  io.dbus.memWen   := !reset.asBool && lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
-  io.dbus.memMask  := mask
-  io.dbus.memAddr  := memAddrAlign
-  io.dbus.memWdata := wdataShift
+  io.dbus.req.bits.mask  := mask
+  io.dbus.req.bits.addr  := memAddrAlign
+  io.dbus.req.bits.wdata := wdataShift
   // -----------------------------------------------
   // -------------------- Output -------------------
   // -----------------------------------------------
-  io.out.valid        := io.out.ready
   io.out.bits.memData := memData
   // pass through
   io.out.bits.gprSel  := io.in.bits.gprSel

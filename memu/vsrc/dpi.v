@@ -59,28 +59,35 @@ import "DPI-C" function int  dpi_paddr_read(input int addr);
 import "DPI-C" function void dpi_paddr_write(input int addr, input byte mask, input int data);
 
 module ROM_DPI(
+  input  wire        clk,
+  output wire        req_ready,
   input  wire [31:0] addr,
-  output wire [31:0] data
+  input  wire        req_valid,
+  input  wire        resp_ready,
+  output reg  [31:0] data,
+  output reg         resp_valid
 );
-  // TODO: When reading from a device using combinational logic, 
-  //       multiple reads may overwrite the results; 
-  //       instructions read are currently working without issue.
-  assign data = dpi_paddr_read(addr);
+  assign req_ready = 'b1;
+  always @(posedge clk) data <= dpi_paddr_read(addr);
+  always @(posedge clk) if (resp_ready) resp_valid <= req_valid;
 endmodule
 module RAM_DPI(
   input  wire        clk,
+  output wire        req_ready,
   input  wire        ren,
   input  wire        wen,
   input  wire [ 7:0] mask,
   input  wire [31:0] addr,
   input  wire [31:0] wdata,
-  output reg  [31:0] rdata
+  input  wire        req_valid,
+  input  wire        resp_ready,
+  output reg  [31:0] rdata,
+  output reg         resp_valid
 );
-  always @(*) begin
-    rdata = 0;
-    if (ren) rdata = dpi_paddr_read(addr);
-  end
+  assign req_ready = 'b1;
   always @(posedge clk) begin
-    if (wen) dpi_paddr_write(addr, mask, wdata);
+    rdata <= ren ? dpi_paddr_read(addr) : 'b0;
+    if (req_valid && wen) dpi_paddr_write(addr, mask, wdata);
+    if (resp_ready) resp_valid <= req_valid;
   end
 endmodule

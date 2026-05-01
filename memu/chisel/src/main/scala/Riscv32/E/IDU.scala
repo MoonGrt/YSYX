@@ -126,22 +126,21 @@ class IDU extends Module {
   // -----------------------------------------------
   // -------------------- State --------------------
   // -----------------------------------------------
-  // private val s_idle :: s_wait :: Nil = Enum(2)
-  // val state = RegInit(s_idle)
-  // state := MuxLookup(state, s_idle)(List(
-  //   s_idle -> Mux(io.out.valid, s_wait, s_idle),
-  //   s_wait -> Mux(io.out.ready, s_idle, s_wait)
+  // private val sIdle :: sWait :: Nil = Enum(2)
+  // val state = RegInit(sIdle)
+  // state := MuxLookup(state, sIdle)(List(
+  //   sIdle -> Mux(io.ifuin.fire, sWait, sIdle),
+  //   sWait -> Mux(io.out.fire, sIdle, sWait)
   // ))
-  // io.in.ready := state === s_idle
-  // io.out.valid := state === s_wait
+  io.ifuin.ready := true.B
+  io.wbuin.ready := true.B
+  io.out.valid   := io.ifuin.fire
   // -----------------------------------------------
   // -------------------- Input --------------------
   // -----------------------------------------------
-  io.ifuin.ready := true.B
-  val pc   = io.ifuin.bits.pc
-  val inst = io.ifuin.bits.inst
-  io.wbuin.ready := true.B
-  val gprWen   = io.wbuin.bits.gprWen
+  val pc      = io.ifuin.bits.pc
+  val inst    = io.ifuin.bits.inst
+  val gprWen  = io.wbuin.bits.gprWen
   val gprAddr = io.wbuin.bits.gprAddr
   val gprData = io.wbuin.bits.gprData
   // -----------------------------------------------
@@ -240,6 +239,8 @@ class IDU extends Module {
   gpr.io.rs2   := rs2
 
   // -------- EX --------
+  dontTouch(op1Sel)
+  dontTouch(op2Sel)
   // Determine 1st operand data signal
   op1 := MuxCase(0.U, Seq(
     (op1Sel === OP1.RS1) -> gpr.io.RS1,
@@ -259,7 +260,6 @@ class IDU extends Module {
   // -----------------------------------------------
   // -------------------- Output -------------------
   // -----------------------------------------------
-  io.out.valid        := io.out.ready
   io.out.bits.exSel   := exSel
   io.out.bits.lsSel   := lsSel
   io.out.bits.gprSel  := gprSel
@@ -275,5 +275,6 @@ class IDU extends Module {
   // -------------------- Trap ---------------------
   // -----------------------------------------------
   val trap = Module(new Trap(Riscv32E_IMPLED))
+  trap.io.valid := !reset.asBool && io.ifuin.fire
   trap.io.inst  := inst
 }
