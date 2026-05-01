@@ -34,22 +34,19 @@ class Riscv32E extends Module {
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
 
-  // Inst Bus
-  Connector(ifu.io.ibus, io.inst, WireMode)
-  // Data Bus
-  Connector(io.data, lsu.io.dbus, WireMode)
+  import riscv.util.Connector._
 
-  // IFU
-  Connector(ifu.io.in, exu.io.br, WireMode)
-  // IDU
-  Connector(idu.io.ifuin, ifu.io.out, WireMode)
-  Connector(idu.io.wbuin, wbu.io.out, WireMode)
-  // EXU
-  Connector(exu.io.in, idu.io.out, WireMode)
-  // LSU
-  Connector(lsu.io.in, exu.io.out, WireMode)
-  // WBU
-  Connector(wbu.io.in, lsu.io.out, WireMode)
+  // Bus
+  io.inst <-> ifu.io.ibus
+  io.data <-> lsu.io.dbus
+
+  // Units
+  ifu.io.in    <-> exu.io.br
+  idu.io.ifuin <-> ifu.io.out
+  idu.io.wbuin <-> wbu.io.out
+  exu.io.in    <-> idu.io.out
+  lsu.io.in    <-> exu.io.out
+  wbu.io.in    <-> lsu.io.out
 }
 
 // ---------------------------
