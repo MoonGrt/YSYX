@@ -36,10 +36,13 @@ void device_update();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
+  if (_this->logbuf[0] == '\0') return;
+  log_write("%s\n", _this->logbuf);
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
-  IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+#ifdef CONFIG_NEMU
+  IFDEF(CONFIG_DIFFTEST, difftest_step());
+#endif
 #ifdef CONFIG_WATCHPOINT
   // 扫描所有监视点
   WP *wp = head;
@@ -63,12 +66,16 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
 }
 
-void trace_inst(word_t pc, uint32_t inst);
 static void exec_once(vaddr_t pc) {
   decode.pc = pc;
   decode.snpc = pc;
   isa_exec_once(decode);
+  if (decode.isa.inst == 0 || (decode.snpc == decode.pc)) {
+    strcpy(decode.logbuf, "");
+    return;
+  }
 #ifdef CONFIG_ITRACE
+  void trace_inst(word_t pc, uint32_t inst);
   IFDEF(CONFIG_ITRACE, trace_inst(decode.pc, decode.isa.inst));
   char *p = decode.logbuf;
   p += snprintf(p, sizeof(decode.logbuf), "[I] " FMT_WORD ": ", decode.pc);

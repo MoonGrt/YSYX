@@ -2,6 +2,7 @@
 #include <utils.h>
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
+#include <cpu/difftest.h>
 #include <memory/paddr.h>
 #include <memory/host.h>
 #include <device/mmio.h>
@@ -97,7 +98,11 @@ extern "C" {
       }
     }
   }
+  void dpi_diffen() {
+    // difftest_step();
+  }
   void dpi_diffpc(int pc, int npc, int inst) {
+    // printf("pc: %x, npc: %x, inst: %08x\n", pc, npc, inst);
     // Decode
     decode.pc = pc;
     decode.snpc = pc + 4;
@@ -105,12 +110,16 @@ extern "C" {
     decode.isa.inst = inst;
     // CPU_state
     cpu.pc = pc;
+    // reference step
+    if (pc != 0) IFDEF(CONFIG_DIFFTEST, difftest_step());
   }
   void dpi_diffgpr(int* gpr) {
+    // printf("dpi_diffgpr\n");
     for (int i = 0; i < 32; i++)
       cpu.gpr[i] = gpr[i];
   }
   void dpi_diffcsr(int* csr) {
+    // printf("dpi_diffcsr\n");
     cpu.csr.mstatus = csr[0];
     cpu.csr.mepc = csr[1];
     cpu.csr.mcause = csr[2];
@@ -242,7 +251,7 @@ extern "C" {
   }
   #define CYCLE_NUM 2
   void rtl_step() {
-    for (int i = 0; i < CYCLE_NUM; i++)
+    // for (int i = 0; i < CYCLE_NUM; i++)
       tick();
   }
   void rtl_exit() {

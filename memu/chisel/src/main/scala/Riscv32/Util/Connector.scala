@@ -1,7 +1,7 @@
 package riscv.util
 
 import chisel3._
-import chisel3.util._
+import chisel3.util.Decoupled
 import chisel3.internal._
 
 sealed trait ConnectMode
@@ -67,4 +67,37 @@ class RegConnect extends Module {
   val sink = Module(new SinkModule)
   // Connector(src.io.out, sink.io.in, RegMode)
   src.io.out <=> sink.io.in
+}
+
+/**
+ * Generate Verilog sources and save it in file GCD.v
+ */
+/*
+cd $MEMU_HOME
+mill -i chisel.runMain riscv.util.TestWireConnect --target-dir build/rtl
+mill -i chisel.runMain riscv.util.TestRegConnect --target-dir build/rtl
+*/
+object TestWireConnect extends App {
+  val firtoolOptions = Array(
+    "--lowering-options=" + List(
+      // make yosys happy
+      // see https://github.com/llvm/circt/blob/main/docs/VerilogGeneration.md
+      "disallowLocalVariables",
+      "disallowPackedArrays",
+      "locationInfoStyle=wrapInAtSquareBracket"
+    ).reduce(_ + "," + _)
+  )
+  circt.stage.ChiselStage.emitSystemVerilogFile(new WireConnect, args, firtoolOptions)
+}
+object TestRegConnect extends App {
+  val firtoolOptions = Array(
+    "--lowering-options=" + List(
+      // make yosys happy
+      // see https://github.com/llvm/circt/blob/main/docs/VerilogGeneration.md
+      "disallowLocalVariables",
+      "disallowPackedArrays",
+      "locationInfoStyle=wrapInAtSquareBracket"
+    ).reduce(_ + "," + _)
+  )
+  circt.stage.ChiselStage.emitSystemVerilogFile(new RegConnect, args, firtoolOptions)
 }

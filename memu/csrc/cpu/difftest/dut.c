@@ -92,19 +92,20 @@ static void checkregs(CPU_state *ref, vaddr_t pc) {
   }
 }
 
-void difftest_step(vaddr_t pc, vaddr_t npc) {
+#include <cpu/cpu.h>
+#include <cpu/decode.h>
+void difftest_step() {
   CPU_state ref;
-
   if (skip_dut_nr_inst > 0) {
     ref_difftest_regcpy(&ref, DIFFTEST_TO_DUT);
-    if (ref.pc == npc) {
+    if (ref.pc == decode.dnpc) {
       skip_dut_nr_inst = 0;
-      checkregs(&ref, pc);
+      checkregs(&ref, decode.pc);
       return;
     }
     skip_dut_nr_inst --;
     if (skip_dut_nr_inst == 0)
-      panic("can not catch up with ref.pc = " FMT_WORD " at pc = " FMT_WORD, ref.pc, pc);
+      panic("can not catch up with ref.pc = " FMT_WORD " at pc = " FMT_WORD, ref.pc, decode.pc);
     return;
   }
 
@@ -117,7 +118,7 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
 
   ref_difftest_exec(1);
   ref_difftest_regcpy(&ref, DIFFTEST_TO_DUT);
-  checkregs(&ref, pc);
+  checkregs(&ref, decode.pc);
 }
 #else
 void init_difftest(char *ref_so_file, long img_size, int port) {}

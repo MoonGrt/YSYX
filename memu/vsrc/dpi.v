@@ -1,3 +1,4 @@
+// Trap
 import "DPI-C" function void exception(input byte code);
 module Exception (
   input clk,
@@ -6,14 +7,15 @@ module Exception (
 );
   always @(posedge clk) if (en) exception(code);
 endmodule
-
+// DiffTest
 import "DPI-C" function void dpi_diffpc(
   input int pc, input int npc, input int inst
 );
 module DiffPC (
+  input clk, en,
   input [31:0] pc, npc, inst
 );
-  always @(*) dpi_diffpc(pc, npc, inst);
+  always @(posedge clk) if (en) dpi_diffpc(pc, npc, inst);
 endmodule
 import "DPI-C" function void dpi_diffgpr(input int gpr [0:31]);
 module DiffGPR (
@@ -59,7 +61,8 @@ import "DPI-C" function int  dpi_paddr_read(input int addr);
 import "DPI-C" function void dpi_paddr_write(input int addr, input byte mask, input int data);
 
 module ROM_DPI(
-  input  wire        clk,
+  input  wire        clock,
+  input  wire        reset,
   output wire        req_ready,
   input  wire [31:0] addr,
   input  wire        req_valid,
@@ -68,11 +71,12 @@ module ROM_DPI(
   output reg         resp_valid
 );
   assign req_ready = 'b1;
-  always @(posedge clk) data <= dpi_paddr_read(addr);
-  always @(posedge clk) if (resp_ready) resp_valid <= req_valid;
+  always @(posedge clock) if (req_valid) data <= dpi_paddr_read(addr);
+  always @(posedge clock) if (resp_ready) resp_valid <= req_valid;
 endmodule
 module RAM_DPI(
-  input  wire        clk,
+  input  wire        clock,
+  input  wire        reset,
   output wire        req_ready,
   input  wire        ren,
   input  wire        wen,
@@ -85,8 +89,8 @@ module RAM_DPI(
   output reg         resp_valid
 );
   assign req_ready = 'b1;
-  always @(posedge clk) begin
-    rdata <= ren ? dpi_paddr_read(addr) : 'b0;
+  always @(posedge clock) begin
+    if (req_valid && ren) rdata <= dpi_paddr_read(addr);
     if (req_valid && wen) dpi_paddr_write(addr, mask, wdata);
     if (resp_ready) resp_valid <= req_valid;
   end

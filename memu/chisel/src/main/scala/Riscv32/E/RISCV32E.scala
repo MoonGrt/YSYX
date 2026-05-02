@@ -69,12 +69,15 @@ class Riscv32E extends Module {
 // import peripheral._
 class Riscv32ETOP extends Module {
   val cpu = Module(new Riscv32E)
-  val rom = Module(new ROM_DPI)
-  val ram = Module(new RAM_DPI)
+  // val rom = Module(new ROM_DPI)
+  // val ram = Module(new RAM_DPI)
   // val rom = Module(new ROM(depth = 256, dataWidth = 32))
   // val ram = Module(new RAM(depth = 256, dataWidth = 32))
+  val rom = Module(new RandomDelayROM)
+  val ram = Module(new RandomDelayRAM)
   // Inst
-  rom.io.clk        <> clock
+  rom.io.clock      <> clock
+  rom.io.reset      <> reset
   rom.io.req_ready  <> cpu.io.inst.req.ready
   rom.io.addr       <> cpu.io.inst.req.bits.addr
   rom.io.req_valid  <> cpu.io.inst.req.valid
@@ -82,7 +85,8 @@ class Riscv32ETOP extends Module {
   rom.io.data       <> cpu.io.inst.resp.bits.data
   rom.io.resp_valid <> cpu.io.inst.resp.valid
   // Data
-  ram.io.clk   <> clock
+  ram.io.clock      <> clock
+  ram.io.reset      <> reset
   ram.io.req_ready  <> cpu.io.data.req.ready
   ram.io.ren        <> cpu.io.data.req.bits.ren
   ram.io.wen        <> cpu.io.data.req.bits.wen
