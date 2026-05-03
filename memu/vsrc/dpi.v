@@ -63,20 +63,34 @@ import "DPI-C" function void dpi_paddr_write(input int addr, input byte mask, in
 module ROM_DPI(
   input  wire        clock,
   input  wire        reset,
+  // req
   output wire        req_ready,
   input  wire [31:0] addr,
   input  wire        req_valid,
+  // resp
   input  wire        resp_ready,
   output reg  [31:0] data,
   output reg         resp_valid
 );
-  assign req_ready = 'b1;
-  always @(posedge clock) if (req_valid) data <= dpi_paddr_read(addr);
-  always @(posedge clock) if (resp_ready) resp_valid <= req_valid;
+  assign req_ready = !resp_valid || resp_ready;
+  always @(posedge clock or posedge reset) begin
+    if (reset) begin
+      data <= 'b0;
+      resp_valid <= 'b0;
+    end else begin
+      if (req_valid && req_ready) begin
+        data <= dpi_paddr_read(addr);
+        resp_valid <= 'b1;
+      end else if (resp_ready) begin
+        resp_valid <= 'b0;
+      end
+    end
+  end
 endmodule
 module RAM_DPI(
   input  wire        clock,
   input  wire        reset,
+  // req
   output wire        req_ready,
   input  wire        ren,
   input  wire        wen,
@@ -84,14 +98,34 @@ module RAM_DPI(
   input  wire [31:0] addr,
   input  wire [31:0] wdata,
   input  wire        req_valid,
+  // resp
   input  wire        resp_ready,
   output reg  [31:0] rdata,
   output reg         resp_valid
 );
-  assign req_ready = 'b1;
-  always @(posedge clock) begin
-    if (req_valid && ren) rdata <= dpi_paddr_read(addr);
-    if (req_valid && wen) dpi_paddr_write(addr, mask, wdata);
-    if (resp_ready) resp_valid <= req_valid;
+  reg ren_r, wen_r;
+  reg [7:0] mask_r;
+  reg [31:0] addr_r, wdata_r;
+  assign req_ready = !resp_valid || resp_ready;
+  always @(posedge clock or posedge reset) begin
+    if (reset) begin
+      rdata <= 'b0;
+      resp_valid <= 'b0;
+    end else begin
+      if (req_valid && req_ready) begin
+        ren_r   <= ren;
+        wen_r   <= wen;
+        mask_r  <= mask;
+        addr_r  <= addr;
+        wdata_r <= wdata;
+        if (ren)
+          rdata <= dpi_paddr_read(addr);
+        else if (wen)
+          dpi_paddr_write(addr, mask, wdata);
+        resp_valid <= 1'b1;
+      end else if (resp_ready) begin
+        resp_valid <= 1'b0;
+      end
+    end
   end
 endmodule

@@ -23,7 +23,7 @@ class ROM_DPI extends BlackBox{
     val resp_valid = Output(Bool())
   })
 }
-class RandomDelayROM(delayWidth: Int = 4, seed: Int = 2, taps: Int = 0x9) extends Module {
+class RandomDelayROM(delayWidth: Int = 8, seed: Int = 2, taps: Int = 0x9) extends Module {
   val io = IO(new Bundle {
     val clock      = Input(Clock())
     val reset      = Input(Bool())
@@ -43,7 +43,7 @@ class RandomDelayROM(delayWidth: Int = 4, seed: Int = 2, taps: Int = 0x9) extend
 
   val lfsr = Module(new LFSR(delayWidth, seed, taps))
   lfsr.io.en := true.B
-  lfsr.io.en := false.B
+  // lfsr.io.en := false.B
 
   val waitingResp = RegInit(false.B)
   val delayCnt    = RegInit(0.U(delayWidth.W))
@@ -52,13 +52,13 @@ class RandomDelayROM(delayWidth: Int = 4, seed: Int = 2, taps: Int = 0x9) extend
 
   rom.io.req_valid := io.req_valid
   rom.io.addr      := io.addr
-  rom.io.resp_ready := true.B
+  rom.io.resp_ready := io.resp_ready
 
   io.req_ready := rom.io.req_ready
   io.data := dataReg
   io.resp_valid := validReg
 
-  when(rom.io.resp_valid) {
+  when(rom.io.resp_valid && rom.io.resp_ready) {
     dataReg := rom.io.data
     delayCnt := lfsr.io.data
     waitingResp := true.B
@@ -99,7 +99,7 @@ class RAM_DPI extends BlackBox {
     val resp_valid = Output(Bool())
   })
 }
-class RandomDelayRAM(delayWidth: Int = 4, seed: Int = 2, taps: Int = 0x9) extends Module {
+class RandomDelayRAM(delayWidth: Int = 8, seed: Int = 2, taps: Int = 0x9) extends Module {
   val io = IO(new Bundle {
     val clock      = Input(Clock())
     val reset      = Input(Bool())
@@ -123,7 +123,7 @@ class RandomDelayRAM(delayWidth: Int = 4, seed: Int = 2, taps: Int = 0x9) extend
 
   val lfsr = Module(new LFSR(delayWidth, seed, taps))
   lfsr.io.en := true.B
-  lfsr.io.en := false.B
+  // lfsr.io.en := false.B
 
   val waitingResp = RegInit(false.B)
   val delayCnt    = RegInit(0.U(delayWidth.W))
@@ -136,13 +136,13 @@ class RandomDelayRAM(delayWidth: Int = 4, seed: Int = 2, taps: Int = 0x9) extend
   ram.io.mask  := io.mask
   ram.io.ren   := io.ren
   ram.io.wen   := io.wen
-  ram.io.resp_ready := true.B
+  ram.io.resp_ready := io.resp_ready
 
   io.req_ready := ram.io.req_ready
   io.rdata := dataReg
   io.resp_valid := validReg
 
-  when(ram.io.resp_valid) {
+  when(ram.io.resp_valid && ram.io.resp_ready) {
     dataReg := ram.io.rdata
     delayCnt := lfsr.io.data
     waitingResp := true.B

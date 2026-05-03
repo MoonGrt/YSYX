@@ -32,12 +32,13 @@ class EXU extends Module {
   // -----------------------------------------------
   // private val sIdle :: sWait :: Nil = Enum(2)
   // val state = RegInit(sIdle)
+  // dontTouch(state)
   // state := MuxLookup(state, sIdle)(List(
-  //   sIdle -> Mux(io.in.fire, sWait, sIdle),
-  //   sWait -> Mux(io.out.fire, sIdle, sWait)
+  //   sIdle -> Mux(io.in.valid, sWait, sIdle),
+  //   sWait -> Mux(io.out.valid, sIdle, sWait)
   // ))
-  io.in.ready := true.B
-  io.out.valid := io.in.fire
+  io.in.ready := io.out.ready
+  io.out.valid := io.in.valid
   // -----------------------------------------------
   // -------------------- Input --------------------
   // -----------------------------------------------

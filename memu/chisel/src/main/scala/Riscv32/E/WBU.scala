@@ -2,6 +2,7 @@ package riscv.e
 
 import chisel3._
 import chisel3.util._
+import riscv.util._
 import riscv.Constants._
 import riscv.Constants.Riscv32E._
 
@@ -23,12 +24,13 @@ class WBU extends Module {
   // -----------------------------------------------
   // private val sIdle :: sWait :: Nil = Enum(2)
   // val state = RegInit(sIdle)
+  // dontTouch(state)
   // state := MuxLookup(state, sIdle)(List(
-  //   sIdle -> Mux(io.in.fire, sWait, sIdle),
-  //   sWait -> Mux(io.out.fire, sIdle, sWait)
+  //   sIdle -> Mux(io.in.valid, sWait, sIdle),
+  //   sWait -> Mux(io.out.valid, sIdle, sWait)
   // ))
-  io.in.ready := true.B
-  io.out.valid := io.in.fire
+  io.in.ready := io.out.ready
+  io.out.valid := io.in.valid
   // -----------------------------------------------
   // -------------------- Input --------------------
   // -----------------------------------------------
@@ -51,7 +53,7 @@ class WBU extends Module {
   // -----------------------------------------------
   // -------------------- Output -------------------
   // -----------------------------------------------
-  io.out.bits.gprWen  := io.in.fire && gprWen
+  io.out.bits.gprWen  := gprWen && io.in.valid
   io.out.bits.gprAddr := gprAddr
   io.out.bits.gprData := gprData
 }

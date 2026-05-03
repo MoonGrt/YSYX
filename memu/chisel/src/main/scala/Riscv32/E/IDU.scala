@@ -2,10 +2,10 @@ package riscv.e
 
 import chisel3._
 import chisel3.util._
+import riscv.util._
 import riscv.Instructions._
 import riscv.Constants._
 import riscv.Constants.Riscv32E._
-import riscv.util._
 
 // GPR: general purpose registers
 class GPRFile extends Module {
@@ -128,13 +128,14 @@ class IDU extends Module {
   // -----------------------------------------------
   // private val sIdle :: sWait :: Nil = Enum(2)
   // val state = RegInit(sIdle)
+  // dontTouch(state)
   // state := MuxLookup(state, sIdle)(List(
-  //   sIdle -> Mux(io.ifuin.fire, sWait, sIdle),
-  //   sWait -> Mux(io.out.fire, sIdle, sWait)
+  //   sIdle -> Mux(io.ifuin.valid, sWait, sIdle),
+  //   sWait -> Mux(io.out.valid, sIdle, sWait)
   // ))
-  io.ifuin.ready := true.B
+  io.ifuin.ready := io.out.ready
   io.wbuin.ready := true.B
-  io.out.valid   := io.ifuin.fire
+  io.out.valid   := io.ifuin.valid
   // -----------------------------------------------
   // -------------------- Input --------------------
   // -----------------------------------------------
@@ -275,6 +276,6 @@ class IDU extends Module {
   // -------------------- Trap ---------------------
   // -----------------------------------------------
   val trap = Module(new Trap(Riscv32E_IMPLED))
-  trap.io.valid := !reset.asBool && io.ifuin.fire
+  trap.io.valid := !reset.asBool && io.ifuin.valid
   trap.io.inst  := inst
 }

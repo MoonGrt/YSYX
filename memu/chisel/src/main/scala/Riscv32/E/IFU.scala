@@ -21,16 +21,16 @@ class IFU extends Module {
   // -----------------------------------------------
   // -------------------- State --------------------
   // -----------------------------------------------
-  private val sIdle :: sWait :: Nil = Enum(2)
+  private val sIdle :: sWait ::Nil = Enum(2)
   val state = RegInit(sIdle)
   state := MuxLookup(state, sIdle)(List(
     sIdle -> Mux(io.ibus.req.fire, sWait, sIdle),
     sWait -> Mux(io.out.fire, sIdle, sWait)
   ))
-  io.ibus.req.valid := !reset.asBool && (state === sIdle)
-  io.ibus.resp.ready := true.B
-  io.in.ready := !reset.asBool && (state === sIdle)
-  io.out.valid := io.ibus.resp.fire
+  io.ibus.req.valid := (state === sIdle)
+  io.ibus.resp.ready := io.out.ready
+  io.in.ready := (state === sIdle)
+  io.out.valid := io.ibus.resp.valid
   // -----------------------------------------------
   // -------------------- Input --------------------
   // -----------------------------------------------
@@ -40,6 +40,7 @@ class IFU extends Module {
   // -----------------------------------------------
   // -------------------- Logic --------------------
   // -----------------------------------------------
+  
   val pc  = RegInit("h80000000".U)
   val npc = Mux(io.out.fire, Mux(bren, braddr, pc + 4.U), pc)
   pc := npc
@@ -50,7 +51,7 @@ class IFU extends Module {
   // -------------------- Output -------------------
   // -----------------------------------------------
   val pc_reg = Reg(UInt(DataWidth.W))
-  when (io.ibus.req.fire) {
+  when (io.ibus.req.valid) {
     pc_reg := pc
   }
   io.out.bits.pc := pc_reg
@@ -59,14 +60,14 @@ class IFU extends Module {
   // -------------------- DiffTest -----------------
   // -----------------------------------------------
   val started = RegInit(false.B)
-  when (io.out.fire) {
+  when (io.out.valid) {
     started := true.B
   }
-  val diffen = (started === true.B) && io.out.fire
+  val diffen = (started === true.B) && io.in.valid
   val diffpc = Module(new DiffPC)
   diffpc.io.clk  := clock
   diffpc.io.en   := diffen
-  diffpc.io.pc   := pc_reg
+  diffpc.io.pc   := pc
   diffpc.io.npc  := npc
   diffpc.io.inst := inst
 }

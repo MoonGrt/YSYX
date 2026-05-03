@@ -29,22 +29,27 @@ class LSU extends Module {
   val memAddr  = io.in.bits.aluData
   val memRdata = io.dbus.resp.bits.rdata
   // -------- Data Bus --------
-  io.dbus.req.bits.ren := !reset.asBool && lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
-  io.dbus.req.bits.wen := !reset.asBool && lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
+  val ren = lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
+  val wen = lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
+  dontTouch(ren)
+  dontTouch(wen)
+  io.dbus.req.bits.ren := io.in.valid && ren
+  io.dbus.req.bits.wen := io.in.valid && wen
   val dbus_req = io.dbus.req.bits.ren || io.dbus.req.bits.wen
   // -----------------------------------------------
   // -------------------- State --------------------
   // -----------------------------------------------
   private val sIdle :: sWait :: Nil = Enum(2)
   val state = RegInit(sIdle)
+  dontTouch(io.in.ready)
   state := MuxLookup(state, sIdle)(List(
-    sIdle -> Mux(io.dbus.req.fire, sWait, sIdle),
+    sIdle -> Mux(dbus_req, sWait, sIdle),
     sWait -> Mux(io.out.fire, sIdle, sWait)
   ))
-  io.dbus.req.valid := !reset.asBool && (state === sIdle) && dbus_req
-  io.dbus.resp.ready := true.B
-  io.in.ready := !reset.asBool && (state === sIdle)
-  io.out.valid := io.dbus.resp.fire || (!dbus_req && io.in.fire)
+  io.dbus.req.valid := (state === sIdle) && dbus_req
+  io.dbus.resp.ready := io.out.ready
+  io.in.ready := (state === sIdle)
+  io.out.valid := io.dbus.resp.fire || (!io.dbus.req.bits.ren && io.in.valid)
   // -----------------------------------------------
   // -------------------- Logic --------------------
   // -----------------------------------------------
