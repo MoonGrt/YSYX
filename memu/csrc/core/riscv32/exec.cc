@@ -98,9 +98,6 @@ extern "C" {
       }
     }
   }
-  void dpi_diffen() {
-    // difftest_step();
-  }
   void dpi_diffpc(int pc, int npc, int inst) {
     // printf("pc: %x, npc: %x, inst: %08x\n", pc, npc, inst);
     // Decode

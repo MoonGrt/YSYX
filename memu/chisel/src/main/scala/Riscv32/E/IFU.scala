@@ -21,11 +21,12 @@ class IFU extends Module {
   // -----------------------------------------------
   // -------------------- State --------------------
   // -----------------------------------------------
-  private val sIdle :: sWait ::Nil = Enum(2)
+  private val sIdle :: sWait :: sLoad :: Nil = Enum(3)
   val state = RegInit(sIdle)
   state := MuxLookup(state, sIdle)(List(
     sIdle -> Mux(io.ibus.req.fire, sWait, sIdle),
-    sWait -> Mux(io.out.fire, sIdle, sWait)
+    sWait -> Mux(io.out.valid, sLoad, sWait),
+    sLoad -> Mux(io.out.ready, sIdle, sLoad),
   ))
   io.ibus.req.valid := (state === sIdle)
   io.ibus.resp.ready := io.out.ready
@@ -40,21 +41,16 @@ class IFU extends Module {
   // -----------------------------------------------
   // -------------------- Logic --------------------
   // -----------------------------------------------
-  
   val pc  = RegInit("h80000000".U)
-  val npc = Mux(io.out.fire, Mux(bren, braddr, pc + 4.U), pc)
-  pc := npc
-  dontTouch(npc)
+  when (io.out.valid) {
+    pc := Mux(bren, braddr, pc + 4.U)
+  }
   // -------- Inst Bus --------
   io.ibus.req.bits.addr := pc
   // -----------------------------------------------
   // -------------------- Output -------------------
   // -----------------------------------------------
-  val pc_reg = Reg(UInt(DataWidth.W))
-  when (io.ibus.req.valid) {
-    pc_reg := pc
-  }
-  io.out.bits.pc := pc_reg
+  io.out.bits.pc := pc
   io.out.bits.inst := inst
   // -----------------------------------------------
   // -------------------- DiffTest -----------------
@@ -63,11 +59,11 @@ class IFU extends Module {
   when (io.out.valid) {
     started := true.B
   }
-  val diffen = (started === true.B) && io.in.valid
+  val diffen = (started === true.B) && io.ibus.req.valid
   val diffpc = Module(new DiffPC)
   diffpc.io.clk  := clock
   diffpc.io.en   := diffen
   diffpc.io.pc   := pc
-  diffpc.io.npc  := npc
-  diffpc.io.inst := inst
+  diffpc.io.npc  := Mux(bren, braddr, pc + 4.U)
+  diffpc.io.inst := RegNext(inst)
 }

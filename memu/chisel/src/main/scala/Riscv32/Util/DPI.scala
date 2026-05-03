@@ -43,7 +43,6 @@ class RandomDelayROM(delayWidth: Int = 8, seed: Int = 2, taps: Int = 0x9) extend
 
   val lfsr = Module(new LFSR(delayWidth, seed, taps))
   lfsr.io.en := true.B
-  // lfsr.io.en := false.B
 
   val waitingResp = RegInit(false.B)
   val delayCnt    = RegInit(0.U(delayWidth.W))
@@ -123,7 +122,6 @@ class RandomDelayRAM(delayWidth: Int = 8, seed: Int = 2, taps: Int = 0x9) extend
 
   val lfsr = Module(new LFSR(delayWidth, seed, taps))
   lfsr.io.en := true.B
-  // lfsr.io.en := false.B
 
   val waitingResp = RegInit(false.B)
   val delayCnt    = RegInit(0.U(delayWidth.W))
