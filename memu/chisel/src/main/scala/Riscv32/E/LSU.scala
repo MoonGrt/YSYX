@@ -48,15 +48,16 @@ class LSU extends Module {
   ))
   io.dbus.req.valid := (state === sIdle) && dbus_req
   io.dbus.resp.ready := io.out.ready
-  // io.in.ready := (state === sIdle) && !io.dbus.req.bits.ren
   io.in.ready := (state === sIdle)
-  io.out.valid := (ren && io.dbus.resp.fire) || (!ren && io.in.valid)
+  io.out.valid := 
+    ((state === sWait) && io.dbus.resp.fire) || ((state === sIdle) && io.in.valid)
   // -----------------------------------------------
   // -------------------- Logic --------------------
   // -----------------------------------------------
   // Address Align
   val memAddrAlign = Cat(memAddr(31,2), 0.U(2.W))  // word aligned
   val offset = memAddr(1,0)  // byte offset
+  dontTouch(offset)
   val mask = MuxLookup(lsSel, "b0000".U)(Seq(
     LS.WB -> (1.U << offset),  // 1 byte
     LS.WH -> (3.U << offset),  // 2 bytes
@@ -67,7 +68,7 @@ class LSU extends Module {
   // Read Data Align
   val rdataShift = memRdata >> (offset << 3)
   val memData = MuxLookup(lsSel, 0.U)(Seq(
-    LS.RW  -> rdataShift,
+    LS.RW  -> memRdata,
     LS.RB  -> Cat(Fill(24, rdataShift(7)),  rdataShift(7,0)),
     LS.RH  -> Cat(Fill(16, rdataShift(15)), rdataShift(15,0)),
     LS.RBU -> Cat(0.U(24.W), rdataShift(7,0)),

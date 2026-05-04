@@ -70,11 +70,11 @@ static void exec_once(vaddr_t pc) {
   decode.pc = pc;
   decode.snpc = pc;
   isa_exec_once(decode);
+#ifdef CONFIG_ITRACE
   if (decode.isa.inst == 0 || (decode.snpc == decode.pc)) {
     strcpy(decode.logbuf, "");
     return;
   }
-#ifdef CONFIG_ITRACE
   void trace_inst(word_t pc, uint32_t inst);
   IFDEF(CONFIG_ITRACE, trace_inst(decode.pc, decode.isa.inst));
   char *p = decode.logbuf;
