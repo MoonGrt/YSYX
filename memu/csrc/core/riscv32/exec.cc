@@ -64,11 +64,11 @@ extern "C" {
         break;
       case ZERO_INST_CODE:
         printf("%s\n", ANSI_FMT("[MEMU] Zero instruction exception", ANSI_FG_RED));
-        INV(cpu.pc);
+        INV(cpu.pc, decode.isa.inst);
         break;
       case UNIMPL_CODE:
         printf("%s\n", ANSI_FMT("[MEMU] Unimplemented instruction exception", ANSI_FG_RED));
-        INV(cpu.pc);
+        INV(cpu.pc, decode.isa.inst);
         break;
       default:
         printf("%s %d\n", ANSI_FMT("[MEMU] Unknown exception code", ANSI_FG_RED), code);
@@ -137,9 +137,11 @@ void wave_init() {
   tfp = new VerilatedFstC;
 #endif
   top->trace(tfp, 99);  // 99 是 trace depth
-  tfp->open("build/wave.vcd");
-  // const char* path = getenv("WAVE_FILE");
-  // tfp->open(path ? path : "build/wave.vcd");
+#ifdef WAVEOUT
+  tfp->open(WAVEOUT "/wave.vcd");
+#else
+  tfp->open("./wave.vcd");
+#endif
 #endif
 }
 

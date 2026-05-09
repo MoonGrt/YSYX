@@ -8,7 +8,7 @@ object thirdpartys extends SbtModule {
   def scalaVersion = "2.13.14"
   def chiselVersion = "7.0.0-M2"
 
-  override def moduleDir = super.moduleDir / "OpenBus"
+  override def moduleDir = super.moduleDir / "OpenNoC"
 
   override def scalacOptions = Seq(
     "-language:reflectiveCalls",

@@ -26,7 +26,7 @@ void set_memu_state(int state, vaddr_t pc, int halt_ret) {
 }
 
 __attribute__((noinline))
-void invalid_inst(vaddr_t thispc) {
+void invalid_inst(vaddr_t thispc, vaddr_t thisinst) {
   uint32_t temp[2];
   vaddr_t pc = thispc;
   temp[0] = inst_fetch(&pc, 4);
@@ -39,8 +39,8 @@ void invalid_inst(vaddr_t thispc) {
       thispc, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], temp[0], temp[1]);
 
   printf("There are two cases which will trigger this unexpected exception:\n"
-      "1. The instruction at PC = " FMT_WORD " is not implemented.\n"
-      "2. Something is implemented incorrectly.\n", thispc);
+      "1. The instruction at PC = " FMT_WORD " -> Inst = " FMT_WORD " is not implemented.\n"
+      "2. Something is implemented incorrectly.\n", thispc, thisinst);
   printf("Find this PC(" FMT_WORD ") in the disassembling result to distinguish which case it is.\n\n", thispc);
   printf(ANSI_FMT("If it is the first case, see\n%s\nfor more details.\n\n"
         "If it is the second case, remember:\n"

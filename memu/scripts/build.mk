@@ -30,6 +30,9 @@ INCLUDES = $(addprefix -I, $(INC_PATH))
 ifeq ($(CONFIG_NEMU),y)
 CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
 else
+ifeq ($(CONFIG_WAVE),y)
+CFLAGS  += -DWAVEOUT=\"$(BUILD_DIR)\"
+endif
 CFLAGS  := -O2 -MMD -Werror $(INCLUDES) $(CFLAGS)
 endif
 LDFLAGS := -O2 $(LDFLAGS)

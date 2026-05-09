@@ -29,7 +29,7 @@ class GPRFile extends Module {
   // -----------------------------------------------
   // -------------------- DiffTest -----------------
   // -----------------------------------------------
-  val diffgpr = Module(new DiffGPR)
+  val diffgpr = Module(new DpiDiffGPRBB)
   for (i <- 0 until GPRNum) {
     diffgpr.io.gpr(i) := gpr(i)
   }
@@ -96,7 +96,7 @@ class CSRFile extends Module {
     csr(CSR_MSTATUS) := 0x00000080.U
   }
   // -------- DiffTest --------
-  val diffcsr = Module(new DiffCSR)
+  val diffcsr = Module(new DpiDiffCSRBB)
   for (i <- 0 until CSRNum) {
     diffcsr.io.csr(i) := csr(i)
   }

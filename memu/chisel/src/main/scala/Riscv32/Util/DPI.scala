@@ -4,83 +4,29 @@ import chisel3._
 import chisel3.util._
 import riscv.Instructions._
 import riscv.Constants._
-import riscv.util.LFSR
 
 // ---------------------------
-// ROM BlackBox (只读指令存储器)
+// DPI ROM BlackBox (只读指令存储器)
 // ---------------------------
-class ROM_DPI extends BlackBox{
+class DpiROMBB(val dataWidth: Int) extends BlackBox{
   val io = IO(new Bundle {
     val clock      = Input(Clock())
     val reset      = Input(Bool())
     // req
     val req_ready  = Output(Bool())
-    val addr       = Input(UInt(DataWidth.W))
+    val addr       = Input(UInt(dataWidth.W))
     val req_valid  = Input(Bool())
     // resp
     val resp_ready = Input(Bool())
-    val data       = Output(UInt(DataWidth.W))
+    val data       = Output(UInt(dataWidth.W))
     val resp_valid = Output(Bool())
   })
 }
-class RandomDelayROM(delayWidth: Int = 8, seed: Int = 2, taps: Int = 0x9) extends Module {
-  val io = IO(new Bundle {
-    val clock      = Input(Clock())
-    val reset      = Input(Bool())
-    // req
-    val req_ready  = Output(Bool())
-    val addr       = Input(UInt(DataWidth.W))
-    val req_valid  = Input(Bool())
-    // resp
-    val resp_ready = Input(Bool())
-    val data       = Output(UInt(DataWidth.W))
-    val resp_valid = Output(Bool())
-  })
-
-  val rom = Module(new ROM_DPI)
-  rom.io.clock <> io.clock
-  rom.io.reset <> io.reset
-
-  val lfsr = Module(new LFSR(delayWidth, seed, taps))
-  lfsr.io.en := true.B
-
-  val waitingResp = RegInit(false.B)
-  val delayCnt    = RegInit(0.U(delayWidth.W))
-  val dataReg     = Reg(UInt(DataWidth.W))
-  val validReg    = RegInit(false.B)
-
-  rom.io.req_valid := io.req_valid
-  rom.io.addr      := io.addr
-  rom.io.resp_ready := io.resp_ready
-
-  io.req_ready := rom.io.req_ready
-  io.data := dataReg
-  io.resp_valid := validReg
-
-  when(rom.io.resp_valid && rom.io.resp_ready) {
-    dataReg := rom.io.data
-    delayCnt := lfsr.io.data
-    waitingResp := true.B
-  }
-
-  when(validReg) {
-    validReg := false.B
-  }
-
-  when(waitingResp) {
-    when(delayCnt =/= 0.U) {
-      delayCnt := delayCnt - 1.U
-    }.otherwise {
-      validReg := true.B
-      waitingResp := false.B
-    }
-  }
-}
 
 // ---------------------------
-// RAM BlackBox (可读写数据存储器)
+// DPI RAM BlackBox (可读写数据存储器)
 // ---------------------------
-class RAM_DPI extends BlackBox {
+class DpiRAMBB(val dataWidth: Int) extends BlackBox {
   val io = IO(new Bundle {
     val clock      = Input(Clock())
     val reset      = Input(Bool())
@@ -89,81 +35,33 @@ class RAM_DPI extends BlackBox {
     val ren        = Input(Bool())
     val wen        = Input(Bool())
     val mask       = Input(UInt(8.W))
-    val addr       = Input(UInt(DataWidth.W))
-    val wdata      = Input(UInt(DataWidth.W))
+    val addr       = Input(UInt(dataWidth.W))
+    val wdata      = Input(UInt(dataWidth.W))
     val req_valid  = Input(Bool())
     // resp
     val resp_ready = Input(Bool())
-    val rdata      = Output(UInt(DataWidth.W))
+    val rdata      = Output(UInt(dataWidth.W))
     val resp_valid = Output(Bool())
   })
 }
-class RandomDelayRAM(delayWidth: Int = 8, seed: Int = 2, taps: Int = 0x9) extends Module {
+
+
+class DpiMem extends BlackBox{
   val io = IO(new Bundle {
-    val clock      = Input(Clock())
-    val reset      = Input(Bool())
-    // req
-    val req_ready  = Output(Bool())
-    val ren        = Input(Bool())
-    val wen        = Input(Bool())
-    val mask       = Input(UInt(8.W))
-    val addr       = Input(UInt(DataWidth.W))
-    val wdata      = Input(UInt(DataWidth.W))
-    val req_valid  = Input(Bool())
-    // resp
-    val resp_ready = Input(Bool())
-    val rdata      = Output(UInt(DataWidth.W))
-    val resp_valid = Output(Bool())
+    val ren   =  Input(Bool())
+    val wen   =  Input(Bool())
+    val mask  =  Input(UInt( 8.W))
+    val addr  =  Input(UInt(32.W))
+    val wdata =  Input(UInt(32.W))
+    val rdata = Output(UInt(32.W))
   })
-
-  val ram = Module(new RAM_DPI)
-  ram.io.clock <> io.clock
-  ram.io.reset <> io.reset
-
-  val lfsr = Module(new LFSR(delayWidth, seed, taps))
-  lfsr.io.en := true.B
-
-  val waitingResp = RegInit(false.B)
-  val delayCnt    = RegInit(0.U(delayWidth.W))
-  val dataReg     = Reg(UInt(DataWidth.W))
-  val validReg    = RegInit(false.B)
-
-  ram.io.req_valid := io.req_valid
-  ram.io.addr  := io.addr
-  ram.io.wdata := io.wdata
-  ram.io.mask  := io.mask
-  ram.io.ren   := io.ren
-  ram.io.wen   := io.wen
-  ram.io.resp_ready := io.resp_ready
-
-  io.req_ready := ram.io.req_ready
-  io.rdata := dataReg
-  io.resp_valid := validReg
-
-  when(ram.io.resp_valid && ram.io.resp_ready) {
-    dataReg := ram.io.rdata
-    delayCnt := lfsr.io.data
-    waitingResp := true.B
-  }
-
-  when(validReg) {
-    validReg := false.B
-  }
-
-  when(waitingResp) {
-    when(delayCnt =/= 0.U) {
-      delayCnt := delayCnt - 1.U
-    }.otherwise {
-      validReg := true.B
-      waitingResp := false.B
-    }
-  }
 }
 
+
 // ---------------------------
-// Exception BlackBox (异常处理模块)
+// DPI Exception BlackBox (异常处理模块)
 // ---------------------------
-class Exception extends BlackBox {
+class DpiExceptionBB extends BlackBox {
   val io = IO(new Bundle {
     val clk  = Input(Clock())
     val en   = Input(Bool())
@@ -190,7 +88,7 @@ class Trap(val impled: Seq[BitPat]) extends Module {
     is_unimpl -> 3.U,
   ))
   // -------- Exception --------
-  val exception = Module(new Exception)
+  val exception = Module(new DpiExceptionBB)
   exception.io.clk  := clock
   exception.io.en   := io.valid && ~reset.asBool && 
                        (is_unimpl || is_zero || is_ebreak || is_ecall)
@@ -200,9 +98,9 @@ class Trap(val impled: Seq[BitPat]) extends Module {
 }
 
 // ---------------------------
-// DiffTest BlackBox (差分测试模块)
+// DPI DiffTest BlackBox (差分测试模块)
 // ---------------------------
-class DiffPC extends BlackBox {
+class DpiDiffPCBB extends BlackBox {
   val io = IO(new Bundle {
     val clk  = Input(Clock())
     val en   = Input(Bool())
@@ -211,12 +109,12 @@ class DiffPC extends BlackBox {
     val inst = Input(UInt(DataWidth.W))
   })
 }
-class DiffGPR extends BlackBox {
+class DpiDiffGPRBB extends BlackBox {
   val io = IO(new Bundle {
     val gpr  = Input(Vec(GPRNum, UInt(DataWidth.W)))
   })
 }
-class DiffCSR extends BlackBox {
+class DpiDiffCSRBB extends BlackBox {
   val io = IO(new Bundle {
     val csr  = Input(Vec(CSRNum, UInt(DataWidth.W)))
   })

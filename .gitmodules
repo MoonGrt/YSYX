@@ -1,0 +1,3 @@
+[submodule "memu/thirdpartys/OpenNoC"]
+	path = memu/thirdpartys/OpenNoC
+	url = https://github.com/MoonGrt/OpenNoC.git

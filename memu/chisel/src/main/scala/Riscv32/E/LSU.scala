@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import riscv.Constants._
 import riscv.Constants.Riscv32E._
+import peripheral.mem.DataBus
 
 // ----------------------------------
 // LSU: Load/Store Unit
@@ -18,7 +19,7 @@ class LSUOut extends Bundle{
 }
 class LSU extends Module {
   val io = IO(new Bundle {
-    val dbus = new DataBus
+    val dbus = new DataBus(DataWidth)
     val in   = Flipped(Decoupled(new EXUOut))
     val out  = Decoupled(new LSUOut)
   })

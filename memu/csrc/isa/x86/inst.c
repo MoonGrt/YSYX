@@ -172,14 +172,14 @@ static void decode_operand(uint8_t opcode, int *rd_, word_t *src1,
 
 #define gp1() do { \
   switch (gp_idx) { \
-    default: INV(decode.pc); \
+    default: INV(decode.pc, decode.isa.inst); \
   }; \
 } while (0)
 
 void _2byte_esc(bool is_operand_size_16) {
   uint8_t opcode = x86_inst_fetch(1);
   INSTPAT_START();
-  INSTPAT("???? ????", inv,    N,    0, INV(decode.pc));
+  INSTPAT("???? ????", inv,    N,    0, INV(decode.pc, decode.isa.inst));
   INSTPAT_END();
 }
 
@@ -213,7 +213,7 @@ again:
   INSTPAT("1100 0110", mov,       I2E,  1, RMw(imm));
   INSTPAT("1100 0111", mov,       I2E,  0, RMw(imm));
   INSTPAT("1100 1100", memu_trap, N,    0, MEMUTRAP(decode.pc, cpu.eax));
-  INSTPAT("???? ????", inv,       N,    0, INV(decode.pc));
+  INSTPAT("???? ????", inv,       N,    0, INV(decode.pc, decode.isa.inst));
   INSTPAT_END();
 
   return 0;

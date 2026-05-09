@@ -24,11 +24,11 @@ void cpu_exec(uint64_t n);
 extern "C" {
 #endif
 void set_memu_state(int state, vaddr_t pc, int halt_ret);
-void invalid_inst(vaddr_t thispc);
+void invalid_inst(vaddr_t thispc, vaddr_t thisinst);
 #ifdef __cplusplus
 }
 #endif
 #define MEMUTRAP(thispc, code) set_memu_state(MEMU_END, thispc, code)
-#define INV(thispc) invalid_inst(thispc)
+#define INV(thispc, thisinst) invalid_inst(thispc, thisinst)
 
 #endif

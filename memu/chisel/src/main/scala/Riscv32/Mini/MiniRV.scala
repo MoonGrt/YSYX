@@ -223,8 +223,8 @@
 // // ---------------------------
 // class MiniRVTOP extends Module {
 //   val cpu = Module(new MiniRV)
-//   val rom = Module(new ROM_DPI)
-//   val ram = Module(new RAM_DPI)
+//   val rom = Module(new DpiROM)
+//   val ram = Module(new DpiRAM)
 //   // 指令取值
 //   rom.io.addr := cpu.io.pc
 //   cpu.io.inst := rom.io.data

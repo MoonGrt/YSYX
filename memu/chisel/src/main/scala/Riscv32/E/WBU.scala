@@ -53,6 +53,7 @@ class WBU extends Module {
   // -----------------------------------------------
   // -------------------- Output -------------------
   // -----------------------------------------------
+  dontTouch(gprWen)
   io.out.bits.gprWen  := gprWen && io.in.valid
   io.out.bits.gprAddr := gprAddr
   io.out.bits.gprData := gprData

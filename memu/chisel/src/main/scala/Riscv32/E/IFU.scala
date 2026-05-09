@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import riscv.util._
 import riscv.Constants._
+import peripheral.mem.InstBus
 
 // ----------------------------------
 // IFU: Instruction Fetch
@@ -14,7 +15,7 @@ class IFUOut extends Bundle{
 }
 class IFU extends Module {
   val io = IO(new Bundle {
-    val ibus = new InstBus
+    val ibus = new InstBus(DataWidth)
     val in   = Flipped(Decoupled(new BROut))
     val out  = Decoupled(new IFUOut)
   })
@@ -61,7 +62,7 @@ class IFU extends Module {
     started := true.B
   }
   val diffen = (started === true.B) && io.ibus.req.valid
-  val diffpc = Module(new DiffPC)
+  val diffpc = Module(new DpiDiffPCBB)
   diffpc.io.clk  := clock
   diffpc.io.en   := diffen
   diffpc.io.pc   := pc
