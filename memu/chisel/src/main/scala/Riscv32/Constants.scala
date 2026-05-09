@@ -4,12 +4,12 @@ import chisel3._
 import chisel3.util._
 
 object Constants {
-  val DataWidth = 32
-  val GPRNum    = 32
-  val CSRNum    = 8
-  val CSRWidth  = 12
-
+  // MiniRV Constants
   object MiniRV {
+    val DataWidth = 32
+    val GPRNum    = 16
+    val CSRNum    = 8
+    val CSRWidth  = 12
     object OP2 extends ChiselEnum {
       val NONE, RS2, IMI, IMS, IMU = Value
     }
@@ -23,8 +23,12 @@ object Constants {
       val NONE, RW, RBU, WW, WB = Value
     }
   }
-
+  // MiniRV Constants
   object Riscv32E {
+    val DataWidth = 32
+    val GPRNum    = 16
+    val CSRNum    = 8
+    val CSRWidth  = 12
     object OP1 extends ChiselEnum {
       val NONE, RS1, PC, IMZ = Value
     }

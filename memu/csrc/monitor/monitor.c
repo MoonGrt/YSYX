@@ -34,9 +34,9 @@ static void welcome() {
 #if defined(CONFIG_NEMU)
   printf("[MEMU] Welcome to %s-MEMU-nemu!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
 #elif defined(CONFIG_NPC)
-#ifdef CONFIG_CORE_minirv
+#ifdef CONFIG_CORE_RVMINI
 #define CORE "minirv"
-#elif  CONFIG_CORE_riscv32e
+#elif  CONFIG_CORE_RV32E
 #define CORE "riscv32e"
 #elif  CONFIG_CORE_riscv32
 #elif  CONFIG_CORE_riscv64

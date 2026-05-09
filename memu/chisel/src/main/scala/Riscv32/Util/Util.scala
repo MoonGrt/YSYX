@@ -2,14 +2,13 @@ package riscv.util
 
 import chisel3._
 import chisel3.util._
-import riscv.Constants._
 
 // ---------------------------
 // Symbol Expansion
 // ---------------------------
 object Sext {
-  def apply(x: UInt, bits: Int): UInt = {
-    Cat(Fill(DataWidth - bits, x(bits - 1)), x)
+  def apply(dataWidth: Int, x: UInt, bits: Int): UInt = {
+    Cat(Fill(dataWidth - bits, x(bits - 1)), x)
   }
 }
 

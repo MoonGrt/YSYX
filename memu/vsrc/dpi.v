@@ -1,75 +1,9 @@
+`define CORE_RVMINI
+`define CORE_RVE
+
 // Mem
 import "DPI-C" function int  dpi_paddr_read(input int addr);
 import "DPI-C" function void dpi_paddr_write(input int addr, input byte mask, input int data);
-module DpiROMBB(
-  input  wire        clock,
-  input  wire        reset,
-  // req
-  output wire        req_ready,
-  input  wire [31:0] addr,
-  input  wire        req_valid,
-  // resp
-  input  wire        resp_ready,
-  output reg  [31:0] data,
-  output reg         resp_valid
-);
-  assign req_ready = !resp_valid || resp_ready;
-  always @(posedge clock or posedge reset) begin
-    if (reset) begin
-      data <= 'b0;
-      resp_valid <= 'b0;
-    end else begin
-      if (req_valid && req_ready) begin
-        data <= dpi_paddr_read(addr);
-        resp_valid <= 'b1;
-      end else if (resp_ready) begin
-        resp_valid <= 'b0;
-      end
-    end
-  end
-endmodule
-module DpiRAMBB(
-  input  wire        clock,
-  input  wire        reset,
-  // req
-  output wire        req_ready,
-  input  wire        ren,
-  input  wire        wen,
-  input  wire [ 7:0] mask,
-  input  wire [31:0] addr,
-  input  wire [31:0] wdata,
-  input  wire        req_valid,
-  // resp
-  input  wire        resp_ready,
-  output reg  [31:0] rdata,
-  output reg         resp_valid
-);
-  reg ren_r, wen_r;
-  reg [7:0] mask_r;
-  reg [31:0] addr_r, wdata_r;
-  assign req_ready = !resp_valid || resp_ready;
-  always @(posedge clock or posedge reset) begin
-    if (reset) begin
-      rdata <= 'b0;
-      resp_valid <= 'b0;
-    end else begin
-      if (req_valid && req_ready) begin
-        ren_r   <= ren;
-        wen_r   <= wen;
-        mask_r  <= mask;
-        addr_r  <= addr;
-        wdata_r <= wdata;
-        if (ren)
-          rdata <= dpi_paddr_read(addr);
-        else if (wen)
-          dpi_paddr_write(addr, mask, wdata);
-        resp_valid <= 1'b1;
-      end else if (resp_ready) begin
-        resp_valid <= 1'b0;
-      end
-    end
-  end
-endmodule
 module DpiMem(
     input  wire        ren,
     input  wire        wen,
@@ -97,7 +31,7 @@ endmodule
 
 // DiffTest
 import "DPI-C" function void dpi_diffpc(input int pc, input int npc, input int inst);
-import "DPI-C" function void dpi_diffgpr(input int gpr [0:31]);
+import "DPI-C" function void dpi_diffgpr(input int gpr [0:15]);
 import "DPI-C" function void dpi_diffcsr(input int csr [0:7]);
 module DpiDiffPCBB (
   input clk, en,
@@ -109,22 +43,14 @@ module DpiDiffGPRBB (
   input [31:0] gpr_0,  gpr_1,  gpr_2,  gpr_3,
   input [31:0] gpr_4,  gpr_5,  gpr_6,  gpr_7,
   input [31:0] gpr_8,  gpr_9,  gpr_10, gpr_11,
-  input [31:0] gpr_12, gpr_13, gpr_14, gpr_15,
-  input [31:0] gpr_16, gpr_17, gpr_18, gpr_19,
-  input [31:0] gpr_20, gpr_21, gpr_22, gpr_23,
-  input [31:0] gpr_24, gpr_25, gpr_26, gpr_27,
-  input [31:0] gpr_28, gpr_29, gpr_30, gpr_31
+  input [31:0] gpr_12, gpr_13, gpr_14, gpr_15
 );
-  int gpr [0:31];
+  int gpr [0:15];
   always @(*) begin
     gpr[0]  = gpr_0;  gpr[1]  = gpr_1;  gpr[2]  = gpr_2;  gpr[3]  = gpr_3;
     gpr[4]  = gpr_4;  gpr[5]  = gpr_5;  gpr[6]  = gpr_6;  gpr[7]  = gpr_7;
     gpr[8]  = gpr_8;  gpr[9]  = gpr_9;  gpr[10] = gpr_10; gpr[11] = gpr_11;
     gpr[12] = gpr_12; gpr[13] = gpr_13; gpr[14] = gpr_14; gpr[15] = gpr_15;
-    gpr[16] = gpr_16; gpr[17] = gpr_17; gpr[18] = gpr_18; gpr[19] = gpr_19;
-    gpr[20] = gpr_20; gpr[21] = gpr_21; gpr[22] = gpr_22; gpr[23] = gpr_23;
-    gpr[24] = gpr_24; gpr[25] = gpr_25; gpr[26] = gpr_26; gpr[27] = gpr_27;
-    gpr[28] = gpr_28; gpr[29] = gpr_29; gpr[30] = gpr_30; gpr[31] = gpr_31;
   end
   always @(*) dpi_diffgpr(gpr);
 endmodule

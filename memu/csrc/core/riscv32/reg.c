@@ -26,7 +26,7 @@ const char *regs[] = {
 void isa_reg_display() {
   printf(" pc = 0x%08x\n", cpu.pc);
   printf(" GPR:\n");
-  for (int i = 0; i < 32; i++) {
+  for (int i = 0; i < MUXDEF(CONFIG_RVE, 16, 32); i++) {
     printf("  %-3s = %08x", regs[i], cpu.gpr[i]);
     if ((i + 1) % 4 == 0) printf("\n");
   }
@@ -34,7 +34,7 @@ void isa_reg_display() {
 
 word_t isa_reg_str2val(const char *s, bool *success) {
   if (strcmp(s, "pc") == 0) return cpu.pc;
-  for (int i = 0; i < 32; i++)
+  for (int i = 0; i < MUXDEF(CONFIG_RVE, 16, 32); i++)
     if (strcmp(s, regs[i]) == 0)
       return cpu.gpr[i];
   printf("  Unknown register: %s\n", s);

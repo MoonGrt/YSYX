@@ -26,9 +26,9 @@ if NPC
 choice
   prompt "Base Core"
   default CORE_riscv32e
-config CORE_minirv
+config CORE_MINIRV
   bool "minirv"
-config CORE_riscv32e
+config CORE_RV32E
   bool "riscv32e"
 endchoice
 endif
@@ -44,10 +44,10 @@ config ISA
 
 config CORE
   string
-  default "riscv32" if CORE_minirv
-  default "riscv32" if CORE_riscv32e
-  default "riscv32" if CORE_riscv32
-  default "riscv64" if CORE_riscv64
+  default "riscv32" if CORE_MINIRV
+  default "riscv32" if CORE_RV32E
+  default "riscv32" if CORE_RV32
+  default "riscv64" if CORE_RV64
   default "none"
 
 config ISA64

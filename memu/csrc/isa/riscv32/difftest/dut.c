@@ -45,7 +45,7 @@
 bool isa_difftest_checkregs(CPU_state *ref) {
   bool result = true;
   CHECKDIFF(pc);
-  for (int i = 0; i < 32; i++)
+  for (int i = 0; i < MUXDEF(CONFIG_RVE, 16, 32); i++)
     CHECKDIFF_FMT(gpr[i], "gpr[%d]", i);
 #define _(x) CHECKDIFF_CSR(x);
   CSR_LIST(_)

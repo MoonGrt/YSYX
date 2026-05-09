@@ -3,49 +3,11 @@ package riscv.util
 import chisel3._
 import chisel3.util._
 import riscv.Instructions._
-import riscv.Constants._
+import riscv.Constants.Riscv32E._
 
 // ---------------------------
-// DPI ROM BlackBox (只读指令存储器)
+// DPI Mem BlackBox (数据存储器)
 // ---------------------------
-class DpiROMBB(val dataWidth: Int) extends BlackBox{
-  val io = IO(new Bundle {
-    val clock      = Input(Clock())
-    val reset      = Input(Bool())
-    // req
-    val req_ready  = Output(Bool())
-    val addr       = Input(UInt(dataWidth.W))
-    val req_valid  = Input(Bool())
-    // resp
-    val resp_ready = Input(Bool())
-    val data       = Output(UInt(dataWidth.W))
-    val resp_valid = Output(Bool())
-  })
-}
-
-// ---------------------------
-// DPI RAM BlackBox (可读写数据存储器)
-// ---------------------------
-class DpiRAMBB(val dataWidth: Int) extends BlackBox {
-  val io = IO(new Bundle {
-    val clock      = Input(Clock())
-    val reset      = Input(Bool())
-    // req
-    val req_ready  = Output(Bool())
-    val ren        = Input(Bool())
-    val wen        = Input(Bool())
-    val mask       = Input(UInt(8.W))
-    val addr       = Input(UInt(dataWidth.W))
-    val wdata      = Input(UInt(dataWidth.W))
-    val req_valid  = Input(Bool())
-    // resp
-    val resp_ready = Input(Bool())
-    val rdata      = Output(UInt(dataWidth.W))
-    val resp_valid = Output(Bool())
-  })
-}
-
-
 class DpiMem extends BlackBox{
   val io = IO(new Bundle {
     val ren   =  Input(Bool())
@@ -56,7 +18,6 @@ class DpiMem extends BlackBox{
     val rdata = Output(UInt(32.W))
   })
 }
-
 
 // ---------------------------
 // DPI Exception BlackBox (异常处理模块)

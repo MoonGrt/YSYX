@@ -7,10 +7,10 @@
 #include <memory/host.h>
 #include <device/mmio.h>
 
-#ifdef CONFIG_CORE_minirv
+#ifdef CONFIG_CORE_RVMINI
 #include "VMiniRVTOP.h"
 VMiniRVTOP *top = new VMiniRVTOP;
-#elif  CONFIG_CORE_riscv32e
+#elif  CONFIG_CORE_RV32E
 #include "VRiscv32ETOP.h"
 VRiscv32ETOP *top = new VRiscv32ETOP;
 #endif
@@ -88,11 +88,11 @@ extern "C" {
   }
   void dpi_paddr_write(int addr, char mask, int data) {
     if (addr == 0) return;
+    IFDEF(CONFIG_MTRACE, mtrace(true, addr, 4, data));
     for (int i = 0; i < 4; i++) {
       if (mask & (1 << i)) {
         int byte_addr = addr + i;
         int byte_data = (data >> (i * 8)) & 0xFF;
-        IFDEF(CONFIG_MTRACE, mtrace(true, byte_addr, 1, byte_data));
         if (likely(in_pmem(byte_addr))) pmem_write(byte_addr, 1, byte_data);
         else IFDEF(CONFIG_DEVICE, mmio_write(byte_addr, 1, byte_data));
       }
@@ -112,7 +112,7 @@ extern "C" {
   }
   void dpi_diffgpr(int* gpr) {
     // printf("dpi_diffgpr\n");
-    for (int i = 0; i < 32; i++)
+    for (int i = 0; i < MUXDEF(CONFIG_RVE, 16, 32); i++)
       cpu.gpr[i] = gpr[i];
   }
   void dpi_diffcsr(int* csr) {

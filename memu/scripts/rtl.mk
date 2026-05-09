@@ -20,10 +20,10 @@ PRJ        := chisel
 SCALA_DIR  := $(PRJ)/src
 SCALA_SRCS := $(shell find $(SCALA_DIR) -name "*.scala")
 
-ifeq ($(CONFIG_CORE_minirv),y)
+ifeq ($(CONFIG_CORE_MINIRV),y)
 TOP := MiniRV
 endif
-ifeq ($(CONFIG_CORE_riscv32e),y)
+ifeq ($(CONFIG_CORE_RV32E),y)
 TOP := Riscv32E
 endif
 

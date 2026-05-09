@@ -3,7 +3,6 @@
 // import chisel3._
 // import chisel3.util._
 // import riscv.Instructions._
-// import riscv.Constants._
 // import riscv.Constants.MiniRV._
 // import riscv.util._
 

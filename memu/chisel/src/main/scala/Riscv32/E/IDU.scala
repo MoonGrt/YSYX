@@ -4,7 +4,6 @@ import chisel3._
 import chisel3.util._
 import riscv.util._
 import riscv.Instructions._
-import riscv.Constants._
 import riscv.Constants.Riscv32E._
 
 // GPR: general purpose registers
