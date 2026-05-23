@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import riscv.util._
 import riscv.Constants.Riscv32E._
+import riscv.Parameters.Riscv32E._
 import peripheral.mem.InstBus
 
 // ----------------------------------

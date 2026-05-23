@@ -2,14 +2,39 @@ package riscv
 
 import chisel3._
 import chisel3.util._
+import peripheral.mem._
 
-object Constants {
-  // MiniRV Constants
+object Parameters {
+  // MiniRV Parameters
   object MiniRV {
+    // Basic
     val DataWidth = 32
     val GPRNum    = 16
     val CSRNum    = 8
     val CSRWidth  = 12
+  }
+  // Riscv32E Parameters
+  object Riscv32E {
+    // Basic
+    val DataWidth = 32
+    val GPRNum    = 16
+    val CSRNum    = 8
+    val CSRWidth  = 12
+    // Mem
+    val memBusType  = SimpleBusType
+    val memUseDpi   = true
+    val memDelayCfg = MemDelayConfig(
+      enable = false,
+      delayWidth = 8,
+      delaySeed = 2,
+      delayTaps = 0x9
+    )
+  }
+}
+
+object Constants {
+  // MiniRV Constants
+  object MiniRV {
     object OP2 extends ChiselEnum {
       val NONE, RS2, IMI, IMS, IMU = Value
     }
@@ -23,12 +48,8 @@ object Constants {
       val NONE, RW, RBU, WW, WB = Value
     }
   }
-  // MiniRV Constants
+  // Riscv32E Constants
   object Riscv32E {
-    val DataWidth = 32
-    val GPRNum    = 16
-    val CSRNum    = 8
-    val CSRWidth  = 12
     object OP1 extends ChiselEnum {
       val NONE, RS1, PC, IMZ = Value
     }

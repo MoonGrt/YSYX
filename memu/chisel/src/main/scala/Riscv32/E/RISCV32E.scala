@@ -3,6 +3,7 @@ package riscv.e
 import chisel3._
 import chisel3.util._
 import riscv.Constants.Riscv32E._
+import riscv.Parameters.Riscv32E._
 import peripheral.mem._
 
 // ---------------------------
@@ -42,8 +43,8 @@ class Riscv32ETOP extends Module {
     )
   // Modules
   val cpu = Module(new Riscv32E)
-  val rom = Module(new ROM(useDpi = true, delayCfg = delayCfg))
-  val ram = Module(new RAM(useDpi = true, delayCfg = delayCfg))
+  val rom = Module(new ROM(useDpi = memUseDpi, delayCfg = memDelayCfg))
+  val ram = Module(new RAM(useDpi = memUseDpi, delayCfg = memDelayCfg))
   // Inst
   rom.io  <> cpu.io.inst
   // Data

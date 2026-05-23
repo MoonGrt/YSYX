@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import riscv.Instructions._
 import riscv.Constants.Riscv32E._
+import riscv.Parameters.Riscv32E._
 
 // ---------------------------
 // DPI Mem BlackBox (数据存储器)

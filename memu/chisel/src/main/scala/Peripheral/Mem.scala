@@ -238,258 +238,297 @@ class RAM(
   }
 }
 
+
+
+
 // ============================================================
 // AXI Memory
 // ============================================================
 import bus.amba.axi.common._
 
-class Axi4Rom(p: AxiParams, depthWords: Int = 1024, initFile: String = "") extends Module {
-  require(depthWords > 1, "depthWords must be greater than 1")
-  require((p.dataBits % 8) == 0, "AXI dataBits must be byte aligned")
-  val io = IO(new Bundle {
-    val axi = new AXI4SlaveBundle(p)
-  })
+class AXIROM(
+  p: AxiParams,
+  useDpi: Boolean = true,
+  depth: Int = 1024,
+  width: Int = 32,
+  initFile: Option[String] = None
+) extends Module {
+  require(depth > 1)
+  require(width % 8 == 0)
 
-  def this(depthWords: Int, initFile: String)(implicit params: AxiParameters) =
-    this(AxiParams.fromPortParameters, depthWords, initFile)
+  val io = IO(new AXI4SlaveBundle(p))
 
-  private val dataBytes = p.dataBits / 8
-  private val wordShift = log2Ceil(dataBytes)
-  private val depthBits = log2Ceil(depthWords)
-  private val sizeMatch = log2Ceil(dataBytes).U(3.W)
+  private val addrWidth = log2Ceil(depth)
 
-  import chisel3.util.experimental.loadMemoryFromFileInline
-  private val mem = Mem(depthWords, UInt(p.dataBits.W))
-  if (initFile.nonEmpty) {
-    loadMemoryFromFileInline(mem, initFile)
+  val arFire = io.ar.fire
+  val rFire  = io.r.fire
+
+  val busy = RegInit(false.B)
+
+  io.ar.ready := !busy
+
+  val addr = io.ar.bits.addr(addrWidth - 1, 0)
+  val rdata = Wire(UInt(width.W))
+
+  if (useDpi) {
+    val mem = Module(new DpiMem)
+    mem.io.ren := true.B
+    mem.io.wen := false.B
+    mem.io.mask := Fill(width / 8, 1.U(1.W))
+    mem.io.addr := io.ar.bits.addr
+    mem.io.wdata := 0.U
+    rdata := mem.io.rdata
+  } else {
+    import chisel3.util.experimental.loadMemoryFromFileInline
+    val mem = SyncReadMem(depth, UInt(width.W))
+    initFile.foreach(loadMemoryFromFileInline(mem, _))
+    rdata := mem.read(addr, arFire)
   }
-  private def inRange(addr: UInt): Bool = {
-    val idx = (addr >> wordShift)(depthBits - 1, 0)
-    idx < depthWords.U
-  }
 
-  // -------------------------
-  // Write path: always SLVERR
-  // -------------------------
-  val wIdle :: wData :: wResp :: Nil = Enum(3)
-  val wState = RegInit(wIdle)
-  val wId    = Reg(UInt(p.idBits.W))
-  val awSeen = RegInit(false.B)
-  val wSeen  = RegInit(false.B)
+  io.r.bits.data := RegEnable(rdata, arFire)
+  io.r.bits.id   := RegNext(io.ar.bits.id)
+  io.r.bits.resp := 0.U
+  io.r.bits.last := true.B
+  io.r.bits.user := 0.U
 
-  io.axi.aw.ready := (wState === wIdle) && !awSeen
-  io.axi.w.ready  := (wState === wIdle || wState === wData) && !wSeen
+  io.r.valid := RegNext(arFire, false.B)
 
-  io.axi.b.valid     := (wState === wResp)
-  io.axi.b.bits.id   := wId
-  io.axi.b.bits.resp := AxiResp.SLVERR
-  io.axi.b.bits.user := 0.U
+  when(arFire) { busy := true.B }
+  when(rFire)  { busy := false.B }
 
-  when((wState === wIdle || wState === wData) && io.axi.aw.fire) {
-    wId    := io.axi.aw.bits.id
-    awSeen := true.B
-    when(wSeen) { wState := wResp }
-      .otherwise { wState := wData }
-  }
-  when((wState === wIdle || wState === wData) && io.axi.w.fire) {
-    wSeen := true.B
-    when(awSeen && io.axi.w.bits.last) {
-      wState := wResp
-    }.otherwise {
-      wState := wData
+  io.aw.ready := false.B
+  io.w.ready := false.B
+  io.b.valid := false.B
+  io.b.bits.id   := 0.U
+  io.b.bits.resp := 0.U
+  io.b.bits.user := 0.U
+}
+
+class AXIRAM(
+  p: AxiParams,
+  useDpi: Boolean = true,
+  depth: Int = 1024,
+  width: Int = 32
+) extends Module {
+  require(depth > 1)
+  require(width % 8 == 0)
+  val io = IO(new AXI4SlaveBundle(p))
+  private val addrWidth = log2Ceil(depth)
+  private val maskWidth = width / 8
+  val busy = RegInit(false.B)
+
+  val awFire = io.aw.fire
+  val wFire  = io.w.fire
+  val arFire = io.ar.fire
+
+  io.aw.ready := !busy
+  io.w.ready  := !busy
+  io.ar.ready := !busy
+
+  val addrW = io.aw.bits.addr(addrWidth - 1, 0)
+  val addrR = io.ar.bits.addr(addrWidth - 1, 0)
+
+  val rdata = Wire(UInt(width.W))
+  val rvalid = RegInit(false.B)
+
+  if (useDpi) {
+    val mem = Module(new DpiMem)
+    mem.io.addr := Mux(awFire, io.aw.bits.addr, io.ar.bits.addr)
+    mem.io.mask := io.w.bits.strb
+    mem.io.wdata := io.w.bits.data
+    mem.io.ren := arFire
+    mem.io.wen := wFire && awFire
+    rdata := mem.io.rdata
+  } else {
+    val mem = SyncReadMem(depth, Vec(maskWidth, UInt(8.W)))
+    val wdata = io.w.bits.data.asTypeOf(Vec(maskWidth, UInt(8.W)))
+
+    when(awFire && wFire) {
+      mem.write(addrW, wdata, io.w.bits.strb.asBools)
     }
-  }
-  when(wState === wResp && io.axi.b.fire) {
-    awSeen := false.B
-    wSeen  := false.B
-    wState := wIdle
+
+    rdata := mem.read(addrR, arFire).asUInt
   }
 
-  // -------------------------
-  // Read path (AR/R)
-  // -------------------------
-  val rIdle :: rData :: Nil = Enum(2)
-  val rState = RegInit(rIdle)
-  val rId    = Reg(UInt(p.idBits.W))
-  val rAddr  = Reg(UInt(p.addrBits.W))
-  val rBurst = Reg(UInt(2.W))
-  val rSize  = Reg(UInt(3.W))
-  val rBeats = Reg(UInt(9.W))
+  // read response
+  io.r.bits.data := RegEnable(rdata, arFire)
+  io.r.bits.id   := RegNext(io.ar.bits.id)
+  io.r.bits.resp := 0.U
+  io.r.bits.last := true.B
+  io.r.valid     := RegNext(rvalid)
+  io.r.bits.user := 0.U
 
-  io.axi.ar.ready := (rState === rIdle)
-
-  io.axi.r.valid     := (rState === rData)
-  io.axi.r.bits.id   := rId
-  io.axi.r.bits.data := 0.U
-  io.axi.r.bits.resp := AxiResp.OKAY
-  io.axi.r.bits.last := (rBeats === 1.U)
-  io.axi.r.bits.user := 0.U
-  when(rState === rIdle && io.axi.ar.fire) {
-    rId    := io.axi.ar.bits.id
-    rAddr  := io.axi.ar.bits.addr
-    rBurst := io.axi.ar.bits.burst
-    rSize  := io.axi.ar.bits.size
-    rBeats := io.axi.ar.bits.len + 1.U
-    rState := rData
+  when(arFire) {
+    rvalid := true.B
+    busy := true.B
+  }.elsewhen(io.r.fire) {
+    rvalid := false.B
+    busy := false.B
   }
-  when(rState === rData) {
-    val addrOk  = inRange(rAddr)
-    val sizeOk  = (rSize === sizeMatch)
-    val burstOk = (rBurst === AxiBurst.INCR) || (rBurst === AxiBurst.FIXED)
-    when(addrOk && sizeOk && burstOk) {
-      val idx = (rAddr >> wordShift)(depthBits - 1, 0)
-      io.axi.r.bits.data := mem.read(idx)
-      io.axi.r.bits.resp := AxiResp.OKAY
-    }.otherwise {
-      io.axi.r.bits.data := 0.U
-      io.axi.r.bits.resp := AxiResp.SLVERR
-    }
-    when(io.axi.r.fire) {
-      when(rBeats === 1.U) {
-        rState := rIdle
-      }.otherwise {
-        rBeats := rBeats - 1.U
-        when(rBurst === AxiBurst.INCR) {
-          rAddr := rAddr + dataBytes.U
-        }
-      }
-    }
+
+  // write response (AXI B channel)
+  io.b.bits.id   := RegNext(io.aw.bits.id)
+  io.b.bits.resp := 0.U
+  io.b.bits.user := 0.U
+  io.b.valid := RegNext(awFire && wFire)
+
+  when(io.b.fire) {
+    busy := false.B
   }
 }
 
-class Axi4Ram(p: AxiParams, depthWords: Int = 1024) extends Module {
-  require(depthWords > 1, "depthWords must be greater than 1")
-  require((p.dataBits % 8) == 0, "AXI dataBits must be byte aligned")
+/** Minimal usage example: issue one read to ROM base address. */
+class AXIROMExample extends Module {
+  private implicit val params: AxiParameters = new BaseAxiConfig
+  private val p = AxiParams.fromPortParameters
+
   val io = IO(new Bundle {
-    val axi = new AXI4SlaveBundle(p)
+    val done = Output(Bool())
+    val data = Output(UInt(p.dataBits.W))
+    val resp = Output(UInt(2.W))
   })
 
-  def this(depthWords: Int)(implicit params: AxiParameters) =
-    this(AxiParams.fromPortParameters, depthWords)
+  val host = Module(new bus.amba.axi.host.Axi4SingleBeatMasterHost(p))
+  val rom  = Module(new AXIROM(p))
+  rom.io <> host.io.axi
 
-  private val dataBytes = p.dataBits / 8
-  private val wordShift = log2Ceil(dataBytes)
-  private val depthBits = log2Ceil(depthWords)
-  private val sizeMatch = log2Ceil(dataBytes).U(3.W)
+  val sReq :: sWait :: sDone :: Nil = Enum(3)
+  val st = RegInit(sReq)
+  val dataReg = RegInit(0.U(p.dataBits.W))
+  val respReg = RegInit(AxiResp.OKAY)
 
-  private val mem = Mem(depthWords, UInt(p.dataBits.W))
-  private def inRange(addr: UInt): Bool = {
-    val idx = (addr >> wordShift)(depthBits - 1, 0)
-    idx < depthWords.U
-  }
-  private def mergeBytes(oldData: UInt, newData: UInt, strb: UInt): UInt = {
-    val lanes = (0 until p.strobeBits).map { i =>
-      val lo = i * 8
-      Mux(strb(i), newData(lo + 7, lo), oldData(lo + 7, lo))
+  host.io.cmd.valid := false.B
+  host.io.cmd.bits  := 0.U.asTypeOf(host.io.cmd.bits)
+  host.io.rsp.ready := false.B
+
+  switch(st) {
+    is(sReq) {
+      host.io.cmd.valid      := true.B
+      host.io.cmd.bits.write := false.B
+      host.io.cmd.bits.addr  := 0.U
+      host.io.cmd.bits.wdata := 0.U
+      host.io.cmd.bits.strb  := 0.U
+      host.io.cmd.bits.prot  := 0.U
+      when(host.io.cmd.fire) { st := sWait }
     }
-    Cat(lanes.reverse)
-  }
-
-  // -------------------------
-  // Write path (AW/W/B)
-  // -------------------------
-  val wIdle :: wData :: wResp :: Nil = Enum(3)
-  val wState = RegInit(wIdle)
-
-  val wId      = Reg(UInt(p.idBits.W))
-  val wAddr    = Reg(UInt(p.addrBits.W))
-  val wBurst   = Reg(UInt(2.W))
-  val wSize    = Reg(UInt(3.W))
-  val wBeats   = Reg(UInt(9.W)) // len + 1, up to 256
-  val wRespReg = RegInit(AxiResp.OKAY)
-
-  io.axi.aw.ready := (wState === wIdle)
-  io.axi.w.ready  := (wState === wData)
-
-  io.axi.b.valid     := (wState === wResp)
-  io.axi.b.bits.id   := wId
-  io.axi.b.bits.resp := wRespReg
-  io.axi.b.bits.user := 0.U
-
-  when(wState === wIdle && io.axi.aw.fire) {
-    wId      := io.axi.aw.bits.id
-    wAddr    := io.axi.aw.bits.addr
-    wBurst   := io.axi.aw.bits.burst
-    wSize    := io.axi.aw.bits.size
-    wBeats   := io.axi.aw.bits.len + 1.U
-    wRespReg := AxiResp.OKAY
-    wState   := wData
-  }
-  when(wState === wData && io.axi.w.fire) {
-    val addrOk  = inRange(wAddr)
-    val sizeOk  = (wSize === sizeMatch)
-    val burstOk = (wBurst === AxiBurst.INCR) || (wBurst === AxiBurst.FIXED)
-    when(addrOk && sizeOk && burstOk) {
-      val idx     = (wAddr >> wordShift)(depthBits - 1, 0)
-      val oldData = mem.read(idx)
-      mem.write(idx, mergeBytes(oldData, io.axi.w.bits.data, io.axi.w.bits.strb))
-    }.otherwise {
-      wRespReg := AxiResp.SLVERR
-    }
-    val lastBeatByCount = (wBeats === 1.U)
-    val txnDone         = io.axi.w.bits.last || lastBeatByCount
-    when(txnDone) {
-      wState := wResp
-    }.otherwise {
-      wBeats := wBeats - 1.U
-      when(wBurst === AxiBurst.INCR) {
-        wAddr := wAddr + dataBytes.U
+    is(sWait) {
+      host.io.rsp.ready := true.B
+      when(host.io.rsp.fire) {
+        dataReg := host.io.rsp.bits.rdata
+        respReg := host.io.rsp.bits.resp
+        st := sDone
       }
     }
   }
-  when(wState === wResp && io.axi.b.fire) {
-    wState := wIdle
-  }
 
-  // -------------------------
-  // Read path (AR/R)
-  // -------------------------
-  val rIdle :: rData :: Nil = Enum(2)
-  val rState = RegInit(rIdle)
-  val rId    = Reg(UInt(p.idBits.W))
-  val rAddr  = Reg(UInt(p.addrBits.W))
-  val rBurst = Reg(UInt(2.W))
-  val rSize  = Reg(UInt(3.W))
-  val rBeats = Reg(UInt(9.W))
+  io.done := (st === sDone)
+  io.data := dataReg
+  io.resp := respReg
+}
 
-  io.axi.ar.ready := (rState === rIdle)
+// mill -i chisel.runMain peripheral.mem.AXIROMExample --target-dir build/rtl
+object AXIROMExample extends App {
+  val firtoolOptions = Array(
+    "--lowering-options=" + List(
+      "disallowLocalVariables",
+      "disallowPackedArrays",
+      "locationInfoStyle=wrapInAtSquareBracket"
+    ).reduce(_ + "," + _)
+  )
+  _root_.circt.stage.ChiselStage.emitSystemVerilogFile(new AXIROMExample, args, firtoolOptions)
+}
 
-  io.axi.r.valid     := (rState === rData)
-  io.axi.r.bits.id   := rId
-  io.axi.r.bits.data := 0.U
-  io.axi.r.bits.resp := AxiResp.OKAY
-  io.axi.r.bits.last := (rBeats === 1.U)
-  io.axi.r.bits.user := 0.U
 
-  when(rState === rIdle && io.axi.ar.fire) {
-    rId    := io.axi.ar.bits.id
-    rAddr  := io.axi.ar.bits.addr
-    rBurst := io.axi.ar.bits.burst
-    rSize  := io.axi.ar.bits.size
-    rBeats := io.axi.ar.bits.len + 1.U
-    rState := rData
-  }
-  when(rState === rData) {
-    val addrOk  = inRange(rAddr)
-    val sizeOk  = (rSize === sizeMatch)
-    val burstOk = (rBurst === AxiBurst.INCR) || (rBurst === AxiBurst.FIXED)
-    when(addrOk && sizeOk && burstOk) {
-      val idx = (rAddr >> wordShift)(depthBits - 1, 0)
-      io.axi.r.bits.data := mem.read(idx)
-      io.axi.r.bits.resp := AxiResp.OKAY
-    }.otherwise {
-      io.axi.r.bits.data := 0.U
-      io.axi.r.bits.resp := AxiResp.SLVERR
+/** Minimal usage example: write one word then read back. */
+class AXIRAMExample extends Module {
+  private val masterPort = AXI4MasterPortParameters(
+    masters = Seq(AXI4MasterParameters(name = "axi4ram-example-master", id = IdRange(0, 4)))
+  )
+  private val slavePort = AXI4SlavePortParameters(
+    slaves = Seq(
+      AXI4SlaveParameters(
+        address = Seq(AddressSet(base = 0, size = 1024)),
+        supportsWrite = TransferSizes(1, 4),
+        supportsRead = TransferSizes(1, 4)
+      )
+    ),
+    beatBytes = 4
+  )
+
+  private implicit val params: AxiParameters =
+    new WithAxiPorts(masterPort, slavePort) ++ new BaseAxiConfig
+
+  private val p: AxiParams = AxiParams.fromPortParameters
+  private val ramDepthWords: Int =
+    ((slavePort.maxAddress + 1) / slavePort.beatBytes).toInt
+
+  val io = IO(new Bundle {
+    val done     = Output(Bool())
+    val readData = Output(UInt(p.dataBits.W))
+    val readResp = Output(UInt(2.W))
+  })
+
+  val host = Module(new bus.amba.axi.host.Axi4SingleBeatMasterHost(p))
+  val ram  = Module(new AXIRAM(p))
+  ram.io <> host.io.axi
+
+  val sWriteCmd :: sWaitWriteRsp :: sReadCmd :: sWaitReadRsp :: sDone :: Nil = Enum(5)
+  val state = RegInit(sWriteCmd)
+
+  host.io.cmd.valid := false.B
+  host.io.cmd.bits  := 0.U.asTypeOf(host.io.cmd.bits)
+  host.io.rsp.ready := false.B
+
+  val readDataReg = RegInit(0.U(p.dataBits.W))
+  val readRespReg = RegInit(AxiResp.OKAY)
+
+  switch(state) {
+    is(sWriteCmd) {
+      host.io.cmd.valid      := true.B
+      host.io.cmd.bits.write := true.B
+      host.io.cmd.bits.addr  := 0.U
+      host.io.cmd.bits.wdata := "h1234ABCD".U
+      host.io.cmd.bits.strb  := Fill(p.strobeBits, 1.U(1.W))
+      host.io.cmd.bits.prot  := 0.U
+      when(host.io.cmd.fire) { state := sWaitWriteRsp }
     }
-    when(io.axi.r.fire) {
-      when(rBeats === 1.U) {
-        rState := rIdle
-      }.otherwise {
-        rBeats := rBeats - 1.U
-        when(rBurst === AxiBurst.INCR) {
-          rAddr := rAddr + dataBytes.U
-        }
+    is(sWaitWriteRsp) {
+      host.io.rsp.ready := true.B
+      when(host.io.rsp.fire) { state := sReadCmd }
+    }
+    is(sReadCmd) {
+      host.io.cmd.valid      := true.B
+      host.io.cmd.bits.write := false.B
+      host.io.cmd.bits.addr  := 0.U
+      host.io.cmd.bits.wdata := 0.U
+      host.io.cmd.bits.strb  := 0.U
+      host.io.cmd.bits.prot  := 0.U
+      when(host.io.cmd.fire) { state := sWaitReadRsp }
+    }
+    is(sWaitReadRsp) {
+      host.io.rsp.ready := true.B
+      when(host.io.rsp.fire) {
+        readDataReg := host.io.rsp.bits.rdata
+        readRespReg := host.io.rsp.bits.resp
+        state := sDone
       }
     }
+    is(sDone) { host.io.rsp.ready := true.B }
   }
+
+  io.done     := (state === sDone)
+  io.readData := readDataReg
+  io.readResp := readRespReg
+}
+
+// mill -i chisel.runMain peripheral.mem.AXIRAMExample --target-dir build/rtl
+object AXIRAMExample extends App {
+  val firtoolOptions = Array(
+    "--lowering-options=" + List(
+      "disallowLocalVariables",
+      "disallowPackedArrays",
+      "locationInfoStyle=wrapInAtSquareBracket"
+    ).reduce(_ + "," + _)
+  )
+  _root_.circt.stage.ChiselStage.emitSystemVerilogFile(new AXIRAMExample, args, firtoolOptions)
 }

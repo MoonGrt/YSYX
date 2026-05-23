@@ -405,8 +405,7 @@ object BiConnectSmart {
       case WireMode =>
         lhs := rhs
       case RegMode =>
-        val reg = RegNext(rhs)
-        lhs := reg
+        lhs := RegNext(rhs)
     }
   }
 }

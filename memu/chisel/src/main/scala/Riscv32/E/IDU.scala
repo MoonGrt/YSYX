@@ -5,6 +5,7 @@ import chisel3.util._
 import riscv.util._
 import riscv.Instructions._
 import riscv.Constants.Riscv32E._
+import riscv.Parameters.Riscv32E._
 
 // GPR: general purpose registers
 class GPRFile extends Module {
