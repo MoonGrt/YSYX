@@ -310,67 +310,145 @@ class AXIRAM(
   p: AxiParams,
   useDpi: Boolean = true,
   depth: Int = 1024,
-  width: Int = 32
-) extends Module {
+  width: Int = 32,
+  delayCfg: MemDelayConfig = MemDelayConfig()
+) extends Module with RandomDelay {
   require(depth > 1)
   require(width % 8 == 0)
   val io = IO(new AXI4SlaveBundle(p))
-  private val addrWidth = log2Ceil(depth)
-  private val maskWidth = width / 8
+
+  // ----------------------------------------------------------------
+  // Base RAM
+  // ----------------------------------------------------------------
+  val ram = Module(new BaseRAM(useDpi, depth, width))
+  ram.io.req.valid := false.B
+  ram.io.req.bits  := DontCare
+  ram.io.resp.ready := true.B
+
+  // ----------------------------------------------------------------
+  // Write channel state
+  // ----------------------------------------------------------------
+  val awValidReg = RegInit(false.B)
+  val wValidReg  = RegInit(false.B)
+  val awAddrReg = Reg(UInt(p.addrBits.W))
+  val awIdReg   = Reg(UInt(p.idBits.W))
+  val wDataReg = Reg(UInt(p.dataBits.W))
+  val wStrbReg = Reg(UInt((p.dataBits / 8).W))
+  val bValidReg = RegInit(false.B)
+  val bIdReg    = Reg(UInt(p.idBits.W))
+
+  // ----------------------------------------------------------------
+  // Read channel state
+  // ----------------------------------------------------------------
+  val rValidReg = RegInit(false.B)
+  val rDataReg  = Reg(UInt(width.W))
+  val rIdReg    = Reg(UInt(p.idBits.W))
+
+  // ----------------------------------------------------------------
+  // Busy
+  // single outstanding transaction
+  // ----------------------------------------------------------------
   val busy = RegInit(false.B)
 
-  val awFire = io.aw.fire
-  val wFire  = io.w.fire
-  val arFire = io.ar.fire
-
-  io.aw.ready := !busy
-  io.w.ready  := !busy
+  // ----------------------------------------------------------------
+  // Default outputs
+  // ----------------------------------------------------------------
+  io.aw.ready := !busy && !awValidReg
+  io.w.ready  := !busy && !wValidReg
   io.ar.ready := !busy
 
-  val addrW = io.aw.bits.addr(addrWidth - 1, 0)
-  val addrR = io.ar.bits.addr(addrWidth - 1, 0)
+  io.b.valid := bValidReg
+  io.b.bits.id := bIdReg
+  io.b.bits.resp := 0.U
+  io.b.bits.user := 0.U
 
-  val rdata = Wire(UInt(width.W))
-  val rvalid = RegInit(false.B)
-
-  if (useDpi) {
-    val mem = Module(new DpiMem)
-    mem.io.addr := Mux(awFire, io.aw.bits.addr, io.ar.bits.addr)
-    mem.io.mask := io.w.bits.strb
-    mem.io.wdata := io.w.bits.data
-    mem.io.ren := arFire
-    mem.io.wen := wFire && awFire
-    rdata := mem.io.rdata
-  } else {
-    val mem = SyncReadMem(depth, Vec(maskWidth, UInt(8.W)))
-    val wdata = io.w.bits.data.asTypeOf(Vec(maskWidth, UInt(8.W)))
-    when(awFire && wFire) {
-      mem.write(addrW, wdata, io.w.bits.strb.asBools)
-    }
-    rdata := mem.read(addrR, arFire).asUInt
-  }
-
-  // read response
-  io.r.bits.data := RegEnable(rdata, arFire)
-  io.r.bits.id   := RegNext(io.ar.bits.id)
+  io.r.valid := rValidReg
+  io.r.bits.data := rDataReg
+  io.r.bits.id := rIdReg
   io.r.bits.resp := 0.U
   io.r.bits.last := true.B
-  io.r.valid     := RegNext(rvalid)
   io.r.bits.user := 0.U
-  when(arFire) {
-    rvalid := true.B
+
+  // ----------------------------------------------------------------
+  // Capture AW
+  // ----------------------------------------------------------------
+  when(io.aw.fire) {
+    awValidReg := true.B
+    awAddrReg  := io.aw.bits.addr
+    awIdReg    := io.aw.bits.id
+  }
+
+  // ----------------------------------------------------------------
+  // Capture W
+  // ----------------------------------------------------------------
+  when(io.w.fire) {
+    wValidReg := true.B
+    wDataReg  := io.w.bits.data
+    wStrbReg  := io.w.bits.strb
+  }
+
+  // ----------------------------------------------------------------
+  // Write issue
+  // ----------------------------------------------------------------
+  val writeFire = awValidReg && wValidReg && !bValidReg
+  when(writeFire) {
+    ram.io.req.valid := true.B
+    ram.io.req.bits.wen := true.B
+    ram.io.req.bits.ren := false.B
+    ram.io.req.bits.addr := awAddrReg
+    ram.io.req.bits.wdata := wDataReg
+    ram.io.req.bits.mask := wStrbReg
+
+    bValidReg := true.B
+    bIdReg := awIdReg
+    awValidReg := false.B
+    wValidReg := false.B
     busy := true.B
-  }.elsewhen(io.r.fire) {
-    rvalid := false.B
+  }
+
+  // ----------------------------------------------------------------
+  // Read request
+  // ----------------------------------------------------------------
+  val arFire = io.ar.fire
+  when(arFire) {
+    ram.io.req.valid := true.B
+    ram.io.req.bits.ren := true.B
+    ram.io.req.bits.wen := false.B
+    ram.io.req.bits.addr := io.ar.bits.addr
+    rIdReg := io.ar.bits.id
+    busy := true.B
+  }
+
+  // ----------------------------------------------------------------
+  // Read response
+  // ----------------------------------------------------------------
+  if(delayCfg.enable) {
+    val (data, valid) = applyDelay(
+      fire  = ram.io.resp.fire,
+      data  = ram.io.resp.bits.rdata,
+      width = width,
+      cfg   = delayCfg
+    )
+    when(valid) {
+      rDataReg := data
+      rValidReg := true.B
+    }
+  } else {
+    when(ram.io.resp.fire) {
+      rDataReg := ram.io.resp.bits.rdata
+      rValidReg := true.B
+    }
+  }
+  when(io.r.fire) {
+    rValidReg := false.B
     busy := false.B
   }
 
-  // write response (AXI B channel)
-  io.b.bits.id   := RegNext(io.aw.bits.id)
-  io.b.bits.resp := 0.U
-  io.b.bits.user := 0.U
-  io.b.valid := RegNext(awFire && wFire)
+  // ----------------------------------------------------------------
+  // Write response
+  // ----------------------------------------------------------------
   when(io.b.fire) {
+    bValidReg := false.B
     busy := false.B
   }
 }
@@ -452,7 +530,6 @@ class AXIRAMExample extends Module {
 
   private implicit val params: AxiParameters =
     new WithAxiPorts(masterPort, slavePort) ++ new BaseAxiConfig
-
   private val p: AxiParams = AxiParams.fromPortParameters
   private val ramDepthWords: Int =
     ((slavePort.maxAddress + 1) / slavePort.beatBytes).toInt

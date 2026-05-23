@@ -26,10 +26,12 @@ class LSU extends Module {
   // -----------------------------------------------
   // -------------------- Input --------------------
   // -----------------------------------------------
-  val memRdata  = io.dbus.resp.bits.rdata
+  val lsSel    = io.in.bits.lsSel
+  val memAddr  = io.in.bits.aluData
+  val memRdata = io.dbus.resp.bits.rdata
   // -------- Data Bus --------
-  val ren = io.in.bits.lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
-  val wen = io.in.bits.lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
+  val ren = lsSel.isOneOf(LS.RW, LS.RH, LS.RB, LS.RHU, LS.RBU)
+  val wen = lsSel.isOneOf(LS.WW, LS.WH, LS.WB)
   dontTouch(ren)
   dontTouch(wen)
   io.dbus.req.bits.ren := io.in.valid && ren
@@ -48,15 +50,11 @@ class LSU extends Module {
   io.dbus.req.valid := (state === sIdle) && dbus_req
   io.dbus.resp.ready := io.out.ready
   io.in.ready := (state === sIdle)
-  io.out.valid := 
+  io.out.valid :=
     ((state === sWait) && io.dbus.resp.fire) || ((state === sIdle) && io.in.valid)
   // -----------------------------------------------
   // -------------------- Logic --------------------
   // -----------------------------------------------
-  val lsSel_reg   = RegEnable(io.in.bits.lsSel, io.in.valid)
-  val memAddr_reg = RegEnable(io.in.bits.aluData, io.in.valid)
-  val lsSel = Mux(state === sIdle, io.in.bits.lsSel, lsSel_reg)
-  val memAddr = Mux(state === sIdle, io.in.bits.aluData, memAddr_reg)
   // Address Align
   val memAddrAlign = Cat(memAddr(31,2), 0.U(2.W))  // word aligned
   val offset = memAddr(1,0)  // byte offset

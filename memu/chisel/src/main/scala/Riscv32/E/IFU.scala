@@ -53,8 +53,9 @@ class IFU extends Module {
   // -------------------- Output -------------------
   // -----------------------------------------------
   val pc_reg = RegEnable(pc, io.ibus.req.valid)
+  val inst_reg = RegEnable(inst, io.ibus.resp.valid)
   io.out.bits.pc := pc_reg
-  io.out.bits.inst := inst
+  io.out.bits.inst := Mux(io.ibus.resp.valid, inst, inst_reg)
   // -----------------------------------------------
   // -------------------- DiffTest -----------------
   // -----------------------------------------------

@@ -65,3 +65,11 @@ module DpiDiffCSRBB (
   end
   always @(*) dpi_diffcsr(csr);
 endmodule
+
+// UART
+module UART(
+  input en,
+  input [7:0] data
+);
+  always @(*) if (en) $write("%c",data);
+endmodule
