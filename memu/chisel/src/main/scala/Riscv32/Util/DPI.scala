@@ -37,7 +37,7 @@ class Trap(val impled: Seq[BitPat]) extends Module {
     val inst  = Input(UInt(DataWidth.W))
     val halt  = Output(Bool())
   })
-  // -------- 异常类型 --------
+  // -------- Trap Type --------
   val is_ebreak = io.valid && (io.inst === EBREAK)
   val is_ecall  = io.valid && (io.inst === ECALL)
   val is_zero   = io.valid && (io.inst === 0.U)

@@ -221,7 +221,7 @@ class Riscv32ETOP extends Module {
   private val slavePort = AXI4SlavePortParameters(
     slaves = Seq(
       AXI4SlaveParameters(
-        address = Seq(AddressSet(base = 0x80000000L, size = 1024)),
+        address = Seq(AddressSet(base = 0x80000000L, mask = 0xffff)),
         supportsWrite = TransferSizes(1, 4),
         supportsRead = TransferSizes(1, 4)
       )
@@ -233,12 +233,6 @@ class Riscv32ETOP extends Module {
   private val p: AxiParams = AxiParams.fromPortParameters
 
 
-  val delayCfg = MemDelayConfig(
-      enable = false,
-      delayWidth = 8,
-      delaySeed = 2,
-      delayTaps = 0x9
-    )
   // Core
   val cpu = Module(new Riscv32E(p))
   // Inst

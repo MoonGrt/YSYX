@@ -442,7 +442,7 @@ class AXIRAMExample extends Module {
   private val slavePort = AXI4SlavePortParameters(
     slaves = Seq(
       AXI4SlaveParameters(
-        address = Seq(AddressSet(base = 0, size = 1024)),
+        address = Seq(AddressSet(base = 0, mask = 0xffff)),
         supportsWrite = TransferSizes(1, 4),
         supportsRead = TransferSizes(1, 4)
       )

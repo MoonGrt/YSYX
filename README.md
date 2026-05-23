@@ -905,7 +905,8 @@ yield() → 在 a7 寄存器放入自陷的标志，并要求执行 ecall 指令
 ## B阶段
 ### B1 总线
 
-1. microbench 的 train 规模测: am-kernels/benchmarks/microbench
+1. 评估单周期NPC的主频和程序性能
+microbench 的 train 规模测: am-kernels/benchmarks/microbench
 
 > 跑分时关闭 NEMU 的监视点, trace, DiffTest, 同时取消 menuconfig 中的 `Enable debug information` 并重新编译NEMU, 以获得较为真实的跑分
 
@@ -949,7 +950,54 @@ Total  time: 42478.522 ms
 [csrc/cpu/cpu-exec.c:111 statistic] simulation frequency = 4,593,624 inst/s
 ```
 
-> nangate45 工艺下主频为 51.491MHz → microbench 需要运行 3.870s. (仿真花费了 42478.522 ms)
+> nangate45 工艺下主频为 ~~51.491MHz~~ → microbench 需要运行 3.870s. (仿真花费了 42478.522 ms)
+
+2. 评估多周期NPC的主频和程序性能
+microbench 的 train 规模测: am-kernels/benchmarks/microbench
+
+> 跑分时关闭 NEMU 的监视点, trace, DiffTest, 同时取消 menuconfig 中的 `Enable debug information` 并重新编译NEMU, 以获得较为真实的跑分
+
+```bash
+cd $AM_TEST_HOME/benchmarks/microbench
+make ARCH=riscv32e-memu run mainargs=train
+```
+
+```
+[MEMU] Welcome to riscv32-MEMU-npc-riscv32e!
+[MEMU] For help, type "help"
+======= Running MicroBench [input *train*] =======
+[qsort] Quick sort: * Passed.
+  min time: 3457.054 ms [0]
+[queen] Queen placement: * Passed.
+  min time: 4811.926 ms [0]
+[bf] Brainf**k interpreter: * Passed.
+  min time: 6105.016 ms [0]
+[fib] Fibonacci number: * Passed.
+  min time: 80542.522 ms [0]
+[sieve] Eratosthenes sieve: * Passed.
+  min time: 5518.897 ms [0]
+[15pz] A* 15-puzzle search: * Passed.
+  min time: 4824.460 ms [0]
+[dinic] Dinic's maxflow algorithm: * Passed.
+  min time: 2557.861 ms [0]
+[lzip] Lzip compression: * Passed.
+  min time: 2662.568 ms [0]
+[ssort] Suffix sort: * Passed.
+  min time: 6656.292 ms [0]
+[md5] MD5 digest: * Passed.
+  min time: 6362.659 ms [0]
+==================================================
+MicroBench PASS
+Scored time: 123499.255 ms
+Total  time: 137964.751 ms
+[MEMU] EBREAK exception
+[csrc/cpu/cpu-exec.c:147 cpu_exec] memu: HIT GOOD TRAP at pc = 0x800055fc
+[csrc/cpu/cpu-exec.c:116 statistic] host time spent = 137,972,011 us
+[csrc/cpu/cpu-exec.c:117 statistic] total guest instructions = 616,613,764
+[csrc/cpu/cpu-exec.c:118 statistic] simulation frequency = 4,469,122 inst/s
+```
+
+> nangate45 工艺下主频为  → microbench 需要运行 . (仿真花费了 137964.751 ms)
 
 ### B2 SoC计算机系统
 ### B3 时序分析和优化
