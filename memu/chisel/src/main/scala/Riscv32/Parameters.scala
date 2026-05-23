@@ -21,7 +21,7 @@ object Parameters {
     val CSRNum    = 8
     val CSRWidth  = 12
     // Mem
-    val memBusType  = SimpleBusType
+    val memBusType  = BusType.AXI
     val memUseDpi   = true
     val memDelayCfg = MemDelayConfig(
       enable = false,

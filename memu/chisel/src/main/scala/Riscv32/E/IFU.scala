@@ -58,10 +58,7 @@ class IFU extends Module {
   // -----------------------------------------------
   // -------------------- DiffTest -----------------
   // -----------------------------------------------
-  val started = RegInit(false.B)
-  when (io.out.valid) {
-    started := true.B
-  }
+  val started = RegEnable(true.B, false.B, io.out.valid)
   val diffen = (started === true.B) && io.ibus.req.valid
   val diffpc = Module(new DpiDiffPCBB)
   diffpc.io.clk  := clock

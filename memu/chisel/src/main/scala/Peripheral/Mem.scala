@@ -8,6 +8,10 @@ import riscv.util.{DpiMem, LFSR}
 // Config
 // ============================================================
 
+object BusType extends ChiselEnum {
+  val SimpleBus, AXI = Value
+}
+
 case class MemDelayConfig(
   enable    : Boolean = false,
   delayWidth: Int     = 8,
@@ -255,9 +259,7 @@ class AXIROM(
 ) extends Module {
   require(depth > 1)
   require(width % 8 == 0)
-
   val io = IO(new AXI4SlaveBundle(p))
-
   private val addrWidth = log2Ceil(depth)
 
   val arFire = io.ar.fire
@@ -342,11 +344,9 @@ class AXIRAM(
   } else {
     val mem = SyncReadMem(depth, Vec(maskWidth, UInt(8.W)))
     val wdata = io.w.bits.data.asTypeOf(Vec(maskWidth, UInt(8.W)))
-
     when(awFire && wFire) {
       mem.write(addrW, wdata, io.w.bits.strb.asBools)
     }
-
     rdata := mem.read(addrR, arFire).asUInt
   }
 
@@ -357,7 +357,6 @@ class AXIRAM(
   io.r.bits.last := true.B
   io.r.valid     := RegNext(rvalid)
   io.r.bits.user := 0.U
-
   when(arFire) {
     rvalid := true.B
     busy := true.B
@@ -371,7 +370,6 @@ class AXIRAM(
   io.b.bits.resp := 0.U
   io.b.bits.user := 0.U
   io.b.valid := RegNext(awFire && wFire)
-
   when(io.b.fire) {
     busy := false.B
   }
@@ -381,7 +379,6 @@ class AXIRAM(
 class AXIROMExample extends Module {
   private implicit val params: AxiParameters = new BaseAxiConfig
   private val p = AxiParams.fromPortParameters
-
   val io = IO(new Bundle {
     val done = Output(Bool())
     val data = Output(UInt(p.dataBits.W))
@@ -400,7 +397,6 @@ class AXIROMExample extends Module {
   host.io.cmd.valid := false.B
   host.io.cmd.bits  := 0.U.asTypeOf(host.io.cmd.bits)
   host.io.rsp.ready := false.B
-
   switch(st) {
     is(sReq) {
       host.io.cmd.valid      := true.B
@@ -420,7 +416,6 @@ class AXIROMExample extends Module {
       }
     }
   }
-
   io.done := (st === sDone)
   io.data := dataReg
   io.resp := respReg
