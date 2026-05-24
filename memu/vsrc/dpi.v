@@ -67,9 +67,14 @@ module DpiDiffCSRBB (
 endmodule
 
 // UART
+import "DPI-C" function void difftest_skip_ref();
 module UART(
   input en,
   input [7:0] data
 );
-  always @(*) if (en) $write("%c",data);
+  always @(*) 
+    if (en) begin
+      $write("%c",data);
+      difftest_skip_ref();
+    end
 endmodule

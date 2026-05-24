@@ -76,7 +76,7 @@ extern "C" {
     }
     Verilated::gotFinish(true);
   }
-  int dpi_paddr_read(int addr){
+  int dpi_paddr_read(int addr) {
     if (addr == 0) return 0;
     if (likely(in_pmem(addr))) {
       word_t data = pmem_read(addr, 4);

@@ -51,7 +51,7 @@ class LSU extends Module {
   io.dbus.resp.ready := io.out.ready
   io.in.ready := (state === sIdle)
   io.out.valid :=
-    ((state === sWait) && io.dbus.resp.fire) || ((state === sIdle) && io.in.valid)
+    (~dbus_req && io.dbus.resp.fire) || ((state === sIdle) && io.in.valid)
   // -----------------------------------------------
   // -------------------- Logic --------------------
   // -----------------------------------------------

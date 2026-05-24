@@ -182,7 +182,7 @@ config WAVE_ABS_START
 config WAVE_ABS_END
   depends on WAVE_ABSOLUTE
   int "When wave tracing is disabled (unit: number of instructions)"
-  default 10000
+  default 100000
 
 config WAVE_RELATIVE
   depends on WAVE
