@@ -37,4 +37,8 @@ gdb: all
 clean:
 	rm -rf Makefile.* build/
 
+clean-all: clean
+	${MAKE} -s -C ${AM_HOME} clean
+	${MAKE} -s -C ${MEMU_HOME} clean
+
 latest:

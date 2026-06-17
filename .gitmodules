@@ -1,3 +1,6 @@
 [submodule "memu/thirdpartys/OpenNoC"]
 	path = memu/thirdpartys/OpenNoC
 	url = https://github.com/MoonGrt/OpenNoC.git
+[submodule "memu/thirdpartys/rocket-chip"]
+	path = memu/thirdpartys/rocket-chip
+	url = https://github.com/chipsalliance/rocket-chip.git

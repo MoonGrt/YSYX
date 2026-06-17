@@ -13,7 +13,7 @@
 # See the Mulan PSL v2 for more details.
 #**************************************************************************************/
 
--include $(MEMU_HOME)/../Makefile
+include $(MEMU_HOME)/../common.mk
 include $(MEMU_HOME)/scripts/build.mk
 include $(MEMU_HOME)/tools/difftest.mk
 
@@ -44,10 +44,14 @@ gdb: run-env
 	$(call git_commit, "gdb MEMU")
 	gdb -s $(BINARY) --args $(MEMU_EXEC) -b $(IMG)
 
-clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile"))
+clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile" -not -path "./tools/fixdep/*"))
 $(clean-tools):
-	-@$(MAKE) -s -C $@ clean
+	-$(MAKE) -s -C $@ clean
+clean-fixdep = ./tools/fixdep
+$(clean-fixdep):
+	-$(MAKE) -s -C $@ clean
 clean-tools: $(clean-tools)
-clean-all: clean distclean clean-tools
+clean-config: distclean clean-fixdep
+clean-all: clean clean-tools
 
 .PHONY: run gdb run-env clean-tools clean-all $(clean-tools)

@@ -1,6 +1,7 @@
 *.*
 *
 !*/
+!*.mk
 !/nexus-am/*
 !/nanos-lite/*
 !/navy-apps/*

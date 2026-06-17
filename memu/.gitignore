@@ -8,6 +8,7 @@
 !*.v
 !*.cc
 !*.cpp
+!*.sh
 !.gitignore
 !.scalafmt.conf
 !README.md
@@ -17,10 +18,8 @@ include/generated
 build/
 
 # mill
-!*.mill
+!*.sc
 !.mill-version
-out/
-rtl/
 .bsp/
 .idea/
 .idea_modules/

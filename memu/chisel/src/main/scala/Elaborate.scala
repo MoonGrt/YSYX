@@ -8,7 +8,7 @@
 //       "locationInfoStyle=wrapInAtSquareBracket"
 //     ).reduce(_ + "," + _)
 //   )
-//   circt.stage.ChiselStage.emitSystemVerilogFile(new riscv.mini.MiniRVTOP(), args, firtoolOptions)
+//   circt.stage.ChiselStage.emitSystemVerilogFile(new soc.riscv.mini.MiniRVTOP(), args, firtoolOptions)
 // }
 
 object Riscv32ETOP extends App {
@@ -21,5 +21,5 @@ object Riscv32ETOP extends App {
       "locationInfoStyle=wrapInAtSquareBracket"
     ).reduce(_ + "," + _)
   )
-  circt.stage.ChiselStage.emitSystemVerilogFile(new riscv.e.Riscv32ETOP, args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new soc.riscv.e.Riscv32ETOP, args, firtoolOptions)
 }

@@ -98,6 +98,12 @@ extern "C" {
       }
     }
   }
+  void flash_read(int addr, int data) {
+
+  }
+  void mrom_read(int raddr, int rdata) {
+
+  }
   void dpi_diffpc(int pc, int npc, int inst) {
     // printf("pc: %x, npc: %x, inst: %08x\n", pc, npc, inst);
     // Decode
@@ -125,6 +131,9 @@ extern "C" {
     cpu.csr.mcycleh = csr[5];
     cpu.csr.mvendorid = csr[6];
     cpu.csr.marchid = csr[7];
+  }
+  void dpi_diffskip(void) {
+    IFDEF(CONFIG_DIFFTEST, difftest_skip_ref());
   }
 }
 

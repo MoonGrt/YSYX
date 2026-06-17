@@ -1,8 +1,8 @@
-package peripheral.mem
+package soc.perip.mem
 
 import chisel3._
 import chisel3.util._
-import riscv.util.{DpiMem, LFSR}
+import soc.util.{DpiMem, LFSR}
 
 // ============================================================
 // Config
@@ -499,7 +499,7 @@ class AXIROMExample extends Module {
   io.resp := respReg
 }
 
-// mill -i chisel.runMain peripheral.mem.AXIROMExample --target-dir build/rtl
+// mill -i chisel.runMain soc.perip.mem.AXIROMExample --target-dir build/rtl
 object AXIROMExample extends App {
   val firtoolOptions = Array(
     "--lowering-options=" + List(
@@ -593,7 +593,7 @@ class AXIRAMExample extends Module {
   io.readResp := readRespReg
 }
 
-// mill -i chisel.runMain peripheral.mem.AXIRAMExample --target-dir build/rtl
+// mill -i chisel.runMain soc.perip.mem.AXIRAMExample --target-dir build/rtl
 object AXIRAMExample extends App {
   val firtoolOptions = Array(
     "--lowering-options=" + List(

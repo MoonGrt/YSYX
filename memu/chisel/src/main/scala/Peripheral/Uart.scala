@@ -1,8 +1,8 @@
-package peripheral.uart
+package soc.perip.uart
 
 import chisel3._
 import chisel3.util._
-import riscv.util._
+import soc.util._
 import bus.amba.axi.common._
 
 class AXIUART(p: AxiParams) extends Module {
