@@ -3,15 +3,16 @@ FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 ARG VERILATOR_VERSION=7e7b6d7fb83defa29415fda2012f2f336fe534fa
 ARG MILL_VERSION=0.12.17
+ARG YSYX_HOME=/workspace/YSYX
 
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     MILL_VERSION=${MILL_VERSION} \
-    MEMU_HOME=/workspace/YSYX/memu \
-    AM_HOME=/workspace/YSYX/abstract-machine \
-    AM_TEST_HOME=/workspace/YSYX/am-kernels \
-    NVBOARD_HOME=/workspace/YSYX/nvboard \
-    NPC_HOME=/workspace/YSYX/npc
+    YSYX_HOME=${YSYX_HOME} \
+    MEMU_HOME=${YSYX_HOME}/memu \
+    AM_HOME=${YSYX_HOME}/abstract-machine \
+    AM_TEST_HOME=${YSYX_HOME}/am-kernels \
+    NVBOARD_HOME=${YSYX_HOME}/thirdpartys/nvboard
 
 # Install build, simulation, and RISC-V cross-compilation dependencies.
 RUN apt-get update \
@@ -68,6 +69,6 @@ RUN git config --global core.autocrlf input \
     && git config --global user.name "MoonGrt" \
     && git config --global user.email "1561145394@qq.com"
 
-WORKDIR /workspace/YSYX
+WORKDIR ${YSYX_HOME}
 
 CMD ["bash"]

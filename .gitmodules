@@ -4,3 +4,18 @@
 [submodule "memu/thirdpartys/rocket-chip"]
 	path = memu/thirdpartys/rocket-chip
 	url = https://github.com/chipsalliance/rocket-chip.git
+[submodule "thirdpartys/fceux-am"]
+	path = thirdpartys/fceux-am
+	url = https://github.com/NJU-ProjectN/fceux-am.git
+[submodule "thirdpartys/nvboard"]
+	path = thirdpartys/nvboard
+	url = https://github.com/NJU-ProjectN/nvboard.git
+[submodule "thirdpartys/rt-thread-am"]
+	path = thirdpartys/rt-thread-am
+	url = https://github.com/NJU-ProjectN/rt-thread-am.git
+[submodule "thirdpartys/yosys-sta"]
+	path = thirdpartys/yosys-sta
+	url = https://github.com/OSCPU/yosys-sta.git
+[submodule "thirdpartys/ysyxSoC"]
+	path = thirdpartys/ysyxSoC
+	url = https://github.com/OSCPU/ysyxSoC.git

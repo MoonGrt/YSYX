@@ -1,0 +1,206 @@
+diff --git a/bsp/abstract-machine/integrate-am-apps.py b/bsp/abstract-machine/integrate-am-apps.py
+index 8968df3..fb077ba 100644
+--- a/bsp/abstract-machine/integrate-am-apps.py
++++ b/bsp/abstract-machine/integrate-am-apps.py
+@@ -8 +8,4 @@ AM_HOME = Path(os.environ["AM_HOME"])
+-AM_KERNELS_HOME = (AM_HOME / ".." / "am-kernels").resolve()
++YSYX_HOME = Path(os.environ.get("YSYX_HOME", AM_HOME / "..")).resolve()
++AM_KERNELS_HOME = Path(
++  os.environ.get("AM_TEST_HOME", YSYX_HOME / "am-kernels")
++).resolve()
+@@ -14 +17 @@ app_dir_list = [
+-  AM_KERNELS_HOME / ".." / "fceux-am",
++  YSYX_HOME / "thirdpartys" / "fceux-am",
+diff --git a/bsp/abstract-machine/src/context.c b/bsp/abstract-machine/src/context.c
+index ee38829..5b02da5 100644
+--- a/bsp/abstract-machine/src/context.c
++++ b/bsp/abstract-machine/src/context.c
+@@ -5 +5,30 @@
+-static Context* ev_handler(Event e, Context *c) {
++/* =======================
++ * 线程上下文切换参数
++ * ======================= */
++typedef struct {
++  rt_ubase_t to;
++  rt_ubase_t from;
++} ctx_switch_ud_t;
++
++/* =======================
++ * 线程入口参数
++ * ======================= */
++typedef struct {
++  void (*tentry)(void*);
++  void* parameter;
++  void (*texit)(void);
++} thread_args_t;
++
++/* =======================
++ * 线程启动包装
++ * ======================= */
++static void context_wrapper(thread_args_t* args) {
++  args->tentry(args->parameter);
++  args->texit();
++  while (1);  // 不应返回
++}
++
++/* =======================
++ * AM 事件处理
++ * ======================= */
++static Context* ev_handler(Event e, Context* c) {
+@@ -7 +36,14 @@ static Context* ev_handler(Event e, Context *c) {
+-    default: printf("Unhandled event ID = %d\n", e.event); assert(0);
++    case EVENT_YIELD: {
++      rt_thread_t current = rt_thread_self();
++      ctx_switch_ud_t *ud = (ctx_switch_ud_t *)current->user_data;
++      if (ud->from) *((Context**)ud->from) = c;
++      c = *(Context**)ud->to;
++      break;
++    }
++    case EVENT_IRQ_TIMER:
++      return c;
++    case EVENT_IRQ_IODEV:
++      return c;
++    default:
++      printf("Unhandled event ID = %d\n", e.event);
++      assert(0);
+@@ -11,0 +54,3 @@ static Context* ev_handler(Event e, Context *c) {
++/* =======================
++ * CTE 初始化
++ * ======================= */
+@@ -15,0 +61,3 @@ void __am_cte_init() {
++/* =======================
++ * 切换到新线程（无 from）
++ * ======================= */
+@@ -17 +65,8 @@ void rt_hw_context_switch_to(rt_ubase_t to) {
+-  assert(0);
++  rt_thread_t current = rt_thread_self();
++  ctx_switch_ud_t ud;
++  ud.to   = to;
++  ud.from = 0;
++  rt_ubase_t old_ud = current->user_data;
++  current->user_data = (rt_ubase_t)&ud;
++  yield();
++  current->user_data = old_ud;
+@@ -19,0 +75,3 @@ void rt_hw_context_switch_to(rt_ubase_t to) {
++/* =======================
++ * 线程间上下文切换
++ * ======================= */
+@@ -21 +79,8 @@ void rt_hw_context_switch(rt_ubase_t from, rt_ubase_t to) {
+-  assert(0);
++  rt_thread_t current = rt_thread_self();
++  ctx_switch_ud_t ud;
++  ud.to   = to;
++  ud.from = from;
++  rt_ubase_t old_ud = current->user_data;
++  current->user_data = (rt_ubase_t)&ud;
++  yield();
++  current->user_data = old_ud;
+@@ -23,0 +89,3 @@ void rt_hw_context_switch(rt_ubase_t from, rt_ubase_t to) {
++/* =======================
++ * 中断上下文切换（未实现）
++ * ======================= */
+@@ -28,3 +96,14 @@ void rt_hw_context_switch_interrupt(void *context, rt_ubase_t from, rt_ubase_t t
+-rt_uint8_t *rt_hw_stack_init(void *tentry, void *parameter, rt_uint8_t *stack_addr, void *texit) {
+-  assert(0);
+-  return NULL;
++/* =======================
++ * 线程栈初始化
++ * ======================= */
++rt_uint8_t* rt_hw_stack_init(void* tentry, void* parameter, rt_uint8_t* stack_addr, void* texit) {
++  stack_addr = (rt_uint8_t*)(((uintptr_t)stack_addr + sizeof(uintptr_t) - 1) & ~(sizeof(uintptr_t) - 1));
++  stack_addr -= sizeof(thread_args_t); // 在栈上分配参数结构体空间
++  thread_args_t* args = (thread_args_t*)stack_addr; // 转型
++  // 设置参数
++  args->tentry = (void (*)(void*))tentry;
++  args->parameter = parameter;
++  args->texit = (void (*)(void))texit;
++  Area stack_area = {.end = (rt_uint8_t*)stack_addr};  // 设置栈区域
++  rt_uint8_t* c = (rt_uint8_t*)kcontext(stack_area, (void*)context_wrapper, args);
++  return c;
+diff --git a/bsp/abstract-machine/src/uart.c b/bsp/abstract-machine/src/uart.c
+index e4eb866..bea380e 100644
+--- a/bsp/abstract-machine/src/uart.c
++++ b/bsp/abstract-machine/src/uart.c
+@@ -13,0 +14 @@
++#include <klib-macros.h>
+@@ -38,0 +40,40 @@ static int _uart_putc(struct rt_serial_device *serial, char c) {
++#define AM_KEY_CHAR_MAP(key, normal, shifted) \
++  case AM_KEY_##key: return shift ? (shifted) : (normal);
++
++#define AM_KEY_TO_CHAR(_) \
++  _(RETURN, '\n', '\n') \
++  _(SPACE, ' ', ' ') \
++  _(BACKSPACE, '\b', '\b') \
++  _(TAB, '\t', '\t') \
++  \
++  _(A, 'a', 'A') _(B, 'b', 'B') _(C, 'c', 'C') _(D, 'd', 'D') \
++  _(E, 'e', 'E') _(F, 'f', 'F') _(G, 'g', 'G') _(H, 'h', 'H') \
++  _(I, 'i', 'I') _(J, 'j', 'J') _(K, 'k', 'K') _(L, 'l', 'L') \
++  _(M, 'm', 'M') _(N, 'n', 'N') _(O, 'o', 'O') _(P, 'p', 'P') \
++  _(Q, 'q', 'Q') _(R, 'r', 'R') _(S, 's', 'S') _(T, 't', 'T') \
++  _(U, 'u', 'U') _(V, 'v', 'V') _(W, 'w', 'W') _(X, 'x', 'X') \
++  _(Y, 'y', 'Y') _(Z, 'z', 'Z') \
++  \
++  _(0, '0', ')') \
++  _(1, '1', '!') \
++  _(2, '2', '@') \
++  _(3, '3', '#') \
++  _(4, '4', '$') \
++  _(5, '5', '%') \
++  _(6, '6', '^') \
++  _(7, '7', '&') \
++  _(8, '8', '*') \
++  _(9, '9', '(') \
++  \
++  _(MINUS, '-', '_') \
++  _(EQUALS, '=', '+') \
++  _(LEFTBRACKET, '[', '{') \
++  _(RIGHTBRACKET, ']', '}') \
++  _(BACKSLASH, '\\', '|') \
++  _(SEMICOLON, ';', ':') \
++  _(APOSTROPHE, '\'', '"') \
++  _(COMMA, ',', '<') \
++  _(PERIOD, '.', '>') \
++  _(SLASH, '/', '?')
++
++static bool has_uart, has_kbd;
+@@ -40,2 +81,26 @@ static int _uart_getc(struct rt_serial_device *serial) {
+-  static const char *p = "help\ndate\nversion\nfree\nps\npwd\nls\nmemtrace\nmemcheck\nutest_list\n";
+-  return (*p != '\0' ? *(p ++) : -1);
++  /* 0 自动脚本 */
++  static const char *p =
++    "help\ndate\nversion\nfree\nps\npwd\nls\nmemtrace\nmemcheck\nutest_list\n";
++  if (*p != '\0') return *(p++);
++  /* 1 UART */
++  if (has_uart) {
++    AM_UART_RX_T rx = io_read(AM_UART_RX);
++    if (rx.data != (char)-1)
++      return rx.data;
++  }
++  /* 2 Keyboard */
++  if (has_kbd) {
++    static int shift = 0;
++    AM_INPUT_KEYBRD_T ev = io_read(AM_INPUT_KEYBRD);
++    if (ev.keycode == AM_KEY_LSHIFT || ev.keycode == AM_KEY_RSHIFT) {
++      shift = ev.keydown;
++      return 0;
++    }
++    if (ev.keydown) {
++      switch (ev.keycode) {
++        AM_KEY_TO_CHAR(AM_KEY_CHAR_MAP)
++        default: return 0;
++      }
++    }
++  }
++  return -1;
+@@ -55,0 +121,3 @@ int rt_hw_uart_init(void) {
++  has_uart = io_read(AM_UART_CONFIG).present;
++  has_kbd  = io_read(AM_INPUT_CONFIG).present;
++
+diff --git a/components/finsh/msh.c b/components/finsh/msh.c
+index a63e34d..afdb0e4 100644
+--- a/components/finsh/msh.c
++++ b/components/finsh/msh.c
+@@ -742 +742 @@ void msh_auto_complete(char *prefix)
+-            if (strncmp(prefix, cmd_name, strlen(prefix)) == 0)
++            if (rt_strncmp(prefix, cmd_name, strlen(prefix)) == 0)
