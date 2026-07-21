@@ -7,8 +7,9 @@
 !/navy-apps/*
 !Makefile
 !README.md
-!.gitignore
 !init.sh
+!.gitignore
+!.devcontainer/*
 fceux-am
 nvboard
 rt-thread-am

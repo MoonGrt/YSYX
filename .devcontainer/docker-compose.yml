@@ -1,0 +1,15 @@
+services:
+  ysyx:
+    image: ysyx:latest
+    container_name: ysyx-dev
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    hostname: dev
+    working_dir: /workspace/YSYX
+    command: sleep infinity
+    environment:
+      DISPLAY: ${DISPLAY:-}
+    volumes:
+      - ..:/workspace/YSYX
+      - /mnt/wslg/.X11-unix:/tmp/.X11-unix
