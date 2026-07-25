@@ -6,6 +6,7 @@
 #include <memory/paddr.h>
 #include <memory/host.h>
 #include <device/mmio.h>
+#include <csignal>
 
 #ifdef CONFIG_CORE_RVMINI
 #include "VMiniRVTOP.h"
@@ -18,7 +19,6 @@ VRiscv32ETOP *top = new VRiscv32ETOP;
 #if defined(CONFIG_WAVE_ABSOLUTE) || defined(CONFIG_WAVE_RELATIVE)
 
 extern uint64_t g_nr_guest_inst;
-#include <verilated.h>
 #if defined(CONFIG_WAVE_VCD)
 #include <verilated_vcd_c.h>
 VerilatedVcdC *tfp;
@@ -61,7 +61,10 @@ extern "C" {
         break;
       case ECALL_CODE:
         IFDEF(CONFIG_ETRACE, etrace(decode.pc, 11));
-        break;
+        // ECALL is a guest exception, not a simulator termination request.
+        // The RTL core redirects execution to mtvec and later returns with
+        // MRET, so keep Verilator running while the trap is handled.
+        return;
       case ZERO_INST_CODE:
         printf("%s\n", ANSI_FMT("[MEMU] Zero instruction exception", ANSI_FG_RED));
         INV(cpu.pc, decode.isa.inst);
@@ -105,6 +108,7 @@ extern "C" {
 
   }
   void dpi_diffpc(int pc, int npc, int inst) {
+    static bool skip_mmio_commit = false;
     // printf("pc: %x, npc: %x, inst: %08x\n", pc, npc, inst);
     // Decode
     decode.pc = pc;
@@ -113,6 +117,24 @@ extern "C" {
     decode.isa.inst = inst;
     // CPU_state
     cpu.pc = pc;
+    if (skip_mmio_commit) {
+      IFDEF(CONFIG_DIFFTEST, difftest_skip_ref());
+      skip_mmio_commit = false;
+    }
+    // RTL peripherals do not go through mmio_read(), so reproduce the
+    // software MMIO path's difftest skip at the architectural commit point.
+    // This currently matters for RT-Thread's byte load from UART RX.
+    if ((inst & 0x7f) == 0x03) {
+      int rs1 = (inst >> 15) & 0x1f;
+      int32_t imm = (int32_t)inst >> 20;
+      word_t addr = rs1 < MUXDEF(CONFIG_RVE, 16, 32)
+                      ? cpu.gpr[rs1] + imm : 0;
+      if (addr >= 0xa0000000u && addr <= 0xa0000fffu) {
+        // dpi_diffpc observes the instruction before its write-back state is
+        // visible through dpi_diffgpr, so synchronize on the next callback.
+        skip_mmio_commit = true;
+      }
+    }
     // reference step
     if (pc != 0) IFDEF(CONFIG_DIFFTEST, difftest_step());
   }
@@ -238,20 +260,16 @@ void exit(void) {
 #endif
 }
 
-#ifdef CONFIG_WAVE_RELATIVE
-void signal_handler(int signum) {
-  if(getpid()) {
-    kill(getpid(), SIGKILL);
-    waitpid(getpid(), NULL, 0);
-  }
-}
-#endif
+// void signal_handler(int signum) {
+//   Verilated::gotFinish(true);
+//   memu_state.state = MEMU_QUIT;
+// }
 
 extern "C" {
   void rtl_init(int argc, char *argv[]) {
     Verilated::commandArgs(argc, argv);
     IFDEF(CONFIG_WAVE_ABSOLUTE, wave_init());
-    IFDEF(CONFIG_WAVE_RELATIVE, signal(SIGINT, signal_handler));
+    // signal(SIGINT, signal_handler);
     reset();
   }
   void rtl_reset() {

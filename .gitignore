@@ -11,5 +11,6 @@
 !init.sh
 !.gitignore
 !.devcontainer/*
+__pycache__
 .metals
 .vscode

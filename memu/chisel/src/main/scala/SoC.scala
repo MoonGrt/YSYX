@@ -56,7 +56,7 @@ class ysyxSoCASIC(implicit p: Parameters) extends LazyModule {
   if (Config.sdramUseAXI) lsdram_axi.get.node := soc.util.AXI4Delayer() := xbar
   else                    lsdram_apb.get.node := apbxbar
   if (Config.hasChipLink) chiplinkNode.get := xbar
-  xbar := cpu.masterNode
+  xbar :=* cpu.masterNode
 
   override lazy val module = new Impl
   class Impl extends LazyModuleImp(this) with DontTouch {

@@ -5,6 +5,9 @@ import chisel3.util._
 import soc.perip.mem._
 
 object Parameters {
+  object AxiPackage extends Enumeration {
+    val Custom, RocketChip = Value
+  }
   // MiniRV Parameters
   object MiniRV {
     // Basic
@@ -22,6 +25,8 @@ object Parameters {
     val CSRWidth  = 12
     // Mem
     val memBusType  = BusType.AXI
+    // Custom: standalone MEMU/NPC top; RocketChip: diplomacy-based ysyxSoC.
+    val axiPackage  = AxiPackage.RocketChip
     val memUseDpi   = true
     val memDelayCfg = MemDelayConfig(
       enable = false,

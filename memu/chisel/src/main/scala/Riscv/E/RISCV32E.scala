@@ -9,6 +9,8 @@ import soc.perip.uart._
 import soc.perip.clint._
 import bus.amba.axi.common._
 import bus.amba.axi.axifull._
+import freechips.rocketchip.amba.axi4.{AXI4BundleParameters => RCAXI4BundleParameters}
+import soc.riscv.Parameters.AxiPackage
 
 // ----------------------------------
 // Bus Bridge
@@ -184,15 +186,14 @@ class DBusBridge(p: AxiParams) extends Module {
     }
     // ---------------- Finish ----------------
     when(awDone && wDone) {
-      // state := sWriteResp
-      state := sIdle  // 暂时不需要知道写入内存是否成功
+      state := sIdle
     }
   }
 
   // ----------------------------------------------------------------
   // Write Response
   // ----------------------------------------------------------------
-  axi.b.ready := true.B  // 暂时不需要知道写入内存是否成功
+  axi.b.ready := true.B
   when(state === sWriteResp) {
     dbus.resp.valid := axi.b.valid
     dbus.resp.bits.rdata := 0.U
@@ -258,17 +259,17 @@ class Riscv32ETOP extends Module {
   private val slavePort = AXI4SlavePortParameters(
     slaves = Seq(
       AXI4SlaveParameters(
-        address = Seq(AddressSet(base = 0x80000000L, mask = 0xffffff)),
+        address = Seq(AddressSet(base = 0x80000000L, mask = 0x07ffffffL)),
         supportsWrite = TransferSizes(0, 4),
         supportsRead = TransferSizes(0, 4)
       ),
       AXI4SlaveParameters(
-        address = Seq(AddressSet(base = 0xa0000000L, mask = 0xfff)),
+        address = Seq(AddressSet(base = 0xa0000000L, mask = 0x00000fffL)),
         supportsWrite = TransferSizes(0, 4),
         supportsRead = TransferSizes(0, 4)
       ),
       AXI4SlaveParameters(
-        address = Seq(AddressSet(base = 0xb0000000L, mask = 0xfff)),
+        address = Seq(AddressSet(base = 0xb0000000L, mask = 0x00000fffL)),
         supportsWrite = TransferSizes(0, 4),
         supportsRead = TransferSizes(0, 4)
       ),
@@ -280,8 +281,18 @@ class Riscv32ETOP extends Module {
   private val p: AxiParams = AxiParams.fromPortParameters
 
 
-  // Core
-  val cpu = Module(new Riscv32E(p))
+  // Core. Both choices share the same simulation peripherals; only the AXI
+  // implementation at the CPU boundary changes.
+  val cpuCustom = if (axiPackage == AxiPackage.Custom) Some(Module(new Riscv32E(p))) else None
+  val rcParams = RCAXI4BundleParameters(
+    addrBits = p.addrBits,
+    dataBits = p.dataBits,
+    idBits = p.idBits
+  )
+  val cpuRocket = if (axiPackage == AxiPackage.RocketChip)
+    Some(Module(new Riscv32ERocketChip(rcParams))) else None
+  val rcInstAdapter = cpuRocket.map(_ => Module(new RCToCustomAXI(rcParams, p)))
+  val rcDataAdapter = cpuRocket.map(_ => Module(new RCToCustomAXI(rcParams, p)))
   // SRAM
   if (memBusType == BusType.AXI) {
     // Xbar
@@ -290,9 +301,9 @@ class Riscv32ETOP extends Module {
         p = p,
         nMasters = 2,
         slaveAddress = Seq(
-          AddressSet(0x80000000L, 0xffffff),
-          AddressSet(0xa0000000L, 0xfff),
-          AddressSet(0xb0000000L, 0xfff),
+          AddressSet(0x80000000L, 0x07ffffffL),
+          AddressSet(0xa0000000L, 0x00000fffL),
+          AddressSet(0xb0000000L, 0x00000fffL),
         )
       )
     )
@@ -301,9 +312,15 @@ class Riscv32ETOP extends Module {
     val uart  = Module(new AXIUART(p))
     val clint = Module(new AXICLINT(p))
     // master 0 -> inst
-    xbar.io.fromMasters(0) <> cpu.io.inst
-    // master 1 -> data
-    xbar.io.fromMasters(1) <> cpu.io.data
+    if (axiPackage == AxiPackage.Custom) {
+      xbar.io.fromMasters(0) <> cpuCustom.get.io.inst
+      xbar.io.fromMasters(1) <> cpuCustom.get.io.data
+    } else {
+      rcInstAdapter.get.io.rc <> cpuRocket.get.io.inst
+      rcDataAdapter.get.io.rc <> cpuRocket.get.io.data
+      xbar.io.fromMasters(0) <> rcInstAdapter.get.io.custom
+      xbar.io.fromMasters(1) <> rcDataAdapter.get.io.custom
+    }
     // slave 0 -> sram
     sram.io  <> xbar.io.toSlaves(0)
     uart.io  <> xbar.io.toSlaves(1)
@@ -311,9 +328,11 @@ class Riscv32ETOP extends Module {
   } else {
     // Inst
     val rom = Module(new ROM(useDpi = memUseDpi, delayCfg = memDelayCfg))
-    rom.io <> cpu.io.inst
+    require(axiPackage == AxiPackage.Custom,
+      "direct InstBus/DataBus mode only supports the custom bus implementation")
+    rom.io <> cpuCustom.get.io.inst
     // Data
     val ram = Module(new RAM(useDpi = memUseDpi, delayCfg = memDelayCfg))
-    ram.io <> cpu.io.data
+    ram.io <> cpuCustom.get.io.data
   }
 }

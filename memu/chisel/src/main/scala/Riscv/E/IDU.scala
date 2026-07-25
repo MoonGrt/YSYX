@@ -38,6 +38,7 @@ class GPRFile extends Module {
 // CSR: control and status registers
 class CSRFile extends Module {
   val io = IO(new Bundle {
+    val valid  = Input(Bool())
     val csrSel = Input(CSR())
     val pc     = Input(UInt(DataWidth.W))
     val addr   = Input(UInt(CSRWidth.W))
@@ -77,7 +78,7 @@ class CSRFile extends Module {
     (io.csrSel === CSR.MRET) -> csr(CSR_MEPC ),  // mepc
   ))
   // Write
-  val csrWen = io.csrSel.isOneOf(CSR.W, CSR.S, CSR.C)
+  val csrWen = io.valid && io.csrSel.isOneOf(CSR.W, CSR.S, CSR.C)
   when (csrWen) {
     csr(csrid) := MuxCase(io.wdata, Seq(
       (io.csrSel === CSR.W) -> io.wdata,
@@ -86,13 +87,13 @@ class CSRFile extends Module {
     ))
   }
   // ECALL
-  when (io.csrSel === CSR.E) {
+  when (io.valid && io.csrSel === CSR.E) {
     csr(CSR_MSTATUS) := 0x00001800.U
     csr(CSR_MEPC   ) := io.pc
     csr(CSR_MCAUSE ) := 11.U
   }
   // MRET
-  when (io.csrSel === CSR.MRET) {
+  when (io.valid && io.csrSel === CSR.MRET) {
     csr(CSR_MSTATUS) := 0x00000080.U
   }
   // -------- DiffTest --------
@@ -228,6 +229,7 @@ class IDU extends Module {
   val op1 = Wire(UInt(DataWidth.W))
   val op2 = Wire(UInt(DataWidth.W))
   val csr = Module(new CSRFile)
+  csr.io.valid  := io.ifuin.fire
   csr.io.csrSel := csrSel
   csr.io.pc     := pc
   csr.io.addr   := immi
@@ -276,6 +278,6 @@ class IDU extends Module {
   // -------------------- Trap ---------------------
   // -----------------------------------------------
   val trap = Module(new Trap(Riscv32E_IMPLED))
-  trap.io.valid := !reset.asBool && io.ifuin.valid
+  trap.io.valid := !reset.asBool && io.ifuin.fire
   trap.io.inst  := inst
 }

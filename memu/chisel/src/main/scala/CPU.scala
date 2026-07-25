@@ -10,6 +10,7 @@ import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.util._
 
 import soc.util._
+import soc.riscv.e.Riscv32ERocketChip
 
 object CPUAXI4BundleParameters {
   def apply() = AXI4BundleParameters(addrBits = 32, dataBits = 32, idBits = ChipLinkParam.idBits)
@@ -26,22 +27,25 @@ class ysyx_00000000 extends BlackBox {
 }
 
 class CPU(idBits: Int)(implicit p: Parameters) extends LazyModule {
-  val masterNode = AXI4MasterNode(p(ExtIn).map(params =>
-    AXI4MasterPortParameters(
-      masters = Seq(AXI4MasterParameters(
-        name = "cpu",
-        id   = IdRange(0, 1 << idBits))))).toSeq)
+  private def master(name: String) = AXI4MasterPortParameters(
+    masters = Seq(AXI4MasterParameters(
+      name = name,
+      id   = IdRange(0, 1 << idBits))))
+
+  val masterNode = AXI4MasterNode(Seq(
+    master("riscv32e-ibus"),
+    master("riscv32e-dbus")
+  ))
   lazy val module = new Impl
   class Impl extends LazyModuleImp(this) {
-    val (master, _) = masterNode.out(0)
+    val (inst, _) = masterNode.out(0)
+    val (data, _) = masterNode.out(1)
     val interrupt = IO(Input(Bool()))
     val slave = IO(Flipped(AXI4Bundle(CPUAXI4BundleParameters())))
 
-    val cpu = Module(new ysyx_00000000)
-    cpu.io.clock := clock
-    cpu.io.reset := reset
-    cpu.io.io_interrupt := interrupt
-    cpu.io.io_slave <> slave
-    master <> cpu.io.io_master
+    val cpu = Module(new Riscv32ERocketChip(CPUAXI4BundleParameters()))
+    cpu.io.inst <> inst
+    cpu.io.data <> data
+    slave := DontCare
   }
 }

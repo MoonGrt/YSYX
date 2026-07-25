@@ -85,14 +85,32 @@ class AXIUART(p: AxiParams) extends Module {
   io.b.bits.user := 0.U
 
   // --------------------------------------------------------------------------
-  // AXI read channel (not implemented)
+  // AXI read channel. Route the whole MEMU device page through the existing
+  // DPI MMIO model so both stdin UART input and SDL keyboard events reach AM.
   // --------------------------------------------------------------------------
-  io.ar.ready := false.B
-  io.r.valid := false.B
-  io.r.bits.id := 0.U
-  io.r.bits.data := 0.U
+  val readPending = RegInit(false.B)
+  val readId = Reg(UInt(p.idBits.W))
+  val readData = Reg(UInt(p.dataBits.W))
+  val deviceRead = Module(new DpiMem)
+  deviceRead.io.ren := io.ar.fire
+  deviceRead.io.wen := false.B
+  deviceRead.io.mask := 0.U
+  deviceRead.io.addr := io.ar.bits.addr
+  deviceRead.io.wdata := 0.U
+  io.ar.ready := !readPending
+  when(io.ar.fire) {
+    readPending := true.B
+    readId := io.ar.bits.id
+    readData := deviceRead.io.rdata
+  }
+  when(io.r.fire) {
+    readPending := false.B
+  }
+  io.r.valid := readPending
+  io.r.bits.id := readId
+  io.r.bits.data := readData
   io.r.bits.resp := 0.U
-  io.r.bits.last := false.B
+  io.r.bits.last := true.B
   io.r.bits.user := 0.U
 
   // --------------------------------------------------------------------------

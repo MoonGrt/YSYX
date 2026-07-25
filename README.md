@@ -88,6 +88,17 @@ misc/patches/rt-thread-am.patch
 
 运行 `./init.sh` 会自动应用该补丁。更新补丁前，先在 `thirdpartys/rt-thread-am` 中完成修改，再重新生成并验证补丁；不要让主仓库指向仅存在于本地的子模块提交。
 
+#### 继续修改并生成新补丁
+
+随后直接修改 `thirdpartys/rt-thread-am` 中的文件。当前工作区的差异同时包含“原补丁内容”和“本次新增修改”，因此从官方子模块提交生成的 diff 就是完整的新补丁：
+
+```bash
+git -C thirdpartys/rt-thread-am diff --binary \
+  > misc/patches/rt-thread-am.patch
+```
+
+此时 `thirdpartys/rt-thread-am` 显示为已修改是正常现象。不要在子模块中提交，也不要把主仓库的子模块指针更新到仅存在于本机的提交；需要保存的是主仓库中的 `misc/patches/rt-thread-am.patch`。
+
 ## Dev Container
 
 `.devcontainer/` 提供 Ubuntu 22.04、Verilator、GTKWave、SBT、Mill 和 RISC-V 交叉编译环境。在 VS Code 中打开仓库后，执行 **Dev Containers: Reopen in Container** 即可使用。

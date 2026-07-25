@@ -58,6 +58,10 @@ class LSU extends Module {
   // Address Align
   val memAddrAlign = Cat(memAddr(31,2), 0.U(2.W))  // word aligned
   val offset = memAddr(1,0)  // byte offset
+  // The upstream request may no longer be present when the read response
+  // arrives. Preserve its byte offset for sub-word load extraction.
+  val readOffset = RegEnable(offset, 0.U, io.dbus.req.fire && ren)
+  val responseOffset = Mux(state === sWait, readOffset, offset)
   dontTouch(offset)
   val mask = MuxLookup(lsSel, "b0000".U)(Seq(
     LS.WB -> (1.U << offset),  // 1 byte
@@ -67,7 +71,7 @@ class LSU extends Module {
   // Write Data Align
   val wdataShift = io.in.bits.RS2 << (offset << 3)
   // Read Data Align
-  val rdataShift = memRdata >> (offset << 3)
+  val rdataShift = memRdata >> (responseOffset << 3)
   val memData = MuxLookup(lsSel, 0.U)(Seq(
     LS.RW  -> memRdata,
     LS.RB  -> Cat(Fill(24, rdataShift(7)),  rdataShift(7,0)),
