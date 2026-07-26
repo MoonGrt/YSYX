@@ -35,3 +35,21 @@ The main features of MEMU include
   * most of them are simplified and unprogrammable
 * 2 types of I/O
   * port-mapped I/O and memory-mapped I/O
+
+## DiffTest
+
+执行 `make menuconfig`，打开 `Enable differential testing`，再在
+`Reference design` 中选择：
+
+- `NEMU (MEMU interpreter)`：使用 MEMU 内置解释器作为参考模型。
+- `Spike`：使用 Spike 作为参考模型。
+
+之后照常执行：
+
+```sh
+make run IMG=/path/to/program.bin
+```
+
+参考模型会自动构建并通过 `--diff` 加载。SoC 模式会同时覆盖
+`0x20000000` 的 MROM 和 `0x0f000000` 的 SRAM；UART 等 MMIO 指令仍由
+DUT 执行，并在提交时同步参考模型。

@@ -19,10 +19,24 @@ DIFF_REF_SO = $(DIFF_REF_PATH)/build/$(GUEST_ISA)-$(call remove_quote,$(CONFIG_D
 MKFLAGS = GUEST_ISA=$(GUEST_ISA) SHARE=1 ENGINE=interpreter
 ARGS_DIFF = --diff=$(DIFF_REF_SO)
 
-ifndef CONFIG_DIFFTEST_REF_MEMU
-$(DIFF_REF_SO):
-	$(MAKE) -s -C $(DIFF_REF_PATH) $(MKFLAGS)
+ifdef CONFIG_SOC
+# ysyxSoC boots from MROM at 0x20000000, but its programs also use SRAM at
+# 0x0f000000.  Give the reference model one sparse-on-demand host mapping that
+# covers both architectural regions.
+DIFF_MBASE = 0x0f000000
+DIFF_MSIZE = 0x19000000
+DIFF_RESET_OFFSET = 0x11000000
+else
+DIFF_MBASE = $(CONFIG_MBASE)
+DIFF_MSIZE = $(CONFIG_MSIZE)
+DIFF_RESET_OFFSET = $(CONFIG_PC_RESET_OFFSET)
 endif
+
+$(DIFF_REF_SO):
+	$(MAKE) -s -C $(DIFF_REF_PATH) $(MKFLAGS) \
+		CONFIG_RVE=$(CONFIG_RVE) CONFIG_SOC=$(CONFIG_SOC) \
+		CONFIG_MBASE=$(DIFF_MBASE) CONFIG_MSIZE=$(DIFF_MSIZE) \
+		CONFIG_PC_RESET_OFFSET=$(DIFF_RESET_OFFSET)
 
 .PHONY: $(DIFF_REF_SO)
 endif

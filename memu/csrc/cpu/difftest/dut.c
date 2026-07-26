@@ -61,7 +61,7 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
 
   void *handle;
   handle = dlopen(ref_so_file, RTLD_LAZY);
-  assert(handle);
+  Assert(handle, "Can not load DiffTest reference '%s': %s", ref_so_file, dlerror());
 
   ref_difftest_memcpy = dlsym(handle, "difftest_memcpy");
   assert(ref_difftest_memcpy);

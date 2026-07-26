@@ -31,10 +31,15 @@ $(SPIKE): $(REPO_MAKEFILE)
 
 BUILD_DIR = ./build
 $(shell mkdir -p $(BUILD_DIR))
+CONFIG_HEADER = $(BUILD_DIR)/include/generated/autoconf.h
+
+CONFIG_MBASE ?= 0x80000000
+CONFIG_MSIZE ?= 0x08000000
+CONFIG_PC_RESET_OFFSET ?= 0
 
 inc_dependencies = fesvr riscv disasm customext fdt softfloat spike_main spike_dasm build
 INC_PATH  = -I$(REPO_PATH) $(addprefix -I$(REPO_PATH)/, $(inc_dependencies))
-INC_PATH += -I$(MEMU_HOME)/include
+INC_PATH += -I$(BUILD_DIR)/include -I$(MEMU_HOME)/include
 lib_dependencies = libspike_main.a libriscv.a libdisasm.a libsoftfloat.a libfesvr.a libfdt.a
 INC_LIBS  = $(addprefix $(REPO_PATH)/build/, $(lib_dependencies))
 
@@ -42,8 +47,25 @@ NAME = $(GUEST_ISA)-spike-so
 BINARY = $(BUILD_DIR)/$(NAME)
 SRCS = difftest.cc
 
-$(BINARY): $(SPIKE) $(SRCS)
+$(BINARY): $(SPIKE) $(SRCS) $(CONFIG_HEADER)
 	g++ -std=c++17 -O2 -shared -fPIC -fvisibility=hidden $(INC_PATH) $(SRCS) $(INC_LIBS) -o $@
+
+$(CONFIG_HEADER): FORCE
+	@mkdir -p $(dir $@)
+	@{ \
+	  echo '#ifndef __SPIKE_DIFF_AUTOCONF_H__'; \
+	  echo '#define __SPIKE_DIFF_AUTOCONF_H__'; \
+	  echo '#define CONFIG_ISA_riscv 1'; \
+	  echo '#define CONFIG_MBASE $(CONFIG_MBASE)'; \
+	  echo '#define CONFIG_MSIZE $(CONFIG_MSIZE)'; \
+	  echo '#define CONFIG_PC_RESET_OFFSET $(CONFIG_PC_RESET_OFFSET)'; \
+	  $(if $(filter y,$(CONFIG_RVE)),echo '#define CONFIG_RVE 1';,) \
+	  echo '#endif'; \
+	} > $@.tmp
+	@cmp -s $@.tmp $@ || cp $@.tmp $@
+	@rm -f $@.tmp
+
+FORCE:
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -51,4 +73,4 @@ clean:
 all: $(BINARY)
 .DEFAULT_GOAL = all
 
-.PHONY: all clean $(SPIKE)
+.PHONY: all clean FORCE $(SPIKE)
