@@ -10,7 +10,9 @@ import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.util._
 
 import soc.util._
-import soc.riscv.e.Riscv32ERocketChip
+import soc.riscv.e.Riscv32E
+import soc.riscv.Parameters.{AxiPackage, Riscv32E => Riscv32EParameters}
+import bus.amba.axi.common.AxiParams
 
 object CPUAXI4BundleParameters {
   def apply() = AXI4BundleParameters(addrBits = 32, dataBits = 32, idBits = ChipLinkParam.idBits)
@@ -48,12 +50,28 @@ class CPU(
     val interrupt = IO(Input(Bool()))
     val slave = IO(Flipped(AXI4Bundle(CPUAXI4BundleParameters())))
 
-    val cpu = Module(new Riscv32ERocketChip(
-      CPUAXI4BundleParameters(),
+    private val rocketParams = CPUAXI4BundleParameters()
+    private val customParams = AxiParams(
+      addrBits = rocketParams.addrBits,
+      dataBits = rocketParams.dataBits,
+      idBits = rocketParams.idBits
+    )
+    val cpu = Module(new Riscv32E(
+      customParams,
+      rocketParams,
       resetPc = resetPc
     ))
-    cpu.io.inst <> inst
-    cpu.io.data <> data
+    if (Riscv32EParameters.axiPackage == AxiPackage.RocketChip) {
+      cpu.io.inst <> inst
+      cpu.io.data <> data
+    } else {
+      val instAdapter = Module(new CustomToRCAXI(customParams, rocketParams))
+      val dataAdapter = Module(new CustomToRCAXI(customParams, rocketParams))
+      instAdapter.io.custom <> cpu.io.inst
+      dataAdapter.io.custom <> cpu.io.data
+      instAdapter.io.rc <> inst
+      dataAdapter.io.rc <> data
+    }
     slave := DontCare
   }
 }

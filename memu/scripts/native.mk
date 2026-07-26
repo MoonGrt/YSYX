@@ -51,7 +51,7 @@ clean-fixdep = ./tools/fixdep
 $(clean-fixdep):
 	-$(MAKE) -s -C $@ clean
 clean-tools: $(clean-tools)
-clean-config: distclean clean-fixdep
+clean-config: distclean $(clean-fixdep)
 clean-all: clean clean-tools
 
 .PHONY: run gdb run-env clean-tools clean-all $(clean-tools)

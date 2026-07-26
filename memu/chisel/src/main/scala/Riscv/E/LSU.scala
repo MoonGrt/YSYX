@@ -62,10 +62,8 @@ class LSU extends Module {
   // -------------------- Logic --------------------
   // -----------------------------------------------
   // Address Align
-  val memAddrAlign = Cat(memAddr(31,2), 0.U(2.W))  // word aligned
+  val memAddrAlign = Cat(memAddr(31,2), 0.U(2.W))
   val offset = memAddr(1,0)  // byte offset
-  // The upstream request may no longer be present when the read response
-  // arrives. Preserve its byte offset for sub-word load extraction.
   val readOffset = RegEnable(offset, 0.U, io.dbus.req.fire && ren)
   val responseOffset = Mux(state === sWait, readOffset, offset)
   dontTouch(offset)
@@ -73,6 +71,11 @@ class LSU extends Module {
     LS.WB -> (1.U << offset),  // 1 byte
     LS.WH -> (3.U << offset),  // 2 bytes
     LS.WW -> "b1111".U         // 4 bytes
+  ))
+  val size = MuxLookup(lsSel, 2.U)(Seq(
+    LS.RB  -> 0.U, LS.RBU -> 0.U, LS.WB -> 0.U,
+    LS.RH  -> 1.U, LS.RHU -> 1.U, LS.WH -> 1.U,
+    LS.RW  -> 2.U, LS.WW  -> 2.U
   ))
   // Write Data Align
   val wdataShift = io.in.bits.RS2 << (offset << 3)
@@ -87,7 +90,9 @@ class LSU extends Module {
   ))
   // -------- Data Bus --------
   io.dbus.req.bits.mask  := mask
-  io.dbus.req.bits.addr  := memAddrAlign
+  io.dbus.req.bits.size  := size
+  val isUart = memAddr(31, 12) === "h10000".U
+  io.dbus.req.bits.addr  := Mux(isUart, memAddr, memAddrAlign)
   io.dbus.req.bits.wdata := wdataShift
   // -----------------------------------------------
   // -------------------- Output -------------------

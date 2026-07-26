@@ -1,21 +1,28 @@
 [submodule "memu/thirdpartys/OpenNoC"]
 	path = memu/thirdpartys/OpenNoC
 	url = https://github.com/MoonGrt/OpenNoC.git
+	shallow = true
 [submodule "memu/thirdpartys/rocket-chip"]
 	path = memu/thirdpartys/rocket-chip
 	url = https://github.com/chipsalliance/rocket-chip.git
+	shallow = true
 [submodule "thirdpartys/fceux-am"]
 	path = thirdpartys/fceux-am
 	url = https://github.com/NJU-ProjectN/fceux-am.git
+	shallow = true
 [submodule "thirdpartys/nvboard"]
 	path = thirdpartys/nvboard
 	url = https://github.com/NJU-ProjectN/nvboard.git
+	shallow = true
 [submodule "thirdpartys/rt-thread-am"]
 	path = thirdpartys/rt-thread-am
 	url = https://github.com/NJU-ProjectN/rt-thread-am.git
+	shallow = true
 [submodule "thirdpartys/yosys-sta"]
 	path = thirdpartys/yosys-sta
 	url = https://github.com/OSCPU/yosys-sta.git
+	shallow = true
 [submodule "thirdpartys/ysyxSoC"]
 	path = thirdpartys/ysyxSoC
 	url = https://github.com/OSCPU/ysyxSoC.git
+	shallow = true

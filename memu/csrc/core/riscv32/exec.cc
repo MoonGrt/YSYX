@@ -51,6 +51,8 @@ bool have_initial_fork = false;
 #endif
 
 extern "C" {
+  static bool resync_after_mmio_commit = false;
+
   void mtrace(bool is_write, paddr_t addr, int len, word_t data);
   void etrace(uint32_t epc, uint32_t ecode);
 
@@ -101,8 +103,16 @@ extern "C" {
       if (mask & (1 << i)) {
         int byte_addr = addr + i;
         int byte_data = (data >> (i * 8)) & 0xFF;
-        if (likely(in_pmem(byte_addr))) pmem_write(byte_addr, 1, byte_data);
-        else IFDEF(CONFIG_DEVICE, mmio_write(byte_addr, 1, byte_data));
+        if (likely(in_pmem(byte_addr))) {
+          pmem_write(byte_addr, 1, byte_data);
+        } else {
+          // The reference model has no devices, so it must not execute this
+          // MMIO store.  This callback has the resolved address and is more
+          // reliable than reconstructing it from commit-time register state.
+          IFDEF(CONFIG_DIFFTEST, difftest_skip_ref());
+          resync_after_mmio_commit = true;
+          IFDEF(CONFIG_DEVICE, mmio_write(byte_addr, 1, byte_data));
+        }
       }
     }
   }
@@ -121,7 +131,6 @@ extern "C" {
     // printf("0x%08x\n", (unsigned int)(*data));
   }
   void dpi_diffpc(int pc, int npc, int inst) {
-    static bool skip_mmio_commit = false;
     // printf("pc: %x, npc: %x, inst: %08x\n", pc, npc, inst);
     // Decode
     decode.pc = pc;
@@ -130,26 +139,34 @@ extern "C" {
     decode.isa.inst = inst;
     // CPU_state
     cpu.pc = pc;
-    if (skip_mmio_commit) {
-      IFDEF(CONFIG_DIFFTEST, difftest_skip_ref());
-      skip_mmio_commit = false;
-    }
-    // RTL peripherals do not go through mmio_read(), so reproduce the
-    // software MMIO path's difftest skip at the architectural commit point.
-    // This currently matters for RT-Thread's byte load from UART RX.
-    if ((inst & 0x7f) == 0x03) {
+    // The reference model has no device mappings.  MMIO stores are skipped by
+    // their memory/peripheral DPI callbacks.  Detect loads here because their
+    // RTL result must be synchronized after writeback.
+    uint32_t opcode = inst & 0x7f;
+    if (opcode == 0x03) {
       int rs1 = (inst >> 15) & 0x1f;
       int32_t imm = (int32_t)inst >> 20;
       word_t addr = rs1 < MUXDEF(CONFIG_RVE, 16, 32)
                       ? cpu.gpr[rs1] + imm : 0;
-      if (addr >= 0xa0000000u && addr <= 0xa0000fffu) {
-        // dpi_diffpc observes the instruction before its write-back state is
-        // visible through dpi_diffgpr, so synchronize on the next callback.
-        skip_mmio_commit = true;
+      bool is_mmio = (addr >= 0xa0000000u && addr <= 0xa0000fffu) ||
+                     (addr >= 0x10000000u && addr <= 0x10000fffu);
+      if (is_mmio) {
+        IFDEF(CONFIG_DIFFTEST, difftest_skip_ref());
+        // dpi_diffpc observes a load before its write-back state is visible
+        // through dpi_diffgpr. Synchronize the load result on the next
+        // callback.
+        resync_after_mmio_commit = true;
       }
     }
     // reference step
     if (pc != 0) IFDEF(CONFIG_DIFFTEST, difftest_step());
+    // difftest_step() above skips the MMIO instruction using the pre-commit
+    // state.  Schedule one more skip so the next callback copies the committed
+    // PC and any load result into the reference before it resumes.
+    if (resync_after_mmio_commit) {
+      IFDEF(CONFIG_DIFFTEST, difftest_skip_ref());
+      resync_after_mmio_commit = false;
+    }
   }
   void dpi_diffgpr(int* gpr) {
     // printf("dpi_diffgpr\n");
@@ -169,6 +186,9 @@ extern "C" {
   }
   void dpi_diffskip(void) {
     IFDEF(CONFIG_DIFFTEST, difftest_skip_ref());
+    // RTL peripherals such as UART bypass dpi_paddr_write().  Mark their
+    // instruction for a second synchronization after it commits.
+    resync_after_mmio_commit = true;
   }
 }
 

@@ -1,14 +1,9 @@
-AM_SRCS := platform/memu/trm.c \
-           platform/memu/ioe/ioe.c \
-           platform/memu/ioe/timer.c \
-           platform/memu/ioe/input.c \
-           platform/memu/ioe/gpu.c \
-           platform/memu/ioe/audio.c \
-           platform/memu/ioe/disk.c \
-           platform/memu/mpe.c
+AM_SRCS := platform/ysyxsoc/trm.c \
+           platform/ysyxsoc/ioe/ioe.c \
+           platform/ysyxsoc/mpe.c
 
 CFLAGS    += -fdata-sections -ffunction-sections
-CFLAGS    += -I$(AM_HOME)/am/src/platform/memu/include
+CFLAGS    += -I$(AM_HOME)/am/src/platform/ysyxsoc/include
 LDSCRIPTS += $(AM_HOME)/scripts/linker-ysyxsoc.ld
 LDFLAGS   += --defsym=_pmem_start=0x20000000 --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start

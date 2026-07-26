@@ -1,11 +1,144 @@
-package soc.riscv.e
+package soc.util
 
 import chisel3._
 import chisel3.util._
 import freechips.rocketchip.amba.axi4.{AXI4Bundle, AXI4BundleParameters}
 import soc.perip.mem.{DataBus, DataReq, InstBus}
-import soc.riscv.Parameters.Riscv32E.DataWidth
 import bus.amba.axi.common.{AxiParams, AXI4MasterBundle => CustomAXI4MasterBundle}
+
+/** Instruction-bus adapter using MEMU's standalone AXI4 bundle. */
+class IBusBridge(p: AxiParams) extends Module {
+  val axi  = IO(new CustomAXI4MasterBundle(p))
+  val ibus = IO(Flipped(new InstBus(p.dataBits)))
+
+  val idle :: waitResp :: Nil = Enum(2)
+  val state = RegInit(idle)
+
+  axi.aw.valid := false.B
+  axi.aw.bits := DontCare
+  axi.w.valid := false.B
+  axi.w.bits := DontCare
+  axi.b.ready := false.B
+
+  axi.ar.valid := state === idle && ibus.req.valid
+  axi.ar.bits := DontCare
+  axi.ar.bits.id := 0.U
+  axi.ar.bits.addr := ibus.req.bits.addr
+  axi.ar.bits.len := 0.U
+  axi.ar.bits.size := log2Ceil(p.dataBits / 8).U
+  axi.ar.bits.burst := 1.U
+  axi.ar.bits.lock := 0.U
+  axi.ar.bits.cache := 0.U
+  axi.ar.bits.prot := 0.U
+  axi.ar.bits.qos := 0.U
+  axi.ar.bits.region := 0.U
+  axi.ar.bits.user := 0.U
+
+  ibus.req.ready := state === idle && axi.ar.ready
+  ibus.resp.valid := state === waitResp && axi.r.valid
+  ibus.resp.bits.data := axi.r.bits.data
+  axi.r.ready := state === waitResp && ibus.resp.ready
+
+  when(state === idle && ibus.req.fire) { state := waitResp }
+  when(state === waitResp && axi.r.fire) { state := idle }
+}
+
+/** Data-bus adapter using MEMU's standalone AXI4 bundle. */
+class DBusBridge(p: AxiParams) extends Module {
+  val axi  = IO(new CustomAXI4MasterBundle(p))
+  val dbus = IO(Flipped(new DataBus(p.dataBits)))
+
+  val idle :: readAddr :: readResp :: writeReq :: writeResp :: Nil = Enum(5)
+  val state = RegInit(idle)
+  val request = Reg(new DataReq(p.dataBits))
+  val awDone = RegInit(false.B)
+  val wDone = RegInit(false.B)
+
+  axi.ar.valid := false.B
+  axi.ar.bits := DontCare
+  axi.aw.valid := false.B
+  axi.aw.bits := DontCare
+  axi.w.valid := false.B
+  axi.w.bits := DontCare
+  axi.r.ready := false.B
+  axi.b.ready := false.B
+  dbus.req.ready := false.B
+  dbus.resp.valid := false.B
+  dbus.resp.bits.rdata := 0.U
+
+  when(state === idle) {
+    dbus.req.ready := true.B
+    when(dbus.req.fire) {
+      request := dbus.req.bits
+      when(dbus.req.bits.ren) { state := readAddr }
+      when(dbus.req.bits.wen) {
+        awDone := false.B
+        wDone := false.B
+        state := writeReq
+      }
+    }
+  }
+
+  when(state === readAddr) {
+    axi.ar.valid := true.B
+    axi.ar.bits := DontCare
+    axi.ar.bits.id := 0.U
+    axi.ar.bits.addr := request.addr
+    axi.ar.bits.len := 0.U
+    axi.ar.bits.size := request.size
+    axi.ar.bits.burst := 1.U
+    axi.ar.bits.lock := 0.U
+    axi.ar.bits.cache := 0.U
+    axi.ar.bits.prot := 0.U
+    axi.ar.bits.qos := 0.U
+    axi.ar.bits.region := 0.U
+    axi.ar.bits.user := 0.U
+    when(axi.ar.fire) { state := readResp }
+  }
+
+  when(state === readResp) {
+    dbus.resp.valid := axi.r.valid
+    dbus.resp.bits.rdata := axi.r.bits.data
+    axi.r.ready := dbus.resp.ready
+    when(axi.r.fire) { state := idle }
+  }
+
+  when(state === writeReq) {
+    axi.aw.valid := !awDone
+    axi.aw.bits := DontCare
+    axi.aw.bits.id := 0.U
+    axi.aw.bits.addr := request.addr
+    axi.aw.bits.len := 0.U
+    axi.aw.bits.size := request.size
+    axi.aw.bits.burst := 1.U
+    axi.aw.bits.lock := 0.U
+    axi.aw.bits.cache := 0.U
+    axi.aw.bits.prot := 0.U
+    axi.aw.bits.qos := 0.U
+    axi.aw.bits.region := 0.U
+    axi.aw.bits.user := 0.U
+
+    axi.w.valid := !wDone
+    axi.w.bits := DontCare
+    axi.w.bits.data := request.wdata
+    axi.w.bits.strb := request.mask
+    axi.w.bits.last := true.B
+    axi.w.bits.user := 0.U
+
+    when(axi.aw.fire) { awDone := true.B }
+    when(axi.w.fire) { wDone := true.B }
+    when((awDone || axi.aw.fire) && (wDone || axi.w.fire)) {
+      state := writeResp
+    }
+  }
+
+  when(state === writeResp) {
+    dbus.resp.valid := axi.b.valid
+    dbus.resp.bits.rdata := 0.U
+    axi.b.ready := dbus.resp.ready
+    when(axi.b.fire) { state := idle }
+  }
+}
 
 /** Boundary adapter used by the MEMU simulation top while the core itself
   * speaks rocket-chip AXI4. */
@@ -66,6 +199,64 @@ class RCToCustomAXI(rcp: AXI4BundleParameters, cp: AxiParams) extends Module {
   io.rc.r.bits.data := io.custom.r.bits.data
   io.rc.r.bits.resp := io.custom.r.bits.resp
   io.rc.r.bits.last := io.custom.r.bits.last
+}
+
+/** Boundary adapter used by diplomacy SoCs when the selected CPU boundary
+  * speaks MEMU's standalone AXI4 bundle. */
+class CustomToRCAXI(cp: AxiParams, rcp: AXI4BundleParameters) extends Module {
+  val io = IO(new Bundle {
+    val custom = Flipped(new CustomAXI4MasterBundle(cp))
+    val rc = new AXI4Bundle(rcp)
+  })
+
+  io.rc.aw.valid := io.custom.aw.valid
+  io.custom.aw.ready := io.rc.aw.ready
+  io.rc.aw.bits := DontCare
+  io.rc.aw.bits.id := io.custom.aw.bits.id
+  io.rc.aw.bits.addr := io.custom.aw.bits.addr
+  io.rc.aw.bits.len := io.custom.aw.bits.len
+  io.rc.aw.bits.size := io.custom.aw.bits.size
+  io.rc.aw.bits.burst := io.custom.aw.bits.burst
+  io.rc.aw.bits.lock := io.custom.aw.bits.lock
+  io.rc.aw.bits.cache := io.custom.aw.bits.cache
+  io.rc.aw.bits.prot := io.custom.aw.bits.prot
+  io.rc.aw.bits.qos := io.custom.aw.bits.qos
+
+  io.rc.w.valid := io.custom.w.valid
+  io.custom.w.ready := io.rc.w.ready
+  io.rc.w.bits := DontCare
+  io.rc.w.bits.data := io.custom.w.bits.data
+  io.rc.w.bits.strb := io.custom.w.bits.strb
+  io.rc.w.bits.last := io.custom.w.bits.last
+
+  io.custom.b.valid := io.rc.b.valid
+  io.rc.b.ready := io.custom.b.ready
+  io.custom.b.bits := DontCare
+  io.custom.b.bits.id := io.rc.b.bits.id
+  io.custom.b.bits.resp := io.rc.b.bits.resp
+  io.custom.b.bits.user := 0.U
+
+  io.rc.ar.valid := io.custom.ar.valid
+  io.custom.ar.ready := io.rc.ar.ready
+  io.rc.ar.bits := DontCare
+  io.rc.ar.bits.id := io.custom.ar.bits.id
+  io.rc.ar.bits.addr := io.custom.ar.bits.addr
+  io.rc.ar.bits.len := io.custom.ar.bits.len
+  io.rc.ar.bits.size := io.custom.ar.bits.size
+  io.rc.ar.bits.burst := io.custom.ar.bits.burst
+  io.rc.ar.bits.lock := io.custom.ar.bits.lock
+  io.rc.ar.bits.cache := io.custom.ar.bits.cache
+  io.rc.ar.bits.prot := io.custom.ar.bits.prot
+  io.rc.ar.bits.qos := io.custom.ar.bits.qos
+
+  io.custom.r.valid := io.rc.r.valid
+  io.rc.r.ready := io.custom.r.ready
+  io.custom.r.bits := DontCare
+  io.custom.r.bits.id := io.rc.r.bits.id
+  io.custom.r.bits.data := io.rc.r.bits.data
+  io.custom.r.bits.resp := io.rc.r.bits.resp
+  io.custom.r.bits.last := io.rc.r.bits.last
+  io.custom.r.bits.user := 0.U
 }
 
 /** Instruction-bus adapter using rocket-chip's native AXI4 bundle. */
@@ -149,7 +340,7 @@ class RCDBusBridge(p: AXI4BundleParameters) extends Module {
     io.axi.ar.bits.id := 0.U
     io.axi.ar.bits.addr := request.addr
     io.axi.ar.bits.len := 0.U
-    io.axi.ar.bits.size := log2Ceil(p.dataBits / 8).U
+    io.axi.ar.bits.size := request.size
     io.axi.ar.bits.burst := 1.U
     io.axi.ar.bits.lock := 0.U
     io.axi.ar.bits.cache := 0.U
@@ -171,7 +362,7 @@ class RCDBusBridge(p: AXI4BundleParameters) extends Module {
     io.axi.aw.bits.id := 0.U
     io.axi.aw.bits.addr := request.addr
     io.axi.aw.bits.len := 0.U
-    io.axi.aw.bits.size := log2Ceil(p.dataBits / 8).U
+    io.axi.aw.bits.size := request.size
     io.axi.aw.bits.burst := 1.U
     io.axi.aw.bits.lock := 0.U
     io.axi.aw.bits.cache := 0.U
@@ -197,36 +388,4 @@ class RCDBusBridge(p: AXI4BundleParameters) extends Module {
     io.axi.b.ready := io.dbus.resp.ready
     when(io.axi.b.fire) { state := idle }
   }
-}
-
-/** RISCV32E with two rocket-chip AXI4 master ports for diplomacy SoCs. */
-class Riscv32ERocketChip(
-  p: AXI4BundleParameters,
-  resetPc: BigInt = 0x80000000L
-) extends Module {
-  require(p.dataBits == DataWidth)
-  val io = IO(new Bundle {
-    val inst = new AXI4Bundle(p)
-    val data = new AXI4Bundle(p)
-  })
-
-  val ifu = Module(new IFU(resetPc))
-  val idu = Module(new IDU)
-  val exu = Module(new EXU)
-  val lsu = Module(new LSU)
-  val wbu = Module(new WBU)
-  val iBridge = Module(new RCIBusBridge(p))
-  val dBridge = Module(new RCDBusBridge(p))
-
-  iBridge.io.ibus <> ifu.io.ibus
-  iBridge.io.axi <> io.inst
-  dBridge.io.dbus <> lsu.io.dbus
-  dBridge.io.axi <> io.data
-
-  exu.io.br <> ifu.io.in
-  ifu.io.out <> idu.io.ifuin
-  wbu.io.out <> idu.io.wbuin
-  idu.io.out <> exu.io.in
-  exu.io.out <> lsu.io.in
-  lsu.io.out <> wbu.io.in
 }

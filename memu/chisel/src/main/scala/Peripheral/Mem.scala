@@ -37,6 +37,7 @@ class InstBus(w: Int) extends Bundle {
 class DataReq(w: Int) extends Bundle {
   val ren   = Bool()
   val wen   = Bool()
+  val size  = UInt(log2Ceil(log2Ceil(w / 8) + 1).W)
   val mask  = UInt((w/8).W)
   val addr  = UInt(w.W)
   val wdata = UInt(w.W)

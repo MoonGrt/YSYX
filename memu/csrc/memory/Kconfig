@@ -1,9 +1,19 @@
 menu "Memory Configuration"
 
-config MBASE
+config MBASE_NOSOC
   hex "Memory base address"
-  default 0x0        if ISA_x86
+  depends on !SOC
   default 0x80000000
+
+config MBASE_SOC
+  hex "SOC memory base address"
+  depends on SOC
+  default 0x20000000
+
+config MBASE
+  hex
+  default MBASE_SOC if SOC
+  default MBASE_NOSOC
 
 config MSIZE
   hex "Memory size"

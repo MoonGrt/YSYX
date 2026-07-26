@@ -53,7 +53,7 @@ class ysyxSoCASIC(resetPc: BigInt = 0x20000000L)(implicit p: Parameters) extends
   val xbar1 = AXI4Xbar()
   val xbar2 = AXI4Xbar()
   val apbxbar = LazyModule(new APBFanout).node
-  val cpu = LazyModule(new CPU(
+  val core = LazyModule(new CPU(
     idBits = ChipLinkParam.idBits,
     resetPc = resetPc
   ))
@@ -88,7 +88,7 @@ class ysyxSoCASIC(resetPc: BigInt = 0x20000000L)(implicit p: Parameters) extends
   else                    lsdram_apb.get.node := apbxbar
   if (Config.hasChipLink) chiplinkNode.get := xbar1
   xbar1 :=* addressMonitor.node
-  addressMonitor.node :=* cpu.masterNode
+  addressMonitor.node :=* core.masterNode
 
   override lazy val module = new Impl
   class Impl extends LazyModuleImp(this) with DontTouch {
@@ -101,22 +101,22 @@ class ysyxSoCASIC(resetPc: BigInt = 0x20000000L)(implicit p: Parameters) extends
     }.otherwise {
       resetPipe := Cat(resetPipe(8, 0), false.B)
     }
-    cpu.module.reset := reset.asBool || resetPipe.orR
+    core.module.reset := reset.asBool || resetPipe.orR
     val fpga_io = if (Config.hasChipLink) Some(IO(chiselTypeOf(chipMaster.get.module.fpga_io))) else None
     if (Config.hasChipLink) {
       // connect chiplink slave interface to crossbar
       (chipMaster.get.slave zip chiplinkNode.get.in) foreach { case (io, (bundle, _)) => io <> bundle }
       // connect chiplink dma interface to cpu
-      cpu.module.slave <> chipMaster.get.master_mem(0)
+      core.module.slave <> chipMaster.get.master_mem(0)
       // expose chiplink fpga I/O interface as ports
       fpga_io.get <> chipMaster.get.module.fpga_io
     } else {
-      cpu.module.slave := DontCare
+      core.module.slave := DontCare
     }
 
     // connect interrupt signal to cpu
     val intr_from_chipSlave = IO(Input(Bool()))
-    cpu.module.interrupt := intr_from_chipSlave
+    core.module.interrupt := intr_from_chipSlave
     val sdramBundle = if (Config.sdramUseAXI) lsdram_axi.get.module.sdram_bundle
                       else                    lsdram_apb.get.module.sdram_bundle
 
@@ -140,7 +140,7 @@ class ysyxSoCASIC(resetPc: BigInt = 0x20000000L)(implicit p: Parameters) extends
 
 class ysyxSoCFPGA(implicit p: Parameters) extends ChipLinkSlave
 
-class ysyxSoCFull(implicit p: Parameters) extends LazyModule {
+class ysyxSoCTop(implicit p: Parameters) extends LazyModule {
   val asic = LazyModule(new ysyxSoCASIC)
   ElaborationArtefacts.add("graphml", graphML)
 
@@ -198,13 +198,4 @@ import freechips.rocketchip.system.{Edge32BitConfig, DefaultRV32Config}
 object Config {
   def hasChipLink: Boolean = false
   def sdramUseAXI: Boolean = false
-}
-
-class ysyxSoCTop extends Module {
-  implicit val config: Parameters = new Config(new Edge32BitConfig ++ new DefaultRV32Config)
-  val io = IO(new Bundle {})
-  val dut = LazyModule(new ysyxSoCFull)
-  val mdut = Module(dut.module)
-  mdut.dontTouchPorts()
-  mdut.externalPins := DontCare
 }

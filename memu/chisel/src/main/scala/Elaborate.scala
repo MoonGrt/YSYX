@@ -25,6 +25,11 @@ object Riscv32ETop extends App {
 }
 
 object ysyxSoCTop extends App {
+  implicit val config: org.chipsalliance.cde.config.Parameters =
+    new org.chipsalliance.cde.config.Config(
+      new freechips.rocketchip.system.Edge32BitConfig ++
+      new freechips.rocketchip.system.DefaultRV32Config
+    )
   val firtoolOptions = Array(
     // rocket-chip AXI4RAM emits SRAMAnnotation for downstream SRAM
     // replacement flows.  firtool does not consume this annotation itself.
@@ -37,5 +42,9 @@ object ysyxSoCTop extends App {
       "locationInfoStyle=wrapInAtSquareBracket"
     ).reduce(_ + "," + _)
   )
-  circt.stage.ChiselStage.emitSystemVerilogFile(new soc.ysyxSoCTop, args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(
+    freechips.rocketchip.diplomacy.LazyModule(new soc.ysyxSoCTop).module,
+    args,
+    firtoolOptions
+  )
 }

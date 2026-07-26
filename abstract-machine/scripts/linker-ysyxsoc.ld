@@ -1,38 +1,48 @@
 ENTRY(_start)
-PHDRS { text PT_LOAD; data PT_LOAD; }
+
+MEMORY {
+  mrom (rx)  : ORIGIN = 0x20000000, LENGTH = 4K
+  sram (rwx) : ORIGIN = 0x0f000000, LENGTH = 8K
+}
 
 SECTIONS {
-  /* The boot image is read from the SoC MROM. */
-  . = _pmem_start + _entry_offset;
+  . = ORIGIN(mrom);
   .text : {
     *(entry)
     *(.text*)
-  } : text
+  } > mrom AT> mrom
   etext = .;
   _etext = .;
   .rodata : {
     *(.rodata*)
-  }
-  .data : {
+  } > mrom AT> mrom
+
+  .data ORIGIN(sram) : {
+    _data_start = .;
     *(.data*)
-  } : data
+    *(.sdata*)
+    _data_end = .;
+  } > sram AT> mrom
+  _data_load_start = LOADADDR(.data);
   edata = .;
   _data = .;
-  .bss : {
+
+  .bss (NOLOAD) : {
     _bss_start = .;
     *(.bss*)
     *(.sbss*)
     *(.scommon)
-  }
+    _bss_end = .;
+  } > sram
 
-  /*
-   * ysyxSoC provides 8 KiB of writable SRAM at 0x0f000000.
-   * Grow the stack down from its upper boundary.
-   */
-  _stack_top = 0x0f000000;
+  _heap_start = ALIGN(8);
+  _stack_top = 0x0f001000;
   _stack_pointer = 0x0f002000;
 
-  end = .;
-  _end = .;
-  _heap_start = ALIGN(0x1000);
+  end = _heap_start;
+  _end = _heap_start;
+
+  ASSERT(LOADADDR(.data) + SIZEOF(.data) <= ORIGIN(mrom) + LENGTH(mrom),
+         "MROM image overflow")
+  ASSERT(_heap_start <= _stack_top, "SRAM data/BSS overflow")
 }

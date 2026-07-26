@@ -1,249 +1,75 @@
 package soc.riscv.e
 
 import chisel3._
-import chisel3.util._
-import soc.riscv.Constants.Riscv32E._
 import soc.riscv.Parameters.Riscv32E._
+import soc.riscv.Parameters.AxiPackage
 import soc.perip.mem._
 import soc.perip.uart._
 import soc.perip.clint._
+import soc.util._
 import bus.amba.axi.common._
 import bus.amba.axi.axifull._
-import freechips.rocketchip.amba.axi4.{AXI4BundleParameters => RCAXI4BundleParameters}
-import soc.riscv.Parameters.AxiPackage
-
-// ----------------------------------
-// Bus Bridge
-// ----------------------------------
-class IBusBridge(p: AxiParams) extends Module {
-  val axi  = IO(new AXI4MasterBundle(p))
-  val ibus = IO(Flipped(new InstBus(p.dataBits)))
-
-  val sIdle :: sWait :: Nil = Enum(2)
-  val state = RegInit(sIdle)
-
-  // Default
-  axi.aw.valid := false.B
-  axi.aw.bits  := DontCare
-  axi.w.valid  := false.B
-  axi.w.bits   := DontCare
-  axi.b.ready  := false.B
-
-  // AR Channel
-  axi.ar.valid       := (state === sIdle) && ibus.req.valid
-  axi.ar.bits.id     := 0.U
-  axi.ar.bits.addr   := ibus.req.bits.addr
-  axi.ar.bits.len    := 0.U
-  axi.ar.bits.size   := log2Ceil(p.dataBits / 8).U
-  axi.ar.bits.burst  := 1.U // INCR
-  axi.ar.bits.lock   := 0.U
-  axi.ar.bits.cache  := 0.U
-  axi.ar.bits.prot   := 0.U
-  axi.ar.bits.qos    := 0.U
-  axi.ar.bits.region := 0.U
-  axi.ar.bits.user   := 0.U
-
-  ibus.req.ready := (state === sIdle) && axi.ar.ready
-
-  // R Channel
-  ibus.resp.valid := (state === sWait) && axi.r.valid
-  ibus.resp.bits.data := axi.r.bits.data
-  axi.r.ready := (state === sWait) && ibus.resp.ready
-
-  // State
-  switch(state) {
-    is(sIdle) {
-      when(ibus.req.fire) {
-        state := sWait
-      }
-    }
-    is(sWait) {
-      when(axi.r.fire) {
-        state := sIdle
-      }
-    }
-  }
+import freechips.rocketchip.amba.axi4.{
+  AXI4Bundle,
+  AXI4BundleParameters => RCAXI4BundleParameters
 }
 
-class DBusBridge(p: AxiParams) extends Module {
-  val axi  = IO(new AXI4MasterBundle(p))
-  val dbus = IO(Flipped(new DataBus(p.dataBits)))
-
-  val sIdle :: sReadAddr :: sReadResp :: sWriteReq :: sWriteResp :: Nil = Enum(5)
-  val state = RegInit(sIdle)
-
-  val reqReg = Reg(new DataReq(p.dataBits))
-  val awDone = RegInit(true.B)
-  val wDone  = RegInit(true.B)
-
-  // ----------------------------------------------------------------
-  // Defaults
-  // ----------------------------------------------------------------
-  axi.ar.valid := false.B
-  axi.aw.valid := false.B
-  axi.w.valid  := false.B
-  axi.r.ready := false.B
-  axi.b.ready := false.B
-  axi.ar.bits := DontCare
-  axi.aw.bits := DontCare
-  axi.w.bits  := DontCare
-  dbus.req.ready := false.B
-  dbus.resp.valid := false.B
-  dbus.resp.bits.rdata := 0.U
-
-  // ----------------------------------------------------------------
-  // Common AXI fields
-  // ----------------------------------------------------------------
-  def fillAR(): Unit = {
-    axi.ar.bits.id     := 0.U
-    axi.ar.bits.addr   := reqReg.addr
-    axi.ar.bits.len    := 0.U
-    axi.ar.bits.size   := log2Ceil(p.dataBits / 8).U
-    axi.ar.bits.burst  := 1.U
-    axi.ar.bits.lock   := 0.U
-    axi.ar.bits.cache  := 0.U
-    axi.ar.bits.prot   := 0.U
-    axi.ar.bits.qos    := 0.U
-    axi.ar.bits.region := 0.U
-    axi.ar.bits.user   := 0.U
-  }
-  def fillAW(): Unit = {
-    axi.aw.bits.id     := 0.U
-    axi.aw.bits.addr   := reqReg.addr
-    axi.aw.bits.len    := 0.U
-    axi.aw.bits.size   := log2Ceil(p.dataBits / 8).U
-    axi.aw.bits.burst  := 1.U
-    axi.aw.bits.lock   := 0.U
-    axi.aw.bits.cache  := 0.U
-    axi.aw.bits.prot   := 0.U
-    axi.aw.bits.qos    := 0.U
-    axi.aw.bits.region := 0.U
-    axi.aw.bits.user   := 0.U
-  }
-  def fillW(): Unit = {
-    axi.w.bits.data := reqReg.wdata
-    axi.w.bits.strb := reqReg.mask
-    axi.w.bits.last := true.B
-    axi.w.bits.user := 0.U
-  }
-
-  // ----------------------------------------------------------------
-  // Idle
-  // ----------------------------------------------------------------
-  when(state === sIdle) {
-    dbus.req.ready := true.B
-    when(dbus.req.fire) {
-      reqReg := dbus.req.bits
-      when(dbus.req.bits.ren) {
-        state := sReadAddr
-      }
-      when(dbus.req.bits.wen) {
-        awDone := false.B
-        wDone  := false.B
-        state  := sWriteReq
-      }
-    }
-  }
-
-  // ----------------------------------------------------------------
-  // Read Address
-  // ----------------------------------------------------------------
-  when(state === sReadAddr) {
-    axi.ar.valid := true.B
-    fillAR()
-    when(axi.ar.fire) {
-      state := sReadResp
-    }
-  }
-
-  // ----------------------------------------------------------------
-  // Read Response
-  // ----------------------------------------------------------------
-  when(state === sReadResp) {
-    dbus.resp.valid := axi.r.valid
-    dbus.resp.bits.rdata := axi.r.bits.data
-    axi.r.ready := dbus.resp.ready
-    when(axi.r.fire) {
-      state := sIdle
-    }
-  }
-
-  // ----------------------------------------------------------------
-  // Write Request
-  // ----------------------------------------------------------------
-  when(state === sWriteReq) {
-    // ---------------- AW ----------------
-    axi.aw.valid := !awDone
-    fillAW()
-    when(axi.aw.fire) {
-      awDone := true.B
-    }
-    // ---------------- W ----------------
-    axi.w.valid := !wDone
-    fillW()
-    when(axi.w.fire) {
-      wDone := true.B
-    }
-    // ---------------- Finish ----------------
-    when((awDone || axi.aw.fire) && (wDone || axi.w.fire)) {
-      state := sWriteResp
-    }
-  }
-
-  // ----------------------------------------------------------------
-  // Write Response
-  // ----------------------------------------------------------------
-  when(state === sWriteResp) {
-    dbus.resp.valid := axi.b.valid
-    dbus.resp.bits.rdata := 0.U
-    axi.b.ready := dbus.resp.ready
-    when(axi.b.fire) {
-      state := sIdle
-    }
-  }
-}
-
-// ---------------------------
-// Riscv32E CPU
-// ---------------------------
+/** The single RISCV32E implementation.
+  *
+  * The pipeline always uses InstBus/DataBus internally.  `axiPackage` selects
+  * only the AXI bundle and adapters exposed at the CPU boundary.
+  */
 class Riscv32E(
-  p: AxiParams,
+  customParams: AxiParams,
+  rocketParams: RCAXI4BundleParameters,
   resetPc: BigInt = 0x80000000L
 ) extends Module {
+  require(customParams.dataBits == DataWidth)
+  require(rocketParams.dataBits == DataWidth)
+
   val io = IO(new Bundle {
-    val inst = if (memBusType == BusType.AXI) {
-        new AXI4MasterBundle(p)
-      } else {
-        new InstBus(DataWidth)
-      }
-    val data = if (memBusType == BusType.AXI) {
-        new AXI4MasterBundle(p)
-      } else {
-        new DataBus(DataWidth)
-      }
+    val inst =
+      if (memBusType != BusType.AXI) new InstBus(DataWidth)
+      else if (axiPackage == AxiPackage.Custom) new AXI4MasterBundle(customParams)
+      else new AXI4Bundle(rocketParams)
+    val data =
+      if (memBusType != BusType.AXI) new DataBus(DataWidth)
+      else if (axiPackage == AxiPackage.Custom) new AXI4MasterBundle(customParams)
+      else new AXI4Bundle(rocketParams)
   })
   dontTouch(io.inst)
   dontTouch(io.data)
-  // Modules
+
   val ifu = Module(new IFU(resetPc))
   val idu = Module(new IDU)
   val exu = Module(new EXU)
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
-  // Connect
+
   if (memBusType == BusType.AXI) {
-    val iBridge = Module(new IBusBridge(p))
-    iBridge.ibus <> ifu.io.ibus
-    iBridge.axi <> io.inst
-    val dBridge = Module(new DBusBridge(p))
-    dBridge.dbus <> lsu.io.dbus
-    dBridge.axi <> io.data
+    if (axiPackage == AxiPackage.Custom) {
+      val iBridge = Module(new IBusBridge(customParams))
+      val dBridge = Module(new DBusBridge(customParams))
+      iBridge.ibus <> ifu.io.ibus
+      iBridge.axi <> io.inst
+      dBridge.dbus <> lsu.io.dbus
+      dBridge.axi <> io.data
+    } else {
+      val iBridge = Module(new RCIBusBridge(rocketParams))
+      val dBridge = Module(new RCDBusBridge(rocketParams))
+      iBridge.io.ibus <> ifu.io.ibus
+      iBridge.io.axi <> io.inst
+      dBridge.io.dbus <> lsu.io.dbus
+      dBridge.io.axi <> io.data
+    }
   } else {
+    require(axiPackage == AxiPackage.Custom,
+      "direct InstBus/DataBus mode only supports the custom bus implementation")
     io.inst <> ifu.io.ibus
     io.data <> lsu.io.dbus
   }
-  // Connect
-  exu.io.br  <> ifu.io.in
+
+  exu.io.br <> ifu.io.in
   ifu.io.out <> idu.io.ifuin
   wbu.io.out <> idu.io.wbuin
   idu.io.out <> exu.io.in
@@ -251,9 +77,7 @@ class Riscv32E(
   lsu.io.out <> wbu.io.in
 }
 
-// ---------------------------
-// Riscv32E TOP = CPU + ROM + RAM
-// ---------------------------
+/** Standalone MEMU top: CPU plus simulation memory and peripherals. */
 class Riscv32ETop(resetPc: BigInt = 0x80000000L) extends Module {
   private val masterPort = AXI4MasterPortParameters(
     masters = Seq(AXI4MasterParameters(name = "cpu_master", id = IdRange(0, 4)))
@@ -274,68 +98,54 @@ class Riscv32ETop(resetPc: BigInt = 0x80000000L) extends Module {
         address = Seq(AddressSet(base = 0xb0000000L, mask = 0x00000fffL)),
         supportsWrite = TransferSizes(0, 4),
         supportsRead = TransferSizes(0, 4)
-      ),
+      )
     ),
     beatBytes = 4
   )
   private implicit val params: AxiParameters =
     new WithAxiPorts(masterPort, slavePort) ++ new BaseAxiConfig
-  private val p: AxiParams = AxiParams.fromPortParameters
-
-
-  // Core. Both choices share the same simulation peripherals; only the AXI
-  // implementation at the CPU boundary changes.
-  val cpuCustom = if (axiPackage == AxiPackage.Custom)
-    Some(Module(new Riscv32E(p, resetPc = resetPc))) else None
-  val rcParams = RCAXI4BundleParameters(
-    addrBits = p.addrBits,
-    dataBits = p.dataBits,
-    idBits = p.idBits
+  private val customParams = AxiParams.fromPortParameters
+  private val rocketParams = RCAXI4BundleParameters(
+    addrBits = customParams.addrBits,
+    dataBits = customParams.dataBits,
+    idBits = customParams.idBits
   )
-  val cpuRocket = if (axiPackage == AxiPackage.RocketChip)
-    Some(Module(new Riscv32ERocketChip(rcParams, resetPc = resetPc))) else None
-  val rcInstAdapter = cpuRocket.map(_ => Module(new RCToCustomAXI(rcParams, p)))
-  val rcDataAdapter = cpuRocket.map(_ => Module(new RCToCustomAXI(rcParams, p)))
-  // SRAM
+
+  val cpu = Module(new Riscv32E(customParams, rocketParams, resetPc))
+
   if (memBusType == BusType.AXI) {
-    // Xbar
-    val xbar = Module(
-      new AxiCrossbar(
-        p = p,
-        nMasters = 2,
-        slaveAddress = Seq(
-          AddressSet(0x80000000L, 0x07ffffffL),
-          AddressSet(0xa0000000L, 0x00000fffL),
-          AddressSet(0xb0000000L, 0x00000fffL),
-        )
+    val xbar = Module(new AxiCrossbar(
+      p = customParams,
+      nMasters = 2,
+      slaveAddress = Seq(
+        AddressSet(0x80000000L, 0x07ffffffL),
+        AddressSet(0xa0000000L, 0x00000fffL),
+        AddressSet(0xb0000000L, 0x00000fffL)
       )
-    )
-    // SRAM
-    val sram  = Module(new AXIRAM(p, useDpi = memUseDpi, delayCfg = memDelayCfg))
-    val uart  = Module(new AXIUART(p))
-    val clint = Module(new AXICLINT(p))
-    // master 0 -> inst
+    ))
+    val sram  = Module(new AXIRAM(customParams, useDpi = memUseDpi, delayCfg = memDelayCfg))
+    val uart  = Module(new AXIUART(customParams))
+    val clint = Module(new AXICLINT(customParams))
+
     if (axiPackage == AxiPackage.Custom) {
-      xbar.io.fromMasters(0) <> cpuCustom.get.io.inst
-      xbar.io.fromMasters(1) <> cpuCustom.get.io.data
+      xbar.io.fromMasters(0) <> cpu.io.inst
+      xbar.io.fromMasters(1) <> cpu.io.data
     } else {
-      rcInstAdapter.get.io.rc <> cpuRocket.get.io.inst
-      rcDataAdapter.get.io.rc <> cpuRocket.get.io.data
-      xbar.io.fromMasters(0) <> rcInstAdapter.get.io.custom
-      xbar.io.fromMasters(1) <> rcDataAdapter.get.io.custom
+      val instAdapter = Module(new RCToCustomAXI(rocketParams, customParams))
+      val dataAdapter = Module(new RCToCustomAXI(rocketParams, customParams))
+      instAdapter.io.rc <> cpu.io.inst
+      dataAdapter.io.rc <> cpu.io.data
+      xbar.io.fromMasters(0) <> instAdapter.io.custom
+      xbar.io.fromMasters(1) <> dataAdapter.io.custom
     }
-    // slave 0 -> sram
-    sram.io  <> xbar.io.toSlaves(0)
-    uart.io  <> xbar.io.toSlaves(1)
+
+    sram.io <> xbar.io.toSlaves(0)
+    uart.io <> xbar.io.toSlaves(1)
     clint.io <> xbar.io.toSlaves(2)
   } else {
-    // Inst
     val rom = Module(new ROM(useDpi = memUseDpi, delayCfg = memDelayCfg))
-    require(axiPackage == AxiPackage.Custom,
-      "direct InstBus/DataBus mode only supports the custom bus implementation")
-    rom.io <> cpuCustom.get.io.inst
-    // Data
     val ram = Module(new RAM(useDpi = memUseDpi, delayCfg = memDelayCfg))
-    ram.io <> cpuCustom.get.io.data
+    rom.io <> cpu.io.inst
+    ram.io <> cpu.io.data
   }
 }
