@@ -112,7 +112,7 @@ class RCDBusBridge(p: AXI4BundleParameters) extends Module {
     val dbus = Flipped(new DataBus(p.dataBits))
   })
 
-  val idle :: readAddr :: readResp :: writeReq :: Nil = Enum(4)
+  val idle :: readAddr :: readResp :: writeReq :: writeResp :: Nil = Enum(5)
   val state = RegInit(idle)
   val request = Reg(new DataReq(p.dataBits))
   val awDone = RegInit(false.B)
@@ -125,8 +125,7 @@ class RCDBusBridge(p: AXI4BundleParameters) extends Module {
   io.axi.w.valid := false.B
   io.axi.w.bits := DontCare
   io.axi.r.ready := false.B
-  // RISCV32E currently retires stores after AW/W acceptance. Always drain B.
-  io.axi.b.ready := true.B
+  io.axi.b.ready := false.B
   io.dbus.req.ready := false.B
   io.dbus.resp.valid := false.B
   io.dbus.resp.bits.rdata := 0.U
@@ -187,19 +186,31 @@ class RCDBusBridge(p: AXI4BundleParameters) extends Module {
 
     when(io.axi.aw.fire) { awDone := true.B }
     when(io.axi.w.fire) { wDone := true.B }
-    when(awDone && wDone) { state := idle }
+    when((awDone || io.axi.aw.fire) && (wDone || io.axi.w.fire)) {
+      state := writeResp
+    }
+  }
+
+  when(state === writeResp) {
+    io.dbus.resp.valid := io.axi.b.valid
+    io.dbus.resp.bits.rdata := 0.U
+    io.axi.b.ready := io.dbus.resp.ready
+    when(io.axi.b.fire) { state := idle }
   }
 }
 
 /** RISCV32E with two rocket-chip AXI4 master ports for diplomacy SoCs. */
-class Riscv32ERocketChip(p: AXI4BundleParameters) extends Module {
+class Riscv32ERocketChip(
+  p: AXI4BundleParameters,
+  resetPc: BigInt = 0x80000000L
+) extends Module {
   require(p.dataBits == DataWidth)
   val io = IO(new Bundle {
     val inst = new AXI4Bundle(p)
     val data = new AXI4Bundle(p)
   })
 
-  val ifu = Module(new IFU)
+  val ifu = Module(new IFU(resetPc))
   val idu = Module(new IDU)
   val exu = Module(new EXU)
   val lsu = Module(new LSU)

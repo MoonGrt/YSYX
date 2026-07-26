@@ -8,12 +8,17 @@
 #include <device/mmio.h>
 #include <csignal>
 
-#ifdef CONFIG_CORE_RVMINI
-#include "VMiniRVTOP.h"
-VMiniRVTOP *top = new VMiniRVTOP;
-#elif  CONFIG_CORE_RV32E
-#include "VRiscv32ETOP.h"
-VRiscv32ETOP *top = new VRiscv32ETOP;
+#ifndef CONFIG_SOC
+  #ifdef CONFIG_CORE_RVMINI
+  #include "VMiniRVTop.h"
+  VMiniRVTop *top = new VMiniRVTop;
+  #elif  CONFIG_CORE_RV32E
+  #include "VRiscv32ETop.h"
+  VRiscv32ETop *top = new VRiscv32ETop;
+  #endif
+#else
+#include "VysyxSoCTop.h"
+VysyxSoCTop *top = new VysyxSoCTop;
 #endif
 
 #if defined(CONFIG_WAVE_ABSOLUTE) || defined(CONFIG_WAVE_RELATIVE)
@@ -101,11 +106,19 @@ extern "C" {
       }
     }
   }
-  void flash_read(int addr, int data) {
-
+  void flash_read(int32_t addr, int32_t *data) {
+#ifndef CONFIG_SOC
+    assert(0);
+#endif
+    assert(0);
   }
-  void mrom_read(int raddr, int rdata) {
-
+  void mrom_read(int32_t addr, int32_t *data) {
+#ifndef CONFIG_SOC
+    assert(0);
+#endif
+    // *data = 0x00100073;  // ebreak
+    *data = dpi_paddr_read(addr);
+    // printf("0x%08x\n", (unsigned int)(*data));
   }
   void dpi_diffpc(int pc, int npc, int inst) {
     static bool skip_mmio_commit = false;

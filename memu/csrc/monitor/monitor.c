@@ -34,12 +34,14 @@ static void welcome() {
 #if defined(CONFIG_NEMU)
   printf("[MEMU] Welcome to %s-MEMU-nemu!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
 #elif defined(CONFIG_NPC)
+#ifndef CONFIG_SOC
 #ifdef CONFIG_CORE_RVMINI
 #define CORE "minirv"
 #elif  CONFIG_CORE_RV32E
 #define CORE "riscv32e"
-#elif  CONFIG_CORE_riscv32
-#elif  CONFIG_CORE_riscv64
+#endif
+#else
+#define CORE "ysyxsoc"
 #endif
   printf("[MEMU] Welcome to %s-MEMU-npc-%s!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED), CORE);
 #endif
@@ -74,43 +76,6 @@ static long load_img(const char *img_file) {
   fclose(fp);
   return size;
 }
-
-// #include <elf.h>
-// static long load_img(const char *elf_file) {
-//   if (elf_file == NULL) {
-//     Log("No image is given. Use the default build-in image.");
-//     return 4096;
-//   }
-//   FILE *fp = fopen(elf_file, "rb");
-//   Assert(fp, "Can not open '%s'", elf_file);
-//   Elf32_Ehdr eh;
-//   Assert(fread(&eh, 1, sizeof(eh), fp) == sizeof(eh),
-//       "Bad ELF header");
-//   Assert(!memcmp(eh.e_ident, ELFMAG, SELFMAG),
-//       "Not an ELF file");
-//   Assert(eh.e_ident[EI_CLASS] == ELFCLASS32,
-//       "Only ELF32 is supported");
-//   long max_addr = RESET_VECTOR;
-//   for (int i = 0; i < eh.e_phnum; i++) {
-//     Elf32_Phdr ph;
-//     fseek(fp, eh.e_phoff + i * sizeof(ph), SEEK_SET);
-//     Assert(fread(&ph, 1, sizeof(ph), fp) == sizeof(ph),
-//         "Bad program header");
-//     if (ph.p_type != PT_LOAD || ph.p_memsz == 0)
-//       continue;
-//     uint8_t *dst = guest_to_host(ph.p_paddr);
-//     fseek(fp, ph.p_offset, SEEK_SET);
-//     Assert(fread(dst, 1, ph.p_filesz, fp) == ph.p_filesz,
-//         "Load segment failed");
-//     memset(dst + ph.p_filesz, 0, ph.p_memsz - ph.p_filesz);
-//     if (ph.p_paddr + ph.p_memsz > max_addr)
-//       max_addr = ph.p_paddr + ph.p_memsz;
-//   }
-//   fclose(fp);
-//   long size = max_addr - RESET_VECTOR;
-//   Log("The image is %s, size = %ld", elf_file, size);
-//   return size;
-// }
 
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {

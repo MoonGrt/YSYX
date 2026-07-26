@@ -185,18 +185,18 @@ class DBusBridge(p: AxiParams) extends Module {
       wDone := true.B
     }
     // ---------------- Finish ----------------
-    when(awDone && wDone) {
-      state := sIdle
+    when((awDone || axi.aw.fire) && (wDone || axi.w.fire)) {
+      state := sWriteResp
     }
   }
 
   // ----------------------------------------------------------------
   // Write Response
   // ----------------------------------------------------------------
-  axi.b.ready := true.B
   when(state === sWriteResp) {
     dbus.resp.valid := axi.b.valid
     dbus.resp.bits.rdata := 0.U
+    axi.b.ready := dbus.resp.ready
     when(axi.b.fire) {
       state := sIdle
     }
@@ -206,7 +206,10 @@ class DBusBridge(p: AxiParams) extends Module {
 // ---------------------------
 // Riscv32E CPU
 // ---------------------------
-class Riscv32E(p: AxiParams) extends Module {
+class Riscv32E(
+  p: AxiParams,
+  resetPc: BigInt = 0x80000000L
+) extends Module {
   val io = IO(new Bundle {
     val inst = if (memBusType == BusType.AXI) {
         new AXI4MasterBundle(p)
@@ -222,7 +225,7 @@ class Riscv32E(p: AxiParams) extends Module {
   dontTouch(io.inst)
   dontTouch(io.data)
   // Modules
-  val ifu = Module(new IFU)
+  val ifu = Module(new IFU(resetPc))
   val idu = Module(new IDU)
   val exu = Module(new EXU)
   val lsu = Module(new LSU)
@@ -251,8 +254,7 @@ class Riscv32E(p: AxiParams) extends Module {
 // ---------------------------
 // Riscv32E TOP = CPU + ROM + RAM
 // ---------------------------
-class Riscv32ETOP extends Module {
-
+class Riscv32ETop(resetPc: BigInt = 0x80000000L) extends Module {
   private val masterPort = AXI4MasterPortParameters(
     masters = Seq(AXI4MasterParameters(name = "cpu_master", id = IdRange(0, 4)))
   )
@@ -283,14 +285,15 @@ class Riscv32ETOP extends Module {
 
   // Core. Both choices share the same simulation peripherals; only the AXI
   // implementation at the CPU boundary changes.
-  val cpuCustom = if (axiPackage == AxiPackage.Custom) Some(Module(new Riscv32E(p))) else None
+  val cpuCustom = if (axiPackage == AxiPackage.Custom)
+    Some(Module(new Riscv32E(p, resetPc = resetPc))) else None
   val rcParams = RCAXI4BundleParameters(
     addrBits = p.addrBits,
     dataBits = p.dataBits,
     idBits = p.idBits
   )
   val cpuRocket = if (axiPackage == AxiPackage.RocketChip)
-    Some(Module(new Riscv32ERocketChip(rcParams))) else None
+    Some(Module(new Riscv32ERocketChip(rcParams, resetPc = resetPc))) else None
   val rcInstAdapter = cpuRocket.map(_ => Module(new RCToCustomAXI(rcParams, p)))
   val rcDataAdapter = cpuRocket.map(_ => Module(new RCToCustomAXI(rcParams, p)))
   // SRAM

@@ -8,7 +8,7 @@ ifeq ($(CONFIG_WAVE_FST),y)
 VERILATOR_CFLAGS += --trace-fst
 endif
 VERILATOR_CFLAGS += -cc -MMD -cc -O3 --x-assign fast --x-initial fast \
-                    --timescale "1ns/1ns" --no-timing \
+                    --timescale "1ns/1ns" --no-timing --autoflush \
                     -CFLAGS -ggdb -LDFLAGS -ggdb -j 8
 VERILATOR_CFLAGS += -I$(MEMU_HOME)/vsrc/perip/uart16550/rtl
 VERILATOR_CFLAGS += -I$(MEMU_HOME)/vsrc/perip/spi/rtl
@@ -21,15 +21,21 @@ PRJ        := chisel
 SCALA_DIR  := $(PRJ)/src
 SCALA_SRCS := $(shell find $(SCALA_DIR) -name "*.scala")
 
-ifeq ($(CONFIG_CORE_MINIRV),y)
-TOP := MiniRV
-endif
-ifeq ($(CONFIG_CORE_RV32E),y)
-TOP := Riscv32E
+ifeq ($(CONFIG_SOC),y)
+	ifeq ($(CONFIG_CORE_RV32E),y)
+	TOP := ysyxSoC
+	endif
+else
+	ifeq ($(CONFIG_CORE_MINIRV),y)
+	TOP := MiniRV
+	endif
+	ifeq ($(CONFIG_CORE_RV32E),y)
+	TOP := Riscv32E
+	endif
 endif
 
 CONFIG    := .config
-VTOP      := $(TOP)TOP
+VTOP      := $(TOP)Top
 RTL_OBJS  := $(RTL_DIR)/$(VTOP).sv
 RTL_FINAL := $(RTL_DIR)/$(VTOP).v
 VSRCS      = $(RTL_FINAL) \

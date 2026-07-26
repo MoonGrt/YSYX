@@ -9,6 +9,11 @@ config NPC
   bool "NPC: Proxy Core"
 endchoice
 
+config SOC
+  depends on NPC
+  bool "Enable SOC"
+  default n
+
 choice
   prompt "Base ISA"
   default ISA_riscv

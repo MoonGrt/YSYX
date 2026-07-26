@@ -9,8 +9,8 @@ AM_SRCS := platform/memu/trm.c \
 
 CFLAGS    += -fdata-sections -ffunction-sections
 CFLAGS    += -I$(AM_HOME)/am/src/platform/memu/include
-LDSCRIPTS += $(AM_HOME)/scripts/linker.ld
-LDFLAGS   += --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
+LDSCRIPTS += $(AM_HOME)/scripts/linker-ysyxsoc.ld
+LDFLAGS   += --defsym=_pmem_start=0x20000000 --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start
 MEMUFLAGS += --log=$(shell dirname $(IMAGE).elf)/memu-log.txt
 MEMUFLAGS += --ftrace=$(shell dirname $(IMAGE).elf)/memu-ftrace.txt
@@ -28,6 +28,28 @@ image: image-dep
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
+# Build only the application's _start entry, without AM or its linker script.
+BARE_IMAGE  := $(WORK_DIR)/build/$(NAME)-bare
+BARE_ELF    := $(BARE_IMAGE).elf
+BARE_BIN    := $(BARE_IMAGE).bin
+BARE_CFLAGS := -DBARE_METAL -Os -nostdlib -nostartfiles -ffreestanding \
+               -march=rv32e_zicsr -mabi=ilp32e
+BARE_LDFLAGS := -Wl,-Ttext=0x20000000 -Wl,-e,_start
+
+bare:
+	@mkdir -p $(WORK_DIR)/build
+	$(CC) $(BARE_CFLAGS) $(BARE_LDFLAGS) $(realpath $(SRCS)) -o $(BARE_ELF)
+	$(OBJCOPY) -j .text -O binary $(BARE_ELF) $(BARE_BIN)
+	$(OBJCOPY) -O ihex $(BARE_ELF) $(BARE_IMAGE).hex
+	$(OBJCOPY) -O verilog $(BARE_ELF) $(BARE_IMAGE).v
+	$(OBJDUMP) -d -M no-aliases -S $(BARE_ELF) > $(BARE_IMAGE).s
+	od -An -v -w4 -t x4 $(BARE_BIN) | tr -d ' ' > $(BARE_IMAGE).memhex
+
+bare-run: bare
+	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) run \
+		IMG=$(BARE_BIN) \
+		ARGS="--log=$(BARE_IMAGE)-memu-log.txt --ftrace=$(BARE_IMAGE)-memu-ftrace.txt --elf=$(BARE_ELF)"
+
 run: insert-arg
 	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) run ARGS="$(MEMUFLAGS)" IMG=$(IMAGE).bin
 
@@ -40,4 +62,4 @@ wave: run
 gdb: insert-arg
 	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) gdb ARGS="$(MEMUFLAGS)" IMG=$(IMAGE).bin
 
-.PHONY: insert-arg
+.PHONY: insert-arg bare bare-run

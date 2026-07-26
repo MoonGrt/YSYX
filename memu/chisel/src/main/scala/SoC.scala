@@ -17,20 +17,47 @@ import soc.perip._
 object AXI4SlaveNodeGenerator {
   def apply(params: Option[MasterPortParams], address: Seq[AddressSet])(implicit valName: ValName) =
     AXI4SlaveNode(params.map(p => AXI4SlavePortParameters(
-        slaves = Seq(AXI4SlaveParameters(
-          address       = address,
-          executable    = p.executable,
-          supportsWrite = TransferSizes(1, p.maxXferBytes),
-          supportsRead  = TransferSizes(1, p.maxXferBytes))),
-        beatBytes = p.beatBytes
-      )).toSeq)
+      slaves = Seq(AXI4SlaveParameters(
+        address       = address,
+        executable    = p.executable,
+        supportsWrite = TransferSizes(1, p.maxXferBytes),
+        supportsRead  = TransferSizes(1, p.maxXferBytes))),
+      beatBytes = p.beatBytes
+    )).toSeq)
 }
 
-class ysyxSoCASIC(implicit p: Parameters) extends LazyModule {
-  val xbar = AXI4Xbar()
+/** Pass-through AXI node that fails fast on requests outside the downstream map. */
+class AXI4AddressMonitor(implicit p: Parameters) extends LazyModule {
+  val node = AXI4IdentityNode()
+  override lazy val module = new Impl
+  class Impl extends LazyModuleImp(this) {
+    (node.in zip node.out).foreach { case ((in, _), (out, edgeOut)) =>
+      out <> in
+      val mappedAddresses =
+        edgeOut.slave.slaves.flatMap(_.address)
+      def isMapped(address: UInt): Bool =
+        mappedAddresses.map(_.contains(address)).reduce(_ || _)
+      when(in.ar.valid) {
+        assert(isMapped(in.ar.bits.addr),
+          cf"Illegal AXI read address 0x${in.ar.bits.addr}%x")
+      }
+      when(in.aw.valid) {
+        assert(isMapped(in.aw.bits.addr),
+          cf"Illegal AXI write address 0x${in.aw.bits.addr}%x")
+      }
+    }
+  }
+}
+
+class ysyxSoCASIC(resetPc: BigInt = 0x20000000L)(implicit p: Parameters) extends LazyModule {
+  val xbar1 = AXI4Xbar()
   val xbar2 = AXI4Xbar()
   val apbxbar = LazyModule(new APBFanout).node
-  val cpu = LazyModule(new CPU(idBits = ChipLinkParam.idBits))
+  val cpu = LazyModule(new CPU(
+    idBits = ChipLinkParam.idBits,
+    resetPc = resetPc
+  ))
+  val addressMonitor = LazyModule(new AXI4AddressMonitor)
   val chipMaster = if (Config.hasChipLink) Some(LazyModule(new ChipLinkMaster)) else None
   val chiplinkNode = if (Config.hasChipLink) Some(AXI4SlaveNodeGenerator(p(ExtBus), ChipLinkParam.allSpace)) else None
 
@@ -51,19 +78,30 @@ class ysyxSoCASIC(implicit p: Parameters) extends LazyModule {
   val lsdram_axi = if ( Config.sdramUseAXI) Some(LazyModule(new AXI4SDRAM(sdramAddressSet))) else None
 
   List(lspi.node, luart.node, lpsram.node, lgpio.node, lkeyboard.node, lvga.node).map(_ := apbxbar)
-  List(apbxbar := APBDelayer() := AXI4ToAPB() := AXI4Buffer(), lmrom.node, sramNode).map(_ := xbar2)
-  xbar2 := AXI4UserYanker(Some(1)) := AXI4Fragmenter() := xbar
-  if (Config.sdramUseAXI) lsdram_axi.get.node := soc.util.AXI4Delayer() := xbar
+  List(
+    apbxbar := APBDelayer() := AXI4ToAPB() := AXI4Buffer(),
+    lmrom.node
+  ).map(_ := xbar2)
+  sramNode := AXI4Buffer() := xbar2
+  xbar2 := AXI4UserYanker(Some(1)) := AXI4Fragmenter() := xbar1
+  if (Config.sdramUseAXI) lsdram_axi.get.node := soc.util.AXI4Delayer() := xbar1
   else                    lsdram_apb.get.node := apbxbar
-  if (Config.hasChipLink) chiplinkNode.get := xbar
-  xbar :=* cpu.masterNode
+  if (Config.hasChipLink) chiplinkNode.get := xbar1
+  xbar1 :=* addressMonitor.node
+  addressMonitor.node :=* cpu.masterNode
 
   override lazy val module = new Impl
   class Impl extends LazyModuleImp(this) with DontTouch {
     // generate delayed reset for cpu, since chiplink should finish reset
     // to initialize some async modules before accept any requests from cpu
-    cpu.module.reset := SynchronizerShiftReg(reset.asBool, 10) || reset.asBool
-
+    // cpu.module.reset := SynchronizerShiftReg(reset.asBool, 10) || reset.asBool
+    val resetPipe = RegInit("b1111111111".U(10.W))
+    when(reset.asBool) {
+      resetPipe := "b1111111111".U
+    }.otherwise {
+      resetPipe := Cat(resetPipe(8, 0), false.B)
+    }
+    cpu.module.reset := reset.asBool || resetPipe.orR
     val fpga_io = if (Config.hasChipLink) Some(IO(chiselTypeOf(chipMaster.get.module.fpga_io))) else None
     if (Config.hasChipLink) {
       // connect chiplink slave interface to crossbar
@@ -150,4 +188,23 @@ class ysyxSoCFull(implicit p: Parameters) extends LazyModule {
     externalPins.vga <> masic.vga
     externalPins.uart <> masic.uart
   }
+}
+
+
+
+import org.chipsalliance.cde.config.{Parameters, Config}
+import freechips.rocketchip.system.{Edge32BitConfig, DefaultRV32Config}
+
+object Config {
+  def hasChipLink: Boolean = false
+  def sdramUseAXI: Boolean = false
+}
+
+class ysyxSoCTop extends Module {
+  implicit val config: Parameters = new Config(new Edge32BitConfig ++ new DefaultRV32Config)
+  val io = IO(new Bundle {})
+  val dut = LazyModule(new ysyxSoCFull)
+  val mdut = Module(dut.module)
+  mdut.dontTouchPorts()
+  mdut.externalPins := DontCare
 }

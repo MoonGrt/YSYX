@@ -156,8 +156,8 @@ class BaseRAM(
   if (useDpi) {
     // DPI memory backend
     val mem = Module(new DpiMem)
-    mem.io.ren   := ren
-    mem.io.wen   := wen
+    mem.io.ren   := fire && ren
+    mem.io.wen   := fire && wen
     mem.io.mask  := io.req.bits.mask
     mem.io.addr  := io.req.bits.addr
     mem.io.wdata := io.req.bits.wdata
@@ -322,7 +322,7 @@ class AXIRAM(
   // ----------------------------------------------------------------
   val ram = Module(new BaseRAM(useDpi, depth, width))
   ram.io.req.valid := false.B
-  ram.io.req.bits  := DontCare
+  ram.io.req.bits  := 0.U.asTypeOf(ram.io.req.bits)
   ram.io.resp.ready := true.B
 
   // ----------------------------------------------------------------

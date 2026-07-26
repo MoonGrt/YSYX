@@ -43,15 +43,21 @@ class LSU extends Module {
   private val sIdle :: sWait :: Nil = Enum(2)
   val state = RegInit(sIdle)
   dontTouch(io.in.ready)
-  state := MuxLookup(state, sIdle)(List(
-    sIdle -> Mux(io.dbus.req.bits.ren, sWait, sIdle),
-    sWait -> Mux(io.out.fire, sIdle, sWait),
-  ))
-  io.dbus.req.valid := (state === sIdle) && dbus_req
-  io.dbus.resp.ready := io.out.ready
-  io.in.ready := (state === sIdle)
+  io.dbus.req.valid := !reset.asBool && (state === sIdle) && dbus_req
+  io.dbus.resp.ready := (state === sWait) && io.out.ready
+  io.in.ready :=
+    Mux(state === sIdle, !dbus_req && io.out.ready,
+      io.dbus.resp.valid && io.out.ready)
   io.out.valid :=
-    (~dbus_req && io.dbus.resp.fire) || ((state === sIdle) && io.in.valid)
+    Mux(state === sIdle, io.in.valid && !dbus_req,
+      io.dbus.resp.valid)
+
+  when(state === sIdle && io.dbus.req.fire) {
+    state := sWait
+  }
+  when(state === sWait && io.dbus.resp.fire) {
+    state := sIdle
+  }
   // -----------------------------------------------
   // -------------------- Logic --------------------
   // -----------------------------------------------

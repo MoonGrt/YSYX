@@ -1000,7 +1000,60 @@ Total  time: 137964.751 ms
 
 > nangate45 工艺下主频为  → microbench 需要运行 . (仿真花费了 137964.751 ms)
 
+#### 避免握手的死锁和活锁
+
+- 发送方不能等待 `ready` 才拉高 `valid`。
+- `valid` 拉高后，在 `valid && ready` 握手前必须保持为高，负载也必须稳定。
+- 接收方可以等待 `valid` 再拉高 `ready`，也可以提前拉高；为降低延迟通常提前拉高。
+- 只有 `valid && ready` 同周期为高才算传输完成，双方才能更新状态。
+
+因此，死锁由“双方互等”避免，活锁由“发送方不得在握手前撤销 `valid`”避免。
+
 ### B2 SoC计算机系统
+
+#### char-test：裸机与 AM
+
+讲义中的裸机版本直接提供 `_start()`，写两次 UART 后死循环：
+
+```c
+void _start() {
+  *(volatile char *)0x10000000 = 'A';
+  *(volatile char *)0x10000000 = '\n';
+  while (1);
+}
+```
+
+```bash
+make bare
+```
+
+它没有函数调用、栈和全局数据，只需把代码放入 MROM `0x20000000`，因此不需要
+SRAM 链接脚本。
+
+AM 版本提供 `main()`，执行路径为：
+
+```text
+_start -> 初始化 sp -> _trm_init -> main -> halt
+```
+
+```bash
+make ARCH=riscv32e-ysyxsoc run
+```
+
+AM 暴露了裸机版本没有覆盖的问题：
+
+- 旧 `linker.ld` 把栈放到 `0x20009000`，首次压栈访问未映射的
+  `0x20008ffc`，AXI 无响应；专用链接脚本应把栈放入
+  `0x0f000000–0x0f001fff` 的 SRAM。
+- 日志虽然最后显示 UART 的 `sb`，真正阻塞的可能是更早的栈写；日志出现指令
+  不代表指令已经退休。
+- AM 会产生更多 store，要求 LSU 只在 `valid && ready` 握手后退休，否则栈写
+  或 UART 写会丢失。
+- AM 平台的入口、栈和设备地址都必须符合 ysyxSoC 地址图。
+
+裸机 char-test 只能验证 MROM 取指和 UART 通路；AM char-test 才会继续验证链接
+脚本、SRAM 栈、运行时和总线背压。
+
 ### B3 时序分析和优化
 ### B4 性能优化和简易缓存
 ### B5 流水线处理器

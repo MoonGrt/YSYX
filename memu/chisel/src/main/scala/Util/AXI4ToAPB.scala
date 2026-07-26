@@ -46,16 +46,11 @@ class AXI4ToAPB(val aFlow: Boolean = true)(implicit p: Parameters) extends LazyM
     (node.in zip node.out) foreach { case ((in, edgeIn), (out, edgeOut)) =>
       val (ar, r, aw, w, b) = (in.ar, in.r, in.aw, in.w, in.b)
 
-      val s_idle :: s_inflight :: s_wait_rready_bready :: Nil = Enum(3)
-      val state = RegInit(s_idle)
-      val accept_read = (state === s_idle) && ar.valid
-      val accept_write = !accept_read && (state === s_idle) && aw.valid && w.valid
-      val is_write = accept_write holdUnless (state === s_idle)
-      switch (state) {
-        is (s_idle)     { state := Mux(ar.valid || (aw.valid && w.valid), s_inflight, s_idle) }
-        is (s_inflight) { state := Mux(out.pready, Mux(r.fire || b.fire, s_idle, s_wait_rready_bready), s_inflight) }
-        is (s_wait_rready_bready) { state := Mux(r.fire || b.fire, s_idle, s_wait_rready_bready) }
-      }
+      val sIdle :: sSetup :: sAccess :: sResponse :: Nil = Enum(4)
+      val state = RegInit(sIdle)
+      val isWrite = RegInit(false.B)
+      val awHeld = RegInit(false.B)
+      val wHeld = RegInit(false.B)
 
       // burst is not supported
       assert(!(ar.valid && ar.bits.len =/= 0.U))
@@ -64,36 +59,78 @@ class AXI4ToAPB(val aFlow: Boolean = true)(implicit p: Parameters) extends LazyM
       assert(!(ar.valid && ar.bits.size > "b10".U))
       assert(!(aw.valid && aw.bits.size > "b10".U))
 
-      val rid_reg    = RegEnable(ar.bits.id, accept_read)
-      val bid_reg    = RegEnable(aw.bits.id, accept_write)
-      val araddr_reg = ar.bits.addr holdUnless accept_read
-      val awaddr_reg = aw.bits.addr holdUnless accept_write
-      val wdata_reg  =  w.bits.data holdUnless accept_write
-      val wstrb_reg  =  w.bits.strb holdUnless accept_write
+      val ridReg = Reg(ar.bits.id.cloneType)
+      val bidReg = Reg(aw.bits.id.cloneType)
+      val araddrReg = RegInit(0.U(ar.bits.addr.getWidth.W))
+      val awaddrReg = RegInit(0.U(aw.bits.addr.getWidth.W))
+      val wdataReg = RegInit(0.U(w.bits.data.getWidth.W))
+      val wstrbReg = RegInit(0.U(w.bits.strb.getWidth.W))
+      val rdataReg = RegInit(0.U(out.prdata.getWidth.W))
+      val respReg = RegInit(AXI4Parameters.RESP_OKAY)
 
-      out.psel    := (accept_read || accept_write) || out.penable
-      out.penable := state === s_inflight
-      out.pwrite  := is_write
-      out.paddr   := Mux(is_write, awaddr_reg, araddr_reg)
+      val canRead = state === sIdle && !awHeld && !wHeld
+      ar.ready := canRead
+      val takeRead = ar.fire
+      val readSelected = canRead && ar.valid
+      aw.ready := state === sIdle && !awHeld && !readSelected
+      w.ready := state === sIdle && !wHeld && !readSelected
+
+      when(state === sIdle) {
+        when(takeRead) {
+          ridReg := ar.bits.id
+          araddrReg := ar.bits.addr
+          isWrite := false.B
+          state := sSetup
+        }.otherwise {
+          when(aw.fire) {
+            bidReg := aw.bits.id
+            awaddrReg := aw.bits.addr
+            awHeld := true.B
+          }
+          when(w.fire) {
+            wdataReg := w.bits.data
+            wstrbReg := w.bits.strb
+            wHeld := true.B
+          }
+          when((awHeld || aw.fire) && (wHeld || w.fire)) {
+            isWrite := true.B
+            awHeld := false.B
+            wHeld := false.B
+            state := sSetup
+          }
+        }
+      }
+
+      when(state === sSetup) {
+        state := sAccess
+      }
+      when(state === sAccess && out.pready) {
+        rdataReg := out.prdata
+        respReg := Mux(out.pslverr,
+          AXI4Parameters.RESP_SLVERR, AXI4Parameters.RESP_OKAY)
+        state := sResponse
+      }
+      when(state === sResponse && (r.fire || b.fire)) {
+        state := sIdle
+      }
+
+      out.psel    := state === sSetup || state === sAccess
+      out.penable := state === sAccess
+      out.pwrite  := isWrite
+      out.paddr   := Mux(isWrite, awaddrReg, araddrReg)
       out.pprot   := APBParameters.PROT_DEFAULT
-      out.pwdata  := wdata_reg
-      out.pstrb   := Mux(is_write, wstrb_reg, 0.U)
+      out.pwdata  := wdataReg
+      out.pstrb   := Mux(isWrite, wstrbReg, 0.U)
 
-      ar.ready := accept_read
-      w.ready  := accept_write
-      aw.ready := accept_write
-
-      val resp = Mux(out.pslverr, AXI4Parameters.RESP_SLVERR, AXI4Parameters.RESP_OKAY)
-      val resp_hold = resp holdUnless (state === s_inflight)
-      r.valid  := !is_write && (((state === s_inflight) && out.pready) || (state === s_wait_rready_bready))
-      r.bits.data := Fill(2, out.prdata holdUnless (state === s_inflight))
-      r.bits.id   := rid_reg
-      r.bits.resp := resp_hold
+      r.valid  := state === sResponse && !isWrite
+      r.bits.data := rdataReg
+      r.bits.id   := ridReg
+      r.bits.resp := respReg
       r.bits.last := true.B
 
-      b.valid  := is_write && (((state === s_inflight) && out.pready) || (state === s_wait_rready_bready))
-      b.bits.resp := resp_hold
-      b.bits.id   := bid_reg
+      b.valid  := state === sResponse && isWrite
+      b.bits.resp := respReg
+      b.bits.id   := bidReg
     }
   }
 }

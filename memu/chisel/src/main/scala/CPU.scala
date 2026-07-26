@@ -26,11 +26,16 @@ class ysyx_00000000 extends BlackBox {
   })
 }
 
-class CPU(idBits: Int)(implicit p: Parameters) extends LazyModule {
+class CPU(
+  idBits: Int,
+  resetPc: BigInt = 0x80000000L
+)(implicit p: Parameters) extends LazyModule {
   private def master(name: String) = AXI4MasterPortParameters(
     masters = Seq(AXI4MasterParameters(
       name = name,
-      id   = IdRange(0, 1 << idBits))))
+      id   = IdRange(0, 1 << idBits))
+    )
+  )
 
   val masterNode = AXI4MasterNode(Seq(
     master("riscv32e-ibus"),
@@ -43,7 +48,10 @@ class CPU(idBits: Int)(implicit p: Parameters) extends LazyModule {
     val interrupt = IO(Input(Bool()))
     val slave = IO(Flipped(AXI4Bundle(CPUAXI4BundleParameters())))
 
-    val cpu = Module(new Riscv32ERocketChip(CPUAXI4BundleParameters()))
+    val cpu = Module(new Riscv32ERocketChip(
+      CPUAXI4BundleParameters(),
+      resetPc = resetPc
+    ))
     cpu.io.inst <> inst
     cpu.io.data <> data
     slave := DontCare

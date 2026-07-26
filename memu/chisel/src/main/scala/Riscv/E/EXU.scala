@@ -82,7 +82,7 @@ class EXU extends Module {
   // -------------------- Output -------------------
   // -----------------------------------------------
   io.out.bits.aluData := aluout
-  io.br.valid         := io.br.ready
+  io.br.valid         := io.out.valid
   io.br.bits.bren     := bren
   io.br.bits.braddr   := braddr
   // pass through

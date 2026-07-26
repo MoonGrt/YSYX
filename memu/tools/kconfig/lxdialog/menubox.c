@@ -185,7 +185,7 @@ do_resize:
 
 	height -= 4;
 	width  -= 5;
-	menu_height = height - 10;
+	menu_height = height - 8;
 
 	max_choice = MIN(menu_height, item_count());
 
