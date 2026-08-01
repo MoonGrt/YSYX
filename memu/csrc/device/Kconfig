@@ -1,9 +1,11 @@
 menuconfig DEVICE
-  depends on !TARGET_SHARE
-  bool "Devices"
+  depends on !TARGET_SHARE && !SOC
+  bool "MEMU software devices"
   default y
   help
-    Provide device support for MEMU.
+    Provide host-side MMIO device models for NEMU and non-SoC NPC.
+    SoC peripherals are implemented as RTL modules and do not use these
+    software device models.
 
 if DEVICE
 

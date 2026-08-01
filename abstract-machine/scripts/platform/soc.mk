@@ -2,13 +2,23 @@ AM_SRCS := platform/soc/trm.c \
            platform/soc/ioe/ioe.c \
            platform/soc/mpe.c
 
-CFLAGS    += -fdata-sections -ffunction-sections
-CFLAGS    += -I$(AM_HOME)/am/src/platform/soc/include
+CFLAGS += -fdata-sections -ffunction-sections
+CFLAGS += -I$(AM_HOME)/am/src/platform/soc/include
+
+ifeq ($(SOC_LOAD),sram)
+LDSCRIPTS += $(AM_HOME)/scripts/linker-soc-sram.ld
+else ifeq ($(SOC_LOAD),psram)
+LDSCRIPTS += $(AM_HOME)/scripts/linker-soc-psram.ld
+else ifeq ($(SOC_LOAD),sdram)
+LDSCRIPTS += $(AM_HOME)/scripts/linker-soc-sdram.ld
+else
 LDSCRIPTS += $(AM_HOME)/scripts/linker-soc.ld
+endif
+
 SOC_BOOT_ADDR := $(shell sed -n 's/^CONFIG_MBASE_SOC=//p' $(MEMU_HOME)/.config 2>/dev/null)
 SOC_BOOT_ADDR := $(if $(SOC_BOOT_ADDR),$(SOC_BOOT_ADDR),0x30000000)
-LDFLAGS   += --defsym=_pmem_start=$(SOC_BOOT_ADDR) --defsym=_entry_offset=0x0
-LDFLAGS   += --gc-sections -e _start
+LDFLAGS += --defsym=_pmem_start=$(SOC_BOOT_ADDR) --defsym=_entry_offset=0x0
+LDFLAGS += --gc-sections -e _start
 MEMUFLAGS += --log=$(shell dirname $(IMAGE).elf)/memu-log.txt
 MEMUFLAGS += --ftrace=$(shell dirname $(IMAGE).elf)/memu-ftrace.txt
 MEMUFLAGS += --elf=$(IMAGE).elf

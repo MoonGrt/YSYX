@@ -210,12 +210,24 @@ TRM 的处理流程：
 - 当前 `FAST_FLASH` XIP 使用 DPI 快速读模型，功能等价但不反映真实 SPI
   状态机延迟；软件 SPI 测试仍经过完整的 SPI master 和 Flash 引脚模型。
 
+### 存储密度更大的随机存储器
+
+- PSRAM 实现 `EBh` Quad IO Read 和 `38h` Quad IO Write，容量为 4 MiB；字节写地址需要结合 `PSTRB` 恢复。
+- PSRAM 控制器复位后先以单线发送 `35h` 进入 QPI；后续命令、地址和数据均以四线传输。上层地址映射和软件接口不变。
+- 可通过 `SOC_LOAD=psram` 将程序由 Flash 经 SRAM 中的二级加载器搬到 PSRAM。
+- 从 PSRAM 执行时需关闭当前 NEMU difftest；参考模型未映射 `0x80000000`。PSRAM 自测也不能覆写正在执行的同一地址区间。
+- RT-Thread 的 `.data.extra/.bss.extra` 已纳入 SoC 链接与 bootloader 范围，可从 PSRAM 启动并进入 `msh`。
+- SDRAM 模型支持 ACTIVE、READ、WRITE、PRECHARGE、AUTO REFRESH 和 LOAD MODE，容量为 32 MiB；使用 `SOC_LOAD=sdram` 运行程序。
+- 行为模型不模拟电容漏电，因此 PRECHARGE 和 AUTO REFRESH 可以简化；ACTIVE 仍用于记录各 bank 的当前行。
+- SDRAM 已用两个 x16 颗粒并联扩展为 x32：命令和地址共用，`DQ[15:0]`/`DQM[1:0]` 连接低位颗粒，`DQ[31:16]`/`DQM[3:2]` 连接高位颗粒。
+- 控制器使用 BL=1，一条 READ/WRITE 命令直接传输 32 位，不再用 BL=2 分两拍拼接半字；映射仍保留为 32 MiB，未实现后续的字扩展。
+- `make -C memu/tests/perip/sdram32 test` 验证单命令读写、两个颗粒的数据分配和字节写掩码；SoC 的 SDRAM 测试也通过。
+
+### 链接器、启动代码与 Bootloader
+
+链接脚本、`start.S` 及 FSBL/SSBL 的完整分析已整理到
+[SoC 链接脚本、启动代码与 Bootloader](linker-boot.md)。
+
 ## B3 时序分析和优化
 ## B4 性能优化和简易缓存
 ## B5 流水线处理器
-
-
-
-
-
-

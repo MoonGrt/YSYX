@@ -60,6 +60,12 @@ module EF_PSRAM_CTRL_wb (
     wire        mw_wr;
     wire        mw_done;
 
+    wire        init_done;
+    wire        init_sck;
+    wire        init_ce_n;
+    wire [3:0]  init_dout;
+    wire        init_doe;
+
     //wire        doe;
 
     // WB Control Signals
@@ -79,7 +85,7 @@ module EF_PSRAM_CTRL_wb (
     always @* begin
         case(state)
             ST_IDLE :
-                if(wb_valid)
+                if(wb_valid && init_done)
                     nstate = ST_WAIT;
                 else
                     nstate = ST_IDLE;
@@ -118,17 +124,25 @@ module EF_PSRAM_CTRL_wb (
 
     wire [31:0] wdata = {byte3, byte2, byte1, byte0};
 
-    /*
     wire [1:0]  waddr = (size==1 && sel_i[0]==1) ? 2'b00 :
                         (size==1 && sel_i[1]==1) ? 2'b01 :
                         (size==1 && sel_i[2]==1) ? 2'b10 :
                         (size==1 && sel_i[3]==1) ? 2'b11 :
                         (size==2 && sel_i[2]==1) ? 2'b10 :
                         2'b00;
-                      */
 
-    assign mr_rd    = ( (state==ST_IDLE ) & wb_re );
-    assign mw_wr    = ( (state==ST_IDLE ) & wb_we );
+    assign mr_rd    = ( (state==ST_IDLE ) & wb_re & init_done );
+    assign mw_wr    = ( (state==ST_IDLE ) & wb_we & init_done );
+
+    PSRAM_QPI_INIT INIT (
+        .clk(clk_i),
+        .rst_n(~rst_i),
+        .done(init_done),
+        .sck(init_sck),
+        .ce_n(init_ce_n),
+        .dout(init_dout),
+        .douten(init_doe)
+    );
 
     PSRAM_READER MR (
         .clk(clk_i),
@@ -149,7 +163,7 @@ module EF_PSRAM_CTRL_wb (
     PSRAM_WRITER MW (
         .clk(clk_i),
         .rst_n(~rst_i),
-        .addr({adr_i[23:0]}),
+        .addr({adr_i[23:2], waddr}),
         .wr(mw_wr),
         .size(size),
         .done(mw_done),
@@ -161,12 +175,13 @@ module EF_PSRAM_CTRL_wb (
         .douten(mw_doe)
     );
 
-    assign sck  = wb_we ? mw_sck  : mr_sck;
-    assign ce_n = wb_we ? mw_ce_n : mr_ce_n;
-    assign dout = wb_we ? mw_dout : mr_dout;
-    assign douten  = wb_we ? {4{mw_doe}}  : {4{mr_doe}};
+    assign sck  = !init_done ? init_sck  : (wb_we ? mw_sck  : mr_sck);
+    assign ce_n = !init_done ? init_ce_n : (wb_we ? mw_ce_n : mr_ce_n);
+    assign dout = !init_done ? init_dout : (wb_we ? mw_dout : mr_dout);
+    assign douten = !init_done ? {3'b000, init_doe} :
+                    (wb_we ? {4{mw_doe}} : {4{mr_doe}});
 
     assign mw_din = din;
     assign mr_din = din;
-    assign ack_o = wb_we ? mw_done :mr_done ;
+    assign ack_o = init_done && (wb_we ? mw_done : mr_done);
 endmodule

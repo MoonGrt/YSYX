@@ -1,21 +1,50 @@
+diff --git a/bsp/abstract-machine/Makefile b/bsp/abstract-machine/Makefile
+index 8d70f31..e16f55b 100644
+--- a/bsp/abstract-machine/Makefile
++++ b/bsp/abstract-machine/Makefile
+@@ -8,7 +8,11 @@ NAME = rtthread
+ SRCS = $(shell find src -name "*.c")
+ CFLAGS += -DHAVE_CCONFIG_H -D__RTTHREAD__
+ CFLAGS += -Wno-nonnull-compare
++ifeq ($(ARCH),riscv32e-soc)
++LDFLAGS += -T extra-soc.ld
++else
+ LDFLAGS += -T extra.ld
++endif
+ -include $(FILE_MK)
+ -include $(AM_APPS_MK)
+ include $(AM_HOME)/Makefile
 diff --git a/bsp/abstract-machine/integrate-am-apps.py b/bsp/abstract-machine/integrate-am-apps.py
 index 8968df3..fb077ba 100644
 --- a/bsp/abstract-machine/integrate-am-apps.py
 +++ b/bsp/abstract-machine/integrate-am-apps.py
-@@ -8 +8,4 @@ AM_HOME = Path(os.environ["AM_HOME"])
+@@ -5,13 +5,16 @@ from pathlib import Path
+ 
+ # global settings
+ AM_HOME = Path(os.environ["AM_HOME"])
 -AM_KERNELS_HOME = (AM_HOME / ".." / "am-kernels").resolve()
 +YSYX_HOME = Path(os.environ.get("YSYX_HOME", AM_HOME / "..")).resolve()
 +AM_KERNELS_HOME = Path(
 +  os.environ.get("AM_TEST_HOME", YSYX_HOME / "am-kernels")
 +).resolve()
-@@ -14 +17 @@ app_dir_list = [
+ app_dir_list = [
+   AM_KERNELS_HOME / "kernels" / "hello",
+   AM_KERNELS_HOME / "benchmarks" / "microbench",
+   AM_KERNELS_HOME / "kernels" / "typing-game",
+   AM_KERNELS_HOME / "kernels" / "snake",
 -  AM_KERNELS_HOME / ".." / "fceux-am",
 +  YSYX_HOME / "thirdpartys" / "fceux-am",
+ ]
+ 
+ if len(sys.argv) != 3:
 diff --git a/bsp/abstract-machine/src/context.c b/bsp/abstract-machine/src/context.c
 index ee38829..5b02da5 100644
 --- a/bsp/abstract-machine/src/context.c
 +++ b/bsp/abstract-machine/src/context.c
-@@ -5 +5,30 @@
+@@ -2,30 +2,109 @@
+ #include <klib.h>
+ #include <rtthread.h>
+ 
 -static Context* ev_handler(Event e, Context *c) {
 +/* =======================
 + * 线程上下文切换参数
@@ -47,7 +76,7 @@ index ee38829..5b02da5 100644
 + * AM 事件处理
 + * ======================= */
 +static Context* ev_handler(Event e, Context* c) {
-@@ -7 +36,14 @@ static Context* ev_handler(Event e, Context *c) {
+   switch (e.event) {
 -    default: printf("Unhandled event ID = %d\n", e.event); assert(0);
 +    case EVENT_YIELD: {
 +      rt_thread_t current = rt_thread_self();
@@ -63,15 +92,21 @@ index ee38829..5b02da5 100644
 +    default:
 +      printf("Unhandled event ID = %d\n", e.event);
 +      assert(0);
-@@ -11,0 +54,3 @@ static Context* ev_handler(Event e, Context *c) {
+   }
+   return c;
+ }
+ 
 +/* =======================
 + * CTE 初始化
 + * ======================= */
-@@ -15,0 +61,3 @@ void __am_cte_init() {
+ void __am_cte_init() {
+   cte_init(ev_handler);
+ }
+ 
 +/* =======================
 + * 切换到新线程（无 from）
 + * ======================= */
-@@ -17 +65,8 @@ void rt_hw_context_switch_to(rt_ubase_t to) {
+ void rt_hw_context_switch_to(rt_ubase_t to) {
 -  assert(0);
 +  rt_thread_t current = rt_thread_self();
 +  ctx_switch_ud_t ud;
@@ -81,11 +116,12 @@ index ee38829..5b02da5 100644
 +  current->user_data = (rt_ubase_t)&ud;
 +  yield();
 +  current->user_data = old_ud;
-@@ -19,0 +75,3 @@ void rt_hw_context_switch_to(rt_ubase_t to) {
+ }
+ 
 +/* =======================
 + * 线程间上下文切换
 + * ======================= */
-@@ -21 +79,8 @@ void rt_hw_context_switch(rt_ubase_t from, rt_ubase_t to) {
+ void rt_hw_context_switch(rt_ubase_t from, rt_ubase_t to) {
 -  assert(0);
 +  rt_thread_t current = rt_thread_self();
 +  ctx_switch_ud_t ud;
@@ -95,11 +131,15 @@ index ee38829..5b02da5 100644
 +  current->user_data = (rt_ubase_t)&ud;
 +  yield();
 +  current->user_data = old_ud;
-@@ -23,0 +89,3 @@ void rt_hw_context_switch(rt_ubase_t from, rt_ubase_t to) {
+ }
+ 
 +/* =======================
 + * 中断上下文切换（未实现）
 + * ======================= */
-@@ -28,3 +96,14 @@ void rt_hw_context_switch_interrupt(void *context, rt_ubase_t from, rt_ubase_t t
+ void rt_hw_context_switch_interrupt(void *context, rt_ubase_t from, rt_ubase_t to, struct rt_thread *to_thread) {
+   assert(0);
+ }
+ 
 -rt_uint8_t *rt_hw_stack_init(void *tentry, void *parameter, rt_uint8_t *stack_addr, void *texit) {
 -  assert(0);
 -  return NULL;
@@ -117,13 +157,23 @@ index ee38829..5b02da5 100644
 +  Area stack_area = {.end = (rt_uint8_t*)stack_addr};  // 设置栈区域
 +  rt_uint8_t* c = (rt_uint8_t*)kcontext(stack_area, (void*)context_wrapper, args);
 +  return c;
+ }
 diff --git a/bsp/abstract-machine/src/uart.c b/bsp/abstract-machine/src/uart.c
 index e4eb866..bea380e 100644
 --- a/bsp/abstract-machine/src/uart.c
 +++ b/bsp/abstract-machine/src/uart.c
-@@ -13,0 +14 @@
+@@ -11,6 +11,7 @@
+ #include <rtthread.h>
+ #include <am.h>
+ #include <klib.h>
 +#include <klib-macros.h>
-@@ -38,0 +40,40 @@ static int _uart_putc(struct rt_serial_device *serial, char c) {
+ 
+ #define UART_DEFAULT_BAUDRATE 115200
+ 
+@@ -36,9 +37,73 @@ static int _uart_putc(struct rt_serial_device *serial, char c) {
+   return 1;
+ }
+ 
 +#define AM_KEY_CHAR_MAP(key, normal, shifted) \
 +  case AM_KEY_##key: return shift ? (shifted) : (normal);
 +
@@ -164,7 +214,7 @@ index e4eb866..bea380e 100644
 +  _(SLASH, '/', '?')
 +
 +static bool has_uart, has_kbd;
-@@ -40,2 +81,26 @@ static int _uart_getc(struct rt_serial_device *serial) {
+ static int _uart_getc(struct rt_serial_device *serial) {
 -  static const char *p = "help\ndate\nversion\nfree\nps\npwd\nls\nmemtrace\nmemcheck\nutest_list\n";
 -  return (*p != '\0' ? *(p ++) : -1);
 +  /* 0 自动脚本 */
@@ -193,14 +243,85 @@ index e4eb866..bea380e 100644
 +    }
 +  }
 +  return -1;
-@@ -55,0 +121,3 @@ int rt_hw_uart_init(void) {
+ }
+ 
+ const struct rt_uart_ops _uart_ops = {
+@@ -53,6 +118,9 @@ const struct rt_uart_ops _uart_ops = {
+  * UART Initiation
+  */
+ int rt_hw_uart_init(void) {
 +  has_uart = io_read(AM_UART_CONFIG).present;
 +  has_kbd  = io_read(AM_INPUT_CONFIG).present;
 +
+   struct rt_serial_device *serial;
+   struct device_uart *uart;
+   struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
 diff --git a/components/finsh/msh.c b/components/finsh/msh.c
 index a63e34d..afdb0e4 100644
 --- a/components/finsh/msh.c
 +++ b/components/finsh/msh.c
-@@ -742 +742 @@ void msh_auto_complete(char *prefix)
+@@ -739,7 +739,7 @@ void msh_auto_complete(char *prefix)
+         {
+             /* skip finsh shell function */
+             cmd_name = (const char *) index->name;
 -            if (strncmp(prefix, cmd_name, strlen(prefix)) == 0)
 +            if (rt_strncmp(prefix, cmd_name, strlen(prefix)) == 0)
+             {
+                 if (min_length == 0)
+                 {
+diff --git a/bsp/abstract-machine/extra-soc.ld b/bsp/abstract-machine/extra-soc.ld
+new file mode 100644
+index 0000000..d268f65
+--- /dev/null
++++ b/bsp/abstract-machine/extra-soc.ld
+@@ -0,0 +1,50 @@
++SECTIONS {
++  .data.extra ADDR(.rodata) + SIZEOF(.rodata) :
++      AT(LOADADDR(.rodata) + SIZEOF(.rodata)) {
++    /* section information for finsh shell */
++    __fsymtab_start = .;
++    KEEP(*(FSymTab))
++    __fsymtab_end = .;
++    . = ALIGN(8);
++    __vsymtab_start = .;
++    KEEP(*(VSymTab))
++    __vsymtab_end = .;
++    . = ALIGN(8);
++
++    /* section information for initial. */
++    . = ALIGN(8);
++    __rt_init_start = .;
++    KEEP(*(SORT(.rti_fn*)))
++    __rt_init_end = .;
++    . = ALIGN(8);
++
++    __rt_utest_tc_tab_start = .;
++    KEEP(*(UtestTcTab))
++    __rt_utest_tc_tab_end = .;
++
++    . = ALIGN(8);
++    __am_apps_data_start = .;
++    *(__am_apps.data*)
++    *(__am_apps.sdata*)
++    __am_apps_data_end = .;
++    . = ALIGN(8);
++  }
++  _data_extra_vma_end = ADDR(.data.extra) + SIZEOF(.data.extra);
++  _data_extra_load_end = LOADADDR(.data.extra) + SIZEOF(.data.extra);
++}
++INSERT BEFORE .data;
++
++SECTIONS {
++  .bss.extra ADDR(.data) + SIZEOF(.data) (NOLOAD) : {
++    . = ALIGN(8);
++    __am_apps_bss_start = .;
++    *(__am_apps.bss*)
++    *(__am_apps.sbss*)
++    *(__am_apps.scommon*)
++    __am_apps_bss_end = .;
++    . = ALIGN(8);
++  }
++  _bss_extra_start = ADDR(.bss.extra);
++  _bss_extra_vma_end = ADDR(.bss.extra) + SIZEOF(.bss.extra);
++}
++INSERT BEFORE .bss;
