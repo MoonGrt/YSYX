@@ -8,6 +8,9 @@ object Parameters {
   object AxiPackage extends Enumeration {
     val Custom, RocketChip = Value
   }
+  object BootSource extends Enumeration {
+    val MROM, Flash = Value
+  }
   // MiniRV Parameters
   object MiniRV {
     // Basic
@@ -25,8 +28,20 @@ object Parameters {
     val CSRWidth  = 12
     // Mem
     val memBusType  = BusType.AXI
-    // Custom: standalone MEMU/NPC top; RocketChip: diplomacy-based ysyxSoC.
+    // Custom: standalone MEMU/NPC top; RocketChip: diplomacy-based SoC.
     val axiPackage  = AxiPackage.RocketChip
+    // rtl.mk derives this environment variable from menuconfig so that the
+    // RTL reset vector and the simulator memory map always change together.
+    val bootSource = sys.env.get("MEMU_SOC_BOOT") match {
+      case Some("mrom")  => BootSource.MROM
+      case Some("flash") | None => BootSource.Flash
+      case Some(value) =>
+        throw new IllegalArgumentException(s"unknown MEMU_SOC_BOOT=$value")
+    }
+    val bootAddress = bootSource match {
+      case BootSource.MROM  => BigInt("20000000", 16)
+      case BootSource.Flash => BigInt("30000000", 16)
+    }
     val memUseDpi   = true
     val memDelayCfg = MemDelayConfig(
       enable = false,

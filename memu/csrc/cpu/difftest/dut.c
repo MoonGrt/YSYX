@@ -29,10 +29,12 @@ void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 
 static bool is_skip_ref = false;
 static int skip_dut_nr_inst = 0;
+static bool difftest_enabled = false;
 
 // this is used to let ref skip instructions which
 // can not produce consistent behavior with MEMU
 void difftest_skip_ref() {
+  if (!difftest_enabled) return;
   is_skip_ref = true;
   // If such an instruction is one of the instruction packing in QEMU
   // (see below), we end the process of catching up with QEMU's pc to
@@ -51,13 +53,18 @@ void difftest_skip_ref() {
 //   Let REF run `nr_ref` instructions first.
 //   We expect that DUT will catch up with REF within `nr_dut` instructions.
 void difftest_skip_dut(int nr_ref, int nr_dut) {
+  if (!difftest_enabled) return;
   skip_dut_nr_inst += nr_dut;
   while (nr_ref -- > 0)
     ref_difftest_exec(1);
 }
 
 void init_difftest(char *ref_so_file, long img_size, int port) {
-  assert(ref_so_file != NULL);
+  if (ref_so_file == NULL) {
+    Log("Differential testing: %s", ANSI_FMT("OFF", ANSI_FG_YELLOW));
+    return;
+  }
+  difftest_enabled = true;
 
   void *handle;
   handle = dlopen(ref_so_file, RTLD_LAZY);
@@ -95,6 +102,7 @@ static void checkregs(CPU_state *ref, vaddr_t pc) {
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
 void difftest_step() {
+  if (!difftest_enabled) return;
   CPU_state ref;
   if (skip_dut_nr_inst > 0) {
     ref_difftest_regcpy(&ref, DIFFTEST_TO_DUT);

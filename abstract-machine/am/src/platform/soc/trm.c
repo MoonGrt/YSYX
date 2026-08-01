@@ -1,5 +1,6 @@
 #include <am.h>
-#include <ysyxsoc.h>
+#include <klib.h>
+#include <soc.h>
 
 extern char _heap_start;
 int main(const char *args);
@@ -42,11 +43,25 @@ int getch(void) {
 }
 
 void halt(int code) {
-  ysyxsoc_trap(code);
+  soc_trap(code);
   while (1);
+}
+
+static inline void csr_info() {
+  int vendor, arch;
+  asm volatile("csrr %0, mvendorid" : "=r"(vendor));
+  asm volatile("csrr %0, marchid"   : "=r"(arch));
+  char vendor_str[5];
+  for(int i = 0; i < 4; i++)
+    vendor_str[i] = (vendor >> (24 - 8*i)) & 0xFF;
+  vendor_str[4] = '\0';
+  printf("-----------------\n");
+  printf("\"%s\" - %u\n", vendor_str, arch);
+  printf("-----------------\n");
 }
 
 void _trm_init(void) {
   uart_init();
+  // csr_info();
   halt(main(mainargs));
 }

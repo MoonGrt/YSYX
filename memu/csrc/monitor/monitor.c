@@ -41,7 +41,7 @@ static void welcome() {
 #define CORE "riscv32e"
 #endif
 #else
-#define CORE "ysyxsoc"
+#define CORE "soc"
 #endif
   printf("[MEMU] Welcome to %s-MEMU-npc-%s!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED), CORE);
 #endif
@@ -128,6 +128,10 @@ void init_monitor(int argc, char *argv[]) {
   init_isa();
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img(img_file);
+#ifdef CONFIG_SOC
+  extern void init_flash(const char *img_file);
+  init_flash(img_file);
+#endif
   /* Initialize differential testing. */
   init_difftest(diff_so_file, img_size, difftest_port);
   /* Initialize the simple debugger. */

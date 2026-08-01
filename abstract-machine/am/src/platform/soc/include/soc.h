@@ -1,5 +1,5 @@
-#ifndef YSYXSOC_H__
-#define YSYXSOC_H__
+#ifndef SOC_H__
+#define SOC_H__
 
 #include <klib-macros.h>
 #include ISA_H
@@ -11,12 +11,12 @@
 #define SRAM_END   0x0f002000u
 #define UART_BASE  0x10000000u
 
-#define YSYXSOC_PADDR_SPACE \
+#define SOC_PADDR_SPACE \
   RANGE(MROM_BASE, MROM_END), \
   RANGE(SRAM_BASE, SRAM_END), \
   RANGE(UART_BASE, UART_BASE + 0x1000)
 
-#define ysyxsoc_trap(code) \
+#define soc_trap(code) \
   asm volatile("mv a0, %0; ebreak" : : "r"(code))
 
 typedef uintptr_t PTE;

@@ -14,7 +14,7 @@ void unprotect(AddrSpace *as) {
 }
 
 void map(AddrSpace *as, void *va, void *pa, int prot) {
-  panic("ysyxSoC VME is not implemented");
+  panic("SoC VME is not implemented");
 }
 
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {

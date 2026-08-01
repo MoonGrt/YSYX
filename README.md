@@ -14,7 +14,7 @@
 | `misc/` | 零散测试、MiniRV 工程和本地补丁 |
 | `docs/` | 文档、学习记录和参考资料 |
 
-原 README 中的阶段学习记录已迁移至 [`docs/notes.md`](docs/notes.md)。
+原 README 中的阶段学习记录已按阶段整理至 [`docs/note/`](docs/note/README.md)。
 
 ## 获取项目
 

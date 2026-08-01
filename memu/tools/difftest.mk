@@ -20,12 +20,16 @@ MKFLAGS = GUEST_ISA=$(GUEST_ISA) SHARE=1 ENGINE=interpreter
 ARGS_DIFF = --diff=$(DIFF_REF_SO)
 
 ifdef CONFIG_SOC
-# ysyxSoC boots from MROM at 0x20000000, but its programs also use SRAM at
+# SoC boots from flash at 0x30000000, but its programs also use SRAM at
 # 0x0f000000.  Give the reference model one sparse-on-demand host mapping that
 # covers both architectural regions.
 DIFF_MBASE = 0x0f000000
-DIFF_MSIZE = 0x19000000
+DIFF_MSIZE = 0x31000000
+ifeq ($(CONFIG_SOC_BOOT_MROM),y)
 DIFF_RESET_OFFSET = 0x11000000
+else
+DIFF_RESET_OFFSET = 0x21000000
+endif
 else
 DIFF_MBASE = $(CONFIG_MBASE)
 DIFF_MSIZE = $(CONFIG_MSIZE)

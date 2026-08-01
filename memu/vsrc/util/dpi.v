@@ -63,6 +63,18 @@ module DpiDiffCSRBB (
   always @(*) dpi_diffcsr(csr);
 endmodule
 
+import "DPI-C" function void dpi_diffmem(
+  input int addr, input byte mask, input int wdata
+);
+module DpiDiffMemBB (
+  input clk, en,
+  input [31:0] addr,
+  input [3:0] mask,
+  input [31:0] wdata
+);
+  always @(posedge clk) if (en) dpi_diffmem(addr, {4'b0, mask}, wdata);
+endmodule
+
 // UART
 import "DPI-C" function void dpi_diffskip();
 module UART(

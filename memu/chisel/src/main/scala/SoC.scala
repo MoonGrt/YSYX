@@ -13,6 +13,7 @@ import freechips.rocketchip.system.SimAXIMem
 
 import soc.util._
 import soc.perip._
+import soc.riscv.Parameters.{BootSource, Riscv32E}
 
 object AXI4SlaveNodeGenerator {
   def apply(params: Option[MasterPortParams], address: Seq[AddressSet])(implicit valName: ValName) =
@@ -49,7 +50,7 @@ class AXI4AddressMonitor(implicit p: Parameters) extends LazyModule {
   }
 }
 
-class ysyxSoCASIC(resetPc: BigInt = 0x20000000L)(implicit p: Parameters) extends LazyModule {
+class SoCASIC(resetPc: BigInt = Riscv32E.bootAddress)(implicit p: Parameters) extends LazyModule {
   val xbar1 = AXI4Xbar()
   val xbar2 = AXI4Xbar()
   val apbxbar = LazyModule(new APBFanout).node
@@ -69,8 +70,10 @@ class ysyxSoCASIC(resetPc: BigInt = 0x20000000L)(implicit p: Parameters) extends
     AddressSet.misaligned(0x10001000, 0x1000) ++   // SPI controller
     AddressSet.misaligned(0x30000000, 0x10000000)  // XIP flash
   ))
+  val lmrom = if (Riscv32E.bootSource == BootSource.MROM)
+    Some(LazyModule(new AXI4MROM(AddressSet.misaligned(0x20000000L, 0x1000))))
+  else None
   val lpsram = LazyModule(new APBPSRAM(AddressSet.misaligned(0x80000000L, 0x400000)))
-  val lmrom = LazyModule(new AXI4MROM(AddressSet.misaligned(0x20000000, 0x1000)))
   val sramNode = AXI4RAM(AddressSet.misaligned(0x0f000000, 0x2000).head, false, true, 4, None, Nil, false)
 
   val sdramAddressSet = AddressSet.misaligned(0xa0000000L, 0x2000000)
@@ -78,11 +81,9 @@ class ysyxSoCASIC(resetPc: BigInt = 0x20000000L)(implicit p: Parameters) extends
   val lsdram_axi = if ( Config.sdramUseAXI) Some(LazyModule(new AXI4SDRAM(sdramAddressSet))) else None
 
   List(lspi.node, luart.node, lpsram.node, lgpio.node, lkeyboard.node, lvga.node).map(_ := apbxbar)
-  List(
-    apbxbar := APBDelayer() := AXI4ToAPB() := AXI4Buffer(),
-    lmrom.node
-  ).map(_ := xbar2)
+  apbxbar := APBDelayer() := AXI4ToAPB() := AXI4Buffer() := xbar2
   sramNode := AXI4Buffer() := xbar2
+  lmrom.foreach { mrom => mrom.node := AXI4Buffer() := xbar2 }
   xbar2 := AXI4UserYanker(Some(1)) := AXI4Fragmenter() := xbar1
   if (Config.sdramUseAXI) lsdram_axi.get.node := soc.util.AXI4Delayer() := xbar1
   else                    lsdram_apb.get.node := apbxbar
@@ -138,17 +139,17 @@ class ysyxSoCASIC(resetPc: BigInt = 0x20000000L)(implicit p: Parameters) extends
   }
 }
 
-class ysyxSoCFPGA(implicit p: Parameters) extends ChipLinkSlave
+class SoCFPGA(implicit p: Parameters) extends ChipLinkSlave
 
-class ysyxSoCTop(implicit p: Parameters) extends LazyModule {
-  val asic = LazyModule(new ysyxSoCASIC)
+class SoCTop(implicit p: Parameters) extends LazyModule {
+  val asic = LazyModule(new SoCASIC)
   ElaborationArtefacts.add("graphml", graphML)
 
   override lazy val module = new Impl
   class Impl extends LazyModuleImp(this) with DontTouch {
     val masic = asic.module
     if (Config.hasChipLink) {
-      val fpga = LazyModule(new ysyxSoCFPGA)
+      val fpga = LazyModule(new SoCFPGA)
       val mfpga = Module(fpga.module)
       masic.dontTouchPorts()
       masic.fpga_io.get.b2c <> mfpga.fpga_io.c2b

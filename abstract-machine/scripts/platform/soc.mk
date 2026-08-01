@@ -1,11 +1,13 @@
-AM_SRCS := platform/ysyxsoc/trm.c \
-           platform/ysyxsoc/ioe/ioe.c \
-           platform/ysyxsoc/mpe.c
+AM_SRCS := platform/soc/trm.c \
+           platform/soc/ioe/ioe.c \
+           platform/soc/mpe.c
 
 CFLAGS    += -fdata-sections -ffunction-sections
-CFLAGS    += -I$(AM_HOME)/am/src/platform/ysyxsoc/include
-LDSCRIPTS += $(AM_HOME)/scripts/linker-ysyxsoc.ld
-LDFLAGS   += --defsym=_pmem_start=0x20000000 --defsym=_entry_offset=0x0
+CFLAGS    += -I$(AM_HOME)/am/src/platform/soc/include
+LDSCRIPTS += $(AM_HOME)/scripts/linker-soc.ld
+SOC_BOOT_ADDR := $(shell sed -n 's/^CONFIG_MBASE_SOC=//p' $(MEMU_HOME)/.config 2>/dev/null)
+SOC_BOOT_ADDR := $(if $(SOC_BOOT_ADDR),$(SOC_BOOT_ADDR),0x30000000)
+LDFLAGS   += --defsym=_pmem_start=$(SOC_BOOT_ADDR) --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start
 MEMUFLAGS += --log=$(shell dirname $(IMAGE).elf)/memu-log.txt
 MEMUFLAGS += --ftrace=$(shell dirname $(IMAGE).elf)/memu-ftrace.txt
@@ -46,7 +48,7 @@ bare-run: bare
 		ARGS="--log=$(BARE_IMAGE)-memu-log.txt --ftrace=$(BARE_IMAGE)-memu-ftrace.txt --elf=$(BARE_ELF)"
 
 run: insert-arg
-	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) run ARGS="$(MEMUFLAGS)" IMG=$(IMAGE).bin
+	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) NO_DIFF=$(NO_DIFF) run ARGS="$(MEMUFLAGS)" IMG=$(IMAGE).bin
 
 run-sdb: insert-arg
 	$(MAKE) -C $(MEMU_HOME) ISA=$(ISA) run-sdb ARGS="$(MEMUFLAGS)" IMG=$(IMAGE).bin

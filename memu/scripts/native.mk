@@ -24,13 +24,16 @@ $(BINARY):: compile_git
 # Some convenient rules
 
 override ARGS ?= --log=$(BUILD_DIR)/memu-log.txt --ftrace=$(BUILD_DIR)/memu-ftrace.txt
+ifneq ($(NO_DIFF),1)
 override ARGS += $(ARGS_DIFF)
+RUN_DIFF_DEPS := $(DIFF_REF_SO)
+endif
 
 # Command to execute MEMU
 IMG ?=
 MEMU_EXEC := $(BINARY) $(ARGS)
 
-run-env: $(BINARY) $(DIFF_REF_SO)
+run-env: $(BINARY) $(RUN_DIFF_DEPS)
 
 run: run-env
 	$(call git_commit, "run MEMU batch mode")

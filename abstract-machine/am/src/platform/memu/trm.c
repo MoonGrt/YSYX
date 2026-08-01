@@ -21,7 +21,7 @@ void halt(int code) {
   while (1);
 }
 
-static inline void _csr_info() {
+static inline void csr_info() {
   int vendor, arch;
   asm volatile("csrr %0, mvendorid" : "=r"(vendor));
   asm volatile("csrr %0, marchid"   : "=r"(arch));
@@ -35,7 +35,7 @@ static inline void _csr_info() {
 }
 
 void _trm_init() {
-  // _csr_info();
+  // csr_info();
   int ret = main(mainargs);
   halt(ret);
 }

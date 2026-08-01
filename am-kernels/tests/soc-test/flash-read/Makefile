@@ -1,4 +1,4 @@
-NAME = mem
-SRCS = mem.c
+NAME = flash
+SRCS = flash.c
 export ARCH ?= riscv32e-soc
 include $(AM_HOME)/Makefile

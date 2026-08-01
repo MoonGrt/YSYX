@@ -1,5 +1,6 @@
 GTKWAVE   ?= gtkwave
 VERILATOR ?= verilator
+MILL_JOBS ?= $(BUILD_JOBS)
 
 ifeq ($(CONFIG_WAVE_VCD),y)
 VERILATOR_CFLAGS += --trace
@@ -9,7 +10,7 @@ VERILATOR_CFLAGS += --trace-fst
 endif
 VERILATOR_CFLAGS += -cc -MMD -cc -O3 --x-assign fast --x-initial fast \
                     --timescale "1ns/1ns" --no-timing --autoflush \
-                    -CFLAGS -ggdb -LDFLAGS -ggdb -j 8
+                    -CFLAGS -ggdb -LDFLAGS -ggdb -j $(BUILD_JOBS)
 VERILATOR_CFLAGS += -I$(MEMU_HOME)/vsrc/perip/uart16550/rtl
 VERILATOR_CFLAGS += -I$(MEMU_HOME)/vsrc/perip/spi/rtl
 
@@ -23,7 +24,7 @@ SCALA_SRCS := $(shell find $(SCALA_DIR) -name "*.scala")
 
 ifeq ($(CONFIG_SOC),y)
 	ifeq ($(CONFIG_CORE_RV32E),y)
-	TOP := ysyxSoC
+	TOP := SoC
 	endif
 else
 	ifeq ($(CONFIG_CORE_MINIRV),y)
@@ -43,6 +44,17 @@ VSRCS      = $(RTL_FINAL) \
 VLIB      := $(VBUILD)/libV$(VTOP).a
 WAVE_FILE := $(BUILD_DIR)/wave.vcd
 
+ifeq ($(CONFIG_SOC_BOOT_MROM),y)
+SOC_BOOT := mrom
+else
+SOC_BOOT := flash
+endif
+
+# exec.cc includes the Verilator-generated top header.  This dependency is
+# required once the C/C++ objects and RTL library are allowed to build in
+# parallel.
+$(OBJ_DIR)/csrc/core/riscv32/exec.o: $(VLIB)
+
 VROOT    := /usr/local/share/verilator
 INC_PATH += $(VROOT)/include
 INC_PATH += $(VROOT)/include/vltstd
@@ -53,7 +65,7 @@ INC_PATH += $(VBUILD)
 FIRTOOL_VERSION = 1.105.0
 FIRTOOL_PATCH_DIR = $(MEMU_HOME)/scripts/firtool
 
-$(RTL_FINAL): $(SCALA_SRCS)
+$(RTL_FINAL): $(SCALA_SRCS) $(CONFIG)
 	$(call git_commit, "generate verilog")
 	@echo "+ CHISEL  (scala -> verilog)"
 	@mkdir -p $(RTL_DIR)
@@ -63,9 +75,9 @@ ifeq ($(ENABLE_FIRTOOL_PATCH),y)
 	@$(MEMU_HOME)/scripts/firtool-patch.sh \
 		$(FIRTOOL_VERSION) $(FIRTOOL_PATCH_DIR)
 	CHISEL_FIRTOOL_PATH=$(FIRTOOL_PATCH_DIR)/firtool-$(FIRTOOL_VERSION)/bin \
-	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
+	MEMU_SOC_BOOT=$(SOC_BOOT) mill -i --jobs $(MILL_JOBS) $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 else
-	mill -i $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
+	MEMU_SOC_BOOT=$(SOC_BOOT) mill -i --jobs $(MILL_JOBS) $(PRJ).runMain $(VTOP) --target-dir $(RTL_DIR)
 endif
 	@echo "+ SV2V"
 	@mv $(RTL_OBJS) $@

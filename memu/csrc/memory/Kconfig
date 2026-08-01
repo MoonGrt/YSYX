@@ -5,10 +5,22 @@ config MBASE_NOSOC
   depends on !SOC
   default 0x80000000
 
-config MBASE_SOC
-  hex "SOC memory base address"
+choice
   depends on SOC
-  default 0x20000000
+  prompt "SoC boot source"
+  default SOC_BOOT_FLASH
+
+config SOC_BOOT_MROM
+  bool "MROM (0x20000000)"
+
+config SOC_BOOT_FLASH
+  bool "SPI flash XIP (0x30000000)"
+endchoice
+
+config MBASE_SOC
+  hex
+  default 0x20000000 if SOC_BOOT_MROM
+  default 0x30000000 if SOC_BOOT_FLASH
 
 config MBASE
   hex

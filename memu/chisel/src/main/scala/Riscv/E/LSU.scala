@@ -94,6 +94,16 @@ class LSU extends Module {
   val isUart = memAddr(31, 12) === "h10000".U
   io.dbus.req.bits.addr  := Mux(isUart, memAddr, memAddrAlign)
   io.dbus.req.bits.wdata := wdataShift
+  // The SoC SRAM is implemented inside the RTL, so its writes do not pass
+  // through dpi_paddr_write(). Mirror committed write requests to the
+  // difftest reference memory explicitly.
+  val diffmem = Module(new soc.util.DpiDiffMemBB)
+  diffmem.io.clk := clock
+  diffmem.io.en := io.dbus.req.fire && wen &&
+    (memAddrAlign >= "h0f000000".U) && (memAddrAlign < "h0f002000".U)
+  diffmem.io.addr := memAddrAlign
+  diffmem.io.mask := mask
+  diffmem.io.wdata := wdataShift
   // -----------------------------------------------
   // -------------------- Output -------------------
   // -----------------------------------------------

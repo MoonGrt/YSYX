@@ -17,8 +17,8 @@
   VRiscv32ETop *top = new VRiscv32ETop;
   #endif
 #else
-#include "VysyxSoCTop.h"
-VysyxSoCTop *top = new VysyxSoCTop;
+#include "VSoCTop.h"
+VSoCTop *top = new VSoCTop;
 #endif
 
 #if defined(CONFIG_WAVE_ABSOLUTE) || defined(CONFIG_WAVE_RELATIVE)
@@ -49,6 +49,9 @@ bool wave_enable() {
 LightSSS *lightsss = new LightSSS;
 bool have_initial_fork = false;
 #endif
+
+static constexpr size_t FLASH_SIZE = 16 * 1024 * 1024;
+static uint8_t flash_mem[FLASH_SIZE];
 
 extern "C" {
   static bool resync_after_mmio_commit = false;
@@ -120,7 +123,42 @@ extern "C" {
 #ifndef CONFIG_SOC
     assert(0);
 #endif
-    assert(0);
+    uint32_t offset = (uint32_t)addr & 0x00ffffffu;
+    if (offset > FLASH_SIZE - sizeof(*data)) {
+      fprintf(stderr, "flash read out of bounds: 0x%08x\n", (uint32_t)addr);
+      abort();
+    }
+    memcpy(data, flash_mem + offset, sizeof(*data));
+  }
+  void init_flash(const char *img_file) {
+    memset(flash_mem, 0xff, sizeof(flash_mem));
+    if (img_file == nullptr) {
+      // init_isa() has already installed the built-in test image in pmem.
+      // The SoC fetches through the flash model, so mirror the same image
+      // there when `make run` is invoked without IMG.
+      memcpy(flash_mem, guest_to_host(RESET_VECTOR), 4096);
+      return;
+    }
+    FILE *fp = fopen(img_file, "rb");
+    if (fp == nullptr) {
+      fprintf(stderr, "Can not open flash image '%s'\n", img_file);
+      abort();
+    }
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+    if (size < 0 || (size_t)size > FLASH_SIZE) {
+      fprintf(stderr, "flash image is too large: %ld bytes\n", size);
+      abort();
+    }
+    fseek(fp, 0, SEEK_SET);
+    size_t nr = fread(flash_mem, 1, size, fp);
+    if (nr != (size_t)size) {
+      fprintf(stderr, "failed to load flash image '%s'\n", img_file);
+      abort();
+    }
+    fclose(fp);
+    printf("Flash image loaded at [0x30000000, 0x%08x]\n",
+        0x30000000u + (uint32_t)(size == 0 ? 0 : size - 1));
   }
   void mrom_read(int32_t addr, int32_t *data) {
 #ifndef CONFIG_SOC
@@ -149,7 +187,8 @@ extern "C" {
       word_t addr = rs1 < MUXDEF(CONFIG_RVE, 16, 32)
                       ? cpu.gpr[rs1] + imm : 0;
       bool is_mmio = (addr >= 0xa0000000u && addr <= 0xa0000fffu) ||
-                     (addr >= 0x10000000u && addr <= 0x10000fffu);
+                     (addr >= 0x10000000u && addr <= 0x10001fffu) ||
+                     (addr >= 0x30000000u && addr <= 0x3fffffffu);
       if (is_mmio) {
         IFDEF(CONFIG_DIFFTEST, difftest_skip_ref());
         // dpi_diffpc observes a load before its write-back state is visible
@@ -183,6 +222,17 @@ extern "C" {
     cpu.csr.mcycleh = csr[5];
     cpu.csr.mvendorid = csr[6];
     cpu.csr.marchid = csr[7];
+  }
+  void dpi_diffmem(int addr, char mask, int wdata) {
+#ifdef CONFIG_DIFFTEST
+    if (ref_difftest_memcpy == nullptr) return;
+    for (int i = 0; i < 4; i++) {
+      if ((mask & (1 << i)) == 0) continue;
+      uint8_t data = ((uint32_t)wdata >> (i * 8)) & 0xff;
+      ref_difftest_memcpy((paddr_t)(uint32_t)addr + i, &data, 1,
+                          DIFFTEST_TO_REF);
+    }
+#endif
   }
   void dpi_diffskip(void) {
     IFDEF(CONFIG_DIFFTEST, difftest_skip_ref());

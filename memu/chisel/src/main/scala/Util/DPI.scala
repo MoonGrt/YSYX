@@ -81,6 +81,15 @@ class DpiDiffCSRBB extends BlackBox {
     val csr  = Input(Vec(CSRNum, UInt(DataWidth.W)))
   })
 }
+class DpiDiffMemBB extends BlackBox {
+  val io = IO(new Bundle {
+    val clk   = Input(Clock())
+    val en    = Input(Bool())
+    val addr  = Input(UInt(DataWidth.W))
+    val mask  = Input(UInt(4.W))
+    val wdata = Input(UInt(DataWidth.W))
+  })
+}
 
 // ---------------------------
 // UART

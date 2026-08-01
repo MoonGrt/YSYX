@@ -11,6 +11,6 @@ void _start() {
 void main() {
   *(volatile char *)(UART_BASE + UART_TX) = 'A';
   *(volatile char *)(UART_BASE + UART_TX) = '\n';
-  while (1);
+  // while (1);
 }
 #endif

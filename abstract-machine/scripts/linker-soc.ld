@@ -1,28 +1,28 @@
 ENTRY(_start)
 
 MEMORY {
-  mrom (rx)  : ORIGIN = 0x20000000, LENGTH = 4K
+  boot (rx) : ORIGIN = _pmem_start, LENGTH = 16M
   sram (rwx) : ORIGIN = 0x0f000000, LENGTH = 8K
 }
 
 SECTIONS {
-  . = ORIGIN(mrom);
+  . = ORIGIN(boot);
   .text : {
     *(entry)
     *(.text*)
-  } > mrom AT> mrom
+  } > boot AT> boot
   etext = .;
   _etext = .;
   .rodata : {
     *(.rodata*)
-  } > mrom AT> mrom
+  } > boot AT> boot
 
   .data ORIGIN(sram) : {
     _data_start = .;
     *(.data*)
     *(.sdata*)
     _data_end = .;
-  } > sram AT> mrom
+  } > sram AT> boot
   _data_load_start = LOADADDR(.data);
   edata = .;
   _data = .;
@@ -42,7 +42,7 @@ SECTIONS {
   end = _heap_start;
   _end = _heap_start;
 
-  ASSERT(LOADADDR(.data) + SIZEOF(.data) <= ORIGIN(mrom) + LENGTH(mrom),
-         "MROM image overflow")
+  ASSERT(LOADADDR(.data) + SIZEOF(.data) <= ORIGIN(boot) + LENGTH(boot),
+         "boot image overflow")
   ASSERT(_heap_start <= _stack_top, "SRAM data/BSS overflow")
 }

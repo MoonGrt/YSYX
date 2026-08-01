@@ -34,7 +34,7 @@ void ioe_read(int reg, void *buf) {
       *(AM_NET_CONFIG_T *)buf = (AM_NET_CONFIG_T) { .present = false };
       return;
     default:
-      panic("unsupported ysyxsoc IOE read");
+      panic("unsupported soc IOE read");
   }
 }
 
@@ -43,5 +43,5 @@ void ioe_write(int reg, void *buf) {
     putch(((AM_UART_TX_T *)buf)->data);
     return;
   }
-  panic("unsupported ysyxsoc IOE write");
+  panic("unsupported soc IOE write");
 }
