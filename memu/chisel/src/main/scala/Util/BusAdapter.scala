@@ -6,6 +6,116 @@ import freechips.rocketchip.amba.axi4.{AXI4Bundle, AXI4BundleParameters}
 import soc.perip.mem.{DataBus, DataReq, InstBus}
 import bus.amba.axi.common.{AxiParams, AXI4MasterBundle => CustomAXI4MasterBundle}
 
+/** Merge the instruction and data AXI masters without serializing their read
+  * transactions. The most-significant output ID bit records the source, so an
+  * instruction read and a data read may both remain outstanding. Instruction
+  * accesses are read-only; all write channels belong to the data master. */
+class AXI4NonBlockingMerger(
+  inParams: AXI4BundleParameters,
+  outParams: AXI4BundleParameters
+) extends Module {
+  require(outParams.addrBits == inParams.addrBits)
+  require(outParams.dataBits == inParams.dataBits)
+  require(outParams.idBits == inParams.idBits + 1)
+  require(inParams.requestFields.isEmpty && inParams.responseFields.isEmpty && inParams.echoFields.isEmpty)
+  require(outParams.requestFields.isEmpty && outParams.responseFields.isEmpty && outParams.echoFields.isEmpty)
+
+  val io = IO(new Bundle {
+    val inst = Flipped(new AXI4Bundle(inParams))
+    val data = Flipped(new AXI4Bundle(inParams))
+    val out = new AXI4Bundle(outParams)
+  })
+
+  // Round-robin arbitration only selects the AR channel. Responses are routed
+  // independently using the source bit, so accepting one request does not
+  // block a request from the other master while the first response is pending.
+  val preferData = RegInit(false.B)
+  val arLocked = RegInit(false.B)
+  val lockedData = RegInit(false.B)
+  val candidateData = io.data.ar.valid && (!io.inst.ar.valid || preferData)
+  val selectData = Mux(arLocked, lockedData, candidateData)
+  val selectedAr = Mux(selectData, io.data.ar.bits, io.inst.ar.bits)
+  val selectedValid = Mux(selectData, io.data.ar.valid, io.inst.ar.valid)
+
+  io.out.ar.valid := selectedValid
+  io.inst.ar.ready := io.out.ar.ready && selectedValid && !selectData
+  io.data.ar.ready := io.out.ar.ready && selectedValid && selectData
+  io.out.ar.bits := DontCare
+  io.out.ar.bits.id := Cat(selectData, selectedAr.id)
+  io.out.ar.bits.addr := selectedAr.addr
+  io.out.ar.bits.len := selectedAr.len
+  io.out.ar.bits.size := selectedAr.size
+  io.out.ar.bits.burst := selectedAr.burst
+  io.out.ar.bits.lock := selectedAr.lock
+  io.out.ar.bits.cache := selectedAr.cache
+  io.out.ar.bits.prot := selectedAr.prot
+  io.out.ar.bits.qos := selectedAr.qos
+
+  when(!arLocked && io.out.ar.valid && !io.out.ar.ready) {
+    arLocked := true.B
+    lockedData := selectData
+  }
+  when(io.out.ar.fire) {
+    arLocked := false.B
+    preferData := !selectData
+  }
+
+  val readFromData = io.out.r.bits.id(outParams.idBits - 1)
+  io.inst.r.valid := io.out.r.valid && !readFromData
+  io.data.r.valid := io.out.r.valid && readFromData
+  io.out.r.ready := Mux(readFromData, io.data.r.ready, io.inst.r.ready)
+
+  io.inst.r.bits := DontCare
+  io.inst.r.bits.id := io.out.r.bits.id(inParams.idBits - 1, 0)
+  io.inst.r.bits.data := io.out.r.bits.data
+  io.inst.r.bits.resp := io.out.r.bits.resp
+  io.inst.r.bits.last := io.out.r.bits.last
+
+  io.data.r.bits := DontCare
+  io.data.r.bits.id := io.out.r.bits.id(inParams.idBits - 1, 0)
+  io.data.r.bits.data := io.out.r.bits.data
+  io.data.r.bits.resp := io.out.r.bits.resp
+  io.data.r.bits.last := io.out.r.bits.last
+
+  // The instruction bridge never writes. Keeping the write path dedicated to
+  // DBUS also avoids the AXI4 W-channel ownership queue a general merger needs.
+  io.inst.aw.ready := false.B
+  io.inst.w.ready := false.B
+  io.inst.b.valid := false.B
+  io.inst.b.bits := DontCare
+  assert(!io.inst.aw.valid, "instruction AXI master issued a write address")
+  assert(!io.inst.w.valid, "instruction AXI master issued write data")
+
+  io.out.aw.valid := io.data.aw.valid
+  io.data.aw.ready := io.out.aw.ready
+  io.out.aw.bits := DontCare
+  io.out.aw.bits.id := Cat(true.B, io.data.aw.bits.id)
+  io.out.aw.bits.addr := io.data.aw.bits.addr
+  io.out.aw.bits.len := io.data.aw.bits.len
+  io.out.aw.bits.size := io.data.aw.bits.size
+  io.out.aw.bits.burst := io.data.aw.bits.burst
+  io.out.aw.bits.lock := io.data.aw.bits.lock
+  io.out.aw.bits.cache := io.data.aw.bits.cache
+  io.out.aw.bits.prot := io.data.aw.bits.prot
+  io.out.aw.bits.qos := io.data.aw.bits.qos
+
+  io.out.w.valid := io.data.w.valid
+  io.data.w.ready := io.out.w.ready
+  io.out.w.bits := DontCare
+  io.out.w.bits.data := io.data.w.bits.data
+  io.out.w.bits.strb := io.data.w.bits.strb
+  io.out.w.bits.last := io.data.w.bits.last
+
+  io.data.b.valid := io.out.b.valid
+  io.out.b.ready := io.data.b.ready
+  io.data.b.bits := DontCare
+  io.data.b.bits.id := io.out.b.bits.id(inParams.idBits - 1, 0)
+  io.data.b.bits.resp := io.out.b.bits.resp
+  when(io.out.b.valid) {
+    assert(io.out.b.bits.id(outParams.idBits - 1), "write response returned with an instruction ID")
+  }
+}
+
 /** Instruction-bus adapter using MEMU's standalone AXI4 bundle. */
 class IBusBridge(p: AxiParams) extends Module {
   val axi  = IO(new CustomAXI4MasterBundle(p))

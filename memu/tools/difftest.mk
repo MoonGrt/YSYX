@@ -20,11 +20,12 @@ MKFLAGS = GUEST_ISA=$(GUEST_ISA) SHARE=1 ENGINE=interpreter
 ARGS_DIFF = --diff=$(DIFF_REF_SO)
 
 ifdef CONFIG_SOC
-# SoC boots from flash at 0x30000000, but its programs also use SRAM at
-# 0x0f000000.  Give the reference model one sparse-on-demand host mapping that
-# covers both architectural regions.
-DIFF_MBASE = 0x0f000000
-DIFF_MSIZE = 0x31000000
+# Give the reference model one sparse-on-demand host mapping from SRAM through
+# SDRAM. This also covers the MMIO, flash and PSRAM regions between them; only
+# pages actually touched by the test consume physical host memory.
+DIFF_MBASE = $(CONFIG_SOC_SRAM_BASE)
+DIFF_MSIZE = $(shell printf '0x%x' $$(( $(CONFIG_SOC_SDRAM_BASE) + \
+  $(CONFIG_SOC_SDRAM_SIZE) - $(CONFIG_SOC_SRAM_BASE) )))
 ifeq ($(CONFIG_SOC_BOOT_MROM),y)
 DIFF_RESET_OFFSET = 0x11000000
 else

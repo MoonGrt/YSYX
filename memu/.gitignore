@@ -6,6 +6,8 @@
 !*.scala
 !*.[cSh]
 !*.v
+!*.sv
+!*.nxdc
 !*.cc
 !*.cpp
 !*.sh

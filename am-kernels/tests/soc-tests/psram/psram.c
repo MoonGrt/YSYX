@@ -1,6 +1,5 @@
 #include <stdint.h>
 
-#define PSRAM_BASE 0x80000000u
 #ifndef TEST_SIZE
 #define TEST_SIZE  0x1000u
 #endif

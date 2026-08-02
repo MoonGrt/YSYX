@@ -197,7 +197,8 @@ TRM 的处理流程：
 - 为什么不能在 Flash 上执行软件 `flash_read()`：取指和函数内部的 SPI
   寄存器访问会同时占用同一个 SPI master，形成重入竞争，可能死锁或破坏事务。
   应让启动代码位于 SRAM，或用独立硬件 XIP 控制器。
-- 学号 CSR：`mvendorid=0x79737978`、`marchid=0x018ce26e` 已实现。
+- 学号 CSR：`mvendorid=0x79737978`、`marchid=0x018ce1ae`（十进制
+  `26010030`）已实现。
 - SPI 中断等待是可选优化；当前 XIP 快速模型和软件驱动仍采用轮询。
 
 实现中遇到的问题：
@@ -227,6 +228,81 @@ TRM 的处理流程：
 
 链接脚本、`start.S` 及 FSBL/SSBL 的完整分析已整理到
 [SoC 链接脚本、启动代码与 Bootloader](linker-boot.md)。
+
+### 接入更多外设
+
+- GPIO 位于 `0x10002000`：`+0x0` 控制 16 个 LED，`+0x4` 读取 16 个拨码
+  开关，`+0x8` 的 8 个十六进制半字节经硬件译码后驱动 8 个数码管。
+- UART TX/RX 已绑定 NVBoard。UART16550 以 16 倍波特率工作且 DLL 为 1，
+  因此 NVBoard 的串口除数使用默认值 16；`AM_UART_RX` 无数据时返回 `0xff`。
+- PS/2 控制器在下降沿接收 11 位帧，检查起始位、停止位和奇校验，并用 FIFO
+  保存扫描码。AM 负责解析 `e0` 扩展前缀和 `f0` 断码前缀，再转换为 AM 键码。
+- VGA 帧缓冲位于 `0x21000000`，分辨率为 640×480、每像素 32 位，颜色格式为
+  `00RRGGBB`。控制器用 100 MHz 时钟四分频产生约 25 MHz 像素节拍；NVBoard
+  自动刷新，因此 `AM_GPU_FBDRAW` 忽略 `sync`。
+
+在 `memu` 目录执行 `make menuconfig`，同时启用 `SOC` 和 `NVBOARD` 后，可运行：
+
+```bash
+make -C am-kernels/tests/soc-test/perip ARCH=riscv32e-soc run
+make -C am-kernels/tests/soc-test/gpio ARCH=riscv32e-soc run
+make -C am-kernels/tests/am-tests ARCH=riscv32e-soc SOC_LOAD=psram run mainargs=k
+make -C am-kernels/tests/am-tests ARCH=riscv32e-soc SOC_LOAD=psram run mainargs=v
+```
+
+GPIO 示例等待拨码开关输入密码 `0x000f`，随后将 `marchid` 的十进制数值转换
+成 packed BCD，在数码管显示学号并启动流水灯；否则 `26010030` 会被直接显示
+成十六进制 `018CE1AE`。`am-tests` 的静态数据超过 8 KiB SRAM，因此通过二级加载器放入
+PSRAM。前两项分别执行外设 RTL 单元测试和 SoC 软件读写回归；`mainargs=k`
+测试 UART/PS2 输入，`mainargs=v` 测试 VGA。RT-Thread 的串口驱动在内置输入
+耗尽后轮询 `AM_UART_RX`，可直接在 NVBoard 串口窗口输入 `help` 等命令。
+
+#### NVBoard PS/2 键盘修复与测试
+
+键盘无输入由两个问题共同造成：MEMU 的设备更新和 NVBoard 同时轮询 SDL 事件，
+前者会提前取走键盘事件；此外，NVBoard 开始发送首帧前可能产生一次数据仍为高电平
+的时钟下降沿，PS/2 接收器若直接计数，会使后续 11 位帧整体错位。
+
+修复内容：
+
+- SoC 不再调用主机功能设备的 `device_update()`；NVBoard 独占 SDL 事件队列，
+  并在 RTL tick 中驱动外设引脚。
+- PS/2 接收器只在检测到低电平起始位后开始计数。
+- 扫描码 FIFO 从 8 项扩展为 32 项，以容纳按下码和断码的短时突发。
+
+测试时启用 `SOC`、`NVBOARD` 和键盘设备，运行：
+
+```bash
+make -C thirdpartys/rt-thread-am/bsp/abstract-machine \
+  ARCH=riscv32e-soc SOC_LOAD=sdram run
+```
+
+在 NVBoard 窗口中手动输入 `version`、`help`，字符能正常回显并执行对应的
+RT-Thread shell 命令。自动化 X11 按键注入需要保留按下时间和字符间隔；发送过快
+可能丢字符，不能据此判断人工键盘链路失败。
+
+问题：若把帧缓冲放到普通内存，CPU 写像素和 VGA 连续读像素会竞争同一内存
+端口和总线带宽；仲裁不及时会使 VGA 读数据欠载并出现花屏。实际实现通常使用
+双端口缓存、突发预取、DMA 和行缓冲，而不是占用 1.17 MiB 片上寄存器型 SRAM。
+
+### 仿真加速
+
+软件功能调试可在 `menuconfig` 中分别启用快速 Flash、PSRAM、SDRAM，并为 PSRAM、
+SDRAM 独立启用 ELF 预加载。
+快速 Flash 跳过逐次 SPI XIP 传输；快速内存保留 APB/AXI 握手和字节写掩码，
+但绕过 PSRAM QPI、SDRAM 命令及颗粒时序；ELF 预加载直接初始化目标存储器，
+并用短跳板跳过 FSBL/SSBL 的逐字搬运。
+开启 difftest 时会自动禁用快速启动。
+
+只使用 NVBoard 键盘、UART、GPIO 时，可关闭 `Capture VGA output in NVBoard`，
+避免每周期采样像素；需要验证 VGA 时应重新开启。构建使用 `O3` 和
+`-march=native`。LTO 实测仅将启动时间从 `0.865 s` 降到 `0.863 s`，但明显增加
+链接时间，因此未启用。
+
+同一 RT-Thread SDRAM 镜像从启动到 `Hello RISC-V!` 由 `54.373 s` 降至
+`0.852 s`，约加速 `63.8` 倍。RT-Thread 的 SDRAM/PSRAM 启动以及 char、mem、
+SDRAM、PSRAM 测试均通过。验证 FSBL/SSBL、QPI 或 SDRAM 颗粒时，必须关闭对应
+快速启动和快速内存选项，恢复精确模型。
 
 ## B3 时序分析和优化
 ## B4 性能优化和简易缓存

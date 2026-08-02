@@ -1,9 +1,9 @@
 ENTRY(_start)
 
 MEMORY {
-  flash (rx) : ORIGIN = 0x30000000, LENGTH = 16M
-  sram (rwx) : ORIGIN = 0x0f000000, LENGTH = 8K
-  psram (rwx): ORIGIN = 0x80000000, LENGTH = 4M
+  flash (rx) : ORIGIN = _soc_flash_base, LENGTH = _soc_flash_size
+  sram (rwx) : ORIGIN = _soc_sram_base, LENGTH = _soc_sram_size
+  psram (rwx): ORIGIN = _soc_psram_base, LENGTH = _soc_psram_size
 }
 
 SECTIONS {
@@ -57,8 +57,8 @@ SECTIONS {
 
   _heap_start = ALIGN(8);
   _heap_end = ORIGIN(psram) + LENGTH(psram);
-  _stack_top = 0x0f001000;
-  _stack_pointer = 0x0f002000;
+  _stack_top = ORIGIN(sram) + LENGTH(sram) / 2;
+  _stack_pointer = ORIGIN(sram) + LENGTH(sram);
   end = _heap_start;
   _end = _heap_start;
 

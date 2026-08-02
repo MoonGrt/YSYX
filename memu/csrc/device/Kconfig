@@ -1,13 +1,120 @@
 menuconfig DEVICE
-  depends on !TARGET_SHARE && !SOC
-  bool "MEMU software devices"
+  depends on !TARGET_SHARE
+  bool "Devices"
   default y
   help
-    Provide host-side MMIO device models for NEMU and non-SoC NPC.
-    SoC peripherals are implemented as RTL modules and do not use these
-    software device models.
+    Provide host-side device models. In NEMU SoC mode these models implement
+    the same address map and register interfaces as the RTL SoC.
 
-if DEVICE
+if DEVICE && SOC
+
+config NVBOARD
+  depends on NPC
+  bool "Enable NVBoard"
+  default n
+  help
+    Bind the SoC GPIO, PS/2, VGA and UART pins to NVBoard.
+
+config NVBOARD_VGA_CAPTURE
+  depends on NVBOARD && HAS_VGA
+  bool "Capture VGA output in NVBoard"
+  default y
+  help
+    Disable this while testing software that only needs the NVBoard keyboard,
+    UART, GPIO or seven-segment display. Skipping per-pixel VGA sampling can
+    substantially improve simulation speed.
+
+menuconfig HAS_SERIAL
+  bool "Enable UART16550"
+  default y
+
+if HAS_SERIAL
+config SOC_UART_MMIO
+  hex "UART MMIO address"
+  default 0x10000000
+
+config SOC_UART_SIZE
+  hex "UART MMIO size"
+  default 0x1000
+
+config SOC_UART_INPUT
+  bool "Enable terminal input"
+  default y
+endif
+
+menuconfig HAS_SPI
+  bool "Enable SPI controller"
+  default y
+
+if HAS_SPI
+config SOC_SPI_MMIO
+  hex "SPI controller MMIO address"
+  default 0x10001000
+
+config SOC_SPI_SIZE
+  hex "SPI controller MMIO size"
+  default 0x1000
+
+config SOC_SPI_FLASH
+  bool "Enable SPI flash slave"
+  default y
+
+config SOC_SPI_BITREV
+  bool "Enable bit-reversal slave"
+  default y
+endif
+
+menuconfig HAS_GPIO
+  bool "Enable GPIO"
+  default y
+
+if HAS_GPIO
+config SOC_GPIO_MMIO
+  hex "GPIO MMIO address"
+  default 0x10002000
+
+config SOC_GPIO_SIZE
+  hex "GPIO MMIO size"
+  default 0x10
+
+config SOC_GPIO_INPUT
+  hex "Initial GPIO switch value"
+  range 0x0 0xffff
+  default 0x0
+endif
+
+menuconfig HAS_KEYBOARD
+  bool "Enable PS/2 keyboard"
+  default y
+
+if HAS_KEYBOARD
+config SOC_PS2_MMIO
+  hex "PS/2 MMIO address"
+  default 0x10011000
+
+config SOC_PS2_SIZE
+  hex "PS/2 MMIO size"
+  default 0x8
+endif
+
+menuconfig HAS_VGA
+  bool "Enable VGA framebuffer"
+  default y
+
+if HAS_VGA
+config SOC_VGA_ADDR
+  hex "VGA framebuffer address"
+  default 0x21000000
+
+config SOC_VGA_SIZE
+  hex "VGA framebuffer mapping size"
+  default 0x200000
+
+endif
+
+endif
+
+if DEVICE && !SOC
 
 config HAS_PORT_IO
   bool

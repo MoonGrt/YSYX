@@ -24,6 +24,45 @@ module sdram_top_apb (
   inout  [31:0] sdram_dq
 );
 
+`ifdef FAST_SDRAM
+
+  import "DPI-C" function int soc_sdram_read(input int addr);
+  import "DPI-C" function void soc_sdram_write(
+    input int addr, input byte mask, input int data
+  );
+
+  reg [31:0] read_data;
+  wire setup = in_psel && !in_penable;
+  wire access = in_psel && in_penable;
+
+  assign in_pready  = access;
+  assign in_prdata  = read_data;
+  assign in_pslverr = 1'b0;
+
+  assign sdram_clk = clock;
+  assign sdram_cke = 1'b0;
+  assign sdram_cs  = 1'b1;
+  assign sdram_ras = 1'b1;
+  assign sdram_cas = 1'b1;
+  assign sdram_we  = 1'b1;
+  assign sdram_a   = 13'b0;
+  assign sdram_ba  = 2'b0;
+  assign sdram_dqm = 4'hf;
+  assign sdram_dq  = 32'bz;
+
+  always @(posedge clock) begin
+    if (reset) begin
+      read_data <= 32'b0;
+    end else begin
+      if (setup && !in_pwrite)
+        read_data <= soc_sdram_read(in_paddr);
+      if (access && in_pwrite)
+        soc_sdram_write(in_paddr, {4'b0, in_pstrb}, in_pwdata);
+    end
+  end
+
+`else
+
   wire sdram_dout_en;
   wire [31:0] sdram_dout;
   assign sdram_dq = sdram_dout_en ? sdram_dout : 32'bz;
@@ -76,5 +115,7 @@ module sdram_top_apb (
     .sdram_data_output_o(sdram_dout),
     .sdram_data_out_en_o(sdram_dout_en)
   );
+
+`endif
 
 endmodule

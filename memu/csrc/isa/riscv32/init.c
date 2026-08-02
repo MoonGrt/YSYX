@@ -39,7 +39,7 @@ static void restart() {
   cpu.gpr[0] = 0;
   /* CSR init */
   cpu.csr.mvendorid = 0x79737978;  // ysyx
-  cpu.csr.marchid = 0x018CE26E;  // moongrt - 26010030
+  cpu.csr.marchid = 0x018CE1AE;  // moongrt - 26010030
 }
 
 void init_isa() {

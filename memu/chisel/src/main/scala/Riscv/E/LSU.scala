@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import soc.riscv.Constants.Riscv32E._
 import soc.riscv.Parameters.Riscv32E._
+import soc.riscv.Parameters.SoCDevices
 import soc.perip.mem.DataBus
 
 // ----------------------------------
@@ -91,7 +92,8 @@ class LSU extends Module {
   // -------- Data Bus --------
   io.dbus.req.bits.mask  := mask
   io.dbus.req.bits.size  := size
-  val isUart = memAddr(31, 12) === "h10000".U
+  val isUart = memAddr >= SoCDevices.uartBase.U &&
+    memAddr < (SoCDevices.uartBase + SoCDevices.uartSize).U
   io.dbus.req.bits.addr  := Mux(isUart, memAddr, memAddrAlign)
   io.dbus.req.bits.wdata := wdataShift
   // The SoC SRAM is implemented inside the RTL, so its writes do not pass
@@ -100,7 +102,8 @@ class LSU extends Module {
   val diffmem = Module(new soc.util.DpiDiffMemBB)
   diffmem.io.clk := clock
   diffmem.io.en := io.dbus.req.fire && wen &&
-    (memAddrAlign >= "h0f000000".U) && (memAddrAlign < "h0f002000".U)
+    (memAddrAlign >= SoCDevices.sramBase.U) &&
+    (memAddrAlign < (SoCDevices.sramBase + SoCDevices.sramSize).U)
   diffmem.io.addr := memAddrAlign
   diffmem.io.mask := mask
   diffmem.io.wdata := wdataShift

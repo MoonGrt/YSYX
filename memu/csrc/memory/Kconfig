@@ -1,35 +1,149 @@
-menu "Memory Configuration"
-
-config MBASE_NOSOC
-  hex "Memory base address"
-  depends on !SOC
-  default 0x80000000
+menu "Memory"
 
 choice
   depends on SOC
   prompt "SoC boot source"
   default SOC_BOOT_FLASH
-
 config SOC_BOOT_MROM
-  bool "MROM (0x20000000)"
-
+  bool "MROM"
 config SOC_BOOT_FLASH
-  bool "SPI flash XIP (0x30000000)"
+  bool "FLASH"
 endchoice
 
+
+menu "MROM"
+depends on SOC_BOOT_MROM
+config SOC_MROM_BASE
+  depends on SOC
+  hex "MROM base address"
+  default 0x20000000
+config SOC_MROM_SIZE
+  depends on SOC
+  hex "MROM size"
+  default 0x1000
+endmenu
+
+
+menu "FLASH"
+depends on SOC_BOOT_FLASH
+config SOC_FLASH_BASE
+  depends on SOC
+  hex "Flash XIP base address"
+  default 0x30000000
+config SOC_FLASH_SIZE
+  depends on SOC
+  hex "Flash size"
+  default 0x1000000
+config SOC_FAST_FLASH
+  depends on NPC
+  bool "Use fast Flash XIP model"
+  default y
+  help
+    Read XIP data directly through DPI instead of issuing a complete SPI
+    transaction for every instruction fetch. Disable this option when testing
+    the SPI controller, Flash pins or precise XIP timing.
+endmenu
+
+
+menu "SRAM"
+config SOC_SRAM_BASE
+  depends on SOC
+  hex "SRAM base address"
+  default 0x0f000000
+config SOC_SRAM_SIZE
+  depends on SOC
+  hex "SRAM size"
+  default 0x2000
+endmenu
+
+
+menuconfig HAS_PSRAM
+  depends on SOC
+  bool "Enable PSRAM"
+  default y
+if HAS_PSRAM
+config SOC_PSRAM_BASE
+  hex "PSRAM base address"
+  default 0x80000000
+config SOC_PSRAM_SIZE
+  hex "PSRAM size"
+  default 0x400000
+config SOC_FAST_PSRAM
+  depends on NPC
+  bool "Use fast functional PSRAM model"
+  default n
+  help
+    Bypass QPI transfers during normal software simulation while preserving
+    the APB interface and memory contents. Disable this option when testing
+    the PSRAM controller, QPI initialization or particles.
+config SOC_PSRAM_PRELOAD
+  depends on SOC_FAST_PSRAM && SOC_BOOT_FLASH && !DIFFTEST
+  bool "Preload PSRAM program from ELF"
+  default n
+  help
+    Load ELF segments directly into PSRAM and replace the flash boot entry
+    with a short trampoline. This skips the slow CPU-driven copy during
+    software simulation. Disable it when testing FSBL/SSBL behavior.
+endif
+
+
+menuconfig HAS_SDRAM
+  depends on SOC
+  bool "Enable SDRAM"
+  default y
+if HAS_SDRAM
+config SOC_SDRAM_BASE
+  hex "SDRAM base address"
+  default 0xa0000000
+config SOC_SDRAM_SIZE
+  hex "SDRAM size"
+  default 0x2000000
+config SOC_FAST_SDRAM
+  depends on NPC
+  bool "Use fast functional SDRAM model"
+  default n
+  help
+    Bypass pin-level SDRAM commands and timing during normal software
+    simulation while preserving the AXI interface and memory contents.
+    Disable this option when testing the SDRAM controller or particles.
+config SOC_FAST_BOOT
+  depends on SOC_FAST_SDRAM && SOC_BOOT_FLASH && !DIFFTEST
+  bool "Preload SDRAM program from ELF"
+  default n
+  help
+    Load ELF segments directly into SDRAM and replace the flash boot entry
+    with a short trampoline. This skips the slow CPU-driven copy during
+    software simulation. Disable it when testing FSBL/SSBL behavior.
+endif
+
+
+config MBASE_NOSOC
+  hex
+  depends on !SOC
+  default 0x80000000
 config MBASE_SOC
   hex
-  default 0x20000000 if SOC_BOOT_MROM
-  default 0x30000000 if SOC_BOOT_FLASH
-
+  default SOC_MROM_BASE if SOC_BOOT_MROM
+  default SOC_FLASH_BASE if SOC_BOOT_FLASH
 config MBASE
   hex
   default MBASE_SOC if SOC
   default MBASE_NOSOC
 
-config MSIZE
-  hex "Memory size"
+
+config MSIZE_NOSOC
+  hex
+  depends on !SOC
   default 0x8000000
+config MSIZE_SOC
+  hex
+  default SOC_MROM_SIZE if SOC_BOOT_MROM
+  default SOC_FLASH_SIZE if SOC_BOOT_FLASH
+config MSIZE
+  hex
+  default MSIZE_SOC if SOC
+  default MSIZE_NOSOC
+
 
 config PC_RESET_OFFSET
   hex "Offset of reset vector from the base of memory"
@@ -47,7 +161,7 @@ config PMEM_GARRAY
 endchoice
 
 config MEM_RANDOM
-  depends on MODE_SYSTEM && !DIFFTEST && !TARGET_AM
+  depends on !DIFFTEST && !TARGET_AM
   bool "Initialize the memory with random values"
   default y
   help

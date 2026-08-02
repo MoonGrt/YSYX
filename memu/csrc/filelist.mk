@@ -15,7 +15,7 @@
 
 SRCS-y += csrc/memu-main.c
 DIRS-y += csrc/cpu csrc/monitor csrc/utils
-DIRS-$(CONFIG_MODE_SYSTEM) += csrc/memory
+DIRS-y += csrc/memory
 DIRS-BLACKLIST-$(CONFIG_TARGET_AM) += csrc/monitor/sdb
 
 SHARE = $(if $(CONFIG_TARGET_SHARE),1,0)

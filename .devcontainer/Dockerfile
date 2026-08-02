@@ -21,7 +21,8 @@ RUN apt-get update \
         openjdk-17-jdk gtkwave autoconf bison help2man \
         python3 python3-pip python-is-python3 \
         g++-riscv64-linux-gnu binutils-riscv64-linux-gnu \
-        device-tree-compiler libncurses-dev libsdl2-dev libreadline-dev \
+        device-tree-compiler libncurses-dev libsdl2-dev \
+        libsdl2-image-dev libsdl2-ttf-dev libreadline-dev \
         libfl-dev libtool libyaml-dev libudev-dev libusb-1.0-0-dev \
     && rm -rf /var/lib/apt/lists/*
 

@@ -71,7 +71,7 @@ class CSRFile extends Module {
   csr(CSR_MCYCLEH) := cycle64(63,32)
   // mvendorid & marchid
   csr(CSR_MVENDOR) := 0x79737978.U  // ysyx
-  csr(CSR_MARCH  ) := 0x018CE26E.U  // moongrt - 26010030
+  csr(CSR_MARCH  ) := 0x018CE1AE.U  // moongrt - 26010030
   // Read
   io.rdata := MuxCase(csr(csrid), Seq(
     (io.csrSel === CSR.E   ) -> csr(CSR_MTVEC),  // mtvec

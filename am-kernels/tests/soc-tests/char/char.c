@@ -1,4 +1,5 @@
-#define UART_BASE 0x10000000L
+#include <soc-device.h>
+
 #define UART_TX 0
 
 #ifdef BARE_METAL
@@ -8,9 +9,10 @@ void _start() {
   while (1);
 }
 #else
-void main() {
+int main(void) {
   *(volatile char *)(UART_BASE + UART_TX) = 'A';
   *(volatile char *)(UART_BASE + UART_TX) = '\n';
   // while (1);
+  return 0;
 }
 #endif

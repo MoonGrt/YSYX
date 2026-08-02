@@ -80,7 +80,7 @@ void sim_t::diff_get_regs(void* diff_context) {
   // ctx->csr.mvendorid = state->mvendorid->read();
   // ctx->csr.marchid = state->marchid->read();
   // ctx->csr.mvendorid = 0x79737978;  // ysyx
-  // ctx->csr.marchid = 0x018CE26E;  // moongrt - 26010030
+  // ctx->csr.marchid = 0x018CE1AE;  // moongrt - 26010030
 }
 
 void sim_t::diff_set_regs(void* diff_context) {

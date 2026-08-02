@@ -1,6 +1,6 @@
 #include <stdint.h>
+#include <soc-device.h>
 
-#define SPI_BASE 0x10001000u
 #define SPI_REG(off) (*(volatile uint32_t *)(SPI_BASE + (off)))
 #define SPI_TX0 0x00
 #define SPI_CTRL 0x10

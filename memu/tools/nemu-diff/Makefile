@@ -57,10 +57,8 @@ $(CONFIG_HEADER): FORCE
 	  echo '#define __NEMU_DIFF_AUTOCONF_H__'; \
 	  echo '#define CONFIG_NEMU 1'; \
 	  echo '#define CONFIG_ISA_riscv 1'; \
-	  echo '#define CONFIG_MODE_SYSTEM 1'; \
 	  echo '#define CONFIG_TARGET_SHARE 1'; \
 	  echo '#define CONFIG_PMEM_MALLOC 1'; \
-	  echo '#define CONFIG_ENGINE_INTERPRETER 1'; \
 	  echo '#define CONFIG_RT_CHECK 1'; \
 	  echo '#define CONFIG_MBASE $(CONFIG_MBASE)'; \
 	  echo '#define CONFIG_MSIZE $(CONFIG_MSIZE)'; \

@@ -106,7 +106,9 @@ static void execute(uint64_t n) {
     g_nr_guest_inst ++;
     trace_and_difftest(&decode, cpu.pc);
     if (memu_state.state != MEMU_RUNNING) break;
-    IFDEF(CONFIG_DEVICE, if (g_nr_guest_inst % 10) device_update());
+#if defined(CONFIG_DEVICE) && !defined(CONFIG_SOC)
+    if (g_nr_guest_inst % 10 == 0) device_update();
+#endif
   }
 }
 

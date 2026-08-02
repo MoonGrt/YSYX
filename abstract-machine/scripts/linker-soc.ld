@@ -1,8 +1,8 @@
 ENTRY(_start)
 
 MEMORY {
-  boot (rx) : ORIGIN = _pmem_start, LENGTH = 16M
-  sram (rwx) : ORIGIN = 0x0f000000, LENGTH = 8K
+  boot (rx) : ORIGIN = _pmem_start, LENGTH = _soc_boot_size
+  sram (rwx) : ORIGIN = _soc_sram_base, LENGTH = _soc_sram_size
 }
 
 SECTIONS {
@@ -45,8 +45,8 @@ SECTIONS {
   } > sram
 
   _heap_start = ALIGN(8);
-  _stack_top = 0x0f001000;
-  _stack_pointer = 0x0f002000;
+  _stack_top = ORIGIN(sram) + LENGTH(sram) / 2;
+  _stack_pointer = ORIGIN(sram) + LENGTH(sram);
   _heap_end = _stack_top;
 
   end = _heap_start;

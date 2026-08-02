@@ -13,7 +13,7 @@ import freechips.rocketchip.system.SimAXIMem
 
 import soc.util._
 import soc.perip._
-import soc.riscv.Parameters.{BootSource, Riscv32E}
+import soc.riscv.Parameters.{BootSource, Riscv32E, SoCDevices}
 
 object AXI4SlaveNodeGenerator {
   def apply(params: Option[MasterPortParams], address: Seq[AddressSet])(implicit valName: ValName) =
@@ -62,21 +62,21 @@ class SoCASIC(resetPc: BigInt = Riscv32E.bootAddress)(implicit p: Parameters) ex
   val chipMaster = if (Config.hasChipLink) Some(LazyModule(new ChipLinkMaster)) else None
   val chiplinkNode = if (Config.hasChipLink) Some(AXI4SlaveNodeGenerator(p(ExtBus), ChipLinkParam.allSpace)) else None
 
-  val luart = LazyModule(new APBUart16550(AddressSet.misaligned(0x10000000, 0x1000)))
-  val lgpio = LazyModule(new APBGPIO(AddressSet.misaligned(0x10002000, 0x10)))
-  val lkeyboard = LazyModule(new APBKeyboard(AddressSet.misaligned(0x10011000, 0x8)))
-  val lvga = LazyModule(new APBVGA(AddressSet.misaligned(0x21000000, 0x200000)))
+  val luart = LazyModule(new APBUart16550(AddressSet.misaligned(SoCDevices.uartBase, SoCDevices.uartSize)))
+  val lgpio = LazyModule(new APBGPIO(AddressSet.misaligned(SoCDevices.gpioBase, SoCDevices.gpioSize)))
+  val lkeyboard = LazyModule(new APBKeyboard(AddressSet.misaligned(SoCDevices.ps2Base, SoCDevices.ps2Size)))
+  val lvga = LazyModule(new APBVGA(AddressSet.misaligned(SoCDevices.vgaBase, SoCDevices.vgaSize)))
   val lspi  = LazyModule(new APBSPI(
-    AddressSet.misaligned(0x10001000, 0x1000) ++   // SPI controller
-    AddressSet.misaligned(0x30000000, 0x10000000)  // XIP flash
+    AddressSet.misaligned(SoCDevices.spiBase, SoCDevices.spiSize) ++
+    AddressSet.misaligned(SoCDevices.flashBase, SoCDevices.flashSize)
   ))
   val lmrom = if (Riscv32E.bootSource == BootSource.MROM)
-    Some(LazyModule(new AXI4MROM(AddressSet.misaligned(0x20000000L, 0x1000))))
+    Some(LazyModule(new AXI4MROM(AddressSet.misaligned(SoCDevices.mromBase, SoCDevices.mromSize))))
   else None
-  val lpsram = LazyModule(new APBPSRAM(AddressSet.misaligned(0x80000000L, 0x400000)))
-  val sramNode = AXI4RAM(AddressSet.misaligned(0x0f000000, 0x2000).head, false, true, 4, None, Nil, false)
+  val lpsram = LazyModule(new APBPSRAM(AddressSet.misaligned(SoCDevices.psramBase, SoCDevices.psramSize)))
+  val sramNode = AXI4RAM(AddressSet.misaligned(SoCDevices.sramBase, SoCDevices.sramSize).head, false, true, 4, None, Nil, false)
 
-  val sdramAddressSet = AddressSet.misaligned(0xa0000000L, 0x2000000)
+  val sdramAddressSet = AddressSet.misaligned(SoCDevices.sdramBase, SoCDevices.sdramSize)
   val lsdram_apb = if (!Config.sdramUseAXI) Some(LazyModule(new APBSDRAM (sdramAddressSet))) else None
   val lsdram_axi = if ( Config.sdramUseAXI) Some(LazyModule(new AXI4SDRAM(sdramAddressSet))) else None
 
@@ -198,5 +198,5 @@ import freechips.rocketchip.system.{Edge32BitConfig, DefaultRV32Config}
 
 object Config {
   def hasChipLink: Boolean = false
-  def sdramUseAXI: Boolean = false
+  def sdramUseAXI: Boolean = true
 }

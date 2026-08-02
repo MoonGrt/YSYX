@@ -28,6 +28,7 @@ clean-all:
 	find $(AM_HOME) -type d -name build -prune -exec $(RM) -r {} +
 	find $(AM_TEST_HOME) -type d -name build -prune -exec $(RM) -r {} +
 	$(MAKE) -C thirdpartys/fceux-am clean
+	$(RM) -r thirdpartys/nvboard/build
 	$(RM) -r thirdpartys/rt-thread-am/bsp/abstract-machine/build
 	$(RM) -r .metals .bsp .mill
 	find $(MEMU_HOME) $(AM_HOME) $(AM_TEST_HOME) thirdpartys \

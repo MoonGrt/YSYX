@@ -128,9 +128,13 @@ void init_monitor(int argc, char *argv[]) {
   init_isa();
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img(img_file);
-#ifdef CONFIG_SOC
+#if defined(CONFIG_SOC) && defined(CONFIG_NPC)
   extern void init_flash(const char *img_file);
   init_flash(img_file);
+#if defined(CONFIG_SOC_FAST_BOOT) || defined(CONFIG_SOC_PSRAM_PRELOAD)
+  extern void soc_fast_boot(const char *elf_file);
+  soc_fast_boot(elf_file);
+#endif
 #endif
   /* Initialize differential testing. */
   init_difftest(diff_so_file, img_size, difftest_port);

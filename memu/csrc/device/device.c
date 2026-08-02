@@ -16,7 +16,7 @@
 #include <common.h>
 #include <utils.h>
 #include <device/alarm.h>
-#ifndef CONFIG_TARGET_AM
+#if !defined(CONFIG_TARGET_AM) && !defined(CONFIG_SOC)
 #include <SDL2/SDL.h>
 #endif
 
@@ -30,9 +30,14 @@ void init_disk();
 void init_sdcard();
 void init_alarm();
 
+#ifdef CONFIG_SOC
+void init_soc_device();
+#endif
+
 void send_key(uint8_t, bool);
 void vga_update_screen();
 
+#ifndef CONFIG_SOC
 void device_update() {
   static uint64_t last = 0;
   uint64_t now = get_time();
@@ -65,11 +70,14 @@ void device_update() {
   }
 #endif
 }
+#endif
 
 void sdl_clear_event_queue() {
+#ifndef CONFIG_SOC
 #ifndef CONFIG_TARGET_AM
   SDL_Event event;
   while (SDL_PollEvent(&event));
+#endif
 #endif
 }
 
@@ -77,6 +85,9 @@ void init_device() {
   IFDEF(CONFIG_TARGET_AM, ioe_init());
   init_map();
 
+#ifdef CONFIG_SOC
+  init_soc_device();
+#else
   IFDEF(CONFIG_HAS_SERIAL, init_serial());
   IFDEF(CONFIG_HAS_TIMER, init_timer());
   IFDEF(CONFIG_HAS_VGA, init_vga());
@@ -84,6 +95,7 @@ void init_device() {
   IFDEF(CONFIG_HAS_AUDIO, init_audio());
   IFDEF(CONFIG_HAS_DISK, init_disk());
   IFDEF(CONFIG_HAS_SDCARD, init_sdcard());
+#endif
 
   IFNDEF(CONFIG_TARGET_AM, init_alarm());
 }

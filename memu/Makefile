@@ -37,8 +37,8 @@ ifeq ($(CONFIG_NEMU),y)
 else
   GUEST_ISA ?= $(call remove_quote,$(CONFIG_CORE))
 endif
+ENGINE := interpreter
 NAME = $(GUEST_ISA)-memu-$(ENGINE)
-ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))
 
 # Include all filelist.mk to merge file lists
 FILELIST_MK = $(shell find -L ./csrc -name "filelist.mk")
@@ -56,6 +56,7 @@ CC = $(call remove_quote,$(CONFIG_CC))
 endif
 CFLAGS_BUILD += $(call remove_quote,$(CONFIG_CC_OPT))
 CFLAGS_BUILD += $(if $(CONFIG_CC_LTO),-flto,)
+CFLAGS_BUILD += $(if $(CONFIG_CC_NATIVE),-march=native,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-Og -ggdb3,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
 CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)

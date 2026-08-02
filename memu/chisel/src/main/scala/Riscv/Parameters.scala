@@ -5,6 +5,31 @@ import chisel3.util._
 import soc.perip.mem._
 
 object Parameters {
+  object SoCDevices {
+    private def address(name: String, default: String): BigInt =
+      BigInt(sys.env.get(name).filter(_.nonEmpty).getOrElse(default).stripPrefix("0x"), 16)
+
+    val sramBase  = address("MEMU_SOC_SRAM_BASE",  "0f000000")
+    val sramSize  = address("MEMU_SOC_SRAM_SIZE",  "2000")
+    val mromBase  = address("MEMU_SOC_MROM_BASE",  "20000000")
+    val mromSize  = address("MEMU_SOC_MROM_SIZE",  "1000")
+    val uartBase  = address("MEMU_SOC_UART_BASE",  "10000000")
+    val uartSize  = address("MEMU_SOC_UART_SIZE",  "1000")
+    val spiBase   = address("MEMU_SOC_SPI_BASE",   "10001000")
+    val spiSize   = address("MEMU_SOC_SPI_SIZE",   "1000")
+    val gpioBase  = address("MEMU_SOC_GPIO_BASE",  "10002000")
+    val gpioSize  = address("MEMU_SOC_GPIO_SIZE",  "10")
+    val ps2Base   = address("MEMU_SOC_PS2_BASE",   "10011000")
+    val ps2Size   = address("MEMU_SOC_PS2_SIZE",   "8")
+    val vgaBase   = address("MEMU_SOC_VGA_BASE",   "21000000")
+    val vgaSize   = address("MEMU_SOC_VGA_SIZE",   "200000")
+    val flashBase = address("MEMU_SOC_FLASH_BASE", "30000000")
+    val flashSize = address("MEMU_SOC_FLASH_SIZE", "1000000")
+    val psramBase = address("MEMU_SOC_PSRAM_BASE", "80000000")
+    val psramSize = address("MEMU_SOC_PSRAM_SIZE", "400000")
+    val sdramBase = address("MEMU_SOC_SDRAM_BASE", "a0000000")
+    val sdramSize = address("MEMU_SOC_SDRAM_SIZE", "2000000")
+  }
   object AxiPackage extends Enumeration {
     val Custom, RocketChip = Value
   }
@@ -39,8 +64,8 @@ object Parameters {
         throw new IllegalArgumentException(s"unknown MEMU_SOC_BOOT=$value")
     }
     val bootAddress = bootSource match {
-      case BootSource.MROM  => BigInt("20000000", 16)
-      case BootSource.Flash => BigInt("30000000", 16)
+      case BootSource.MROM  => SoCDevices.mromBase
+      case BootSource.Flash => SoCDevices.flashBase
     }
     val memUseDpi   = true
     val memDelayCfg = MemDelayConfig(

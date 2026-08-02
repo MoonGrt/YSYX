@@ -1,6 +1,5 @@
 #include <stdint.h>
 
-#define SDRAM_BASE 0xa0000000u
 #ifndef TEST_SIZE
 #define TEST_SIZE  0x1000u
 #endif

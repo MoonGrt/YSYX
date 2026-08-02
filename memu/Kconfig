@@ -9,11 +9,8 @@ config NPC
   bool "NPC: Proxy Core"
 endchoice
 
-config SOC
-  depends on NPC
-  bool "Enable SOC"
-  default n
 
+menu "ISA"
 choice
   prompt "Base ISA"
   default ISA_riscv
@@ -26,8 +23,17 @@ config ISA_riscv
 config ISA_loongarch32r
   bool "loongarch32r"
 endchoice
+if ISA_riscv
+source "csrc/isa/riscv32/Kconfig"
+endif
+endmenu
 
-if NPC
+
+menu "NPC"
+depends on NPC
+config SOC
+  bool "Enable SOC Platform"
+  default n
 choice
   prompt "Base Core"
   default CORE_RV32E
@@ -36,7 +42,8 @@ config CORE_MINIRV
 config CORE_RV32E
   bool "riscv32e"
 endchoice
-endif
+endmenu
+
 
 config ISA
   string
@@ -61,103 +68,7 @@ config ISA64
   default y
 
 
-if ISA_riscv
-source "csrc/isa/riscv32/Kconfig"
-endif
-
-choice
-  prompt "MEMU execution engine"
-  default ENGINE_INTERPRETER
-
-config ENGINE_INTERPRETER
-  bool "Interpreter"
-  help
-    Interpreter guest instructions one by one.
-endchoice
-
-config ENGINE
-  string
-  default "interpreter" if ENGINE_INTERPRETER
-  default "none"
-
-choice
-  prompt "Running mode"
-  default MODE_SYSTEM
-
-config MODE_SYSTEM
-  bool "System mode"
-  help
-    Support full-system functionality, including privileged instructions, MMU and devices.
-endchoice
-
-choice
-  prompt "Build target"
-  default TARGET_NATIVE_ELF
-config TARGET_NATIVE_ELF
-  bool "Executable on Linux Native"
-config TARGET_SHARE
-  bool "Shared object (used as REF for differential testing)"
-config TARGET_AM
-  bool "Application on Abstract-Machine (DON'T CHOOSE)"
-endchoice
-
-menu "Build Options"
-choice
-  prompt "Compiler"
-  default CC_GCC
-config CC_GCC
-  bool "gcc"
-config CC_GPP
-  bool "g++"
-config CC_CLANG
-  depends on !TARGET_AM
-  bool "clang"
-endchoice
-
-config CC
-  string
-  default "gcc" if CC_GCC
-  default "g++" if CC_GPP
-  default "clang" if CC_CLANG
-  default "none"
-
-choice
-  prompt "Optimization Level"
-  default CC_O2
-config CC_O0
-  bool "O0"
-config CC_O1
-  bool "O1"
-config CC_O2
-  bool "O2"
-config CC_O3
-  bool "O3"
-endchoice
-
-config CC_OPT
-  string
-  default "-O0" if CC_O0
-  default "-O1" if CC_O1
-  default "-O2" if CC_O2
-  default "-O3" if CC_O3
-  default "none"
-
-config CC_LTO
-  depends on !TARGET_AM
-  bool "Enable link-time optimization"
-  default n
-
-config CC_DEBUG
-  bool "Enable debug information"
-  default n
-
-config CC_ASAN
-  depends on MODE_SYSTEM
-  bool "Enable address sanitizer"
-  default n
-endmenu
-
-menu "Tracing and Debugging"
+menu "Trace & Debug"
 
 config WAVE
   depends on NPC
@@ -219,7 +130,7 @@ config TRACE_END
   default 10000
 
 config ITRACE
-  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  depends on TRACE && TARGET_NATIVE_ELF
   bool "Enable instruction tracer"
   default y
 
@@ -229,7 +140,7 @@ config ITRACE_COND
   default "true"
 
 config MTRACE
-  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  depends on TRACE && TARGET_NATIVE_ELF
   bool "Enable memory tracer"
   default n
 
@@ -250,17 +161,17 @@ config MTRACE_HI
     less than this value.
 
 config DTRACE
-  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  depends on TRACE && TARGET_NATIVE_ELF
   bool "Enable device tracer"
   default n
 
 config ETRACE
-  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  depends on TRACE && TARGET_NATIVE_ELF
   bool "Enable ecall tracer"
   default n
 
 config FTRACE
-  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  depends on TRACE && TARGET_NATIVE_ELF
   bool "Enable function call tracer"
   default n
 
@@ -318,10 +229,82 @@ config WATCHPOINT
 
 endmenu
 
-if MODE_SYSTEM
 source "csrc/memory/Kconfig"
 source "csrc/device/Kconfig"
-endif
+
+
+menu "Build Options"
+choice
+  prompt "Build target"
+  default TARGET_NATIVE_ELF
+config TARGET_NATIVE_ELF
+  bool "Executable on Linux Native"
+config TARGET_SHARE
+  bool "Shared object (used as REF for differential testing)"
+config TARGET_AM
+  bool "Application on Abstract-Machine (DON'T CHOOSE)"
+endchoice
+choice
+  prompt "Compiler"
+  default CC_GCC
+config CC_GCC
+  bool "gcc"
+config CC_GPP
+  bool "g++"
+config CC_CLANG
+  depends on !TARGET_AM
+  bool "clang"
+endchoice
+
+config CC
+  string
+  default "gcc" if CC_GCC
+  default "g++" if CC_GPP
+  default "clang" if CC_CLANG
+  default "none"
+
+choice
+  prompt "Optimization Level"
+  default CC_O2
+config CC_O0
+  bool "O0"
+config CC_O1
+  bool "O1"
+config CC_O2
+  bool "O2"
+config CC_O3
+  bool "O3"
+endchoice
+
+config CC_OPT
+  string
+  default "-O0" if CC_O0
+  default "-O1" if CC_O1
+  default "-O2" if CC_O2
+  default "-O3" if CC_O3
+  default "none"
+
+config CC_LTO
+  depends on !TARGET_AM
+  bool "Enable link-time optimization"
+  default n
+
+config CC_NATIVE
+  depends on !TARGET_AM
+  bool "Optimize simulator for the current host CPU"
+  default n
+  help
+    Add -march=native to the simulator and Verilator-generated model. The
+    resulting executable may not run on a different host CPU.
+
+config CC_DEBUG
+  bool "Enable debug information"
+  default n
+
+config CC_ASAN
+  bool "Enable address sanitizer"
+  default n
+endmenu
 
 
 menu "Miscellaneous"

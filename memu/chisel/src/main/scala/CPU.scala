@@ -32,6 +32,8 @@ class CPU(
   idBits: Int,
   resetPc: BigInt = 0x80000000L
 )(implicit p: Parameters) extends LazyModule {
+  require(idBits >= 2, "the merged CPU AXI port needs one source-ID bit")
+
   private def master(name: String) = AXI4MasterPortParameters(
     masters = Seq(AXI4MasterParameters(
       name = name,
@@ -39,18 +41,18 @@ class CPU(
     )
   )
 
-  val masterNode = AXI4MasterNode(Seq(
-    master("riscv32e-ibus"),
-    master("riscv32e-dbus")
-  ))
+  val masterNode = AXI4MasterNode(Seq(master("riscv32e")))
   lazy val module = new Impl
   class Impl extends LazyModuleImp(this) {
-    val (inst, _) = masterNode.out(0)
-    val (data, _) = masterNode.out(1)
+    val (master, _) = masterNode.out(0)
     val interrupt = IO(Input(Bool()))
     val slave = IO(Flipped(AXI4Bundle(CPUAXI4BundleParameters())))
 
-    private val rocketParams = CPUAXI4BundleParameters()
+    private val rocketParams = AXI4BundleParameters(
+      addrBits = master.params.addrBits,
+      dataBits = master.params.dataBits,
+      idBits = idBits - 1
+    )
     private val customParams = AxiParams(
       addrBits = rocketParams.addrBits,
       dataBits = rocketParams.dataBits,
@@ -61,17 +63,19 @@ class CPU(
       rocketParams,
       resetPc = resetPc
     ))
+    val merger = Module(new AXI4NonBlockingMerger(rocketParams, master.params))
     if (Riscv32EParameters.axiPackage == AxiPackage.RocketChip) {
-      cpu.io.inst <> inst
-      cpu.io.data <> data
+      merger.io.inst <> cpu.io.inst
+      merger.io.data <> cpu.io.data
     } else {
       val instAdapter = Module(new CustomToRCAXI(customParams, rocketParams))
       val dataAdapter = Module(new CustomToRCAXI(customParams, rocketParams))
       instAdapter.io.custom <> cpu.io.inst
       dataAdapter.io.custom <> cpu.io.data
-      instAdapter.io.rc <> inst
-      dataAdapter.io.rc <> data
+      merger.io.inst <> instAdapter.io.rc
+      merger.io.data <> dataAdapter.io.rc
     }
+    master <> merger.io.out
     slave := DontCare
   }
 }
