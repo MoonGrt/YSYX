@@ -1,0 +1,86 @@
+
+24. Printing statistics.
+
+=== Riscv32ETOP ===
+
+   Number of wires:              80846
+   Number of wire bits:          80846
+   Number of public wires:       80846
+   Number of public wire bits:   80846
+   Number of ports:                 75
+   Number of port bits:             75
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:              63107
+     AND2_X1                       114
+     AND3_X1                       211
+     AND4_X1                      1785
+     AND4_X2                         5
+     AOI211_X1                     680
+     AOI211_X2                       1
+     AOI21_X1                     1742
+     AOI21_X2                       16
+     AOI21_X4                        4
+     AOI221_X1                     264
+     AOI221_X2                       3
+     AOI222_X1                     778
+     AOI22_X1                     4508
+     AOI22_X2                        7
+     BUF_X1                       1038
+     BUF_X16                        13
+     BUF_X2                        704
+     BUF_X32                         1
+     BUF_X4                        572
+     BUF_X8                        170
+     CLKBUF_X1                     476
+     CLKBUF_X2                       2
+     CLKBUF_X3                       9
+     DFF_X1                      17696
+     INV_X1                        243
+     INV_X16                         1
+     INV_X2                          7
+     INV_X4                          8
+     INV_X8                          2
+     MUX2_X1                     16380
+     NAND2_X1                      483
+     NAND2_X2                       11
+     NAND2_X4                        1
+     NAND3_X1                      475
+     NAND3_X2                        4
+     NAND3_X4                        1
+     NAND4_X1                     9502
+     NAND4_X2                       33
+     NAND4_X4                        7
+     NOR2_X1                       802
+     NOR2_X2                        24
+     NOR2_X4                         4
+     NOR3_X1                       302
+     NOR3_X2                        50
+     NOR3_X4                         7
+     NOR4_X1                       626
+     NOR4_X2                       427
+     NOR4_X4                        59
+     OAI211_X1                    1109
+     OAI211_X2                      11
+     OAI211_X4                       1
+     OAI21_X1                     1094
+     OAI21_X2                       18
+     OAI21_X4                        1
+     OAI221_X1                     109
+     OAI222_X1                       5
+     OAI22_X1                      114
+     OAI22_X2                        6
+     OAI22_X4                        2
+     OAI33_X1                       40
+     OR2_X1                         57
+     OR2_X2                          1
+     OR3_X1                         34
+     OR4_X1                        111
+     OR4_X2                          2
+     XNOR2_X1                      106
+     XOR2_X1                        28
+
+   Chip area for module '\Riscv32ETOP': 149132.634000
+     of which used for sequential elements: 80021.312000 (53.66%)
+

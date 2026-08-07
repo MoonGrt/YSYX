@@ -1,0 +1,15 @@
+Generate the report at 2026-08-02T12:22:07, GitVersion: aa25008b3778a76ae1975c839d4cc459f7f7b3b7.
++--------------------------------------------------+---------------+---------------+----------------+-------------+------+
+| Net / Pin                                        | MaxSlewTime   | SlewTime      | SlewSlack      | LibCellPort | Note |
++--------------------------------------------------+---------------+---------------+----------------+-------------+------+
+| cpu.idu.csr.csr_6_3__reg_p_D_AOI21_X1_ZN_B1      |               |               |                |             |      |
+| cpu.idu.csr.csr_1_4__AND4_X1_A4_A1_NOR4_X1_A1:ZN | 0.199r/0.199f | 0.330r/0.043f | -0.132r/0.155f | NOR4_X1/ZN  | R    |
+| cpu.idu.csr.csr_6_3__reg_p_D_AOI21_X1_ZN_B1      |               |               |                |             |      |
+| cpu.idu.csr.csr_6_11__reg_p_D_AOI21_X1_ZN:B2     | 0.199r/0.199f | 0.330r/0.043f | -0.132r/0.155f | AOI21_X1/B2 | R    |
+| cpu.idu.csr.csr_6_3__reg_p_D_AOI21_X1_ZN_B1      |               |               |                |             |      |
+| cpu.idu.csr.csr_6_12__reg_p_D_AOI21_X1_ZN:B2     | 0.199r/0.199f | 0.330r/0.043f | -0.132r/0.155f | AOI21_X1/B2 | R    |
+| cpu.idu.csr.csr_6_3__reg_p_D_AOI21_X1_ZN_B1      |               |               |                |             |      |
+| cpu.idu.csr.csr_6_13__reg_p_D_AOI21_X1_ZN:B2     | 0.199r/0.199f | 0.330r/0.043f | -0.132r/0.155f | AOI21_X1/B2 | R    |
+| cpu.idu.csr.csr_6_3__reg_p_D_AOI21_X1_ZN_B1      |               |               |                |             |      |
+| cpu.idu.csr.csr_6_14__reg_p_D_AOI21_X1_ZN:B1     | 0.199r/0.199f | 0.330r/0.043f | -0.132r/0.155f | AOI21_X1/B1 | R    |
++--------------------------------------------------+---------------+---------------+----------------+-------------+------+

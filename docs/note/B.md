@@ -1,52 +1,36 @@
 # B阶段
 ## B1 总线
 
-1. 评估单周期NPC的主频和程序性能
-microbench 的 train 规模测: am-kernels/benchmarks/microbench
+1. 评估单周期 NPC 的主频和程序性能
 
-> 跑分时关闭 NEMU 的监视点, trace, DiffTest, 同时取消 menuconfig 中的 `Enable debug information` 并重新编译NEMU, 以获得较为真实的跑分
+在（`npc & OpenBus Joint Compilation`）节点测试。关闭 trace、difftest、watchpoint、device 和调试信息，以 `-O3` 运行 `microbench train`：
 
 ```bash
-cd $AM_TEST_HOME/benchmarks/microbench
+cd am-kernels/benchmarks/microbench
 make ARCH=riscv32e-memu run mainargs=train
 ```
 
-```
-[MEMU] Welcome to riscv32-MEMU-npc-riscv32e!
-[MEMU] For help, type "help"
-======= Running MicroBench [input *train*] =======
-[qsort] Quick sort: * Passed.
-  min time: 1056.504 ms [0]
-[queen] Queen placement: * Passed.
-  min time: 1422.238 ms [0]
-[bf] Brainf**k interpreter: * Passed.
-  min time: 1885.735 ms [0]
-[fib] Fibonacci number: * Passed.
-  min time: 25040.079 ms [0]
-[sieve] Eratosthenes sieve: * Passed.
-  min time: 1715.377 ms [0]
-[15pz] A* 15-puzzle search: * Passed.
-  min time: 1412.233 ms [0]
-[dinic] Dinic's maxflow algorithm: * Passed.
-  min time: 685.078 ms [0]
-[lzip] Lzip compression: * Passed.
-  min time: 778.658 ms [0]
-[ssort] Suffix sort: * Passed.
-  min time: 2082.401 ms [0]
-[md5] MD5 digest: * Passed.
-  min time: 1894.344 ms [0]
-==================================================
-MicroBench PASS
-Scored time: 37972.647 ms
-Total  time: 42478.522 ms
-[MEMU] EBREAK exception
-[csrc/cpu/cpu-exec.c:140 cpu_exec] memu: HIT GOOD TRAP at pc = 0x800055fc
-[csrc/cpu/cpu-exec.c:109 statistic] host time spent = 42,481,315 us
-[csrc/cpu/cpu-exec.c:110 statistic] total guest instructions = 195,143,195
-[csrc/cpu/cpu-exec.c:111 statistic] simulation frequency = 4,593,624 inst/s
+运行结果为 `HIT GOOD TRAP`，共执行 `195,122,746` 条指令，宿主机 RTL 仿真耗时 `37.581 s`。该 NPC 每周期完成一条指令，因此程序需要 `195,122,746` 个周期；宿主机仿真时间不是硬件性能。
+
+按讲义要求，STA 时临时去掉 DPI-C 和 difftest 模块，为取指、访存各接入一个异步读的 `256×32 bit` 寄存器存储器。使用 `thirdpartys/yosys-sta`、Yosys 0.48 和 Nangate45 典型工艺库：
+
+```bash
+make -C thirdpartys/yosys-sta sta \
+  DESIGN=Riscv32ETOP PDK=nangate45 \
+  CLK_PORT_NAME=clock CLK_FREQ_MHZ=500 \
+  RTL_FILES=/path/to/Riscv32ETOP.sv
 ```
 
-> nangate45 工艺下主频为 ~~51.491MHz~~ → microbench 需要运行 3.870s. (仿真花费了 42478.522 ms)
+为保证两个寄存器存储器仍属于 `core_clock`，本次临时跳过 clock-gating；使用 `share`、`DELAY-0`，并跳过与本题无关且耗时很长的功耗报告。最终网表包含 `63,107` 个标准单元，其中 `17,696` 个触发器，单元面积为 `149,132.634 µm²`。关键路径从 PC 出发，经过指令存储器、译码和执行后到达 GPR：
+
+- 关键路径延迟：`2.507 ns`
+- 估计最高主频：`392.510 MHz`
+- 500 MHz 约束下 WNS：`-0.548 ns`，因此不能运行在 500 MHz
+- 理想运行时间：`195,122,746 / 392,510,000 ≈ 0.497 s`
+
+完整综合与时序报告见 [`docs/report/npc-single-cycle`](../report/npc-single-cycle/README.md)。
+
+这是偏乐观的综合后、布局布线前估计：未计入布线、时钟树、片外存储器和实际 I/O；两个 1 KiB 存储器也装不下 `microbench train`，所以周期数与主频来自两次独立实验，不能视为真实 SoC 的端到端性能。
 
 2. 评估多周期NPC的主频和程序性能
 microbench 的 train 规模测: am-kernels/benchmarks/microbench

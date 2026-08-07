@@ -1,0 +1,15 @@
+Generate the report at 2026-08-02T12:22:07, GitVersion: aa25008b3778a76ae1975c839d4cc459f7f7b3b7.
++------------------------------------+-----------+--------+-------------+-------------+------+
+| Net / Pin                          | MaxFanout | Fanout | FanoutSlack | LibCellPort | Note |
++------------------------------------+-----------+--------+-------------+-------------+------+
+| ram.mem_68_2_4__reg_p_QN           |           |        |             |             |      |
+| ram.mem_68_2_4__reg_p:QN           | NA        | 0      | NA          | DFF_X1/QN   |      |
+| rom.mem_108_5__reg_p_D             |           |        |             |             |      |
+| rom.mem_108_5__reg_p_D_MUX2_X1_Z:Z | NA        | 1      | NA          | MUX2_X1/Z   |      |
+| rom.mem_108_4__reg_p_D             |           |        |             |             |      |
+| rom.mem_108_4__reg_p_D_MUX2_X1_Z:Z | NA        | 1      | NA          | MUX2_X1/Z   |      |
+| rom.mem_108_3__reg_p_D             |           |        |             |             |      |
+| rom.mem_108_3__reg_p_D_MUX2_X1_Z:Z | NA        | 1      | NA          | MUX2_X1/Z   |      |
+| rom.mem_108_6__reg_p_D             |           |        |             |             |      |
+| rom.mem_108_6__reg_p_D_MUX2_X1_Z:Z | NA        | 1      | NA          | MUX2_X1/Z   |      |
++------------------------------------+-----------+--------+-------------+-------------+------+
