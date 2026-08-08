@@ -72,11 +72,9 @@ class IFU(resetPc: BigInt = 0x80000000L) extends Module {
   // -----------------------------------------------
   // -------------------- DiffTest -----------------
   // -----------------------------------------------
-  val started = RegEnable(true.B, false.B, io.out.fire)
-  val diffen = (started === true.B) && io.out.fire
   val diffpc = Module(new DpiDiffPCBB)
   diffpc.io.clk  := clock
-  diffpc.io.en   := diffen
+  diffpc.io.en   := !reset.asBool && io.out.fire
   diffpc.io.pc   := requestPc
   diffpc.io.npc  := Mux(bren, braddr, pc + 4.U)
   diffpc.io.inst := inst

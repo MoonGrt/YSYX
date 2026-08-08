@@ -29,6 +29,7 @@
 CPU_state cpu = {};
 Decode decode = {};
 uint64_t g_nr_guest_inst = 0;
+uint64_t g_nr_cycle = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
@@ -103,7 +104,9 @@ static void exec_once(vaddr_t pc) {
 static void execute(uint64_t n) {
   for (;n > 0; n--) {
     exec_once(cpu.pc);
-    g_nr_guest_inst ++;
+    // RTL advances one clock cycle per exec_once(); its retired instruction
+    // count is updated by dpi_diffpc() instead.
+    IFNDEF(CONFIG_NPC, g_nr_guest_inst ++);
     trace_and_difftest(&decode, cpu.pc);
     if (memu_state.state != MEMU_RUNNING) break;
 #if defined(CONFIG_DEVICE) && !defined(CONFIG_SOC)
@@ -117,6 +120,21 @@ static void statistic() {
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64
   Log("host time spent = " NUMBERIC_FMT " us", g_timer);
   Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
+#ifdef CONFIG_NPC
+  extern void perf_report(void);
+  Log("total cycles = " NUMBERIC_FMT, g_nr_cycle);
+  if (g_nr_cycle > 0) {
+    Log("IPC = %.6f", (double)g_nr_guest_inst / (double)g_nr_cycle);
+  } else {
+    Log("IPC = N/A (no cycles elapsed)");
+  }
+  if (g_nr_guest_inst > 0) {
+    Log("CPI = %.6f", (double)g_nr_cycle / (double)g_nr_guest_inst);
+  } else {
+    Log("CPI = N/A (no instructions retired)");
+  }
+  perf_report();
+#endif
   if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }

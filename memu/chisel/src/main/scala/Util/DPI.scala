@@ -71,6 +71,13 @@ class DpiDiffPCBB extends BlackBox {
     val inst = Input(UInt(DataWidth.W))
   })
 }
+class DpiPerfEventBB extends BlackBox {
+  val io = IO(new Bundle {
+    val clk    = Input(Clock())
+    val en     = Input(Bool())
+    val events = Input(UInt(32.W))
+  })
+}
 class DpiDiffGPRBB extends BlackBox {
   val io = IO(new Bundle {
     val gpr  = Input(Vec(GPRNum, UInt(DataWidth.W)))

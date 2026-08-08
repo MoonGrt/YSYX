@@ -82,9 +82,137 @@ void nvboard_bind_all_pins(VSoCTop *top);
 VSoCTop *top = new VSoCTop;
 #endif
 
+extern uint64_t g_nr_guest_inst;
+extern uint64_t g_nr_cycle;
+
+enum PerfEvent : uint32_t {
+  PERF_IFU_REQ          = 1u << 0,
+  PERF_IFU_RESP         = 1u << 1,
+  PERF_INST_ACCEPT      = 1u << 2,
+  PERF_IFU_REQ_STALL    = 1u << 3,
+  PERF_IFU_WAIT_RESP    = 1u << 4,
+  PERF_IFU_BACKEND      = 1u << 5,
+  PERF_LSU_REQ          = 1u << 6,
+  PERF_LSU_RESP         = 1u << 7,
+  PERF_LSU_WAIT_RESP    = 1u << 8,
+  PERF_EXU_FINISH       = 1u << 9,
+  PERF_LSU_LOAD_REQ     = 1u << 10,
+  PERF_LSU_STORE_REQ    = 1u << 11,
+};
+
+enum InstClass {
+  INST_COMPUTE,
+  INST_LOAD,
+  INST_STORE,
+  INST_BRANCH,
+  INST_JUMP,
+  INST_SYSTEM,
+  INST_CLASS_COUNT,
+};
+
+static const char *inst_class_name[INST_CLASS_COUNT] = {
+  "compute", "load", "store", "branch", "jump", "csr/system"
+};
+
+struct PerfCounters {
+  uint64_t samples = 0;
+  uint64_t ifu_req = 0, ifu_resp = 0, inst_accept = 0;
+  uint64_t ifu_req_stall = 0, ifu_wait_resp = 0, ifu_backend = 0;
+  uint64_t ifu_other = 0;
+  uint64_t exu_finish = 0;
+  uint64_t lsu_req = 0, lsu_resp = 0, lsu_wait_resp = 0;
+  uint64_t load_req = 0, store_req = 0;
+  uint64_t lsu_latency_total = 0, lsu_latency_samples = 0;
+  uint64_t lsu_req_cycle = 0;
+  bool lsu_pending = false;
+  uint64_t class_count[INST_CLASS_COUNT] = {};
+  uint64_t class_cycles[INST_CLASS_COUNT] = {};
+  InstClass active_class = INST_COMPUTE;
+  uint64_t active_start_cycle = 0;
+  bool active_inst = false;
+  FILE *trace = nullptr;
+  bool reported = false;
+};
+
+static PerfCounters perf_counters;
+
+static InstClass classify_inst(uint32_t inst) {
+  switch (inst & 0x7f) {
+    case 0x03: return INST_LOAD;
+    case 0x23: return INST_STORE;
+    case 0x63: return INST_BRANCH;
+    case 0x67:
+    case 0x6f: return INST_JUMP;
+    case 0x73: return INST_SYSTEM;
+    default:   return INST_COMPUTE;
+  }
+}
+
+static void perf_trace_open() {
+  if (perf_counters.trace != nullptr) return;
+  const char *path = getenv("MEMU_PERF_TRACE");
+  if (path == nullptr || path[0] == '\0') return;
+  perf_counters.trace = fopen(path, "w");
+  if (perf_counters.trace == nullptr) {
+    fprintf(stderr, "Cannot open performance trace '%s'\n", path);
+    return;
+  }
+  fprintf(perf_counters.trace,
+    "cycle,ifu_req,ifu_resp,inst_accept,exu_finish,lsu_req,lsu_resp,"
+    "ifu_req_stall_cycles,ifu_wait_resp_cycles,ifu_backend_cycles,"
+    "lsu_wait_resp_cycles\n");
+}
+
+extern "C" void perf_report(void) {
+  PerfCounters &p = perf_counters;
+  if (p.reported) return;
+  p.reported = true;
+
+  if (p.active_inst && g_nr_cycle >= p.active_start_cycle) {
+    // The terminating instruction can retire on the same sampled edge that
+    // ends simulation; count that edge as one execution cycle.
+    p.class_cycles[p.active_class] += g_nr_cycle - p.active_start_cycle + 1;
+    p.active_inst = false;
+  }
+  if (p.trace != nullptr) {
+    fclose(p.trace);
+    p.trace = nullptr;
+  }
+
+  printf("[PERF] performance counters:\n");
+  printf("[PERF] IFU requests/responses/accepted = %" PRIu64 "/%" PRIu64 "/%" PRIu64 "\n",
+      p.ifu_req, p.ifu_resp, p.inst_accept);
+  printf("[PERF] EXU completed = %" PRIu64 "\n", p.exu_finish);
+  printf("[PERF] LSU requests/responses (load/store) = %" PRIu64 "/%" PRIu64
+      " (%" PRIu64 "/%" PRIu64 ")\n", p.lsu_req, p.lsu_resp,
+      p.load_req, p.store_req);
+  printf("[PERF] IFU no-supply cycles: wait-response=%" PRIu64
+      ", backend-blocked=%" PRIu64 ", request-stalled=%" PRIu64
+      ", other=%" PRIu64 "\n", p.ifu_wait_resp, p.ifu_backend,
+      p.ifu_req_stall, p.ifu_other);
+  double lsu_avg = p.lsu_latency_samples == 0 ? 0.0 :
+      (double)p.lsu_latency_total / (double)p.lsu_latency_samples;
+  printf("[PERF] LSU response latency: total=%" PRIu64 ", samples=%" PRIu64
+      ", average=%.3f cycles\n", p.lsu_latency_total,
+      p.lsu_latency_samples, lsu_avg);
+  for (int i = 0; i < INST_CLASS_COUNT; i++) {
+    double ratio = g_nr_guest_inst == 0 ? 0.0 :
+        100.0 * (double)p.class_count[i] / (double)g_nr_guest_inst;
+    double avg = p.class_count[i] == 0 ? 0.0 :
+        (double)p.class_cycles[i] / (double)p.class_count[i];
+    printf("[PERF] class %-10s count=%" PRIu64 " (%6.2f%%), cycles=%" PRIu64
+        ", average=%.3f\n", inst_class_name[i], p.class_count[i], ratio,
+        p.class_cycles[i], avg);
+  }
+  uint64_t class_total = 0;
+  for (int i = 0; i < INST_CLASS_COUNT; i++) class_total += p.class_count[i];
+  printf("[PERF] consistency: classes=%" PRIu64 ", IFU responses=%" PRIu64
+      ", accepted=%" PRIu64 ", dynamic instructions=%" PRIu64 "\n",
+      class_total, p.ifu_resp, p.inst_accept, g_nr_guest_inst);
+}
+
 #if defined(CONFIG_WAVE_ABSOLUTE) || defined(CONFIG_WAVE_RELATIVE)
 
-extern uint64_t g_nr_guest_inst;
 #if defined(CONFIG_WAVE_VCD)
 #include <verilated_vcd_c.h>
 VerilatedVcdC *tfp;
@@ -116,6 +244,51 @@ static uint8_t flash_mem[FLASH_SIZE];
 
 extern "C" {
   static bool resync_after_mmio_commit = false;
+  static bool diffpc_started = false;
+
+  void dpi_perf_event(int events) {
+    PerfCounters &p = perf_counters;
+    const uint32_t e = (uint32_t)events;
+    g_nr_cycle++;
+    p.samples++;
+    p.ifu_req       += !!(e & PERF_IFU_REQ);
+    p.ifu_resp      += !!(e & PERF_IFU_RESP);
+    p.inst_accept   += !!(e & PERF_INST_ACCEPT);
+    p.ifu_req_stall += !!(e & PERF_IFU_REQ_STALL);
+    p.ifu_wait_resp += !!(e & PERF_IFU_WAIT_RESP);
+    p.ifu_backend   += !!(e & PERF_IFU_BACKEND);
+    p.exu_finish    += !!(e & PERF_EXU_FINISH);
+    p.lsu_req       += !!(e & PERF_LSU_REQ);
+    p.lsu_resp      += !!(e & PERF_LSU_RESP);
+    p.lsu_wait_resp += !!(e & PERF_LSU_WAIT_RESP);
+    p.load_req      += !!(e & PERF_LSU_LOAD_REQ);
+    p.store_req     += !!(e & PERF_LSU_STORE_REQ);
+
+    if (!(e & PERF_INST_ACCEPT) && !(e & PERF_IFU_WAIT_RESP) &&
+        !(e & PERF_IFU_BACKEND) && !(e & PERF_IFU_REQ_STALL)) {
+      p.ifu_other++;
+    }
+    if (e & PERF_LSU_REQ) {
+      p.lsu_req_cycle = p.samples;
+      p.lsu_pending = true;
+    }
+    if ((e & PERF_LSU_RESP) && p.lsu_pending) {
+      p.lsu_latency_total += p.samples - p.lsu_req_cycle;
+      p.lsu_latency_samples++;
+      p.lsu_pending = false;
+    }
+
+    perf_trace_open();
+    if (p.trace != nullptr) {
+      fprintf(p.trace,
+        "%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64
+        ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64
+        ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 "\n",
+        p.samples, p.ifu_req, p.ifu_resp, p.inst_accept, p.exu_finish,
+        p.lsu_req, p.lsu_resp, p.ifu_req_stall, p.ifu_wait_resp,
+        p.ifu_backend, p.lsu_wait_resp);
+    }
+  }
 
   void mtrace(bool is_write, paddr_t addr, int len, word_t data);
   void etrace(uint32_t epc, uint32_t ecode);
@@ -392,6 +565,26 @@ extern "C" {
     // printf("0x%08x\n", (unsigned int)(*data));
   }
   void dpi_diffpc(int pc, int npc, int inst) {
+    // This core is in-order and non-speculative: every instruction accepted
+    // by the IFU retires exactly once. Reuse the DiffTest callback as the
+    // performance event, including the first instruction.
+    g_nr_guest_inst++;
+
+    PerfCounters &p = perf_counters;
+    if (p.active_inst && g_nr_cycle >= p.active_start_cycle) {
+      p.class_cycles[p.active_class] += g_nr_cycle - p.active_start_cycle;
+    }
+    p.active_class = classify_inst((uint32_t)inst);
+    p.class_count[p.active_class]++;
+    p.active_start_cycle = g_nr_cycle;
+    p.active_inst = true;
+
+    // DiffTest historically suppresses its first callback. Keep that behavior
+    // while allowing performance accounting to include the first instruction.
+    if (!diffpc_started) {
+      diffpc_started = true;
+      return;
+    }
     // printf("pc: %x, npc: %x, inst: %08x\n", pc, npc, inst);
     // Decode
     decode.pc = pc;
@@ -654,10 +847,8 @@ extern "C" {
   void rtl_reset() {
     reset();
   }
-  #define CYCLE_NUM 2
   void rtl_step() {
-    // for (int i = 0; i < CYCLE_NUM; i++)
-      tick();
+    tick();
   }
   void rtl_exit() {
 #ifdef CONFIG_NVBOARD

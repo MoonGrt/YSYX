@@ -10,6 +10,7 @@
 !*.nxdc
 !*.cc
 !*.cpp
+!*.py
 !*.sh
 !.gitignore
 !.scalafmt.conf

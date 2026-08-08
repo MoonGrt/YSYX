@@ -75,6 +75,28 @@ class Riscv32E(
   idu.io.out <> exu.io.in
   exu.io.out <> lsu.io.in
   lsu.io.out <> wbu.io.in
+
+  // Simulation-only performance events. The counters live in the C++
+  // environment, so they do not become part of the synthesized processor.
+  val perfEvents = WireInit(0.U(32.W))
+  perfEvents :=
+    (ifu.io.ibus.req.fire.asUInt       << 0) |
+    (ifu.io.ibus.resp.fire.asUInt      << 1) |
+    (ifu.io.out.fire.asUInt            << 2) |
+    ((ifu.io.ibus.req.valid && !ifu.io.ibus.req.ready).asUInt << 3) |
+    ((ifu.io.ibus.resp.ready && !ifu.io.ibus.resp.valid).asUInt << 4) |
+    ((ifu.io.out.valid && !ifu.io.out.ready).asUInt << 5) |
+    (lsu.io.dbus.req.fire.asUInt       << 6) |
+    (lsu.io.dbus.resp.fire.asUInt      << 7) |
+    ((lsu.io.dbus.resp.ready && !lsu.io.dbus.resp.valid).asUInt << 8) |
+    (exu.io.out.fire.asUInt            << 9) |
+    ((lsu.io.dbus.req.fire && lsu.io.dbus.req.bits.ren).asUInt << 10) |
+    ((lsu.io.dbus.req.fire && lsu.io.dbus.req.bits.wen).asUInt << 11)
+
+  val perf = Module(new DpiPerfEventBB)
+  perf.io.clk    := clock
+  perf.io.en     := !reset.asBool
+  perf.io.events := perfEvents
 }
 
 /** Standalone MEMU top: CPU plus simulation memory and peripherals. */

@@ -36,6 +36,13 @@ module DpiDiffPCBB (
 );
   always @(posedge clk) if (en) dpi_diffpc(pc, npc, inst);
 endmodule
+import "DPI-C" function void dpi_perf_event(input int events);
+module DpiPerfEventBB (
+  input clk, en,
+  input [31:0] events
+);
+  always @(posedge clk) if (en) dpi_perf_event(events);
+endmodule
 module DpiDiffGPRBB (
   input [31:0] gpr_0,  gpr_1,  gpr_2,  gpr_3,
   input [31:0] gpr_4,  gpr_5,  gpr_6,  gpr_7,
